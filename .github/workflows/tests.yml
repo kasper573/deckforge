@@ -1,0 +1,21 @@
+name: Tests
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+          cache: "yarn"
+
+      - name: Install project dependencies
+        run: yarn --prefer-offline
+
+      - run: yarn lint
