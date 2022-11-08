@@ -1,0 +1,69 @@
+on:
+  workflow_call:
+    secrets:
+      CYPRESS_PROJECT_ID:
+        description: "Cypress project ID"
+        required: false
+    inputs:
+      name:
+        description: "Name of test"
+        required: true
+        type: string
+      width:
+        description: "Cypress viewport width"
+        required: true
+        type: number
+      height:
+        description: "Cypress viewport height"
+        required: true
+        type: number
+jobs:
+  run:
+    name: ${{ inputs.width}}x${{ inputs.height }}
+    runs-on: ubuntu-latest
+    container: cypress/included:10.7.0
+    env:
+      DATABASE_URL: "file:./db.sqlite"
+      CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
+      CYPRESS_BASE_URL: http://localhost:3000
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: 0
+      DISCORD_CLIENT_ID: 0
+      DISCORD_CLIENT_SECRET: 0
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+          cache: "yarn"
+
+      - name: Install project dependencies
+        run: yarn --prefer-offline
+
+      - name: Directory access permissions
+        run: |
+          chmod -R a+rwX ./node_modules/.prisma
+          chmod -R a+rwX ./cypress
+          chmod -R a+rwX ./prisma
+      - name: Deploy database migrations
+        run: npx prisma migrate deploy
+
+      - name: Run e2e tests
+        run: yarn test:e2e
+        env:
+          CYPRESS_VIEWPORT_WIDTH: ${{ inputs.width }}
+          CYPRESS_VIEWPORT_HEIGHT: ${{ inputs.height }}
+
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots-${{ inputs.name }}
+          path: cypress/screenshots
+
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-videos-${{ inputs.name }}
+          path: cypress/videos

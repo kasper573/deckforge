@@ -1,8 +1,5 @@
 {
   "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "project": "./tsconfig.json"
-  },
   "plugins": ["@typescript-eslint", "import", "unused-imports"],
   "extends": [
     "next/core-web-vitals",
