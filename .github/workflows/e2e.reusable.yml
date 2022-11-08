@@ -48,7 +48,7 @@ jobs:
           chmod -R a+rwX ./cypress
           chmod -R a+rwX ./prisma
       - name: Deploy database migrations
-        run: yarn db:migrate:deploy
+        run: yarn db:deploy
 
       - name: Seed database
         run: yarn db:seed

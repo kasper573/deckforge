@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "db:deploy && next build",
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint & prettier . --check",
@@ -11,7 +11,7 @@
     "start": "next start",
     "test:e2e": "cross-var start-server-and-test dev $CYPRESS_BASE_URL 'cypress run'",
     "db:seed": "cross-env NODE_ENV=development prisma db seed",
-    "db:migrate:deploy": "prisma migrate deploy"
+    "db:deploy": "prisma migrate deploy"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
