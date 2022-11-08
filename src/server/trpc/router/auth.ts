@@ -1,10 +1,11 @@
-import { router, publicProcedure, protectedProcedure } from "../trpc";
+import { t } from "../trpc";
+import { isAuthed } from "../../middlewares/isAuthed";
 
-export const authRouter = router({
-  getSession: publicProcedure.query(({ ctx }) => {
+export const authRouter = t.router({
+  getSession: t.procedure.query(({ ctx }) => {
     return ctx.session;
   }),
-  getSecretMessage: protectedProcedure.query(() => {
+  getSecretMessage: t.procedure.use(isAuthed).query(() => {
     return "You are logged in and can see this secret message!";
   }),
 });

@@ -1,16 +1,16 @@
 import { z } from "zod";
+import { t } from "../trpc";
+import { isAuthed } from "../../middlewares/isAuthed";
 
-import { router, publicProcedure } from "../trpc";
-
-export const exampleRouter = router({
-  hello: publicProcedure
+export const exampleRouter = t.router({
+  hello: t.procedure
     .input(z.object({ text: z.string().nullish() }).nullish())
     .query(({ input }) => {
       return {
         greeting: `Hello ${input?.text ?? "world"}`,
       };
     }),
-  getAll: publicProcedure.query(({ ctx }) => {
+  getAll: t.procedure.use(isAuthed).query(({ ctx }) => {
     return ctx.prisma.example.findMany();
   }),
 });

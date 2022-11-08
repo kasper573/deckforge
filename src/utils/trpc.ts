@@ -3,7 +3,7 @@ import { createTRPCNext } from "@trpc/next";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
 
-import { type AppRouter } from "../server/trpc/router/_app";
+import { type ApiRouter } from "../server/trpc/router";
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return ""; // browser should use relative url
@@ -11,7 +11,7 @@ const getBaseUrl = () => {
   return `http://localhost:${process.env.PORT ?? 3000}`; // dev SSR should use localhost
 };
 
-export const trpc = createTRPCNext<AppRouter>({
+export const trpc = createTRPCNext<ApiRouter>({
   config() {
     return {
       transformer: superjson,
@@ -34,9 +34,9 @@ export const trpc = createTRPCNext<AppRouter>({
  * Inference helper for inputs
  * @example type HelloInput = RouterInputs['example']['hello']
  **/
-export type RouterInputs = inferRouterInputs<AppRouter>;
+export type RouterInputs = inferRouterInputs<ApiRouter>;
 /**
  * Inference helper for outputs
  * @example type HelloOutput = RouterOutputs['example']['hello']
  **/
-export type RouterOutputs = inferRouterOutputs<AppRouter>;
+export type RouterOutputs = inferRouterOutputs<ApiRouter>;
