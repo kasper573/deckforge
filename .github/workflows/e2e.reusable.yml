@@ -27,9 +27,9 @@ jobs:
       CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
       CYPRESS_BASE_URL: http://localhost:3000
       NEXTAUTH_URL: http://localhost:3000
-      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
-      DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
+      NEXTAUTH_SECRET: 0
+      DISCORD_CLIENT_ID: 0
+      DISCORD_CLIENT_SECRET: 0
     steps:
       - uses: actions/checkout@v3
 
