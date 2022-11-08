@@ -3,7 +3,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { trpc } from "../utils/trpc";
 import styles from "./index.module.css";
 
-export default function HomePage () {
+export default function HomePage() {
   const hello = trpc.example.hello.useQuery({ text: "from tRPC" });
 
   return (
