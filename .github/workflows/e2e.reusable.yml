@@ -23,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     container: cypress/included:10.7.0
     env:
+      DATABASE_URL: "file:./db.sqlite"
       CYPRESS_BASE_URL: http://localhost:3000
       CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
     steps:

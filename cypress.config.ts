@@ -3,6 +3,7 @@ import { defineConfig } from "cypress";
 const dotenvFlowPlugin = require("cypress-dotenv-flow");
 
 export default defineConfig({
+  chromeWebSecurity: false,
   e2e: {
     specPattern: "cypress/**/*.spec.ts",
     setupNodeEvents(on, config) {
