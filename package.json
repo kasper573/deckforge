@@ -9,7 +9,7 @@
     "lint": "next lint & prettier . --check",
     "lint:fix": "next lint --fix & prettier . --write",
     "start": "next start",
-    "test:e2e": "start-server-and-test dev http://localhost:3000 cypress:headless"
+    "test:e2e": "cross-var start-server-and-test dev $CYPRESS_BASE_URL 'cypress run'"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.4",
@@ -34,7 +34,10 @@
     "@types/react-dom": "^18.0.5",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
     "@typescript-eslint/parser": "^5.33.0",
+    "cross-var": "^1.1.0",
     "cypress": "^10.11.0",
+    "cypress-dotenv-flow": "^1.2.2",
+    "dotenv-flow": "^3.2.0",
     "eslint": "^8.26.0",
     "eslint-config-next": "13.0.2",
     "eslint-config-prettier": "^8.5.0",

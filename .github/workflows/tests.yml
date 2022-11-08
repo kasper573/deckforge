@@ -19,3 +19,27 @@ jobs:
         run: yarn --prefer-offline
 
       - run: yarn lint
+
+  e2e-widescreen:
+    uses: ./.github/workflows/e2e.reusable.yml
+    with:
+      width: 1366
+      height: 768
+      name: widescreen
+    secrets: inherit
+
+  e2e-portrait:
+    uses: ./.github/workflows/e2e.reusable.yml
+    with:
+      width: 428
+      height: 926
+      name: portrait
+    secrets: inherit
+
+  e2e-landscape:
+    uses: ./.github/workflows/e2e.reusable.yml
+    with:
+      width: 926
+      height: 428
+      name: landscape
+    secrets: inherit
