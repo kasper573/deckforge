@@ -1,6 +1,6 @@
 {
-  "buildCommand": "yarn build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "devCommand": "yarn dev",
-  "installCommand": "yarn install"
+  "devCommand": "npm run dev",
+  "installCommand": "npm install"
 }
