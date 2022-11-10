@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "yarn db:deploy && next build",
+    "build": "next build",
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint & prettier . --check",
