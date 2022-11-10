@@ -5,7 +5,7 @@ export const authRouter = t.router({
   getSession: t.procedure.query(({ ctx }) => {
     return ctx.session;
   }),
-  getSecretMessage: t.procedure.use(isAuthed).query(() => {
+  getSecretMessage: t.procedure.use(isAuthed()).query(() => {
     return "You are logged in and can see this secret message!";
   }),
 });

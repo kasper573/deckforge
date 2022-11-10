@@ -15,7 +15,6 @@ model Example {
   updatedAt DateTime @updatedAt
 }
 
-// Necessary for Next auth
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -48,6 +47,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  role          String?
   accounts      Account[]
   sessions      Session[]
 }
