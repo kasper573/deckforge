@@ -11,7 +11,7 @@
     "start": "next start",
     "test:e2e": "cross-var start-server-and-test dev $CYPRESS_BASE_URL 'cypress run'",
     "db:seed": "cross-env NODE_ENV=development prisma db seed",
-    "db:deploy": "prisma migrate deploy"
+    "db:deploy": "prisma db push"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
