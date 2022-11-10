@@ -50,6 +50,7 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "prettier": "^2.7.1",
+    "prettier-plugin-prisma": "^4.4.0",
     "prisma": "^4.5.0",
     "start-server-and-test": "^1.14.0",
     "tsx": "^3.11.0",

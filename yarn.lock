@@ -280,6 +280,11 @@
   resolved "https://registry.yarnpkg.com/@prisma/engines/-/engines-4.6.0.tgz#921df8782d9628f3ce5eef95ef98dd055a384ab6"
   integrity sha512-S+72PAl0zTCbIGou1uXD/McvzdtP+bjOs0LRmGZfcOQcVqR9x/0f6Z+dqpUU0zIcqHEl+0DOB8UXaTwRvssFsQ==
 
+"@prisma/prisma-fmt-wasm@4.4.0-66.f352a33b70356f46311da8b00d83386dd9f145d6":
+  version "4.4.0-66.f352a33b70356f46311da8b00d83386dd9f145d6"
+  resolved "https://registry.yarnpkg.com/@prisma/prisma-fmt-wasm/-/prisma-fmt-wasm-4.4.0-66.f352a33b70356f46311da8b00d83386dd9f145d6.tgz#d0ab2f4bac76da2767e242ced74b4257e839befe"
+  integrity sha512-Hc2i5nfAt3nLDUkQNWJcKFJaA9Avd5zz6t85w9SW7P0vGtFXScQ+xIu6znbULr9bc0pgTWejY1We2u/7EMxHWw==
+
 "@rushstack/eslint-patch@^1.1.3":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.2.0.tgz#8be36a1f66f3265389e90b5f9c9962146758f728"
@@ -3884,6 +3889,13 @@ prelude-ls@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.2.1.tgz#debc6489d7a6e6b0e7611888cec880337d316396"
   integrity sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==
+
+prettier-plugin-prisma@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/prettier-plugin-prisma/-/prettier-plugin-prisma-4.4.0.tgz#30d2681f2ad7e70c78534a71fc11bc78165eeef2"
+  integrity sha512-631zwtvHUjcuS+i83wkxE3LqizazojWie4Pkha9GL6r1UsochNUedvxfvWPCdw6Dpyawvc5UKkmxcb9aT9+xfg==
+  dependencies:
+    "@prisma/prisma-fmt-wasm" "4.4.0-66.f352a33b70356f46311da8b00d83386dd9f145d6"
 
 prettier@^2.7.1:
   version "2.7.1"
