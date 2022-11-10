@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { Analytics } from "@vercel/analytics/react";
 import { trpc } from "../utils/trpc";
 import "../styles/globals.css";
+import { env } from "../env/client.mjs";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -14,7 +15,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
       <SessionProvider session={session}>
         <Component {...pageProps} />
       </SessionProvider>
-      <Analytics />
+      {env.NEXT_PUBLIC_ENABLE_ANALYTICS ? <Analytics /> : undefined}
     </>
   );
 };
