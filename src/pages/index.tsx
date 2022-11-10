@@ -38,7 +38,14 @@ function AuthShowcase() {
 
   return (
     <div className={styles.authShowcase}>
-      {sessionData && <p>Logged in as {sessionData?.user?.name}</p>}
+      {sessionData && (
+        <p>
+          Logged in as {sessionData?.user?.name}{" "}
+          {sessionData?.user?.role
+            ? `(role: ${sessionData?.user?.role})`
+            : undefined}
+        </p>
+      )}
       {secretMessage && <p>{secretMessage}</p>}
       <button
         className={styles.signInButton}
