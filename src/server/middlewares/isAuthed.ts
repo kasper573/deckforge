@@ -1,6 +1,6 @@
+import type { UserRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { t } from "../trpc/trpc";
-import type { UserRole } from "../common/userRole";
 
 export function isAuthed(requiredRole?: UserRole) {
   return t.middleware(({ ctx, next }) => {
