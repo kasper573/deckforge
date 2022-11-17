@@ -1,6 +1,6 @@
 import type { Generics } from "./state/Generics";
 import { createId } from "./createId";
-import { createRuntime } from "./createRuntime";
+import { Runtime } from "./Runtime";
 
 describe("deckforge", () => {
   it("card effects react to the correct events", () => {
@@ -8,7 +8,7 @@ describe("deckforge", () => {
 
     const fn = jest.fn();
 
-    const runtime = createRuntime<G>(
+    const runtime = new Runtime<G>(
       { isBattleWon: () => false },
       {
         players: [
@@ -34,9 +34,9 @@ describe("deckforge", () => {
       }
     );
 
-    runtime.actions.b();
+    runtime.events.b();
     expect(fn).not.toHaveBeenCalled();
-    runtime.actions.a();
+    runtime.events.a();
     expect(fn).toHaveBeenCalled();
   });
 });
