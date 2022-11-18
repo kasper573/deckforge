@@ -92,5 +92,18 @@ function generateEffectTests(
       runtime.events.a();
       expect(runtime.state.players[0]?.name).toBe("Updated");
     });
+
+    it("does not mutate current state", () => {
+      const runtime = createRuntime((state: RuntimeState<G>) => {
+        const [player] = state.players;
+        if (player) {
+          player.name = "Updated";
+        }
+      });
+      const stateBeforeEvent = runtime.state;
+      runtime.events.a();
+      expect(runtime.state.players[0]?.name).toBe("Updated");
+      expect(stateBeforeEvent.players[0]?.name).not.toBe("Updated");
+    });
   });
 }
