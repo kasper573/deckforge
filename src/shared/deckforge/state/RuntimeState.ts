@@ -5,4 +5,5 @@ import type { Player } from "./Player";
 export interface RuntimeState<G extends Generics> {
   currentBattle?: Battle<G>;
   players: Player<G>[];
+  settings: G["settings"];
 }

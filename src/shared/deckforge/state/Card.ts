@@ -1,7 +1,7 @@
 import type { Id } from "../createId";
-import type { Expression } from "./Expression";
 import type { Generics } from "./Generics";
 import type { EventExpressions } from "./Expression";
+import type { ReadonlyExpression } from "./Expression";
 
 export type CardId = Id<"CardId">;
 
@@ -9,7 +9,7 @@ export interface Card<G extends Generics> {
   id: CardId;
   name: string;
   type: G["cardTypes"];
-  cost: Expression<G, number>;
-  canBePlayed: Expression<G, boolean>;
+  cost: ReadonlyExpression<G, number>;
+  canBePlayed: ReadonlyExpression<G, boolean>;
   effects: EventExpressions<G>;
 }

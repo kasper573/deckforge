@@ -1,6 +1,15 @@
+import type { DeepReadonly } from "ts-essentials";
 import type { EventInput, EventOutput } from "./Event";
 import type { Generics } from "./Generics";
 import type { RuntimeState } from "./RuntimeState";
+
+export interface ReadonlyExpression<
+  G extends Generics,
+  Output = void,
+  Input = void
+> {
+  (state: DeepReadonly<RuntimeState<G>>, input: Input): Output;
+}
 
 export interface Expression<G extends Generics, Output = void, Input = void> {
   (state: RuntimeState<G>, input: Input): Output;

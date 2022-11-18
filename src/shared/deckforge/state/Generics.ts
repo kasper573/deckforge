@@ -3,6 +3,7 @@ import type { EventRecord } from "./Event";
 export interface Generics<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Events extends EventRecord = any,
+  Settings = unknown,
   PlayerResources extends string = string,
   ItemTypes extends string = string,
   CardTypes extends string = string,
@@ -15,4 +16,5 @@ export interface Generics<
   cardTypes: CardTypes;
   individualCardPiles: IndividualCardPiles;
   sharedCardPiles: SharedCardPiles;
+  settings: Settings;
 }

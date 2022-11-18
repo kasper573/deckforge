@@ -9,9 +9,12 @@ import type { Card } from "./state/Card";
 describe("deckforge", () => {
   describe("card", () => {
     const createState = (
-      effect: EventExpression<G>,
-      options?: Partial<Pick<Card<G>, "cost" | "canBePlayed">>
+      options: {
+        effect?: EventExpression<G>;
+        settings: G["settings"];
+      } & Partial<Pick<Card<G>, "cost" | "canBePlayed">>
     ) => ({
+      settings: options.settings,
       players: [
         {
           name: "Test Player",
@@ -26,7 +29,7 @@ describe("deckforge", () => {
                 type: "foo",
                 cost: options?.cost ?? (() => 0),
                 canBePlayed: options?.canBePlayed ?? (() => true),
-                effects: { a: [effect] },
+                effects: { a: options.effect ? [options.effect] : [] },
               },
             ],
           },
@@ -34,14 +37,29 @@ describe("deckforge", () => {
       ],
     });
 
+    it("can derive cost from state", () => {
+      const runtime = new Runtime(
+        createState({
+          settings: { num: 5 },
+          cost: (state) => state.settings.num,
+        })
+      );
+      expect(
+        runtime.state.players[0]?.deck.cards[0]?.cost?.(runtime.state)
+      ).toBe(5);
+    });
+
     describe("effects", () => {
-      generateEffectTests(createState);
+      generateEffectTests((effect) =>
+        createState({ effect, settings: { num: 0 } })
+      );
     });
   });
 
   describe("item", () => {
     describe("effects", () => {
-      generateEffectTests((fn) => ({
+      generateEffectTests((effect) => ({
+        settings: { num: 0 },
         players: [
           {
             name: "Test Player",
@@ -50,7 +68,7 @@ describe("deckforge", () => {
                 id: createId(),
                 name: "Test Item",
                 type: "foo",
-                effects: { a: [fn] },
+                effects: { a: [effect] },
               },
             ],
             resources: {},
@@ -65,10 +83,13 @@ describe("deckforge", () => {
   });
 });
 
-type G = Generics<{
-  a: (n?: number) => void;
-  b: () => void;
-}>;
+type G = Generics<
+  {
+    a: (n?: number) => void;
+    b: () => void;
+  },
+  { num: number }
+>;
 
 function generateEffectTests(
   createState: (effect: EventExpression<G>) => RuntimeState<G>
