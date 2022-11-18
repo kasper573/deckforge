@@ -1,7 +1,6 @@
 import type { DeepReadonly } from "ts-essentials";
 import produce from "immer";
 import type { Generics } from "./state/Generics";
-import type { Rules } from "./state/Rules";
 import type { RuntimeState } from "./state/RuntimeState";
 import type { RuntimeLike } from "./RuntimeLike";
 import type { EventInput } from "./state/Event";
@@ -14,7 +13,7 @@ export class Runtime<G extends Generics> implements RuntimeLike<G> {
     return this._state as unknown as DeepReadonly<RuntimeState<G>>;
   }
 
-  constructor(rules: Rules<G>, initialState: RuntimeState<G>) {
+  constructor(initialState: RuntimeState<G>) {
     this._state = initialState;
     this.events = new Proxy({} as Readonly<G["events"]>, {
       get: (target, prop) => (input: unknown) => this.triggerEvent(prop, input),

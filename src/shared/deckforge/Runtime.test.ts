@@ -4,10 +4,14 @@ import { createId } from "./createId";
 import { Runtime } from "./Runtime";
 import type { RuntimeState } from "./state/RuntimeState";
 import type { EventExpression } from "./state/Expression";
+import type { Card } from "./state/Card";
 
 describe("deckforge", () => {
   describe("card", () => {
-    const createState = (effect: EventExpression<G>) => ({
+    const createState = (
+      effect: EventExpression<G>,
+      options?: Partial<Pick<Card<G>, "cost" | "canBePlayed">>
+    ) => ({
       players: [
         {
           name: "Test Player",
@@ -20,8 +24,8 @@ describe("deckforge", () => {
                 id: createId(),
                 name: "Test Card",
                 type: "foo",
-                cost: () => 0,
-                canBePlayed: () => true,
+                cost: options?.cost ?? (() => 0),
+                canBePlayed: options?.canBePlayed ?? (() => true),
                 effects: { a: [effect] },
               },
             ],
@@ -67,10 +71,10 @@ type G = Generics<{
 }>;
 
 function generateEffectTests(
-  createRuntimeState: (effect: EventExpression<G>) => RuntimeState<G>
+  createState: (effect: EventExpression<G>) => RuntimeState<G>
 ) {
   const createRuntime = (effect: EventExpression<G>) =>
-    new Runtime({ isBattleWon: () => false }, createRuntimeState(effect));
+    new Runtime(createState(effect));
 
   it("reacts to the correct events", () => {
     const fn = jest.fn();
