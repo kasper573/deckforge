@@ -1,15 +1,15 @@
-import type { DeepReadonly } from "ts-essentials";
+import type { Immutable } from "../../Immutable";
 import type { EventInput, EventOutput } from "./Event";
 import type { Generics } from "./Generics";
 import type { RuntimeState } from "./RuntimeState";
 
 export type SelfExpression<G extends Generics, Output, Self> = PureExpression<
   Output,
-  { self: Self; state: RuntimeState<G> }
+  { self: Self; state: Immutable<RuntimeState<G>> }
 >;
 
 export interface PureExpression<Output = void, Input = void> {
-  (input: DeepReadonly<Input>): Output;
+  (input: Immutable<Input>): Output;
 }
 
 export interface MutationExpression<

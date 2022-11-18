@@ -1,5 +1,5 @@
-import type { DeepReadonly } from "ts-essentials";
 import produce from "immer";
+import type { Immutable } from "../Immutable";
 import type { Generics } from "./state/Generics";
 import type { RuntimeState } from "./state/RuntimeState";
 import type { RuntimeLike } from "./RuntimeLike";
@@ -10,7 +10,7 @@ export class Runtime<G extends Generics> implements RuntimeLike<G> {
 
   private _state: RuntimeState<G>;
   get state() {
-    return this._state as unknown as DeepReadonly<RuntimeState<G>>;
+    return this._state as unknown as Immutable<RuntimeState<G>>;
   }
 
   constructor(initialState: RuntimeState<G>) {

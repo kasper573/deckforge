@@ -1,8 +1,8 @@
-import type { DeepReadonly } from "ts-essentials";
+import type { Immutable } from "../Immutable";
 import type { Generics } from "./state/Generics";
 import type { RuntimeState } from "./state/RuntimeState";
 
 export interface RuntimeLike<G extends Generics> {
-  readonly state: DeepReadonly<RuntimeState<G>>;
+  readonly state: Immutable<RuntimeState<G>>;
   readonly events: Readonly<G["events"]>;
 }

@@ -1,6 +1,7 @@
-import type { Opaque } from "ts-essentials";
-import {v4} from "uuid";
+import { v4 } from "uuid";
 
-export type Id<GloballyUniqueName extends string = string> = Opaque<string, GloballyUniqueName>;
+type NominalString<Token extends string> = `NominalString<${Token}>`;
 
-export const createId = v4 as <T extends Id>() => T
+export type Id<Name extends string = string> = NominalString<Name>;
+
+export const createId = v4 as <T extends Id>() => T;
