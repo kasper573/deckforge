@@ -1,7 +1,10 @@
-export interface Expression<Output = void, Input = void> {
-  (input: Input): Output;
+import type { RuntimeState } from "./RuntimeState";
+import type { Generics } from "./Generics";
+
+export interface Expression<G extends Generics, Output = void, Input = void> {
+  (state: RuntimeState<G>, input: Input): Output;
 }
 
-export type EventExpressions<Events extends string> = Partial<
-  Record<Events, Expression[]>
+export type EventExpressions<G extends Generics> = Partial<
+  Record<G["events"], Expression<G>[]>
 >;
