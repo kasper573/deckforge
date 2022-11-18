@@ -69,9 +69,8 @@ describe("deckforge", () => {
 });
 
 type G = Generics<{
-  a: () => void;
+  a: (n?: number) => void;
   b: () => void;
-  c: (n: number) => void;
 }>;
 
 function generateEffectTests(
@@ -95,6 +94,15 @@ function generateEffectTests(
       const startState = runtime.state;
       runtime.events.a();
       expect(receivedState).toEqual(startState);
+    });
+
+    it("can receive input", () => {
+      let receivedInput: unknown;
+      const runtime = createRuntime((state, input) => {
+        receivedInput = input;
+      });
+      runtime.events.a(123);
+      expect(receivedInput).toBe(123);
     });
 
     it("can update state", () => {
