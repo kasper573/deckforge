@@ -22,7 +22,7 @@ export interface MutationExpression<
 
 export type EventExpression<
   G extends Generics,
-  EventName extends keyof G["events"][EventName] = keyof G["events"]
+  EventName extends keyof G["events"] = keyof G["events"]
 > = MutationExpression<
   G,
   EventOutput<G["events"][EventName]>,

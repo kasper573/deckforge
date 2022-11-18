@@ -16,7 +16,8 @@ export class Runtime<G extends Generics> implements RuntimeLike<G> {
   constructor(initialState: RuntimeState<G>) {
     this._state = initialState;
     this.events = new Proxy({} as Readonly<G["events"]>, {
-      get: (target, prop) => (input: unknown) => this.triggerEvent(prop, input),
+      get: (target, prop) => (input: unknown) =>
+        this.triggerEvent(prop as keyof G["events"], input),
     });
   }
 
