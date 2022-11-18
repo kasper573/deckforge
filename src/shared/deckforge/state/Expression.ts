@@ -3,12 +3,13 @@ import type { EventInput, EventOutput } from "./Event";
 import type { Generics } from "./Generics";
 import type { RuntimeState } from "./RuntimeState";
 
-export interface ReadonlyExpression<
-  G extends Generics,
-  Output = void,
-  Input = void
-> {
-  (state: DeepReadonly<RuntimeState<G>>, input: Input): Output;
+export type SelfExpression<G extends Generics, Output, Self> = PureExpression<
+  Output,
+  { self: Self; state: RuntimeState<G> }
+>;
+
+export interface PureExpression<Output = void, Input = void> {
+  (input: DeepReadonly<Input>): Output;
 }
 
 export interface MutationExpression<

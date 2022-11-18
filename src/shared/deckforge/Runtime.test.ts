@@ -25,7 +25,7 @@ describe("deckforge", () => {
             cards: [
               {
                 id: createId(),
-                name: "Test Card",
+                name: "Foo",
                 type: "foo",
                 cost: options?.cost ?? (() => 0),
                 playable: options?.playable ?? (() => true),
@@ -37,19 +37,27 @@ describe("deckforge", () => {
       ],
     });
 
-    it("can derive cost from state", () => {
+    it("can derive cost from state and input", () => {
       const { state } = new Runtime(
         createState({
-          settings: { num: 5 },
-          cost: (state) => state.settings.num,
+          settings: { num: 3 },
+          cost: ({ state, self }) => state.settings.num + self.name.length,
         })
       );
-      expect(state.players[0]?.deck.cards[0]?.cost?.(state)).toBe(5);
+      const [self] = state.players[0]?.deck.cards ?? [];
+      expect(self?.cost?.({ state, self })).toBe(6);
     });
 
-    it("can derive playable from state", () => {
-      const { state } = new Runtime(createState({ playable: () => true }));
-      expect(state.players[0]?.deck.cards[0]?.playable?.(state)).toBe(true);
+    it("can derive playable from state and input", () => {
+      const { state } = new Runtime(
+        createState({
+          settings: { num: 3 },
+          playable: ({ state, self }) =>
+            state.settings.num + self.name.length === 6,
+        })
+      );
+      const [self] = state.players[0]?.deck.cards ?? [];
+      expect(self?.playable?.({ state, self })).toBe(true);
     });
 
     describe("effects", () => {
