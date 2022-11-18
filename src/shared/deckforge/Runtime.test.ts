@@ -13,23 +13,21 @@ describe("deckforge", () => {
         effect?: EventExpression<G>;
         settings?: G["settings"];
       } & Partial<Pick<Card<G>, "cost" | "playable">>
-    ) => ({
+    ): RuntimeState<G> => ({
       settings: options.settings ?? { num: 0 },
       players: [
         {
-          name: "Test Player",
           items: [],
-          resources: {},
+          props: { name: "Foo" },
           deck: {
-            name: "Test Deck",
+            props: { name: "Foo" },
             cards: [
               {
                 id: createId(),
-                name: "Foo",
-                type: "foo",
                 cost: options?.cost ?? (() => 0),
                 playable: options?.playable ?? (() => true),
                 effects: { a: options.effect ? [options.effect] : [] },
+                props: { name: "Foo" },
               },
             ],
           },
@@ -38,10 +36,11 @@ describe("deckforge", () => {
     });
 
     it("can derive cost from state and input", () => {
-      const { state } = new Runtime(
+      const { state } = new Runtime<G>(
         createState({
           settings: { num: 3 },
-          cost: ({ state, self }) => state.settings.num + self.name.length,
+          cost: ({ state, self }) =>
+            state.settings.num + self.props.name.length,
         })
       );
       const [self] = state.players[0]?.deck.cards ?? [];
@@ -49,11 +48,11 @@ describe("deckforge", () => {
     });
 
     it("can derive playable from state and input", () => {
-      const { state } = new Runtime(
+      const { state } = new Runtime<G>(
         createState({
           settings: { num: 3 },
           playable: ({ state, self }) =>
-            state.settings.num + self.name.length === 6,
+            state.settings.num + self.props.name.length === 6,
         })
       );
       const [self] = state.players[0]?.deck.cards ?? [];
@@ -73,19 +72,17 @@ describe("deckforge", () => {
         settings: { num: 0 },
         players: [
           {
-            name: "Test Player",
+            props: { name: "Foo" },
             items: [
               {
                 id: createId(),
-                name: "Test Item",
-                type: "foo",
                 effects: { a: [effect] },
+                props: { name: "Foo" },
               },
             ],
-            resources: {},
             deck: {
-              name: "Test Deck",
               cards: [],
+              props: {},
             },
           },
         ],
@@ -99,14 +96,17 @@ type G = Generics<
     a: (n?: number) => void;
     b: () => void;
   },
-  { num: number }
+  { num: number },
+  { name: string },
+  { name: string },
+  { name: string }
 >;
 
 function generateEffectTests(
   createState: (effect: EventExpression<G>) => RuntimeState<G>
 ) {
   const createRuntime = (effect: EventExpression<G>) =>
-    new Runtime(createState(effect));
+    new Runtime<G>(createState(effect));
 
   it("reacts to the correct events", () => {
     const fn = jest.fn();
@@ -140,23 +140,23 @@ function generateEffectTests(
     const runtime = createRuntime((state: RuntimeState<G>) => {
       const [player] = state.players;
       if (player) {
-        player.name = "Updated";
+        player.props.name = "Updated";
       }
     });
     runtime.events.a();
-    expect(runtime.state.players[0]?.name).toBe("Updated");
+    expect(runtime.state.players[0]?.props.name).toBe("Updated");
   });
 
   it("updates does not mutate current state", () => {
     const runtime = createRuntime((state: RuntimeState<G>) => {
       const [player] = state.players;
       if (player) {
-        player.name = "Updated";
+        player.props.name = "Updated";
       }
     });
     const stateBeforeEvent = runtime.state;
     runtime.events.a();
-    expect(runtime.state.players[0]?.name).toBe("Updated");
-    expect(stateBeforeEvent.players[0]?.name).not.toBe("Updated");
+    expect(runtime.state.players[0]?.props.name).toBe("Updated");
+    expect(stateBeforeEvent.players[0]?.props.name).not.toBe("Updated");
   });
 }

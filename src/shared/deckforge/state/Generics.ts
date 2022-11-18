@@ -4,17 +4,19 @@ export interface Generics<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Events extends EventRecord = any,
   Settings = unknown,
-  PlayerResources extends string = string,
-  ItemTypes extends string = string,
-  CardTypes extends string = string,
+  PlayerProps = unknown,
+  ItemProps = unknown,
+  CardProps = unknown,
+  DeckProps = unknown,
   IndividualCardPiles extends string = string,
   SharedCardPiles extends string = string
 > {
   events: Events;
-  playerResources: PlayerResources;
-  itemTypes: ItemTypes;
-  cardTypes: CardTypes;
+  settings: Settings;
+  playerProps: PlayerProps;
+  itemProps: ItemProps;
+  cardProps: CardProps;
+  deckProps: DeckProps;
   individualCardPiles: IndividualCardPiles;
   sharedCardPiles: SharedCardPiles;
-  settings: Settings;
 }

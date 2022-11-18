@@ -24,13 +24,13 @@ export class Runtime<G extends Generics> implements RuntimeLike<G> {
     eventName: EventName,
     input: EventInput<G["events"][EventName]>
   ) {
-    this._state = produce(this._state, (draft) =>
-      processEventAndMutateStateDraft(
+    this._state = produce(this._state, (draft) => {
+      processEventAndMutateStateDraft<G, EventName>(
         draft as RuntimeState<G>,
         eventName,
         input
-      )
-    );
+      );
+    });
   }
 }
 

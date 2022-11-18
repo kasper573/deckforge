@@ -6,7 +6,6 @@ export type ItemId = Id<"ItemId">;
 
 export interface Item<G extends Generics> {
   id: ItemId;
-  name: string;
-  type: G["itemTypes"];
   effects: EventExpressions<G>;
+  props: G["cardProps"];
 }
