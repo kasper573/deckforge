@@ -11,10 +11,10 @@ describe("deckforge", () => {
     const createState = (
       options: {
         effect?: EventExpression<G>;
-        settings: G["settings"];
-      } & Partial<Pick<Card<G>, "cost" | "canBePlayed">>
+        settings?: G["settings"];
+      } & Partial<Pick<Card<G>, "cost" | "playable">>
     ) => ({
-      settings: options.settings,
+      settings: options.settings ?? { num: 0 },
       players: [
         {
           name: "Test Player",
@@ -28,7 +28,7 @@ describe("deckforge", () => {
                 name: "Test Card",
                 type: "foo",
                 cost: options?.cost ?? (() => 0),
-                canBePlayed: options?.canBePlayed ?? (() => true),
+                playable: options?.playable ?? (() => true),
                 effects: { a: options.effect ? [options.effect] : [] },
               },
             ],
@@ -38,15 +38,18 @@ describe("deckforge", () => {
     });
 
     it("can derive cost from state", () => {
-      const runtime = new Runtime(
+      const { state } = new Runtime(
         createState({
           settings: { num: 5 },
           cost: (state) => state.settings.num,
         })
       );
-      expect(
-        runtime.state.players[0]?.deck.cards[0]?.cost?.(runtime.state)
-      ).toBe(5);
+      expect(state.players[0]?.deck.cards[0]?.cost?.(state)).toBe(5);
+    });
+
+    it("can derive playable from state", () => {
+      const { state } = new Runtime(createState({ playable: () => true }));
+      expect(state.players[0]?.deck.cards[0]?.playable?.(state)).toBe(true);
     });
 
     describe("effects", () => {
