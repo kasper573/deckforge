@@ -11,14 +11,18 @@ export interface ReadonlyExpression<
   (state: DeepReadonly<RuntimeState<G>>, input: Input): Output;
 }
 
-export interface Expression<G extends Generics, Output = void, Input = void> {
+export interface MutationExpression<
+  G extends Generics,
+  Output = void,
+  Input = void
+> {
   (state: RuntimeState<G>, input: Input): Output;
 }
 
 export type EventExpression<
   G extends Generics,
   EventName extends keyof G["events"][EventName] = keyof G["events"]
-> = Expression<
+> = MutationExpression<
   G,
   EventOutput<G["events"][EventName]>,
   EventInput<G["events"][EventName]>

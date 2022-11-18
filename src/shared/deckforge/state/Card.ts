@@ -9,7 +9,7 @@ export interface Card<G extends Generics> {
   id: CardId;
   name: string;
   type: G["cardTypes"];
-  cost: ReadonlyExpression<G, number>;
-  playable: ReadonlyExpression<G, boolean>;
+  cost: ReadonlyExpression<G, number, Card<G>>;
+  playable: ReadonlyExpression<G, boolean, Card<G>>;
   effects: EventExpressions<G>;
 }
