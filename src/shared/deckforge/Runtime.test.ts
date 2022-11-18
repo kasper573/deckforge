@@ -1,9 +1,10 @@
+import { original } from "immer";
 import type { Generics } from "./state/Generics";
 import { createId } from "./createId";
 import { Runtime } from "./Runtime";
 import type { RuntimeLike } from "./RuntimeLike";
 import type { RuntimeState } from "./state/RuntimeState";
-import type { Expression } from "./state/Expression";
+import type { EventExpression } from "./state/Expression";
 
 describe("deckforge", () => {
   describe("card", () => {
@@ -67,12 +68,16 @@ describe("deckforge", () => {
   });
 });
 
-type G = Generics<"a" | "b">;
+type G = Generics<{
+  a: () => void;
+  b: () => void;
+  c: (n: number) => void;
+}>;
 
 function generateEffectTests(
-  createRuntime: (effect: Expression<G>) => RuntimeLike<G>
+  createRuntime: (effect: EventExpression<G>) => RuntimeLike<G>
 ) {
-  describe("effects", () => {
+  describe("effect", () => {
     it("reacts to the correct events", () => {
       const fn = jest.fn();
       const runtime = createRuntime(fn);
@@ -80,6 +85,16 @@ function generateEffectTests(
       expect(fn).not.toHaveBeenCalled();
       runtime.events.a();
       expect(fn).toHaveBeenCalled();
+    });
+
+    it("can receive state", () => {
+      let receivedState: unknown;
+      const runtime = createRuntime((immerDraft) => {
+        receivedState = original(immerDraft);
+      });
+      const startState = runtime.state;
+      runtime.events.a();
+      expect(receivedState).toEqual(startState);
     });
 
     it("can update state", () => {
@@ -93,7 +108,7 @@ function generateEffectTests(
       expect(runtime.state.players[0]?.name).toBe("Updated");
     });
 
-    it("does not mutate current state", () => {
+    it("updates does not mutate current state", () => {
       const runtime = createRuntime((state: RuntimeState<G>) => {
         const [player] = state.players;
         if (player) {

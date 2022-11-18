@@ -1,5 +1,8 @@
+import type { EventRecord } from "./Event";
+
 export interface Generics<
-  Events extends string = string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Events extends EventRecord = any,
   PlayerResources extends string = string,
   ItemTypes extends string = string,
   CardTypes extends string = string,
