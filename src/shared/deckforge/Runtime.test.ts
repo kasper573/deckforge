@@ -39,4 +39,39 @@ describe("deckforge", () => {
     runtime.events.a();
     expect(fn).toHaveBeenCalled();
   });
+
+  it("item effects react to the correct events", () => {
+    type G = Generics<"a" | "b">;
+
+    const fn = jest.fn();
+
+    const runtime = new Runtime<G>(
+      { isBattleWon: () => false },
+      {
+        players: [
+          {
+            name: "Test Player",
+            items: [
+              {
+                id: createId(),
+                name: "Test Item",
+                type: "foo",
+                effects: { a: [fn] },
+              },
+            ],
+            resources: {},
+            deck: {
+              name: "Test Deck",
+              cards: [],
+            },
+          },
+        ],
+      }
+    );
+
+    runtime.events.b();
+    expect(fn).not.toHaveBeenCalled();
+    runtime.events.a();
+    expect(fn).toHaveBeenCalled();
+  });
 });
