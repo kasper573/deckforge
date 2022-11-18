@@ -5,14 +5,13 @@ import type { RuntimeState } from "./state/RuntimeState";
 import type { EventExpression } from "./state/Expression";
 import type { Card } from "./state/Card";
 
-describe("deckforge", () => {
+describe("Runtime", () => {
   describe("card", () => {
-    const createState = (
-      options: {
-        effect?: EventExpression<G>;
-        settings?: G["settings"];
-      } & Partial<Pick<Card<G>, "cost" | "playable">>
-    ): RuntimeState<G> => ({
+    const createState = (options: {
+      effect?: EventExpression<G>;
+      settings?: G["settings"];
+      playable?: Card<G>["playable"];
+    }): RuntimeState<G> => ({
       settings: options.settings ?? { num: 0 },
       players: [
         {
@@ -23,7 +22,6 @@ describe("deckforge", () => {
             cards: [
               {
                 id: createId(),
-                cost: options?.cost ?? (() => 0),
                 playable: options?.playable ?? (() => true),
                 effects: { a: options.effect ? [options.effect] : [] },
                 props: { name: "Foo" },
@@ -32,18 +30,6 @@ describe("deckforge", () => {
           },
         },
       ],
-    });
-
-    it("can derive cost from state and input", () => {
-      const { state } = new Runtime<G>(
-        createState({
-          settings: { num: 3 },
-          cost: ({ state, self }) =>
-            state.settings.num + self.props.name.length,
-        })
-      );
-      const [self] = state.players[0]?.deck.cards ?? [];
-      expect(self?.cost?.({ state, self })).toBe(6);
     });
 
     it("can derive playable from state and input", () => {
