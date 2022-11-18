@@ -1,22 +1,17 @@
 import type { EventRecord } from "./Event";
 
-export interface Generics<
+export interface Generics {
+  events: EventRecord;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Events extends EventRecord = any,
-  Settings = unknown,
-  PlayerProps = unknown,
-  ItemProps = unknown,
-  CardProps = unknown,
-  DeckProps = unknown,
-  IndividualCardPiles extends string = string,
-  SharedCardPiles extends string = string
-> {
-  events: Events;
-  settings: Settings;
-  playerProps: PlayerProps;
-  itemProps: ItemProps;
-  cardProps: CardProps;
-  deckProps: DeckProps;
-  individualCardPiles: IndividualCardPiles;
-  sharedCardPiles: SharedCardPiles;
+  settings: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  playerProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  itemProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cardProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  deckProps: any;
+  individualCardPiles: string;
+  sharedCardPiles: string;
 }

@@ -1,5 +1,4 @@
 import { original } from "immer";
-import type { Generics } from "./state/Generics";
 import { createId } from "./createId";
 import { Runtime } from "./Runtime";
 import type { RuntimeState } from "./state/RuntimeState";
@@ -91,16 +90,19 @@ describe("deckforge", () => {
   });
 });
 
-type G = Generics<
-  {
+interface G {
+  events: {
     a: (n?: number) => void;
     b: () => void;
-  },
-  { num: number },
-  { name: string },
-  { name: string },
-  { name: string }
->;
+  };
+  settings: { num: number };
+  playerProps: { name: string };
+  itemProps: { name: string };
+  cardProps: { name: string };
+  deckProps: unknown;
+  individualCardPiles: string;
+  sharedCardPiles: string;
+}
 
 function generateEffectTests(
   createState: (effect: EventExpression<G>) => RuntimeState<G>
