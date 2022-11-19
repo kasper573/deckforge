@@ -1,10 +1,12 @@
-import produce from "immer";
+import produce, { enableMapSet } from "immer";
 import type {
   MachineEventHandlerSelector,
   MachineEventInput,
 } from "./MachineEvent";
 import type { MachineContext } from "./MachineContext";
 import type { MachineEventHandlerMap } from "./MachineEvent";
+
+enableMapSet();
 
 export class Machine<MC extends MachineContext> {
   readonly events: MC["events"];
