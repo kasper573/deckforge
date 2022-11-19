@@ -27,25 +27,31 @@ export interface MutationExpression<State, Output = void, Input = void> {
   (state: State, input: Input): Output;
 }
 
+export type MachineEventHandlerCollection<MC extends MachineContext> = {
+  [EventName in keyof MC["events"]]?: Iterable<
+    MachineEventHandler<MC["state"], MC["events"][EventName]>
+  >;
+};
+
 export type MachineEventHandler<
   State,
   Event extends MachineEvent
 > = MutationExpression<State, void, MachineEventInput<Event>>;
 
-export type MachineEventHandlerSelector<EC extends MachineContext> =
-  | MachineEventHandlerCollector<EC>
-  | MachineEventHandlerGenerator<EC>;
+export type MachineEventHandlerSelector<MC extends MachineContext> =
+  | MachineEventHandlerCollector<MC>
+  | MachineEventHandlerGenerator<MC>;
 
-export type MachineEventHandlerCollector<EC extends MachineContext> = <
-  EventName extends keyof EC["events"]
+export type MachineEventHandlerCollector<MC extends MachineContext> = <
+  EventName extends keyof MC["events"]
 >(
-  state: EC["state"],
+  state: MC["state"],
   eventName: EventName
-) => Iterable<MachineEventHandler<EC["state"], EC["events"][EventName]>>;
+) => Iterable<MachineEventHandler<MC["state"], MC["events"][EventName]>>;
 
-export type MachineEventHandlerGenerator<EC extends MachineContext> = <
-  EventName extends keyof EC["events"]
+export type MachineEventHandlerGenerator<MC extends MachineContext> = <
+  EventName extends keyof MC["events"]
 >(
-  state: EC["state"],
+  state: MC["state"],
   eventName: EventName
-) => Generator<MachineEventHandler<EC["state"], EC["events"][EventName]>>;
+) => Generator<MachineEventHandler<MC["state"], MC["events"][EventName]>>;

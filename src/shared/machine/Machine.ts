@@ -4,13 +4,15 @@ import type {
   MachineEventInput,
 } from "./MachineEvent";
 import type { MachineContext } from "./MachineContext";
+import type { MachineEventHandlerCollection } from "./MachineEvent";
 
 export class Machine<MC extends MachineContext> {
   readonly events: MC["events"];
 
   constructor(
     public state: MC["state"],
-    private selectEventHandlers: MachineEventHandlerSelector<MC>
+    private globalEventHandlers?: MachineEventHandlerCollection<MC>,
+    private selectEventHandlers?: MachineEventHandlerSelector<MC>
   ) {
     this.events = new Proxy({} as MC["events"], {
       get:
@@ -27,7 +29,11 @@ export class Machine<MC extends MachineContext> {
     eventInput: MachineEventInput<MC["events"][EventName]>
   ) {
     this.state = produce(this.state, (draft: MC["state"]) => {
-      for (const handleEvent of this.selectEventHandlers(draft, eventName)) {
+      const eventHandlers = [
+        ...(this.globalEventHandlers?.[eventName] ?? []),
+        ...(this.selectEventHandlers?.(draft, eventName) ?? []),
+      ];
+      for (const handleEvent of eventHandlers) {
         handleEvent(draft, eventInput);
       }
     });
