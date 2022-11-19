@@ -46,7 +46,9 @@ export type MachineEventHandlerCollector<MC extends MachineContext> = <
 >(
   state: MC["state"],
   eventName: EventName
-) => Iterable<MachineEventHandler<MC["state"], MC["events"][EventName]>>;
+) =>
+  | Iterable<MachineEventHandler<MC["state"], MC["events"][EventName]>>
+  | undefined;
 
 export type MachineEventHandlerGenerator<MC extends MachineContext> = <
   EventName extends keyof MC["events"]
