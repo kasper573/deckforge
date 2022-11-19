@@ -1,104 +1,124 @@
 import { original } from "immer";
 import { createId } from "./createId";
 import { Runtime } from "./Runtime";
-import type { RuntimeState } from "./state/RuntimeState";
-import type { EventExpression } from "./state/Expression";
 import type { Card } from "./state/Card";
-import type { RuntimeContext } from "./state/RuntimeContext";
+import type { Player } from "./state/Player";
+import type { EventHandlerExpression } from "./state/EventHandler";
+import type { EventHandlerSelector } from "./state/EventHandler";
 
 describe("Runtime", () => {
   describe("card", () => {
     const createState = (options: {
-      effect?: EventExpression<RC>;
-      settings?: RC["settings"];
+      effect?: EventHandlerExpression<RC>;
+      num?: number;
       playable?: Card<RC>["playable"];
-    }): RuntimeState<RC> => ({
-      settings: options.settings ?? { num: 0 },
-      players: [
-        {
-          id: createId(),
-          items: [],
+    }): RC["state"] => ({
+      num: options.num ?? 0,
+      player: {
+        id: createId(),
+        items: [],
+        props: { name: "Foo" },
+        deck: {
           props: { name: "Foo" },
-          deck: {
-            props: { name: "Foo" },
-            cards: [
-              {
-                id: createId(),
-                playable: options?.playable ?? (() => true),
-                effects: { a: options.effect ? [options.effect] : [] },
-                props: { name: "Foo" },
-              },
-            ],
-          },
+          cards: [
+            {
+              id: createId(),
+              playable: options?.playable ?? (() => true),
+              effects: { a: options.effect ? [options.effect] : [] },
+              props: { name: "Foo" },
+            },
+          ],
         },
-      ],
+      },
     });
 
     it("can derive playable from state and input", () => {
       const { state } = new Runtime<RC>(
         createState({
-          settings: { num: 3 },
+          num: 3,
           playable: ({ self, state }) =>
-            state.settings.num + self.props.name.length === 6,
-        })
+            state.num + self.props.name.length === 6,
+        }),
+        selectEventHandlers
       );
-      const [self] = state.players[0]?.deck.cards ?? [];
+      const [self] = state.player.deck.cards;
       expect(self?.playable?.({ state, self })).toBe(true);
     });
 
     describe("effects", () => {
-      generateEffectTests((effect) =>
-        createState({ effect, settings: { num: 0 } })
-      );
+      generateEffectTests((effect) => createState({ effect }));
     });
   });
 
   describe("item", () => {
     describe("effects", () => {
       generateEffectTests((effect) => ({
-        settings: { num: 0 },
-        players: [
-          {
-            id: createId(),
-            props: { name: "Foo" },
-            items: [
-              {
-                id: createId(),
-                effects: { a: [effect] },
-                props: { name: "Foo" },
-              },
-            ],
-            deck: {
-              cards: [],
-              props: {},
+        num: 0,
+        player: {
+          id: createId(),
+          props: { name: "Foo" },
+          items: [
+            {
+              id: createId(),
+              effects: { a: [effect] },
+              props: { name: "Foo" },
             },
+          ],
+          deck: {
+            cards: [],
+            props: {},
           },
-        ],
+        },
       }));
     });
   });
 });
 
-interface RC extends RuntimeContext {
+interface RC {
   events: {
     a: (n?: number) => void;
     b: () => void;
   };
-  settings: { num: number };
+  state: {
+    num: number;
+    player: Player<RC>;
+  };
   battleProps: unknown;
   playerProps: { name: string };
   itemProps: { name: string };
   cardProps: { name: string };
   deckProps: unknown;
-  individualCardPiles: string;
-  sharedCardPiles: string;
+  playerCardPiles: string;
+  battleCardPiles: string;
 }
 
-function generateEffectTests(
-  createState: (effect: EventExpression<RC>) => RuntimeState<RC>
+const selectEventHandlers: EventHandlerSelector<RC> = function* (
+  { player },
+  eventName
 ) {
-  const createRuntime = (effect: EventExpression<RC>) =>
-    new Runtime<RC>(createState(effect));
+  for (const item of player.items) {
+    const itemEffects = item.effects[eventName];
+    if (itemEffects) {
+      for (const effect of itemEffects) {
+        yield effect;
+      }
+    }
+  }
+  for (const card of player.deck.cards) {
+    const cardEffects = card.effects[eventName];
+    if (cardEffects) {
+      for (const effect of cardEffects) {
+        yield effect;
+      }
+    }
+  }
+};
+
+function generateEffectTests(
+  createState: (effect: EventHandlerExpression<RC>) => RC["state"]
+) {
+  const createRuntime = (effect: EventHandlerExpression<RC>) =>
+    new Runtime<RC>(createState(effect), selectEventHandlers);
 
   it("reacts to the correct events", () => {
     const fn = jest.fn();
@@ -129,26 +149,20 @@ function generateEffectTests(
   });
 
   it("can update state", () => {
-    const runtime = createRuntime((state: RuntimeState<RC>) => {
-      const [player] = state.players;
-      if (player) {
-        player.props.name = "Updated";
-      }
+    const runtime = createRuntime((state) => {
+      state.player.props.name = "Updated";
     });
     runtime.events.a();
-    expect(runtime.state.players[0]?.props.name).toBe("Updated");
+    expect(runtime.state.player.props.name).toBe("Updated");
   });
 
   it("updates does not mutate current state", () => {
-    const runtime = createRuntime((state: RuntimeState<RC>) => {
-      const [player] = state.players;
-      if (player) {
-        player.props.name = "Updated";
-      }
+    const runtime = createRuntime((state) => {
+      state.player.props.name = "Updated";
     });
     const stateBeforeEvent = runtime.state;
     runtime.events.a();
-    expect(runtime.state.players[0]?.props.name).toBe("Updated");
-    expect(stateBeforeEvent.players[0]?.props.name).not.toBe("Updated");
+    expect(runtime.state.player.props.name).toBe("Updated");
+    expect(stateBeforeEvent.player.props.name).not.toBe("Updated");
   });
 }

@@ -3,7 +3,7 @@ import type { EventRecord } from "./Event";
 export interface RuntimeContext {
   events: EventRecord;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  settings: any;
+  state: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   battleProps: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

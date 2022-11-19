@@ -1,9 +1,9 @@
 // a 1v1 game consisting of draw, discard, health and mana mechanics
 import { Runtime } from "./deckforge/Runtime";
-import type { RuntimeContext } from "./deckforge/state/RuntimeContext";
 import type { BattleMember } from "./deckforge/state/BattleMember";
 import type { CardId } from "./deckforge/state/Card";
 import type { PlayerId } from "./deckforge/state/Player";
+import type { EventHandlerSelector } from "./deckforge/state/EventHandler";
 
 describe("versus", () => {
   it("can play a game", () => {
@@ -20,8 +20,8 @@ describe("versus", () => {
     // Expect results:
     // - Expect the game to have ended with player 1 as victor
 
-    const runtime = new Runtime<MyRuntimeContext>({});
-    const { member1 } = runtime.state.currentBattle!.props;
+    const runtime = new Runtime<RC>({});
+    const { member1 } = runtime.state;
 
     runtime.events.drawCard(member1.player.id);
 
@@ -30,19 +30,14 @@ describe("versus", () => {
       cardId: member1.cardPiles.hand[0]!.id,
     });
 
-    expect(runtime.state.currentBattle?.winningPlayerId).toBe(
-      member1.player.id
-    );
+    expect(runtime.state.winner).toBe(member1.player.id);
   });
 });
 
-interface MyRuntimeContext extends RuntimeContext {
+interface RC {
   events: MyEvents;
-  settings: unknown;
-  battleProps: {
-    member1: BattleMember<MyRuntimeContext>;
-    member2: BattleMember<MyRuntimeContext>;
-  };
+  state: MyRuntimeState;
+  battleProps: unknown;
   playerProps: unknown;
   itemProps: unknown;
   cardProps: unknown;
@@ -51,8 +46,38 @@ interface MyRuntimeContext extends RuntimeContext {
   battleCardPiles: string;
 }
 
+interface MyRuntimeState {
+  member1: BattleMember<RC>;
+  member2: BattleMember<RC>;
+  winner?: PlayerId;
+}
+
 type MyEvents = {
   playCard: (input: { playerId: PlayerId; cardId: CardId }) => void;
   drawCard: (id: PlayerId) => void;
   endTurn: () => void;
+};
+
+const selectEventHandlers: EventHandlerSelector<RC> = function* (
+  { member1, member2 },
+  eventName
+) {
+  for (const player of [member1, member2]) {
+    for (const item of player.items) {
+      const itemEffects = item.effects[eventName];
+      if (itemEffects) {
+        for (const effect of itemEffects) {
+          yield effect;
+        }
+      }
+    }
+    for (const card of player.deck.cards) {
+      const cardEffects = card.effects[eventName];
+      if (cardEffects) {
+        for (const effect of cardEffects) {
+          yield effect;
+        }
+      }
+    }
+  }
 };
