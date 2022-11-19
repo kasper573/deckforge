@@ -1,12 +1,12 @@
 import { original } from "immer";
 import { Machine } from "./Machine";
-import type { MachineEventHandlerCollection } from "./MachineEvent";
 import type { MachineContext } from "./MachineContext";
 import type { AnyMachineEventHandler } from "./MachineEvent";
+import type { MachineEventHandlerCollection } from "./MachineEvent";
 
 describe("Machine", () => {
   describe("global event handlers", () => {
-    generateTestCases((eventHandler) => new Machine({}, { a: [eventHandler] }));
+    generateTestCases((eventHandler) => new Machine({}, { a: eventHandler }));
   });
 
   describe("state derived event handlers", () => {

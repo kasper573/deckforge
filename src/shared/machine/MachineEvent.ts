@@ -23,6 +23,13 @@ export interface MutationExpression<State, Output = void, Input = void> {
   (state: State, input: Input): Output;
 }
 
+export type MachineEventHandlerMap<MC extends MachineContext> = {
+  [EventName in keyof MC["events"]]?: MachineEventHandler<
+    MC["state"],
+    MC["events"][EventName]
+  >;
+};
+
 export type MachineEventHandlerCollection<MC extends MachineContext> = {
   [EventName in keyof MC["events"]]?: Iterable<
     MachineEventHandler<MC["state"], MC["events"][EventName]>
