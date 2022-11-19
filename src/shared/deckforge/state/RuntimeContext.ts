@@ -1,6 +1,6 @@
 import type { EventRecord } from "./Event";
 
-export interface Generics {
+export interface RuntimeContext {
   events: EventRecord;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   settings: any;

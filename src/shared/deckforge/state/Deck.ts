@@ -1,7 +1,7 @@
 import type { Card } from "./Card";
-import type { Generics } from "./Generics";
+import type { RuntimeContext } from "./RuntimeContext";
 
-export interface Deck<G extends Generics> {
-  cards: Card<G>[];
-  props: G["deckProps"];
+export interface Deck<RC extends RuntimeContext> {
+  cards: Card<RC>[];
+  props: RC["deckProps"];
 }

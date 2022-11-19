@@ -1,29 +1,30 @@
 import type { EventInput } from "./Event";
-import type { Generics } from "./Generics";
+import type { RuntimeContext } from "./RuntimeContext";
 import type { RuntimeState } from "./RuntimeState";
 
-export type SelfExpression<G extends Generics, Output, Self> = PureExpression<
+export type SelfExpression<
+  RC extends RuntimeContext,
   Output,
-  { self: Self; state: RuntimeState<G> }
->;
+  Self
+> = PureExpression<Output, { self: Self; state: RuntimeState<RC> }>;
 
 export interface PureExpression<Output = void, Input = void> {
   (input: Input): Output;
 }
 
 export interface MutationExpression<
-  G extends Generics,
+  RC extends RuntimeContext,
   Output = void,
   Input = void
 > {
-  (state: RuntimeState<G>, input: Input): Output;
+  (state: RuntimeState<RC>, input: Input): Output;
 }
 
 export type EventExpression<
-  G extends Generics,
-  EventName extends keyof G["events"] = keyof G["events"]
-> = MutationExpression<G, void, EventInput<G["events"][EventName]>>;
+  RC extends RuntimeContext,
+  EventName extends keyof RC["events"] = keyof RC["events"]
+> = MutationExpression<RC, void, EventInput<RC["events"][EventName]>>;
 
-export type EventExpressions<G extends Generics> = {
-  [EventName in keyof G["events"]]?: EventExpression<G, EventName>[];
+export type EventExpressions<RC extends RuntimeContext> = {
+  [EventName in keyof RC["events"]]?: EventExpression<RC, EventName>[];
 };

@@ -1,8 +1,7 @@
-import type { Immutable } from "../Immutable";
-import type { Generics } from "./state/Generics";
+import type { RuntimeContext } from "./state/RuntimeContext";
 import type { RuntimeState } from "./state/RuntimeState";
 
-export interface RuntimeLike<G extends Generics> {
-  readonly state: Immutable<RuntimeState<G>>;
+export interface RuntimeLike<G extends RuntimeContext> {
+  readonly state: RuntimeState<G>;
   readonly events: Readonly<G["events"]>;
 }

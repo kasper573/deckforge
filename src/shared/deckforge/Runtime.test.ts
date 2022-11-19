@@ -4,15 +4,15 @@ import { Runtime } from "./Runtime";
 import type { RuntimeState } from "./state/RuntimeState";
 import type { EventExpression } from "./state/Expression";
 import type { Card } from "./state/Card";
-import type { Generics } from "./state/Generics";
+import type { RuntimeContext } from "./state/RuntimeContext";
 
 describe("Runtime", () => {
   describe("card", () => {
     const createState = (options: {
-      effect?: EventExpression<G>;
-      settings?: G["settings"];
-      playable?: Card<G>["playable"];
-    }): RuntimeState<G> => ({
+      effect?: EventExpression<RC>;
+      settings?: RC["settings"];
+      playable?: Card<RC>["playable"];
+    }): RuntimeState<RC> => ({
       settings: options.settings ?? { num: 0 },
       players: [
         {
@@ -35,7 +35,7 @@ describe("Runtime", () => {
     });
 
     it("can derive playable from state and input", () => {
-      const { state } = new Runtime<G>(
+      const { state } = new Runtime<RC>(
         createState({
           settings: { num: 3 },
           playable: ({ self, state }) =>
@@ -79,7 +79,7 @@ describe("Runtime", () => {
   });
 });
 
-interface G extends Generics {
+interface RC extends RuntimeContext {
   events: {
     a: (n?: number) => void;
     b: () => void;
@@ -95,10 +95,10 @@ interface G extends Generics {
 }
 
 function generateEffectTests(
-  createState: (effect: EventExpression<G>) => RuntimeState<G>
+  createState: (effect: EventExpression<RC>) => RuntimeState<RC>
 ) {
-  const createRuntime = (effect: EventExpression<G>) =>
-    new Runtime<G>(createState(effect));
+  const createRuntime = (effect: EventExpression<RC>) =>
+    new Runtime<RC>(createState(effect));
 
   it("reacts to the correct events", () => {
     const fn = jest.fn();
@@ -129,7 +129,7 @@ function generateEffectTests(
   });
 
   it("can update state", () => {
-    const runtime = createRuntime((state: RuntimeState<G>) => {
+    const runtime = createRuntime((state: RuntimeState<RC>) => {
       const [player] = state.players;
       if (player) {
         player.props.name = "Updated";
@@ -140,7 +140,7 @@ function generateEffectTests(
   });
 
   it("updates does not mutate current state", () => {
-    const runtime = createRuntime((state: RuntimeState<G>) => {
+    const runtime = createRuntime((state: RuntimeState<RC>) => {
       const [player] = state.players;
       if (player) {
         player.props.name = "Updated";

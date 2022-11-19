@@ -1,7 +1,7 @@
 import type { Card } from "./Card";
-import type { Generics } from "./Generics";
+import type { RuntimeContext } from "./RuntimeContext";
 
-export type CardPile<G extends Generics, Names extends string> = Record<
+export type CardPile<RC extends RuntimeContext, Names extends string> = Record<
   Names,
-  Card<G>[]
+  Card<RC>[]
 >;

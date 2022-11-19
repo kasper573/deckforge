@@ -1,10 +1,10 @@
 import produce from "immer";
-import type { Generics } from "./state/Generics";
+import type { RuntimeContext } from "./state/RuntimeContext";
 import type { RuntimeState } from "./state/RuntimeState";
 import type { RuntimeLike } from "./RuntimeLike";
 import type { EventInput } from "./state/Event";
 
-export class Runtime<G extends Generics> implements RuntimeLike<G> {
+export class Runtime<G extends RuntimeContext> implements RuntimeLike<G> {
   readonly events: Readonly<G["events"]>;
 
   constructor(public state: RuntimeState<G>) {
@@ -34,7 +34,7 @@ export class Runtime<G extends Generics> implements RuntimeLike<G> {
 }
 
 function processEventAndMutateStateDraft<
-  G extends Generics,
+  G extends RuntimeContext,
   EventName extends keyof G["events"]
 >(
   draft: RuntimeState<G>,

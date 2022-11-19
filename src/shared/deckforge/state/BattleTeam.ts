@@ -1,4 +1,4 @@
 import type { BattleMember } from "./BattleMember";
-import type { Generics } from "./Generics";
+import type { RuntimeContext } from "./RuntimeContext";
 
-export type BattleTeam<G extends Generics> = BattleMember<G>[];
+export type BattleTeam<RC extends RuntimeContext> = BattleMember<RC>[];

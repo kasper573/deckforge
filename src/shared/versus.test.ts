@@ -1,6 +1,6 @@
 // a 1v1 game consisting of draw, discard, health and mana mechanics
 import { Runtime } from "./deckforge/Runtime";
-import type { Generics } from "./deckforge/state/Generics";
+import type { RuntimeContext } from "./deckforge/state/RuntimeContext";
 import type { BattleMember } from "./deckforge/state/BattleMember";
 import type { CardId } from "./deckforge/state/Card";
 import type { PlayerId } from "./deckforge/state/Player";
@@ -36,7 +36,7 @@ describe("versus", () => {
   });
 });
 
-interface MyRuntimeContext extends Generics {
+interface MyRuntimeContext extends RuntimeContext {
   events: MyEvents;
   settings: unknown;
   battleProps: {

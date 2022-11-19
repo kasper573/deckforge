@@ -1,9 +1,9 @@
-import type { Generics } from "./Generics";
+import type { RuntimeContext } from "./RuntimeContext";
 import type { Battle } from "./Battle";
 import type { Player } from "./Player";
 
-export interface RuntimeState<G extends Generics> {
-  currentBattle?: Battle<G>;
-  players: Player<G>[];
-  settings: G["settings"];
+export interface RuntimeState<RC extends RuntimeContext> {
+  currentBattle?: Battle<RC>;
+  players: Player<RC>[];
+  settings: RC["settings"];
 }

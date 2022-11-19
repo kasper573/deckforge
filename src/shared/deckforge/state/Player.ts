@@ -1,13 +1,13 @@
 import type { Id } from "../createId";
 import type { Deck } from "./Deck";
 import type { Item } from "./Item";
-import type { Generics } from "./Generics";
+import type { RuntimeContext } from "./RuntimeContext";
 
 export type PlayerId = Id<"PlayerId">;
 
-export interface Player<G extends Generics> {
+export interface Player<RC extends RuntimeContext> {
   id: PlayerId;
-  items: Item<G>[];
-  deck: Deck<G>;
-  props: G["playerProps"];
+  items: Item<RC>[];
+  deck: Deck<RC>;
+  props: RC["playerProps"];
 }
