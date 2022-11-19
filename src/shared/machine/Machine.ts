@@ -28,11 +28,11 @@ export class Machine<MC extends MachineContext> {
     eventName: EventName,
     eventInput: MachineEventInput<MC["events"][EventName]>
   ) {
+    const eventHandlers = [
+      ...(this.globalEventHandlers?.[eventName] ?? []),
+      ...(this.selectEventHandlers?.(this.state, eventName) ?? []),
+    ];
     this.state = produce(this.state, (draft: MC["state"]) => {
-      const eventHandlers = [
-        ...(this.globalEventHandlers?.[eventName] ?? []),
-        ...(this.selectEventHandlers?.(draft, eventName) ?? []),
-      ];
       for (const handleEvent of eventHandlers) {
         handleEvent(draft, eventInput);
       }
