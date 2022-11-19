@@ -3,6 +3,13 @@ module.exports = {
   roots: ["<rootDir>/src"],
   passWithNoTests: true,
   transform: {
-    "^.+\\.(t|j)sx?$": ["@swc-node/jest"],
+    "^.+\\.(t|j)sx?$": [
+      "@swc-node/jest",
+      {
+        swc: {
+          sourceMaps: "inline",
+        },
+      },
+    ],
   },
 };
