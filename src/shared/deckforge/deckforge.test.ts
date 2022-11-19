@@ -6,7 +6,20 @@ import { createId } from "./createId";
 
 describe("versus", () => {
   it("can play a game", () => {
-    const card: Card = { id: createId(), effects: { playCard: [] } };
+    const card: Card = {
+      id: createId(),
+      effects: {
+        playCard: [
+          (state, ids) => {
+            const target = state.players.get(ids.targetId);
+            if (target) {
+              target.health -= 1;
+            }
+          },
+        ],
+      },
+    };
+
     const deck: Deck = { id: createId(), cards: [card.id] };
     const player1: Player = { id: createId(), deck: deck.id, health: 1 };
     const player2: Player = { id: createId(), deck: deck.id, health: 1 };
