@@ -16,7 +16,7 @@ describe("Machine", () => {
     let receivedState: unknown;
     const runtime = createMachine({
       handlers: {
-        a: (state) => {
+        a(state) {
           receivedState = original(state);
         },
       },
@@ -42,7 +42,7 @@ describe("Machine", () => {
   it("can update state", () => {
     const runtime = createMachine({
       handlers: {
-        a: (state) => {
+        a(state) {
           state.value = "Updated";
         },
       },
@@ -54,7 +54,7 @@ describe("Machine", () => {
   it("updates does not mutate current state", () => {
     const runtime = createMachine({
       handlers: {
-        a: (state) => {
+        a(state) {
           state.value = "Updated";
         },
       },
