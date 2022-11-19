@@ -1,6 +1,6 @@
 import { original } from "immer";
 import { Machine } from "./Machine";
-import type { EventHandlerMap } from "./Event";
+import type { EventHandler } from "./Event";
 
 describe("Machine", () => {
   it("reacts to the correct events", () => {
@@ -75,7 +75,9 @@ function createMachine(state: State) {
 
 interface State {
   value?: unknown;
-  handlers?: EventHandlerMap<State, Events>;
+  handlers?: {
+    [K in keyof Events]?: EventHandler<State, Events[K]>;
+  };
 }
 
 type Events = {

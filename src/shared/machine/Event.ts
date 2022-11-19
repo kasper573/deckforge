@@ -29,14 +29,6 @@ export type EventHandler<State, Event extends AnyEvent> = MutationExpression<
   EventInput<Event>
 >;
 
-export type EventHandlerMap<State, Events extends EventRecord> = {
-  [EventName in keyof Events]?: EventHandler<State, Events[EventName]>;
-};
-
-export type EventHandlerIndex<State, Events extends EventRecord> = {
-  [EventName in keyof Events]?: EventHandler<State, Events[EventName]>[];
-};
-
 export type EventHandlerSelector<State, Events extends EventRecord> =
   | EventHandlerCollector<State, Events>
   | EventHandlerGenerator<State, Events>;
