@@ -5,6 +5,8 @@ export interface Generics {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   settings: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  battleProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   playerProps: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   itemProps: any;
@@ -12,6 +14,6 @@ export interface Generics {
   cardProps: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   deckProps: any;
-  individualCardPiles: string;
-  sharedCardPiles: string;
+  playerCardPiles: string;
+  battleCardPiles: string;
 }

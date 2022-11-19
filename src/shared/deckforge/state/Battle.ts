@@ -1,9 +1,10 @@
 import type { BattleTeam } from "./BattleTeam";
 import type { Generics } from "./Generics";
-import type { Card } from "./Card";
+import type { CardPile } from "./CardPile";
 
 export interface Battle<G extends Generics> {
   turn: number;
   teams: BattleTeam<G>[];
-  sharedCardPiles: Record<G["sharedCardPiles"], Card<G>[]>;
+  cardPiles: CardPile<G, G["battleCardPiles"]>;
+  props: G["battleProps"];
 }
