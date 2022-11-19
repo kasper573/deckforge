@@ -1,47 +1,35 @@
-import type { EventHandlerMap, SelfExpression } from "../machine/Event";
-import type { RuntimeContext } from "./RuntimeContext";
+import type {
+  SelfExpression,
+  MachineEventHandler,
+} from "../machine/MachineEvent";
+import type { MachineContext } from "../machine/MachineContext";
 import type { Id } from "./createId";
 
-export interface Battle<RC extends RuntimeContext> {
-  turn: number;
-}
-
-export type CardPile<RC extends RuntimeContext, Names extends string> = Record<
-  Names,
-  Card<RC>[]
->;
-
 export type PlayerId = Id<"PlayerId">;
-
-export interface Player<RC extends RuntimeContext> {
+export interface Player<Context extends MachineContext> {
   id: PlayerId;
-  items: Item<RC>[];
-  deck: Deck<RC>;
-  props: RC["playerProps"];
-}
-
-export interface BattleMember<RC extends RuntimeContext> {
-  player: Player<RC>;
-  cardPiles: CardPile<RC, RC["playerCardPiles"]>;
-}
-
-export type BattleTeam<RC extends RuntimeContext> = BattleMember<RC>[];
-export type CardId = Id<"CardId">;
-
-export interface Card<RC extends RuntimeContext> {
-  id: CardId;
-  playable: SelfExpression<RC, boolean, Card<RC>>;
-  effects: EventHandlerMap<RC>;
-}
-
-export interface Deck<RC extends RuntimeContext> {
-  cards: Card<RC>[];
-  props: RC["deckProps"];
+  items: Item<Context>[];
+  deck: Deck<Context>;
 }
 
 export type ItemId = Id<"ItemId">;
-
-export interface Item<RC extends RuntimeContext> {
+export interface Item<Context extends MachineContext> {
   id: ItemId;
-  effects: EventHandlerMap<RC>;
+  effects: Effects<Context>;
 }
+
+export type CardId = Id<"CardId">;
+export interface Card<Context extends MachineContext> {
+  id: CardId;
+  playable: SelfExpression<Context, boolean, Card<Context>>;
+  effects: Effects<Context>;
+}
+
+export type Deck<Context extends MachineContext> = Card<Context>[];
+
+export type Effects<Context extends MachineContext> = {
+  [EventName in keyof Context["events"]]?: MachineEventHandler<
+    Context["state"],
+    Context["events"][EventName]
+  >;
+};

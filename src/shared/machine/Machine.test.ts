@@ -1,6 +1,7 @@
 import { original } from "immer";
 import { Machine } from "./Machine";
-import type { EventHandler } from "./Event";
+import type { MachineEventHandler } from "./MachineEvent";
+import type { MachineContext } from "./MachineContext";
 
 describe("Machine", () => {
   it("reacts to the correct events", () => {
@@ -67,16 +68,18 @@ describe("Machine", () => {
 });
 
 function createMachine(state: State) {
-  return new Machine<State, Events>(state, (state, eventName) => {
+  return new Machine<Context>(state, (state, eventName) => {
     const handler = state.handlers?.[eventName];
     return handler ? [handler] : [];
   });
 }
 
+type Context = MachineContext<State, Events>;
+
 interface State {
   value?: unknown;
   handlers?: {
-    [K in keyof Events]?: EventHandler<State, Events[K]>;
+    [K in keyof Events]?: MachineEventHandler<State, Events[K]>;
   };
 }
 

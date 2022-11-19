@@ -1,7 +1,7 @@
 // a 1v1 game consisting of draw, discard, health and mana mechanics
 import { Machine } from "./machine/Machine";
 import type { BattleMember, CardId, PlayerId } from "./deckforge/Entities";
-import type { EventHandlerSelector } from "./machine/Event";
+import type { MachineEventHandlerSelector } from "./machine/MachineEvent";
 
 describe("versus", () => {
   it("can play a game", () => {
@@ -56,7 +56,7 @@ type MyEvents = {
   endTurn: () => void;
 };
 
-const selectEventHandlers: EventHandlerSelector<RC> = function* (
+const selectEventHandlers: MachineEventHandlerSelector<RC> = function* (
   { member1, member2 },
   eventName
 ) {
