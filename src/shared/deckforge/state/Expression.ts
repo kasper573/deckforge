@@ -1,15 +1,14 @@
-import type { Immutable } from "../../Immutable";
-import type { EventInput, EventOutput } from "./Event";
+import type { EventInput } from "./Event";
 import type { Generics } from "./Generics";
 import type { RuntimeState } from "./RuntimeState";
 
 export type SelfExpression<G extends Generics, Output, Self> = PureExpression<
   Output,
-  { self: Self; state: Immutable<RuntimeState<G>> }
+  { self: Self; state: RuntimeState<G> }
 >;
 
 export interface PureExpression<Output = void, Input = void> {
-  (input: Immutable<Input>): Output;
+  (input: Input): Output;
 }
 
 export interface MutationExpression<
@@ -23,11 +22,7 @@ export interface MutationExpression<
 export type EventExpression<
   G extends Generics,
   EventName extends keyof G["events"] = keyof G["events"]
-> = MutationExpression<
-  G,
-  EventOutput<G["events"][EventName]>,
-  EventInput<G["events"][EventName]>
->;
+> = MutationExpression<G, void, EventInput<G["events"][EventName]>>;
 
 export type EventExpressions<G extends Generics> = {
   [EventName in keyof G["events"]]?: EventExpression<G, EventName>[];

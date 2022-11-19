@@ -1,5 +1,4 @@
 import produce from "immer";
-import type { Immutable } from "../Immutable";
 import type { Generics } from "./state/Generics";
 import type { RuntimeState } from "./state/RuntimeState";
 import type { RuntimeLike } from "./RuntimeLike";
@@ -8,16 +7,15 @@ import type { EventInput } from "./state/Event";
 export class Runtime<G extends Generics> implements RuntimeLike<G> {
   readonly events: Readonly<G["events"]>;
 
-  private _state: RuntimeState<G>;
-  get state() {
-    return this._state as unknown as Immutable<RuntimeState<G>>;
-  }
-
-  constructor(initialState: RuntimeState<G>) {
-    this._state = initialState;
+  constructor(public state: RuntimeState<G>) {
     this.events = new Proxy({} as Readonly<G["events"]>, {
-      get: (target, prop) => (input: unknown) =>
-        this.triggerEvent(prop as keyof G["events"], input),
+      get:
+        (target, prop) =>
+        <EventName extends keyof G["events"]>(input: unknown) =>
+          this.triggerEvent(
+            prop as EventName,
+            input as EventInput<G["events"][EventName]>
+          ),
     });
   }
 
@@ -25,7 +23,7 @@ export class Runtime<G extends Generics> implements RuntimeLike<G> {
     eventName: EventName,
     input: EventInput<G["events"][EventName]>
   ) {
-    this._state = produce(this._state, (draft) => {
+    this.state = produce(this.state, (draft) => {
       processEventAndMutateStateDraft<G, EventName>(
         draft as RuntimeState<G>,
         eventName,

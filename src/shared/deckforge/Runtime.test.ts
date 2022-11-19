@@ -4,6 +4,7 @@ import { Runtime } from "./Runtime";
 import type { RuntimeState } from "./state/RuntimeState";
 import type { EventExpression } from "./state/Expression";
 import type { Card } from "./state/Card";
+import type { Generics } from "./state/Generics";
 
 describe("Runtime", () => {
   describe("card", () => {
@@ -15,6 +16,7 @@ describe("Runtime", () => {
       settings: options.settings ?? { num: 0 },
       players: [
         {
+          id: createId(),
           items: [],
           props: { name: "Foo" },
           deck: {
@@ -36,7 +38,7 @@ describe("Runtime", () => {
       const { state } = new Runtime<G>(
         createState({
           settings: { num: 3 },
-          playable: ({ state, self }) =>
+          playable: ({ self, state }) =>
             state.settings.num + self.props.name.length === 6,
         })
       );
@@ -57,6 +59,7 @@ describe("Runtime", () => {
         settings: { num: 0 },
         players: [
           {
+            id: createId(),
             props: { name: "Foo" },
             items: [
               {
@@ -76,12 +79,13 @@ describe("Runtime", () => {
   });
 });
 
-interface G {
+interface G extends Generics {
   events: {
     a: (n?: number) => void;
     b: () => void;
   };
   settings: { num: number };
+  battleProps: unknown;
   playerProps: { name: string };
   itemProps: { name: string };
   cardProps: { name: string };
