@@ -1,9 +1,7 @@
 // a 1v1 game consisting of draw, discard, health and mana mechanics
-import { Runtime } from "./deckforge/Runtime";
-import type { BattleMember } from "./deckforge/state/BattleMember";
-import type { CardId } from "./deckforge/state/Card";
-import type { PlayerId } from "./deckforge/state/Player";
-import type { EventHandlerSelector } from "./deckforge/state/EventHandler";
+import { Machine } from "./machine/Machine";
+import type { BattleMember, CardId, PlayerId } from "./deckforge/Entities";
+import type { EventHandlerSelector } from "./machine/Event";
 
 describe("versus", () => {
   it("can play a game", () => {
@@ -20,7 +18,7 @@ describe("versus", () => {
     // Expect results:
     // - Expect the game to have ended with player 1 as victor
 
-    const runtime = new Runtime<RC>({});
+    const runtime = new Machine<RC>({});
     const { member1 } = runtime.state;
 
     runtime.events.drawCard(member1.player.id);
