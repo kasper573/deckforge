@@ -1,8 +1,7 @@
-// a 1v1 game consisting of draw, discard, health and mana mechanics
-import { Machine } from "../machine/Machine";
-import type { MachineEventHandlerSelector } from "../machine/MachineEvent";
-import type { MachineContext } from "../machine/MachineContext";
 import type { CardId, Player, PlayerId } from "./Entities";
+import { createRuntime } from "./Runtime";
+
+// a 1v1 game consisting of draw, discard, health and mana mechanics
 
 describe("versus", () => {
   it("can play a game", () => {
@@ -19,13 +18,10 @@ describe("versus", () => {
     // Expect results:
     // - Expect the game to have ended with player 1 as victor
 
-    const runtime = new Machine<Context>(
-      {
-        p1: mockPlayer(),
-        p2: mockPlayer(),
-      },
-      selectEffectsForEvent
-    );
+    const runtime = createRuntime({
+      p1: mockPlayer(),
+      p2: mockPlayer(),
+    });
 
     runtime.events.drawCard(runtime.state.p1.id);
 
@@ -41,7 +37,7 @@ describe("versus", () => {
   });
 });
 
-function mockPlayer(): Player<Context> {
+function mockPlayer(): Player {
   return {
     id: "player1" as PlayerId,
     items: [],
@@ -49,7 +45,6 @@ function mockPlayer(): Player<Context> {
     deck: [
       {
         id: "attack" as CardId,
-        playable: () => true,
         effects: {
           playCard: [
             (state, { targetId }) => {
@@ -71,45 +66,3 @@ function mockPlayer(): Player<Context> {
     },
   };
 }
-
-type Context = MachineContext<State, Events>;
-
-interface State {
-  p1: Player<Context>;
-  p2: Player<Context>;
-  winner?: PlayerId;
-}
-
-type Events = {
-  drawCard: (id: PlayerId) => void;
-  playCard: (input: {
-    playerId: PlayerId;
-    cardId: CardId;
-    targetId: PlayerId;
-  }) => void;
-  endTurn: () => void;
-};
-
-const selectEffectsForEvent: MachineEventHandlerSelector<Context> = function* (
-  { p1, p2 },
-  eventName
-) {
-  for (const player of [p1, p2]) {
-    for (const item of player.items) {
-      const itemEffects = item.effects[eventName];
-      if (itemEffects) {
-        for (const effect of itemEffects) {
-          yield effect;
-        }
-      }
-    }
-    for (const card of player.deck) {
-      const cardEffects = card.effects[eventName];
-      if (cardEffects) {
-        for (const effect of cardEffects) {
-          yield effect;
-        }
-      }
-    }
-  }
-};

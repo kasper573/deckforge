@@ -1,41 +1,34 @@
-import type {
-  SelfExpression,
-  MachineEventHandler,
-} from "../machine/MachineEvent";
-import type { MachineContext as EntityContext } from "../machine/MachineContext";
+import type { MachineEventHandler } from "../machine/MachineEvent";
 import type { Id } from "./createId";
+import type { RuntimeEvents, RuntimeState } from "./Runtime";
 
 export type PlayerId = Id<"PlayerId">;
-export interface Player<Context extends EntityContext> {
+export interface Player {
   id: PlayerId;
-  items: Item<Context>[];
-  deck: Deck<Context>;
-  piles: CardPiles<Context, "hand" | "discard" | "draw">;
+  items: Item[];
+  deck: Deck;
+  piles: CardPiles<"hand" | "discard" | "draw">;
   health: number;
 }
 
 export type ItemId = Id<"ItemId">;
-export interface Item<Context extends EntityContext> {
+export interface Item {
   id: ItemId;
-  effects: Effects<Context>;
+  effects: Effects;
 }
 
 export type CardId = Id<"CardId">;
-export interface Card<Context extends EntityContext> {
+export interface Card {
   id: CardId;
-  playable: SelfExpression<Context, boolean, Card<Context>>;
-  effects: Effects<Context>;
+  effects: Effects;
 }
 
-export type CardPiles<
-  Context extends EntityContext,
-  PileNames extends string
-> = Record<PileNames, Card<Context>[]>;
+export type CardPiles<PileNames extends string> = Record<PileNames, Card[]>;
 
-export type Deck<Context extends EntityContext> = Card<Context>[];
+export type Deck = Card[];
 
-export type Effects<Context extends EntityContext> = {
-  [EventName in keyof Context["events"]]?: Iterable<
-    MachineEventHandler<Context["state"], Context["events"][EventName]>
+export type Effects = {
+  [EventName in keyof RuntimeEvents]?: Iterable<
+    MachineEventHandler<RuntimeState, RuntimeEvents[EventName]>
   >;
 };
