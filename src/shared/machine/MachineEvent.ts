@@ -8,11 +8,7 @@ export type MachineEventRecord<EventNames extends string = string> = Record<
   MachineEvent
 >;
 
-export type MachineEventInput<T extends MachineEvent> = T extends MachineEvent<
-  infer I
->
-  ? I
-  : never;
+export type MachineEventInput<T extends MachineEvent> = Parameters<T>[0];
 
 export type SelfExpression<State, Output, Self> = PureExpression<
   Output,
@@ -32,6 +28,9 @@ export type MachineEventHandlerCollection<MC extends MachineContext> = {
     MachineEventHandler<MC["state"], MC["events"][EventName]>
   >;
 };
+
+export type AnyMachineEventHandler<MC extends MachineContext> =
+  MachineEventHandler<MC["state"], MC["events"][keyof MC["events"]]>;
 
 export type MachineEventHandler<
   State,

@@ -1,89 +1,75 @@
 import { original } from "immer";
 import { Machine } from "./Machine";
-import type { MachineEventHandler } from "./MachineEvent";
+import type { MachineEventHandlerCollection } from "./MachineEvent";
 import type { MachineContext } from "./MachineContext";
+import type { AnyMachineEventHandler } from "./MachineEvent";
 
 describe("Machine", () => {
   describe("global event handlers", () => {
-    it("reacts to the correct events", () => {
-      const fn = jest.fn();
-      const runtime = new Machine<Context>({}, { a: [fn] });
-      runtime.events.b();
-      expect(fn).not.toHaveBeenCalled();
-      runtime.events.a();
-      expect(fn).toHaveBeenCalled();
-    });
+    generateTestCases((eventHandler) => new Machine({}, { a: [eventHandler] }));
   });
 
-  describe("dynamic event handlers", () => {
-    it("reacts to the correct events", () => {
-      const fn = jest.fn();
-      const runtime = createMachine({ handlers: { a: fn } });
-      runtime.events.b();
-      expect(fn).not.toHaveBeenCalled();
-      runtime.events.a();
-      expect(fn).toHaveBeenCalled();
-    });
-
-    it("can receive state", () => {
-      let receivedState: unknown;
-      const runtime = createMachine({
-        handlers: {
-          a(state) {
-            receivedState = original(state);
-          },
-        },
-      });
-      const startState = runtime.state;
-      runtime.events.a();
-      expect(receivedState).toEqual(startState);
-    });
-
-    it("can receive input", () => {
-      let receivedInput: number | undefined;
-      const runtime = createMachine({
-        handlers: {
-          a: (state, input) => {
-            receivedInput = input;
-          },
-        },
-      });
-      runtime.events.a(123);
-      expect(receivedInput).toBe(123);
-    });
-
-    it("can update state", () => {
-      const runtime = createMachine({
-        handlers: {
-          a(state) {
-            state.value = "Updated";
-          },
-        },
-      });
-      runtime.events.a();
-      expect(runtime.state.value).toBe("Updated");
-    });
-
-    it("updates does not mutate current state", () => {
-      const runtime = createMachine({
-        handlers: {
-          a(state) {
-            state.value = "Updated";
-          },
-        },
-      });
-      const stateBeforeEvent = runtime.state;
-      runtime.events.a();
-      expect(runtime.state.value).toBe("Updated");
-      expect(stateBeforeEvent.value).not.toBe("Updated");
-    });
+  describe("state derived event handlers", () => {
+    generateTestCases(
+      (eventHandler) =>
+        new Machine(
+          { handlers: { a: [eventHandler] } },
+          {},
+          (state, eventName) => state.handlers?.[eventName]
+        )
+    );
   });
 });
 
-function createMachine(state: State) {
-  return new Machine<Context>(state, {}, (state, eventName) => {
-    const handler = state.handlers?.[eventName];
-    return handler ? [handler] : [];
+function generateTestCases(
+  createMachine: (
+    eventHandler: AnyMachineEventHandler<Context>
+  ) => Machine<Context>
+) {
+  it("reacts to the correct events", () => {
+    const fn = jest.fn();
+    const runtime = createMachine(fn);
+    runtime.events.b();
+    expect(fn).not.toHaveBeenCalled();
+    runtime.events.a();
+    expect(fn).toHaveBeenCalled();
+  });
+
+  it("can receive state", () => {
+    let receivedState: unknown;
+    const runtime = createMachine((state) => {
+      receivedState = original(state);
+    });
+    const startState = runtime.state;
+    runtime.events.a();
+    expect(receivedState).toEqual(startState);
+  });
+
+  it("can receive input", () => {
+    let receivedInput: number | undefined;
+    const runtime = createMachine((state, input) => {
+      receivedInput = input;
+    });
+    runtime.events.a(123);
+    expect(receivedInput).toBe(123);
+  });
+
+  it("can update state", () => {
+    const runtime = createMachine((state) => {
+      state.value = "Updated";
+    });
+    runtime.events.a();
+    expect(runtime.state.value).toBe("Updated");
+  });
+
+  it("updates does not mutate current state", () => {
+    const runtime = createMachine((state) => {
+      state.value = "Updated";
+    });
+    const stateBeforeEvent = runtime.state;
+    runtime.events.a();
+    expect(runtime.state.value).toBe("Updated");
+    expect(stateBeforeEvent.value).not.toBe("Updated");
   });
 }
 
@@ -91,9 +77,7 @@ type Context = MachineContext<State, Events>;
 
 interface State {
   value?: unknown;
-  handlers?: {
-    [K in keyof Events]?: MachineEventHandler<State, Events[K]>;
-  };
+  handlers?: MachineEventHandlerCollection<Context>;
 }
 
 type Events = {
