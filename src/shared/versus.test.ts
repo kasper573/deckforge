@@ -22,9 +22,17 @@ describe("versus", () => {
 
     const runtime = new Runtime<MyRuntimeContext>({});
     const { member1 } = runtime.state.currentBattle!.props;
+
     runtime.events.drawCard(member1.player.id);
-    runtime.events.playCard(member1.player.id, member1.cardPiles.hand[0]!.id);
-    expect(runtime.state.currentBattle.winningPlayerId).toBe(member1.player.id);
+
+    runtime.events.playCard({
+      playerId: member1.player.id,
+      cardId: member1.cardPiles.hand[0]!.id,
+    });
+
+    expect(runtime.state.currentBattle?.winningPlayerId).toBe(
+      member1.player.id
+    );
   });
 });
 
@@ -44,7 +52,7 @@ interface MyRuntimeContext extends Generics {
 }
 
 type MyEvents = {
-  playCard: (input: {playerId: PlayerId, cardId: CardId}) => void;
+  playCard: (input: { playerId: PlayerId; cardId: CardId }) => void;
   drawCard: (id: PlayerId) => void;
   endTurn: () => void;
 };
