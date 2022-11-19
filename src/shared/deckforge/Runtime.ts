@@ -5,6 +5,7 @@ import type { MachineEventHandlerMap } from "../machine/MachineEvent";
 import type {
   Battle,
   BattleId,
+  BattleMember,
   Card,
   CardId,
   Deck,
@@ -12,6 +13,7 @@ import type {
   Player,
   PlayerId,
 } from "./Entities";
+import { createId } from "./createId";
 
 export interface RuntimeState {
   players: EntityCollection<Player>;
@@ -33,10 +35,29 @@ export type RuntimeEvents = {
 };
 
 const globalEventHandlers: MachineEventHandlerMap<RuntimeContext> = {
+  startBattle(state, { member1, member2 }) {
+    const id = createId<BattleId>();
+    state.battles.set(id, {
+      id,
+      member1: createBattleMember(member1),
+      member2: createBattleMember(member2),
+    });
+  },
   endTurn(state) {},
   drawCard(state) {},
   playCard(state, id) {},
 };
+
+function createBattleMember(playerId: PlayerId): BattleMember {
+  return {
+    playerId,
+    cards: {
+      hand: [],
+      draw: [],
+      discard: [],
+    },
+  };
+}
 
 export type RuntimeContext = MachineContext<RuntimeState, RuntimeEvents>;
 

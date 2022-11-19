@@ -31,7 +31,7 @@ export interface Battle extends Entity<BattleId> {
   winner?: PlayerId;
 }
 
-interface BattleMember {
+export interface BattleMember {
   playerId: PlayerId;
   cards: {
     hand: CardId[];
