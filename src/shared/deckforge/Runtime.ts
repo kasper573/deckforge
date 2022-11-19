@@ -31,6 +31,11 @@ export type RuntimeEvents = {
     targetId: PlayerId;
   }): void;
   drawCard(input: { battleId: BattleId; playerId: PlayerId }): void;
+  discardCard(input: {
+    battleId: BattleId;
+    playerId: PlayerId;
+    cardId: CardId;
+  }): void;
   endTurn(id: BattleId): void;
 };
 
@@ -45,7 +50,28 @@ const globalEventHandlers: MachineEventHandlerMap<RuntimeContext> = {
   },
   endTurn(state) {},
   drawCard(state) {},
-  playCard(state, id) {},
+  playCard(state, payload) {
+    // The card effect is handled by state derived event handlers
+    // All we need to do here globally is to discard the card
+    globalEventHandlers.discardCard?.(state, payload);
+  },
+  discardCard(state, { battleId, cardId, playerId }) {
+    const battle = state.battles.get(battleId);
+    if (!battle) {
+      return;
+    }
+    const member = [battle.member1, battle.member2].find(
+      (member) => member.playerId === playerId
+    );
+    if (!member) {
+      return;
+    }
+    const index = member.cards.hand.indexOf(cardId);
+    if (index !== -1) {
+      member.cards.hand.splice(index, 1);
+      member.cards.discard.push(cardId);
+    }
+  },
 };
 
 function createBattleMember(playerId: PlayerId): BattleMember {

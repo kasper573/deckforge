@@ -25,10 +25,13 @@ describe("versus", () => {
     const player2: Player = { id: createId(), deck: deck.id, health: 1 };
 
     const runtime = createRuntime({
-      decks: new Map(),
-      cards: new Map(),
+      decks: new Map([[deck.id, deck]]),
+      cards: new Map([[card.id, card]]),
       battles: new Map(),
-      players: new Map(),
+      players: new Map([
+        [player1.id, player1],
+        [player2.id, player2],
+      ]),
     });
 
     runtime.events.startBattle({
