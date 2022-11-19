@@ -1,50 +1,56 @@
+import type { MachineEventHandlerSelector } from "../machine/MachineEvent";
 import { Machine } from "../machine/Machine";
 import type { MachineContext } from "../machine/MachineContext";
-import type { MachineEventHandlerSelector } from "../machine/MachineEvent";
-import type { CardId, Player, PlayerId } from "./Entities";
+import type { MachineEventHandlerMap } from "../machine/MachineEvent";
+import type {
+  Battle,
+  BattleId,
+  Card,
+  CardId,
+  Deck,
+  EntityCollection,
+  Player,
+  PlayerId,
+} from "./Entities";
 
-export function createRuntime(state: RuntimeState) {
-  return new Machine(state, selectEffects);
+export interface RuntimeState {
+  players: EntityCollection<Player>;
+  cards: EntityCollection<Card>;
+  decks: EntityCollection<Deck>;
+  battles: EntityCollection<Battle>;
 }
 
-const selectEffects: MachineEventHandlerSelector<RuntimeContext> = function* (
-  { p1, p2 },
-  eventName
-) {
-  for (const player of [p1, p2]) {
-    for (const item of player.items) {
-      const itemEffects = item.effects[eventName];
-      if (itemEffects) {
-        for (const effect of itemEffects) {
-          yield effect;
-        }
-      }
-    }
-    for (const card of player.deck) {
-      const cardEffects = card.effects[eventName];
-      if (cardEffects) {
-        for (const effect of cardEffects) {
-          yield effect;
-        }
-      }
-    }
-  }
+export type RuntimeEvents = {
+  startBattle(input: { member1: PlayerId; member2: PlayerId }): void;
+  playCard(input: {
+    battleId: BattleId;
+    playerId: PlayerId;
+    cardId: CardId;
+    targetId: PlayerId;
+  }): void;
+  drawCard(input: { battleId: BattleId; playerId: PlayerId }): void;
+  endTurn(id: BattleId): void;
+};
+
+const globalEventHandlers: MachineEventHandlerMap<RuntimeContext> = {
+  endTurn(state) {},
+  drawCard(state) {},
+  playCard(state, id) {},
 };
 
 export type RuntimeContext = MachineContext<RuntimeState, RuntimeEvents>;
 
-export interface RuntimeState {
-  p1: Player;
-  p2: Player;
-  winner?: PlayerId;
+export type Runtime = ReturnType<typeof createRuntime>;
+
+export function createRuntime(initialState: RuntimeState) {
+  return new Machine(initialState, globalEventHandlers, selectEffects);
 }
 
-export type RuntimeEvents = {
-  drawCard: (id: PlayerId) => void;
-  playCard: (input: {
-    playerId: PlayerId;
-    cardId: CardId;
-    targetId: PlayerId;
-  }) => void;
-  endTurn: () => void;
+const selectEffects: MachineEventHandlerSelector<RuntimeContext> = function* (
+  state,
+  eventName
+) {
+  for (const card of state.cards.values()) {
+    yield* card.effects[eventName] ?? [];
+  }
 };

@@ -1,34 +1,43 @@
-import type { MachineEventHandler } from "../machine/MachineEvent";
+import type { MachineEventHandlerCollection } from "../machine/MachineEvent";
 import type { Id } from "./createId";
-import type { RuntimeEvents, RuntimeState } from "./Runtime";
+import type { RuntimeContext } from "./Runtime";
+
+export type EntityCollection<T extends Entity> = Map<T["id"], T>;
+
+export interface Entity<TId extends Id = Id> {
+  id: TId;
+}
 
 export type PlayerId = Id<"PlayerId">;
-export interface Player {
-  id: PlayerId;
-  items: Item[];
-  deck: Deck;
-  piles: CardPiles<"hand" | "discard" | "draw">;
+export interface Player extends Entity<PlayerId> {
+  deck: DeckId;
   health: number;
 }
 
-export type ItemId = Id<"ItemId">;
-export interface Item {
-  id: ItemId;
-  effects: Effects;
-}
-
 export type CardId = Id<"CardId">;
-export interface Card {
-  id: CardId;
+export interface Card extends Entity<CardId> {
   effects: Effects;
 }
 
-export type CardPiles<PileNames extends string> = Record<PileNames, Card[]>;
+export type DeckId = Id<"DeckId">;
+export interface Deck extends Entity<DeckId> {
+  cards: CardId[];
+}
 
-export type Deck = Card[];
+export type BattleId = Id<"BattleId">;
+export interface Battle extends Entity<BattleId> {
+  member1: BattleMember;
+  member2: BattleMember;
+  winner?: PlayerId;
+}
 
-export type Effects = {
-  [EventName in keyof RuntimeEvents]?: Iterable<
-    MachineEventHandler<RuntimeState, RuntimeEvents[EventName]>
-  >;
-};
+interface BattleMember {
+  playerId: PlayerId;
+  cards: {
+    hand: CardId[];
+    draw: CardId[];
+    discard: CardId[];
+  };
+}
+
+export type Effects = MachineEventHandlerCollection<RuntimeContext>;
