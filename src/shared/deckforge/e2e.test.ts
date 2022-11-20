@@ -8,7 +8,7 @@ it("1v1: can play a one card deck and win the game", () => {
   const player1: Player = { id: createId(), deck: deck.id, health: 1 };
   const player2: Player = { id: createId(), deck: deck.id, health: 1 };
 
-  const runtime = createGame({
+  const game = createGame({
     decks: new Map([[deck.id, deck]]),
     cards: new Map([[card.id, card]]),
     battles: new Map(),
@@ -18,20 +18,20 @@ it("1v1: can play a one card deck and win the game", () => {
     ]),
   });
 
-  const battleId = runtime.actions.startBattle(player1.id, player2.id);
-  runtime.actions.drawCard(battleId, player1.id);
+  const battleId = game.actions.startBattle(player1.id, player2.id);
+  game.actions.drawCard(battleId, player1.id);
 
-  let battle = runtime.state.battles.get(battleId)!;
-  runtime.actions.playCard({
+  let battle = game.state.battles.get(battleId)!;
+  game.actions.playCard({
     battleId,
     playerId: player1.id,
     targetId: player2.id,
     cardId: battle.member1.cards.hand[0]!,
   });
 
-  runtime.actions.endTurn(battleId);
+  game.actions.endTurn(battleId);
 
-  battle = runtime.state.battles.get(battleId)!;
+  battle = game.state.battles.get(battleId)!;
   expect(battle?.winner).toBe(player1.id);
 });
 
@@ -43,7 +43,7 @@ it("1v1: can play a two card deck and win the game", () => {
   const player1: Player = { id: createId(), deck: deck.id, health: 3 };
   const player2: Player = { id: createId(), deck: deck.id, health: 3 };
 
-  const runtime = createGame({
+  const game = createGame({
     decks: new Map([[deck.id, deck]]),
     cards,
     battles: new Map(),
@@ -53,20 +53,20 @@ it("1v1: can play a two card deck and win the game", () => {
     ]),
   });
 
-  const battleId = runtime.actions.startBattle(player1.id, player2.id);
-  runtime.actions.drawCard(battleId, player1.id);
+  const battleId = game.actions.startBattle(player1.id, player2.id);
+  game.actions.drawCard(battleId, player1.id);
 
-  let battle = runtime.state.battles.get(battleId)!;
-  runtime.actions.playCard({
+  let battle = game.state.battles.get(battleId)!;
+  game.actions.playCard({
     battleId,
     playerId: player1.id,
     targetId: player2.id,
     cardId: battle.member1.cards.hand[0]!,
   });
 
-  runtime.actions.endTurn(battleId);
+  game.actions.endTurn(battleId);
 
-  battle = runtime.state.battles.get(battleId)!;
+  battle = game.state.battles.get(battleId)!;
   expect(battle?.winner).toBe(player1.id);
 });
 

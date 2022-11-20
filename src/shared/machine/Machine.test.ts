@@ -32,28 +32,28 @@ describe("Machine", () => {
 
     it("can receive input", () => {
       let receivedInput: number | undefined;
-      const runtime = createActionMachine((state, input) => {
+      const machine = createActionMachine((state, input) => {
         receivedInput = input;
       });
-      runtime.actions.a(123);
+      machine.actions.a(123);
       expect(receivedInput).toBe(123);
     });
 
     it("can update state", () => {
-      const runtime = createActionMachine((state) => {
+      const machine = createActionMachine((state) => {
         state.value = "Updated";
       });
-      runtime.actions.a();
-      expect(runtime.state.value).toBe("Updated");
+      machine.actions.a();
+      expect(machine.state.value).toBe("Updated");
     });
 
     it("updates does not mutate current state", () => {
-      const runtime = createActionMachine((state) => {
+      const machine = createActionMachine((state) => {
         state.value = "Updated";
       });
-      const stateBeforeAction = runtime.state;
-      runtime.actions.a();
-      expect(runtime.state.value).toBe("Updated");
+      const stateBeforeAction = machine.state;
+      machine.actions.a();
+      expect(machine.state.value).toBe("Updated");
       expect(stateBeforeAction.value).not.toBe("Updated");
     });
   });
@@ -80,28 +80,28 @@ describe("Machine", () => {
 
     it("can receive input", () => {
       let receivedInput: number | undefined;
-      const runtime = createReactionMachine((state, output, input) => {
+      const machine = createReactionMachine((state, output, input) => {
         receivedInput = input;
       });
-      runtime.actions.a(123);
+      machine.actions.a(123);
       expect(receivedInput).toBe(123);
     });
 
     it("can update state", () => {
-      const runtime = createReactionMachine((state) => {
+      const machine = createReactionMachine((state) => {
         state.value = "Updated";
       });
-      runtime.actions.a();
-      expect(runtime.state.value).toBe("Updated");
+      machine.actions.a();
+      expect(machine.state.value).toBe("Updated");
     });
 
     it("updates does not mutate current state", () => {
-      const runtime = createReactionMachine((state) => {
+      const machine = createReactionMachine((state) => {
         state.value = "Updated";
       });
-      const stateBeforeAction = runtime.state;
-      runtime.actions.a();
-      expect(runtime.state.value).toBe("Updated");
+      const stateBeforeAction = machine.state;
+      machine.actions.a();
+      expect(machine.state.value).toBe("Updated");
       expect(stateBeforeAction.value).not.toBe("Updated");
     });
   });
