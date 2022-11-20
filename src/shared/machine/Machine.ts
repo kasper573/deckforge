@@ -39,10 +39,14 @@ export class Machine<MC extends MachineContext> {
     this.execute((draft) => {
       const action = this.actionMap[name] as MC["actions"][ActionName];
       const context = { state: draft, actions: this.actions };
+
       output = action(context, input);
-      const reactions = this.selectReactions?.(this.state, name) ?? [];
-      for (const reaction of reactions) {
-        reaction(context, { output, input });
+      const reactions = this.selectReactions?.(this.state, name);
+
+      if (reactions) {
+        for (const reaction of reactions) {
+          reaction(context, { output, input });
+        }
       }
     });
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
