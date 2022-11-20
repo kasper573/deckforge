@@ -1,8 +1,8 @@
-import type { Card, Deck, Player } from "../Entities";
-import { createRuntime } from "../Runtime";
-import { createId } from "../createId";
+import type { Card, Deck, Player } from "./Entities";
+import { createRuntime } from "./Runtime";
+import { createId } from "./createId";
 
-it("can finish and determine winner of a 1v1 game consisting of draw, discard, and health mechanics", () => {
+it("1v1: can play a one card deck and win the game", () => {
   const card: Card = {
     id: createId(),
     effects: {
