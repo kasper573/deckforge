@@ -9,7 +9,17 @@
   "rules": {
     "@typescript-eslint/consistent-type-imports": "warn",
     "import/order": ["error"],
+    "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.test.ts"],
+      "rules": {
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-non-null-asserted-optional-chain": "off"
+      }
+    }
+  ]
 }

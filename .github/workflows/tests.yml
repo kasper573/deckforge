@@ -20,6 +20,22 @@ jobs:
 
       - run: yarn lint
 
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+          cache: "yarn"
+
+      - name: Install project dependencies
+        run: yarn --prefer-offline
+
+      - run: yarn test:unit
+
   e2e-widescreen:
     uses: ./.github/workflows/e2e.reusable.yml
     with:
