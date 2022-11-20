@@ -22,7 +22,7 @@ describe("Machine", () => {
 
     it("can receive state", () => {
       let receivedState: unknown;
-      const machine = createActionMachine((state) => {
+      const machine = createActionMachine(({ state }) => {
         receivedState = original(state);
       });
       const startState = machine.state;
@@ -40,7 +40,7 @@ describe("Machine", () => {
     });
 
     it("can update state", () => {
-      const machine = createActionMachine((state) => {
+      const machine = createActionMachine(({ state }) => {
         state.value = "Updated";
       });
       machine.actions.a();
@@ -48,7 +48,7 @@ describe("Machine", () => {
     });
 
     it("updates does not mutate current state", () => {
-      const machine = createActionMachine((state) => {
+      const machine = createActionMachine(({ state }) => {
         state.value = "Updated";
       });
       const stateBeforeAction = machine.state;
@@ -106,11 +106,28 @@ describe("Machine", () => {
     });
   });
 
+  describe("chaining", () => {
+    it("has access to actions from within an action", () => {
+      let receivedActions: unknown;
+      const machine = createMachine({})
+        .actions({
+          a({ state, actions }) {
+            receivedActions = actions;
+          },
+        })
+        .build();
+      machine.actions.a();
+      expect(receivedActions).toBe(machine.actions);
+    });
+
+    it("can trigger an action from inside a reaction", () => {});
+  });
+
   describe("execution context", () => {
     it("state changes from actions are reflected in the context state draft", () => {
       const machine = createMachine({ value: "start" })
         .actions({
-          change(state) {
+          change({ state }) {
             state.value = "changed";
           },
         })
@@ -125,7 +142,7 @@ describe("Machine", () => {
     it("actions impact machine state once execution finishes", () => {
       const machine = createMachine({ count: 0 })
         .actions({
-          increase(state) {
+          increase({ state }) {
             state.count++;
           },
         })

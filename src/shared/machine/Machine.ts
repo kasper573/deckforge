@@ -4,21 +4,21 @@ import type {
   MachineActionInput,
   MachineActionOutput,
   MachineActionRecord,
-  MachineAction,
 } from "./MachineAction";
 import type { MachineContext } from "./MachineContext";
+import type { MachineActionsWithoutContext } from "./MachineAction";
 
 enableMapSet();
 
 export class Machine<MC extends MachineContext> {
-  readonly actions: ActionProxy<MC["actions"]>;
+  readonly actions: MachineActionsWithoutContext<MC["actions"]>;
 
   constructor(
     public state: MC["state"],
     private actionMap: MC["actions"],
     private selectReactions?: MachineReactionSelector<MC>
   ) {
-    this.actions = new Proxy({} as ActionProxy<MC["actions"]>, {
+    this.actions = new Proxy({} as MachineActionsWithoutContext<MC["actions"]>, {
       get:
         (target, prop) =>
         <ActionName extends keyof MC["actions"]>(
@@ -35,7 +35,7 @@ export class Machine<MC extends MachineContext> {
     let output: MachineActionOutput<MC["actions"][ActionName]>;
     this.execute((draft) => {
       const action = this.actionMap[name] as MC["actions"][ActionName];
-      output = action(draft, input);
+      output = action({ state: draft, actions: this.actions }, input);
       const reactions = this.selectReactions?.(this.state, name) ?? [];
       for (const reaction of reactions) {
         reaction(draft, { output, input });
@@ -59,17 +59,6 @@ export class Machine<MC extends MachineContext> {
     });
   }
 }
-
-type ActionProxy<Actions extends MachineActionRecord> = {
-  [Name in keyof Actions]: ActionWithoutStateParam<Actions[Name]>;
-};
-
-type ActionWithoutStateParam<Action extends MachineAction> = Action extends (
-  state: infer State,
-  ...rest: infer Params
-) => infer Output
-  ? (...rest: Params) => Output
-  : never;
 
 export function createMachine<State>(state: State) {
   return new MachineBuilder(state, {}, () => undefined);

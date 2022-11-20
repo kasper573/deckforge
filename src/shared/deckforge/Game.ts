@@ -28,7 +28,7 @@ export type GameActions = typeof actions;
 export type GameContext = MachineContext<GameState, GameActions>;
 
 const actions = createMachineActions<GameState>()({
-  startBattle(state, [member1, member2]: [PlayerId, PlayerId]) {
+  startBattle({ state }, [member1, member2]: [PlayerId, PlayerId]) {
     const battleId = createId<BattleId>();
     const player1Deck = pull(state.decks, pull(state.players, member1).deck);
     const player2Deck = pull(state.decks, pull(state.players, member2).deck);
@@ -39,7 +39,7 @@ const actions = createMachineActions<GameState>()({
     });
     return battleId;
   },
-  endTurn(state, battleId: BattleId) {
+  endTurn({ state }, battleId: BattleId) {
     const battle = pull(state.battles, battleId);
     const player1 = pull(state.players, battle.member1.playerId);
     const player2 = pull(state.players, battle.member2.playerId);
@@ -50,7 +50,7 @@ const actions = createMachineActions<GameState>()({
     }
   },
   drawCard(
-    state,
+    { state },
     { battleId, playerId }: { battleId: BattleId; playerId: PlayerId }
   ) {
     const battle = pull(state.battles, battleId);
@@ -61,12 +61,12 @@ const actions = createMachineActions<GameState>()({
     }
     member.cards.hand.push(card);
   },
-  playCard(state, payload: CardPayload & { targetId: PlayerId }) {
+  playCard(context, payload: CardPayload & { targetId: PlayerId }) {
     // The card effect is handled by reactions
     // All we need to do here globally is to discard the card
-    actions.discardCard(state, payload);
+    actions.discardCard(context, payload);
   },
-  discardCard(state, { battleId, playerId, cardId }: CardPayload) {
+  discardCard({ state }, { battleId, playerId, cardId }: CardPayload) {
     const battle = pull(state.battles, battleId);
     const member = [battle.member1, battle.member2].find(
       (member) => member.playerId === playerId
