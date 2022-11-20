@@ -31,27 +31,27 @@ it("1v1: can play a one card deck and win the game", () => {
     ]),
   });
 
-  runtime.events.startBattle({
+  runtime.actions.startBattle({
     member1: player1.id,
     member2: player2.id,
   });
 
   const battleId = Array.from(runtime.state.battles.values())[0]?.id!;
 
-  runtime.events.drawCard({
+  runtime.actions.drawCard({
     playerId: player1.id,
     battleId: battleId,
   });
 
   let battle = runtime.state.battles.get(battleId)!;
-  runtime.events.playCard({
+  runtime.actions.playCard({
     battleId,
     playerId: player1.id,
     targetId: player2.id,
     cardId: battle.member1.cards.hand[0]!,
   });
 
-  runtime.events.endTurn(battleId);
+  runtime.actions.endTurn(battleId);
 
   battle = runtime.state.battles.get(battleId)!;
   expect(battle?.winner).toBe(player1.id);
@@ -91,27 +91,27 @@ it("1v1: can play a two card deck and win the game", () => {
     ]),
   });
 
-  runtime.events.startBattle({
+  runtime.actions.startBattle({
     member1: player1.id,
     member2: player2.id,
   });
 
   const battleId = Array.from(runtime.state.battles.values())[0]?.id!;
 
-  runtime.events.drawCard({
+  runtime.actions.drawCard({
     playerId: player1.id,
     battleId: battleId,
   });
 
   let battle = runtime.state.battles.get(battleId)!;
-  runtime.events.playCard({
+  runtime.actions.playCard({
     battleId,
     playerId: player1.id,
     targetId: player2.id,
     cardId: battle.member1.cards.hand[0]!,
   });
 
-  runtime.events.endTurn(battleId);
+  runtime.actions.endTurn(battleId);
 
   battle = runtime.state.battles.get(battleId)!;
   expect(battle?.winner).toBe(player1.id);

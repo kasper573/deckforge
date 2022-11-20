@@ -1,7 +1,7 @@
 import type {
-  MachineEventHandlerMap,
-  MachineEventHandlerSelector,
-} from "../machine/MachineEvent";
+  MachineReactionMap,
+  MachineReactionSelector,
+} from "../machine/MachineAction";
 import { Machine } from "../machine/Machine";
 import type { MachineContext } from "../machine/MachineContext";
 import { pull } from "../util";
@@ -25,7 +25,7 @@ export interface RuntimeState {
   battles: EntityCollection<Battle>;
 }
 
-export type RuntimeEvents = {
+export type RuntimeActions = {
   startBattle(input: { member1: PlayerId; member2: PlayerId }): void;
   playCard(input: {
     battleId: BattleId;
@@ -42,7 +42,7 @@ export type RuntimeEvents = {
   endTurn(id: BattleId): void;
 };
 
-const globalEventHandlers: MachineEventHandlerMap<RuntimeContext> = {
+const actions: MachineReactionMap<RuntimeContext> = {
   startBattle(state, { member1, member2 }) {
     const battleId = createId<BattleId>();
     const player1Deck = pull(state.decks, pull(state.players, member1).deck);
@@ -73,9 +73,9 @@ const globalEventHandlers: MachineEventHandlerMap<RuntimeContext> = {
     member.cards.hand.push(card);
   },
   playCard(state, payload) {
-    // The card effect is handled by state derived event handlers
+    // The card effect is handled by reactions
     // All we need to do here globally is to discard the card
-    globalEventHandlers.discardCard?.(state, payload);
+    actions.discardCard?.(state, payload);
   },
   discardCard(state, { battleId, cardId, playerId }) {
     const battle = pull(state.battles, battleId);
@@ -115,19 +115,19 @@ function createBattleMember(playerId: PlayerId, deck: Deck): BattleMember {
   };
 }
 
-export type RuntimeContext = MachineContext<RuntimeState, RuntimeEvents>;
+export type RuntimeContext = MachineContext<RuntimeState, RuntimeActions>;
 
 export type Runtime = ReturnType<typeof createRuntime>;
 
 export function createRuntime(initialState: RuntimeState) {
-  return new Machine(initialState, globalEventHandlers, selectEffects);
+  return new Machine(initialState, actions, selectEffects);
 }
 
-const selectEffects: MachineEventHandlerSelector<RuntimeContext> = function* (
+const selectEffects: MachineReactionSelector<RuntimeContext> = function* (
   state,
-  eventName
+  actionName
 ) {
   for (const card of state.cards.values()) {
-    yield* card.effects[eventName] ?? [];
+    yield* card.effects[actionName] ?? [];
   }
 };

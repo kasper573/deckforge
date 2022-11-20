@@ -1,43 +1,43 @@
 import produce, { enableMapSet } from "immer";
 import type {
-  MachineEventHandlerSelector,
-  MachineEventInput,
-} from "./MachineEvent";
+  MachineReactionSelector,
+  MachineActionInput,
+} from "./MachineAction";
 import type { MachineContext } from "./MachineContext";
-import type { MachineEventHandlerMap } from "./MachineEvent";
+import type { MachineReactionMap } from "./MachineAction";
 
 enableMapSet();
 
 export class Machine<MC extends MachineContext> {
-  readonly events: MC["events"];
+  readonly actions: MC["actions"];
 
   constructor(
     public state: MC["state"],
-    private globalEventHandlers?: MachineEventHandlerMap<MC>,
-    private selectEventHandlers?: MachineEventHandlerSelector<MC>
+    private globalReactions?: MachineReactionMap<MC>,
+    private selectReactions?: MachineReactionSelector<MC>
   ) {
-    this.events = new Proxy({} as MC["events"], {
+    this.actions = new Proxy({} as MC["actions"], {
       get:
         (target, prop) =>
-        <EventName extends keyof MC["events"]>(
-          input: MachineEventInput<MC["events"][EventName]>
+        <ActionName extends keyof MC["actions"]>(
+          input: MachineActionInput<MC["actions"][ActionName]>
         ) =>
-          this.triggerEvent(prop as EventName, input),
+          this.performAction(prop as ActionName, input),
     });
   }
 
-  private triggerEvent<EventName extends keyof MC["events"]>(
-    eventName: EventName,
-    eventInput: MachineEventInput<MC["events"][EventName]>
+  private performAction<ActionName extends keyof MC["actions"]>(
+    name: ActionName,
+    input: MachineActionInput<MC["actions"][ActionName]>
   ) {
-    const globalEventHandler = this.globalEventHandlers?.[eventName];
-    const eventHandlers = [
-      ...(globalEventHandler ? [globalEventHandler] : []),
-      ...(this.selectEventHandlers?.(this.state, eventName) ?? []),
+    const globalReaction = this.globalReactions?.[name];
+    const actionsAndReactions = [
+      ...(globalReaction ? [globalReaction] : []),
+      ...(this.selectReactions?.(this.state, name) ?? []),
     ];
     this.state = produce(this.state, (draft: MC["state"]) => {
-      for (const handleEvent of eventHandlers) {
-        handleEvent(draft, eventInput);
+      for (const action of actionsAndReactions) {
+        action(draft, input);
       }
     });
   }

@@ -1,10 +1,10 @@
-import type { MachineEventRecord } from "./MachineEvent";
+import type { MachineActionRecord } from "./MachineAction";
 
 export type MachineContext<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   State = any,
-  Events extends MachineEventRecord = MachineEventRecord
+  Actions extends MachineActionRecord = MachineActionRecord
 > = {
   state: State;
-  events: Events;
+  actions: Actions;
 };

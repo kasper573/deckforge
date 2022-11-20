@@ -1,37 +1,35 @@
 import { original } from "immer";
 import { Machine } from "./Machine";
 import type { MachineContext } from "./MachineContext";
-import type { AnyMachineEventHandler } from "./MachineEvent";
-import type { MachineEventHandlerCollection } from "./MachineEvent";
+import type { AnyMachineReaction } from "./MachineAction";
+import type { MachineReactionCollection } from "./MachineAction";
 
 describe("Machine", () => {
-  describe("global event handlers", () => {
-    generateTestCases((eventHandler) => new Machine({}, { a: eventHandler }));
+  describe("actions", () => {
+    generateTestCases((reaction) => new Machine({}, { a: reaction }));
   });
 
-  describe("state derived event handlers", () => {
+  describe("reactions", () => {
     generateTestCases(
-      (eventHandler) =>
+      (reaction) =>
         new Machine(
-          { handlers: { a: [eventHandler] } },
+          { reactions: { a: [reaction] } },
           {},
-          (state, eventName) => state.handlers?.[eventName]
+          (state, actionName) => state.reactions?.[actionName]
         )
     );
   });
 });
 
 function generateTestCases(
-  createMachine: (
-    eventHandler: AnyMachineEventHandler<Context>
-  ) => Machine<Context>
+  createMachine: (reaction: AnyMachineReaction<Context>) => Machine<Context>
 ) {
-  it("reacts to the correct events", () => {
+  it("reacts to the correct actions", () => {
     const fn = jest.fn();
     const runtime = createMachine(fn);
-    runtime.events.b();
+    runtime.actions.b();
     expect(fn).not.toHaveBeenCalled();
-    runtime.events.a();
+    runtime.actions.a();
     expect(fn).toHaveBeenCalled();
   });
 
@@ -41,7 +39,7 @@ function generateTestCases(
       receivedState = original(state);
     });
     const startState = runtime.state;
-    runtime.events.a();
+    runtime.actions.a();
     expect(receivedState).toEqual(startState);
   });
 
@@ -50,7 +48,7 @@ function generateTestCases(
     const runtime = createMachine((state, input) => {
       receivedInput = input;
     });
-    runtime.events.a(123);
+    runtime.actions.a(123);
     expect(receivedInput).toBe(123);
   });
 
@@ -58,7 +56,7 @@ function generateTestCases(
     const runtime = createMachine((state) => {
       state.value = "Updated";
     });
-    runtime.events.a();
+    runtime.actions.a();
     expect(runtime.state.value).toBe("Updated");
   });
 
@@ -66,21 +64,21 @@ function generateTestCases(
     const runtime = createMachine((state) => {
       state.value = "Updated";
     });
-    const stateBeforeEvent = runtime.state;
-    runtime.events.a();
+    const stateBeforeAction = runtime.state;
+    runtime.actions.a();
     expect(runtime.state.value).toBe("Updated");
-    expect(stateBeforeEvent.value).not.toBe("Updated");
+    expect(stateBeforeAction.value).not.toBe("Updated");
   });
 }
 
-type Context = MachineContext<State, Events>;
+type Context = MachineContext<State, actions>;
 
 interface State {
   value?: unknown;
-  handlers?: MachineEventHandlerCollection<Context>;
+  reactions?: MachineReactionCollection<Context>;
 }
 
-type Events = {
+type actions = {
   a: (n?: number) => void;
   b: () => void;
 };

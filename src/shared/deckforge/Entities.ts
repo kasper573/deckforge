@@ -1,4 +1,4 @@
-import type { MachineEventHandlerCollection } from "../machine/MachineEvent";
+import type { MachineReactionCollection } from "../machine/MachineAction";
 import type { Id } from "./createId";
 import type { RuntimeContext } from "./Runtime";
 
@@ -40,4 +40,4 @@ export interface BattleMember {
   };
 }
 
-export type Effects = MachineEventHandlerCollection<RuntimeContext>;
+export type Effects = MachineReactionCollection<RuntimeContext>;
