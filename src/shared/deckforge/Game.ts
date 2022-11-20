@@ -14,20 +14,20 @@ import type {
 } from "./Entities";
 import { createId } from "./createId";
 
-export interface RuntimeState {
+export interface GameState {
   players: EntityCollection<Player>;
   cards: EntityCollection<Card>;
   decks: EntityCollection<Deck>;
   battles: EntityCollection<Battle>;
 }
 
-export type RuntimeMachine = ReturnType<typeof createRuntime>;
+export type GameMachine = ReturnType<typeof createGame>;
 
-export type RuntimeActions = typeof actions;
+export type GameActions = typeof actions;
 
-export type RuntimeContext = MachineContext<RuntimeState, RuntimeActions>;
+export type GameContext = MachineContext<GameState, GameActions>;
 
-const actions = createMachineActions<RuntimeState>()({
+const actions = createMachineActions<GameState>()({
   startBattle(state, member1: PlayerId, member2: PlayerId) {
     const battleId = createId<BattleId>();
     const player1Deck = pull(state.decks, pull(state.players, member1).deck);
@@ -86,7 +86,7 @@ export interface CardPayload {
   cardId: CardId;
 }
 
-export function createRuntime(initialState: RuntimeState) {
+export function createGame(initialState: GameState) {
   return createMachine(initialState)
     .actions(actions)
     .reactions(function* (state, actionName) {

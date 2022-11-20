@@ -1,6 +1,6 @@
 import type { MachineReactionCollection } from "../machine/MachineAction";
 import type { Id } from "./createId";
-import type { RuntimeContext } from "./Runtime";
+import type { GameContext } from "./Game";
 
 export type EntityCollection<T extends Entity> = Map<T["id"], T>;
 
@@ -40,4 +40,4 @@ export interface BattleMember {
   };
 }
 
-export type Effects = MachineReactionCollection<RuntimeContext>;
+export type Effects = MachineReactionCollection<GameContext>;
