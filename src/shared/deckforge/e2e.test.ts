@@ -18,21 +18,21 @@ it("1v1: can play a one card deck and win the game", () => {
     ]),
   });
 
-  const battleId = game.actions.startBattle(player1.id, player2.id);
-  game.actions.drawCard(battleId, player1.id);
+  game.execute((state) => {
+    const battleId = game.actions.startBattle(player1.id, player2.id);
+    game.actions.drawCard(battleId, player1.id);
 
-  let battle = game.state.battles.get(battleId)!;
-  game.actions.playCard({
-    battleId,
-    playerId: player1.id,
-    targetId: player2.id,
-    cardId: battle.member1.cards.hand[0]!,
+    const battle = state.battles.get(battleId)!;
+    game.actions.playCard({
+      battleId,
+      playerId: player1.id,
+      targetId: player2.id,
+      cardId: battle.member1.cards.hand[0]!,
+    });
+
+    game.actions.endTurn(battleId);
+    expect(battle.winner).toBe(player1.id);
   });
-
-  game.actions.endTurn(battleId);
-
-  battle = game.state.battles.get(battleId)!;
-  expect(battle?.winner).toBe(player1.id);
 });
 
 it("1v1: can play a two card deck and win the game", () => {
@@ -53,21 +53,21 @@ it("1v1: can play a two card deck and win the game", () => {
     ]),
   });
 
-  const battleId = game.actions.startBattle(player1.id, player2.id);
-  game.actions.drawCard(battleId, player1.id);
+  game.execute((state) => {
+    const battleId = game.actions.startBattle(player1.id, player2.id);
+    game.actions.drawCard(battleId, player1.id);
 
-  let battle = game.state.battles.get(battleId)!;
-  game.actions.playCard({
-    battleId,
-    playerId: player1.id,
-    targetId: player2.id,
-    cardId: battle.member1.cards.hand[0]!,
+    const battle = state.battles.get(battleId)!;
+    game.actions.playCard({
+      battleId,
+      playerId: player1.id,
+      targetId: player2.id,
+      cardId: battle.member1.cards.hand[0]!,
+    });
+
+    game.actions.endTurn(battleId);
+    expect(battle.winner).toBe(player1.id);
   });
-
-  game.actions.endTurn(battleId);
-
-  battle = game.state.battles.get(battleId)!;
-  expect(battle?.winner).toBe(player1.id);
 });
 
 function mockCard(damage: number): Card {

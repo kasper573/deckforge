@@ -105,6 +105,42 @@ describe("Machine", () => {
       expect(stateBeforeAction.value).not.toBe("Updated");
     });
   });
+
+  describe("execution context", () => {
+    it("state changes from actions are reflected in the context state draft", () => {
+      const machine = createMachine({ value: "start" })
+        .actions({
+          change(state) {
+            state.value = "changed";
+          },
+        })
+        .build();
+
+      machine.execute((state) => {
+        machine.actions.change();
+        expect(state.value).toBe("changed");
+      });
+    });
+
+    it("actions impact machine state once execution finishes", () => {
+      const machine = createMachine({ count: 0 })
+        .actions({
+          increase(state) {
+            state.count++;
+          },
+        })
+        .build();
+
+      machine.execute(() => {
+        machine.actions.increase();
+        machine.actions.increase();
+        machine.actions.increase();
+        expect(machine.state.count).toBe(0);
+      });
+
+      expect(machine.state.count).toBe(3);
+    });
+  });
 });
 
 function createActionMachine(fn: AnyMachineAction) {

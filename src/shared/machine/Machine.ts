@@ -32,7 +32,7 @@ export class Machine<MC extends MachineContext> {
     input: MachineActionInput<MC["actions"][ActionName]>
   ) {
     let output: MachineActionOutput<MC["actions"][ActionName]>;
-    this.state = produce(this.state, (draft: MC["state"]) => {
+    this.execute((draft) => {
       const action = this.actionMap[name] as MC["actions"][ActionName];
       output = action(draft, ...input);
       const reactions = this.selectReactions?.(this.state, name) ?? [];
@@ -42,6 +42,20 @@ export class Machine<MC extends MachineContext> {
     });
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return output!;
+  }
+
+  private currentDraft?: MC["state"];
+  execute(fn: (draft: MC["state"]) => void) {
+    if (this.currentDraft) {
+      fn(this.currentDraft);
+      return;
+    }
+
+    this.state = produce(this.state, (draft: MC["state"]) => {
+      this.currentDraft = draft;
+      fn(draft);
+      this.currentDraft = undefined;
+    });
   }
 }
 
