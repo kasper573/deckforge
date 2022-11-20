@@ -38,14 +38,13 @@ export class Machine<MC extends MachineContext> {
     let output: MachineActionOutput<MC["actions"][ActionName]>;
     this.execute((draft) => {
       const action = this.actionMap[name] as MC["actions"][ActionName];
-      const context = { state: draft, actions: this.actions };
 
-      output = action(context, input);
+      output = action(draft, input);
       const reactions = this.selectReactions?.(this.state, name);
 
       if (reactions) {
         for (const reaction of reactions) {
-          reaction(context, { output, input });
+          reaction(draft, { output, input });
         }
       }
     });
