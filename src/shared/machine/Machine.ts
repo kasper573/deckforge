@@ -4,6 +4,7 @@ import type {
   MachineActionInput,
   MachineActionOutput,
   MachineActionRecord,
+  MachineAction,
 } from "./MachineAction";
 import type { MachineContext } from "./MachineContext";
 
@@ -21,7 +22,7 @@ export class Machine<MC extends MachineContext> {
       get:
         (target, prop) =>
         <ActionName extends keyof MC["actions"]>(
-          ...input: MachineActionInput<MC["actions"][ActionName]>
+          input: MachineActionInput<MC["actions"][ActionName]>
         ) =>
           this.performAction(prop as ActionName, input),
     });
@@ -34,10 +35,10 @@ export class Machine<MC extends MachineContext> {
     let output: MachineActionOutput<MC["actions"][ActionName]>;
     this.execute((draft) => {
       const action = this.actionMap[name] as MC["actions"][ActionName];
-      output = action(draft, ...input);
+      output = action(draft, input);
       const reactions = this.selectReactions?.(this.state, name) ?? [];
       for (const reaction of reactions) {
-        reaction(draft, output, ...input);
+        reaction(draft, { output, input });
       }
     });
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -60,10 +61,15 @@ export class Machine<MC extends MachineContext> {
 }
 
 type ActionProxy<Actions extends MachineActionRecord> = {
-  [Name in keyof Actions]: (
-    ...input: MachineActionInput<Actions[Name]>
-  ) => MachineActionOutput<Actions[Name]>;
+  [Name in keyof Actions]: ActionWithoutStateParam<Actions[Name]>;
 };
+
+type ActionWithoutStateParam<Action extends MachineAction> = Action extends (
+  state: infer State,
+  ...rest: infer Params
+) => infer Output
+  ? (...rest: Params) => Output
+  : never;
 
 export function createMachine<State>(state: State) {
   return new MachineBuilder(state, {}, () => undefined);

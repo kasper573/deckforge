@@ -28,7 +28,7 @@ export type GameActions = typeof actions;
 export type GameContext = MachineContext<GameState, GameActions>;
 
 const actions = createMachineActions<GameState>()({
-  startBattle(state, member1: PlayerId, member2: PlayerId) {
+  startBattle(state, [member1, member2]: [PlayerId, PlayerId]) {
     const battleId = createId<BattleId>();
     const player1Deck = pull(state.decks, pull(state.players, member1).deck);
     const player2Deck = pull(state.decks, pull(state.players, member2).deck);
@@ -49,7 +49,10 @@ const actions = createMachineActions<GameState>()({
       battle.winner = player1.id;
     }
   },
-  drawCard(state, battleId: BattleId, playerId: PlayerId) {
+  drawCard(
+    state,
+    { battleId, playerId }: { battleId: BattleId; playerId: PlayerId }
+  ) {
     const battle = pull(state.battles, battleId);
     const member = selectBattleMember(battle, playerId);
     const card = member.cards.draw.shift();

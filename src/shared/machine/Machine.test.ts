@@ -80,7 +80,7 @@ describe("Machine", () => {
 
     it("can receive input", () => {
       let receivedInput: number | undefined;
-      const machine = createReactionMachine((state, output, input) => {
+      const machine = createReactionMachine((state, { input }) => {
         receivedInput = input;
       });
       machine.actions.a(123);
@@ -145,7 +145,12 @@ describe("Machine", () => {
 
 function createActionMachine(fn: AnyMachineAction) {
   return createMachine({ value: undefined as unknown })
-    .actions({ a: fn, b() {} })
+    .actions({
+      a(state, n?: number) {
+        return fn(state, n);
+      },
+      b() {},
+    })
     .build();
 }
 

@@ -19,8 +19,8 @@ it("1v1: can play a one card deck and win the game", () => {
   });
 
   game.execute((state) => {
-    const battleId = game.actions.startBattle(player1.id, player2.id);
-    game.actions.drawCard(battleId, player1.id);
+    const battleId = game.actions.startBattle([player1.id, player2.id]);
+    game.actions.drawCard({ battleId, playerId: player1.id });
 
     const battle = state.battles.get(battleId)!;
     game.actions.playCard({
@@ -54,8 +54,8 @@ it("1v1: can play a two card deck and win the game", () => {
   });
 
   game.execute((state) => {
-    const battleId = game.actions.startBattle(player1.id, player2.id);
-    game.actions.drawCard(battleId, player1.id);
+    const battleId = game.actions.startBattle([player1.id, player2.id]);
+    game.actions.drawCard({ battleId, playerId: player1.id });
 
     const battle = state.battles.get(battleId)!;
     game.actions.playCard({
@@ -75,7 +75,7 @@ function mockCard(damage: number): Card {
     id: createId(),
     effects: {
       playCard: [
-        (state, _, { targetId }) => {
+        (state, { input: { targetId } }) => {
           const target = state.players.get(targetId);
           if (target) {
             target.health -= damage;
