@@ -78,7 +78,7 @@ function mockCard(damage: number): Card {
         (state, _, { targetId }) => {
           const target = state.players.get(targetId);
           if (target) {
-            target.health -= 1;
+            target.health -= damage;
           }
         },
       ],
