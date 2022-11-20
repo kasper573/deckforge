@@ -11,7 +11,6 @@ import type {
   Player,
   PlayerId,
 } from "./Entities";
-import { createId } from "./createId";
 
 export interface GameState {
   players: EntityCollection<Player>;
@@ -27,18 +26,15 @@ export type GameActions = typeof actions;
 export type GameContext = MachineContext<GameState, GameActions>;
 
 const actions = createMachineActions<GameState>()({
-  startBattle(state, [member1, member2]: [PlayerId, PlayerId]) {
-    const battleId = createId<BattleId>();
-    const player1Deck = pull(state.decks, pull(state.players, member1).deck);
-    const player2Deck = pull(state.decks, pull(state.players, member2).deck);
-    state.battles.set(
-      battleId,
-      new Battle(
-        BattleMember.from(member1, player1Deck),
-        BattleMember.from(member2, player2Deck)
-      )
+  startBattle(state, [player1, player2]: [PlayerId, PlayerId]) {
+    const player1Deck = pull(state.decks, pull(state.players, player1).deck);
+    const player2Deck = pull(state.decks, pull(state.players, player2).deck);
+    const battle = new Battle(
+      BattleMember.from(player1, player1Deck),
+      BattleMember.from(player2, player2Deck)
     );
-    return battleId;
+    state.battles.set(battle.id, battle);
+    return battle.id;
   },
   endTurn(state, battleId: BattleId) {
     const battle = pull(state.battles, battleId);
