@@ -70,7 +70,7 @@ describe("Machine", () => {
 
     it("can receive state", () => {
       let receivedState: unknown;
-      const machine = createReactionMachine((state) => {
+      const machine = createReactionMachine(({ state }) => {
         receivedState = original(state);
       });
       const startState = machine.state;
@@ -88,7 +88,7 @@ describe("Machine", () => {
     });
 
     it("can update state", () => {
-      const machine = createReactionMachine((state) => {
+      const machine = createReactionMachine(({ state }) => {
         state.value = "Updated";
       });
       machine.actions.a();
@@ -96,7 +96,7 @@ describe("Machine", () => {
     });
 
     it("updates does not mutate current state", () => {
-      const machine = createReactionMachine((state) => {
+      const machine = createReactionMachine(({ state }) => {
         state.value = "Updated";
       });
       const stateBeforeAction = machine.state;

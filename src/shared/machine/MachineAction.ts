@@ -10,7 +10,12 @@ export type MachineAction<
   Input = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Output = any
-> = (context: { state: State; actions: unknown }, input: Input) => Output;
+> = (context: MachineExecutionContext<State>, input: Input) => Output;
+
+export interface MachineExecutionContext<State> {
+  state: State;
+  actions: unknown;
+}
 
 export type MachineActionRecord<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,7 +49,7 @@ export type AnyMachineReaction<MC extends MachineContext = MachineContext> =
   MachineReaction<AnyMachineAction<MC>>;
 
 export type MachineReaction<Action extends MachineAction> = (
-  state: MachineActionState<Action>,
+  context: MachineExecutionContext<MachineActionState<Action>>,
   payload: MachineReactionPayload<Action>
 ) => void;
 

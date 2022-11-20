@@ -18,14 +18,17 @@ export class Machine<MC extends MachineContext> {
     private actionMap: MC["actions"],
     private selectReactions?: MachineReactionSelector<MC>
   ) {
-    this.actions = new Proxy({} as MachineActionsWithoutContext<MC["actions"]>, {
-      get:
-        (target, prop) =>
-        <ActionName extends keyof MC["actions"]>(
-          input: MachineActionInput<MC["actions"][ActionName]>
-        ) =>
-          this.performAction(prop as ActionName, input),
-    });
+    this.actions = new Proxy(
+      {} as MachineActionsWithoutContext<MC["actions"]>,
+      {
+        get:
+          (target, prop) =>
+          <ActionName extends keyof MC["actions"]>(
+            input: MachineActionInput<MC["actions"][ActionName]>
+          ) =>
+            this.performAction(prop as ActionName, input),
+      }
+    );
   }
 
   private performAction<ActionName extends keyof MC["actions"]>(
@@ -35,10 +38,11 @@ export class Machine<MC extends MachineContext> {
     let output: MachineActionOutput<MC["actions"][ActionName]>;
     this.execute((draft) => {
       const action = this.actionMap[name] as MC["actions"][ActionName];
-      output = action({ state: draft, actions: this.actions }, input);
+      const context = { state: draft, actions: this.actions };
+      output = action(context, input);
       const reactions = this.selectReactions?.(this.state, name) ?? [];
       for (const reaction of reactions) {
-        reaction(draft, { output, input });
+        reaction(context, { output, input });
       }
     });
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
