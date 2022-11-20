@@ -41,7 +41,8 @@ export type MachineActionsWithoutContext<Actions extends MachineActionRecord> =
   };
 
 export type MachineActionWithoutContext<Action extends MachineAction> =
-  Action extends (state: infer State, ...rest: infer Params) => infer Output
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Action extends (context: any, ...rest: infer Params) => infer Output
     ? (...rest: Params) => Output
     : never;
 
