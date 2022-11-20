@@ -20,7 +20,6 @@ export class Player extends Entity<PlayerId> {
 
 export type CardId = Id<"CardId">;
 export class Card extends Entity<CardId> {
-  id: CardId = createId();
   constructor(public effects: Effects) {
     super();
   }
