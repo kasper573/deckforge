@@ -55,6 +55,10 @@ export function createMachine<State>(state: State) {
   return new MachineBuilder(state, {}, () => undefined);
 }
 
+export function createMachineActions<State>() {
+  return <T extends MachineActionRecord<State>>(actions: T) => actions;
+}
+
 class MachineBuilder<State, Actions extends MachineActionRecord> {
   constructor(
     private _state: State,

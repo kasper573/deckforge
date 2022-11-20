@@ -3,20 +3,7 @@ import { createRuntime } from "./Runtime";
 import { createId } from "./createId";
 
 it("1v1: can play a one card deck and win the game", () => {
-  const card: Card = {
-    id: createId(),
-    effects: {
-      playCard: [
-        (state, ids) => {
-          const target = state.players.get(ids.targetId);
-          if (target) {
-            target.health -= 1;
-          }
-        },
-      ],
-    },
-  };
-
+  const card = mockCard(1);
   const deck: Deck = { id: createId(), cards: [card.id] };
   const player1: Player = { id: createId(), deck: deck.id, health: 1 };
   const player2: Player = { id: createId(), deck: deck.id, health: 1 };
@@ -31,17 +18,8 @@ it("1v1: can play a one card deck and win the game", () => {
     ]),
   });
 
-  runtime.actions.startBattle({
-    member1: player1.id,
-    member2: player2.id,
-  });
-
-  const battleId = Array.from(runtime.state.battles.values())[0]?.id!;
-
-  runtime.actions.drawCard({
-    playerId: player1.id,
-    battleId: battleId,
-  });
+  const battleId = runtime.actions.startBattle(player1.id, player2.id);
+  runtime.actions.drawCard(battleId, player1.id);
 
   let battle = runtime.state.battles.get(battleId)!;
   runtime.actions.playCard({
@@ -58,22 +36,6 @@ it("1v1: can play a one card deck and win the game", () => {
 });
 
 it("1v1: can play a two card deck and win the game", () => {
-  function mockCard(damage: number): Card {
-    return {
-      id: createId(),
-      effects: {
-        playCard: [
-          (state, ids) => {
-            const target = state.players.get(ids.targetId);
-            if (target) {
-              target.health -= damage;
-            }
-          },
-        ],
-      },
-    };
-  }
-
   const cards = new Map(
     [mockCard(1), mockCard(-1)].map((card) => [card.id, card])
   );
@@ -91,17 +53,8 @@ it("1v1: can play a two card deck and win the game", () => {
     ]),
   });
 
-  runtime.actions.startBattle({
-    member1: player1.id,
-    member2: player2.id,
-  });
-
-  const battleId = Array.from(runtime.state.battles.values())[0]?.id!;
-
-  runtime.actions.drawCard({
-    playerId: player1.id,
-    battleId: battleId,
-  });
+  const battleId = runtime.actions.startBattle(player1.id, player2.id);
+  runtime.actions.drawCard(battleId, player1.id);
 
   let battle = runtime.state.battles.get(battleId)!;
   runtime.actions.playCard({
@@ -116,3 +69,19 @@ it("1v1: can play a two card deck and win the game", () => {
   battle = runtime.state.battles.get(battleId)!;
   expect(battle?.winner).toBe(player1.id);
 });
+
+function mockCard(damage: number): Card {
+  return {
+    id: createId(),
+    effects: {
+      playCard: [
+        (state, _, { targetId }) => {
+          const target = state.players.get(targetId);
+          if (target) {
+            target.health -= 1;
+          }
+        },
+      ],
+    },
+  };
+}
