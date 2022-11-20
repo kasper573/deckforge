@@ -9,6 +9,7 @@
   "rules": {
     "@typescript-eslint/consistent-type-imports": "warn",
     "import/order": ["error"],
+    "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error"
   },

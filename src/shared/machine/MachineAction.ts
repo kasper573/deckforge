@@ -1,37 +1,53 @@
 import type { MachineContext } from "./MachineContext";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MachineAction<Input = any, Output = any> = (input: Input) => Output;
+export type AnyMachineAction<MC extends MachineContext = MachineContext> =
+  MC["actions"][keyof MC["actions"]];
 
-export type MachineActionRecord<Names extends string = string> = Record<
-  Names,
-  MachineAction
->;
+export type MachineAction<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  State = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Input extends any[] = any[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Output = any
+> = (state: State, ...input: Input) => Output;
 
-export type MachineActionInput<T extends MachineAction> = Parameters<T>[0];
+export type MachineActionRecord<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  State = any,
+  Names extends string = string
+> = Record<Names, MachineAction<State>>;
 
-export type MachineActionOutput<T extends MachineAction> = ReturnType<T>;
+export type MachineActionState<T extends MachineAction> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends MachineAction<infer State> ? State : never;
 
-export type AnyMachineReaction<MC extends MachineContext> = MachineReaction<
-  MC["state"],
-  MC["actions"][keyof MC["actions"]]
->;
+export type MachineActionInput<T extends MachineAction> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends MachineAction<any, infer Input> ? Input : never;
 
-export type MachineReaction<State, Action extends MachineAction> = (
-  state: State,
-  input: MachineActionInput<Action>
+export type MachineActionOutput<T extends MachineAction> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends MachineAction<any, any, infer Output> ? Output : never;
+
+export type AnyMachineReaction<MC extends MachineContext = MachineContext> =
+  MachineReaction<AnyMachineAction<MC>>;
+
+export type MachineReaction<Action extends MachineAction> = (
+  state: MachineActionState<Action>,
+  output: MachineActionOutput<Action>,
+  ...input: MachineActionInput<Action>
 ) => void;
 
 export type MachineReactionMap<MC extends MachineContext> = {
   [ActionName in keyof MC["actions"]]?: MachineReaction<
-    MC["state"],
     MC["actions"][ActionName]
   >;
 };
 
 export type MachineReactionCollection<MC extends MachineContext> = {
   [ActionName in keyof MC["actions"]]?: Iterable<
-    MachineReaction<MC["state"], MC["actions"][ActionName]>
+    MachineReaction<MC["actions"][ActionName]>
   >;
 };
 
@@ -44,13 +60,11 @@ export type MachineReactionCollector<MC extends MachineContext> = <
 >(
   state: MC["state"],
   actionName: ActionName
-) =>
-  | Iterable<MachineReaction<MC["state"], MC["actions"][ActionName]>>
-  | undefined;
+) => Iterable<MachineReaction<MC["actions"][ActionName]>> | undefined;
 
 export type MachineReactionGenerator<MC extends MachineContext> = <
   ActionName extends keyof MC["actions"]
 >(
   state: MC["state"],
   actionName: ActionName
-) => Generator<MachineReaction<MC["state"], MC["actions"][ActionName]>>;
+) => Generator<MachineReaction<MC["actions"][ActionName]>>;
