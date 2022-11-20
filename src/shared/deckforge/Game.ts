@@ -1,10 +1,9 @@
 import { createMachine, createMachineActions } from "../machine/Machine";
 import { pull } from "../util";
 import type { MachineContext } from "../machine/MachineContext";
+import { Battle, BattleMember } from "./Entities";
 import type {
-  Battle,
   BattleId,
-  BattleMember,
   Card,
   CardId,
   Deck,
@@ -32,11 +31,13 @@ const actions = createMachineActions<GameState>()({
     const battleId = createId<BattleId>();
     const player1Deck = pull(state.decks, pull(state.players, member1).deck);
     const player2Deck = pull(state.decks, pull(state.players, member2).deck);
-    state.battles.set(battleId, {
-      id: battleId,
-      member1: createBattleMember(member1, player1Deck),
-      member2: createBattleMember(member2, player2Deck),
-    });
+    state.battles.set(
+      battleId,
+      new Battle(
+        BattleMember.from(member1, player1Deck),
+        BattleMember.from(member2, player2Deck)
+      )
+    );
     return battleId;
   },
   endTurn(state, battleId: BattleId) {
@@ -54,7 +55,7 @@ const actions = createMachineActions<GameState>()({
     { battleId, playerId }: { battleId: BattleId; playerId: PlayerId }
   ) {
     const battle = pull(state.battles, battleId);
-    const member = selectBattleMember(battle, playerId);
+    const member = battle.selectMember(playerId);
     const card = member.cards.draw.shift();
     if (!card) {
       throw new Error(`No cards to draw`);
@@ -98,25 +99,4 @@ export function createGame(initialState: GameState) {
       }
     })
     .build();
-}
-
-function selectBattleMember(battle: Battle, playerId: PlayerId): BattleMember {
-  const member = [battle.member1, battle.member2].find(
-    (member) => member.playerId === playerId
-  );
-  if (!member) {
-    throw new Error(`Player ${playerId} not in battle ${battle.id}`);
-  }
-  return member;
-}
-
-function createBattleMember(playerId: PlayerId, deck: Deck): BattleMember {
-  return {
-    playerId,
-    cards: {
-      hand: [],
-      draw: deck.cards,
-      discard: [],
-    },
-  };
 }
