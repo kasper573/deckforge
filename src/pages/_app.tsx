@@ -8,7 +8,6 @@ import type { Session } from "next-auth";
 import type { AppProps } from "next/app";
 import { theme } from "../theme";
 import { trpc } from "../utils/trpc";
-import "../styles/globals.css";
 import { env } from "../env/client.mjs";
 import createEmotionCache from "../createEmotionCache";
 import { Layout } from "../components/Layout";
