@@ -5,6 +5,7 @@ export const font = Roboto({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   fallback: ["Helvetica", "Arial", "sans-serif"],
 });
 
