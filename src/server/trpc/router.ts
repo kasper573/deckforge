@@ -1,5 +1,5 @@
-import { authRouter } from "./services/auth";
-import { exampleRouter } from "./services/example";
+import { authRouter } from "../services/auth";
+import { exampleRouter } from "../services/example";
 import { t } from "./trpc";
 
 export const apiRouter = t.router({

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { t } from "../trpc";
-import { isAuthed } from "../../middlewares/isAuthed";
+import { t } from "../trpc/trpc";
+import { isAuthed } from "../middlewares/isAuthed";
 
 export const exampleRouter = t.router({
   hello: t.procedure

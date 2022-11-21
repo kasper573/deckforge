@@ -6,10 +6,10 @@ import Head from "next/head";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import type { Session } from "next-auth";
 import type { AppProps } from "next/app";
-import { theme } from "../theme";
-import { trpc } from "../utils/trpc";
+import { theme } from "../app/theme";
+import { trpc } from "../app/trpc";
 import { env } from "../env/client.mjs";
-import createEmotionCache from "../createEmotionCache";
+import createEmotionCache from "../app/createEmotionCache";
 import { Layout } from "../components/Layout";
 
 export interface MyAppProps extends AppProps<{ session?: Session }> {

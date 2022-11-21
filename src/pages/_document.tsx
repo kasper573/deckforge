@@ -3,8 +3,8 @@ import type { DocumentInitialProps } from "next/document";
 import Document, { Html, Head, Main, NextScript } from "next/document";
 import type { ReactNode } from "react";
 import createEmotionServer from "@emotion/server/create-instance";
-import createEmotionCache from "../createEmotionCache";
-import { font, theme } from "../theme";
+import createEmotionCache from "../app/createEmotionCache";
+import { font, theme } from "../app/theme";
 import type { MyAppType } from "./_app";
 
 export default class MyDocument extends Document<MyDocumentProps> {

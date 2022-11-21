@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { trpc } from "../utils/trpc";
+import { trpc } from "../app/trpc";
 
 export default function HomePage() {
   const hello = trpc.example.hello.useQuery({ text: "from tRPC" });
