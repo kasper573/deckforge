@@ -4,13 +4,13 @@ import Document, { Html, Head, Main, NextScript } from "next/document";
 import type { ReactNode } from "react";
 import createEmotionServer from "@emotion/server/create-instance";
 import createEmotionCache from "../createEmotionCache";
-import { roboto, theme } from "../theme";
+import { font, theme } from "../theme";
 import type { MyAppType } from "./_app";
 
 export default class MyDocument extends Document<MyDocumentProps> {
   render() {
     return (
-      <Html lang="en" className={roboto.className}>
+      <Html lang="en" className={font.className}>
         <Head>
           <meta name="theme-color" content={theme.palette.primary.main} />
           <link rel="shortcut icon" href="/favicon.ico" />

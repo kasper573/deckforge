@@ -11,6 +11,7 @@ import { trpc } from "../utils/trpc";
 import "../styles/globals.css";
 import { env } from "../env/client.mjs";
 import createEmotionCache from "../createEmotionCache";
+import { Layout } from "../components/Layout";
 
 export interface MyAppProps extends AppProps<{ session?: Session }> {
   emotionCache: EmotionCache;
@@ -31,7 +32,9 @@ function MyApp({
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <SessionProvider session={session}>
-          <Component {...pageProps} />
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
         </SessionProvider>
         {env.NEXT_PUBLIC_ENABLE_ANALYTICS ? <Analytics /> : undefined}
       </ThemeProvider>
