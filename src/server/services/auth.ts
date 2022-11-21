@@ -1,5 +1,5 @@
-import { t } from "../trpc";
-import { isAuthed } from "../../middlewares/isAuthed";
+import { t } from "../trpc/trpc";
+import { isAuthed } from "../middlewares/isAuthed";
 
 export const authRouter = t.router({
   getSession: t.procedure.query(({ ctx }) => {
