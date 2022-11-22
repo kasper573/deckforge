@@ -17,11 +17,8 @@ export default function GameEditPage() {
           <ListItemButton component={Link} href="/build/gameId/entity">
             <ListItemText primary="Entities" />
           </ListItemButton>
-          <ListItemButton component={Link} href="/build/gameId/action">
-            <ListItemText primary="Actions" />
-          </ListItemButton>
-          <ListItemButton component={Link} href="/build/gameId/reaction">
-            <ListItemText primary="Reactions" />
+          <ListItemButton component={Link} href="/build/gameId/events">
+            <ListItemText primary="Events" />
           </ListItemButton>
         </List>
       </Paper>
