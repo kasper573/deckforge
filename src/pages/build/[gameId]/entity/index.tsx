@@ -1,10 +1,8 @@
 import Paper from "@mui/material/Paper";
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import IconButton from "@mui/material/IconButton";
 import ListItemText from "@mui/material/ListItemText";
+import ListItemButton from "@mui/material/ListItemButton";
 import Link from "../../../../components/Link";
-import { Edit } from "../../../../components/icons";
 import { Header } from "../../../../components/Header";
 
 export default function EntityListPage() {
@@ -23,18 +21,8 @@ export default function EntityListPage() {
 
 export function EntityListItem({ name }: { name: string }) {
   return (
-    <ListItem
-      secondaryAction={
-        <IconButton
-          component={Link}
-          href="/build/gameId/entity/entityId"
-          aria-label="edit"
-        >
-          <Edit />
-        </IconButton>
-      }
-    >
+    <ListItemButton component={Link} href="/build/gameId/entity/entityId">
       <ListItemText primary={name} />
-    </ListItem>
+    </ListItemButton>
   );
 }
