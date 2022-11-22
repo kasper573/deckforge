@@ -1,50 +1,32 @@
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
-import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
-import { Delete, Edit } from "./icons";
+import Paper from "@mui/material/Paper";
+import { EditableListItem } from "./EditableListItem";
 
 export function EntityEditor() {
   return (
     <>
-      <List sx={{ mb: 2 }}>
-        <PropertyListItem name="Health" type="number" readOnly />
-        <PropertyListItem name="Attack" type="number" readOnly />
-        <PropertyListItem name="Defense" type="number" />
-        <PropertyListItem name="Type" type="Enum (Attack, Block, Status)" />
-      </List>
+      <Paper sx={{ mb: 3 }}>
+        <List dense>
+          <EditableListItem readOnly>
+            <ListItemText primary="Health" secondary="number" />
+          </EditableListItem>
+          <EditableListItem readOnly>
+            <ListItemText primary="Attack" secondary="number" />
+          </EditableListItem>
+          <EditableListItem>
+            <ListItemText primary="Defense" secondary="number" />
+          </EditableListItem>
+          <EditableListItem>
+            <ListItemText
+              primary="Type"
+              secondary="Enum (Attack, Block, Status)"
+            />
+          </EditableListItem>
+        </List>
+      </Paper>
       <Button variant="contained">Create new property</Button>
     </>
-  );
-}
-
-export function PropertyListItem({
-  name,
-  type,
-  readOnly,
-}: {
-  name: string;
-  type: string;
-  readOnly?: boolean;
-}) {
-  return (
-    <ListItem
-      sx={{ opacity: readOnly ? 0.5 : 1 }}
-      secondaryAction={
-        !readOnly && (
-          <>
-            <IconButton aria-label="edit">
-              <Edit />
-            </IconButton>
-            <IconButton edge="end" aria-label="delete">
-              <Delete />
-            </IconButton>
-          </>
-        )
-      }
-    >
-      <ListItemText primary={name} secondary={type} />
-    </ListItem>
   );
 }

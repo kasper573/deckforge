@@ -33,6 +33,8 @@ const globalStyles = (
     styles={{
       [`html, body, #__next`]: {
         minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
       },
     }}
   />

@@ -20,6 +20,8 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 const Container = styled(MuiContainer)`
-  padding-top: ${({ theme }) => theme.spacing(2)};
+  padding: ${({ theme }) => theme.spacing(2)} 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
