@@ -6,6 +6,8 @@ import NextLink from "next/link";
 import type { LinkProps as MuiLinkProps } from "@mui/material/Link";
 import MuiLink from "@mui/material/Link";
 import { styled } from "@mui/material/styles";
+import type { TypeSafePage } from "next-type-safe-routes";
+import { getRoute } from "next-type-safe-routes";
 
 const Anchor = styled("a")({});
 
@@ -15,7 +17,7 @@ interface NextLinkComposedProps
       NextLinkProps,
       "href" | "as" | "onClick" | "onMouseEnter" | "onTouchStart"
     > {
-  to: NextLinkProps["href"];
+  href: NextLinkProps["href"];
   linkAs?: NextLinkProps["as"];
 }
 
@@ -24,7 +26,7 @@ export const NextLinkComposed = React.forwardRef<
   NextLinkComposedProps
 >(function NextLinkComposed(props, ref) {
   const {
-    to,
+    href,
     linkAs,
     replace,
     scroll,
@@ -37,7 +39,7 @@ export const NextLinkComposed = React.forwardRef<
 
   return (
     <NextLink
-      href={to}
+      href={href}
       prefetch={prefetch}
       as={linkAs}
       replace={replace}
@@ -55,10 +57,10 @@ export const NextLinkComposed = React.forwardRef<
 export type LinkProps = {
   activeClassName?: string;
   as?: NextLinkProps["as"];
-  href: NextLinkProps["href"];
+  to: TypeSafePage;
   linkAs?: NextLinkProps["as"]; // Useful when the as prop is shallow by styled().
   noLinkStyle?: boolean;
-} & Omit<NextLinkComposedProps, "to" | "linkAs" | "href"> &
+} & Omit<NextLinkComposedProps, "linkAs" | "href"> &
   Omit<MuiLinkProps, "href">;
 
 // A styled version of the Next.js Link component:
@@ -71,7 +73,7 @@ const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(function Link(
     activeClassName = "active",
     as,
     className: classNameProps,
-    href,
+    to,
     legacyBehavior,
     linkAs: linkAsProp,
     locale,
@@ -84,27 +86,34 @@ const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(function Link(
     ...other
   } = props;
 
+  // When composing Link with other components, sometimes those components might send in an href prop that
+  // typescript would not be able to detect, in which case we would get a runtime error, so we delete it to make sure that doesn't happen.
+  // Example: <WillPassInHref component={Link} to="/foo" />
+  if ("href" in other) {
+    delete other["href"];
+  }
+
   const router = useRouter();
-  const pathname = typeof href === "string" ? href : href.pathname;
+  const pathname = getRoute(to);
   const className = clsx(classNameProps, {
-    [activeClassName]: router.pathname === pathname && activeClassName,
+    [activeClassName]: router.pathname === to && activeClassName,
   });
 
   const isExternal =
-    typeof href === "string" &&
-    (href.indexOf("http") === 0 || href.indexOf("mailto:") === 0);
+    typeof to === "string" &&
+    (to.indexOf("http") === 0 || to.indexOf("mailto:") === 0);
 
   if (isExternal) {
     if (noLinkStyle) {
-      return <Anchor className={className} href={href} ref={ref} {...other} />;
+      return <Anchor className={className} href={to} ref={ref} {...other} />;
     }
 
-    return <MuiLink className={className} href={href} ref={ref} {...other} />;
+    return <MuiLink className={className} href={to} ref={ref} {...other} />;
   }
 
   const linkAs = linkAsProp || as;
   const nextJsProps = {
-    to: href,
+    href: pathname,
     linkAs,
     replace,
     scroll,

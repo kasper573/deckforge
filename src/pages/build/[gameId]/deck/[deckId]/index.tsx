@@ -31,7 +31,10 @@ export function CardListItem() {
         <>
           <IconButton
             component={Link}
-            href="/build/gameId/deck/deckId/cardId"
+            to={{
+              route: "/build/[gameId]/deck/[deckId]/[cardId]",
+              params: { gameId: "foo", deckId: "bar", cardId: "baz" },
+            }}
             aria-label="edit"
           >
             <Edit />

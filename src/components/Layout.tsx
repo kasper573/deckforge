@@ -10,7 +10,7 @@ export function Layout({ children }: { children: ReactNode }) {
     <>
       <AppBar>
         <Toolbar>
-          <Link href="/">Deck Forge</Link>
+          <Link to="/">Deck Forge</Link>
         </Toolbar>
       </AppBar>
       <Toolbar />

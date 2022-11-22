@@ -4,7 +4,7 @@ export default function HomePage() {
   return (
     <>
       Home
-      <Link href="/build">Build</Link>
+      <Link to="/build">Build</Link>
     </>
   );
 }

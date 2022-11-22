@@ -11,13 +11,28 @@ export default function GameEditPage() {
       <Header>GameEditPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
-          <ListItemButton component={Link} href="/build/gameId/deck">
+          <ListItemButton
+            component={Link}
+            to={{ route: "/build/[gameId]/deck", params: { gameId: "gameId" } }}
+          >
             <ListItemText primary="Decks" />
           </ListItemButton>
-          <ListItemButton component={Link} href="/build/gameId/entity">
+          <ListItemButton
+            component={Link}
+            to={{
+              route: "/build/[gameId]/entity",
+              params: { gameId: "gameId" },
+            }}
+          >
             <ListItemText primary="Entities" />
           </ListItemButton>
-          <ListItemButton component={Link} href="/build/gameId/events">
+          <ListItemButton
+            component={Link}
+            to={{
+              route: "/build/[gameId]/events",
+              params: { gameId: "gameId" },
+            }}
+          >
             <ListItemText primary="Events" />
           </ListItemButton>
         </List>
