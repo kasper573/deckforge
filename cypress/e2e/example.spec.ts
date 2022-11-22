@@ -1,6 +1,6 @@
 describe("example", () => {
-  it("can get hello from tRPC", () => {
+  it("can see home page text", () => {
     cy.visit("/");
-    cy.contains("Hello from tRPC");
+    cy.contains("Home");
   });
 });
