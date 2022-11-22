@@ -12,7 +12,7 @@ const config = {
   reactStrictMode: true,
   swcMinify: true,
   compiler: {
-    emotion: true
+    emotion: true,
   },
   i18n: {
     locales: ["en"],
