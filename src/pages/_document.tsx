@@ -3,6 +3,7 @@ import type { DocumentInitialProps } from "next/document";
 import Document, { Html, Head, Main, NextScript } from "next/document";
 import type { ReactNode } from "react";
 import createEmotionServer from "@emotion/server/create-instance";
+import GlobalStyles from "@mui/material/GlobalStyles";
 import createEmotionCache from "../app/createEmotionCache";
 import { font, theme } from "../app/theme";
 import type { MyAppType } from "./_app";
@@ -20,11 +21,24 @@ export default class MyDocument extends Document<MyDocumentProps> {
         <body>
           <Main />
           <NextScript />
+          {globalStyles}
         </body>
       </Html>
     );
   }
 }
+
+const globalStyles = (
+  <GlobalStyles
+    styles={{
+      [`html, body, #__next`]: {
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      },
+    }}
+  />
+);
 
 interface MyDocumentProps extends DocumentInitialProps {
   emotionStyleTags: ReactNode[];

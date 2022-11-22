@@ -1,6 +1,11 @@
 {
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint", "import", "unused-imports"],
+  "plugins": [
+    "@typescript-eslint",
+    "import",
+    "unused-imports",
+    "mui-path-imports"
+  ],
   "extends": [
     "next/core-web-vitals",
     "plugin:@typescript-eslint/recommended",
@@ -11,7 +16,8 @@
     "import/order": ["error"],
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-unused-vars": "off",
-    "unused-imports/no-unused-imports": "error"
+    "unused-imports/no-unused-imports": "error",
+    "mui-path-imports/mui-path-imports": "error"
   },
   "overrides": [
     {
