@@ -29,10 +29,18 @@ export function GameListItem() {
     <ListItem
       secondaryAction={
         <>
-          <IconButton component={Link} href="/play/foo" aria-label="play">
+          <IconButton
+            component={Link}
+            to={{ route: "/play/[gameId]", params: { gameId: "foo" } }}
+            aria-label="play"
+          >
             <Play />
           </IconButton>
-          <IconButton component={Link} href="/build/gameId" aria-label="edit">
+          <IconButton
+            component={Link}
+            to={{ route: "/build/[gameId]", params: { gameId: "foo" } }}
+            aria-label="edit"
+          >
             <Edit />
           </IconButton>
           <IconButton edge="end" aria-label="delete">

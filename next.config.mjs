@@ -1,3 +1,5 @@
+import nextTypeSafePages from "next-type-safe-routes/plugin.js";
+
 // @ts-check
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
@@ -10,11 +12,12 @@ const config = {
   reactStrictMode: true,
   swcMinify: true,
   compiler: {
-    emotion: true
+    emotion: true,
   },
   i18n: {
     locales: ["en"],
     defaultLocale: "en",
   },
 };
-export default config;
+
+export default nextTypeSafePages(config);

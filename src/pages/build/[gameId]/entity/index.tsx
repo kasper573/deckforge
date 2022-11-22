@@ -21,7 +21,13 @@ export default function EntityListPage() {
 
 export function EntityListItem({ name }: { name: string }) {
   return (
-    <ListItemButton component={Link} href="/build/gameId/entity/entityId">
+    <ListItemButton
+      component={Link}
+      to={{
+        route: "/build/[gameId]/entity/[entityId]",
+        params: { gameId: "gameId", entityId: "entityId" },
+      }}
+    >
       <ListItemText primary={name} />
     </ListItemButton>
   );
