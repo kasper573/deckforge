@@ -54,6 +54,7 @@ model Session {
 enum UserRole {
   Admin
   User
+  Guest
 }
 
 model User {
