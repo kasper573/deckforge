@@ -2,15 +2,15 @@ import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import type { ComponentProps, ReactNode } from "react";
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import type { TypeSafePage } from "next-type-safe-routes";
 import { useSession } from "next-auth/react";
 import Construction from "@mui/icons-material/Construction";
-import Link from "../components/Link";
+import ListItemButton from "@mui/material/ListItemButton";
 import { Play } from "../components/icons";
 import { defined } from "../shared/util/defined";
+import Link from "../components/Link";
 
 export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
   const { data: session } = useSession();
@@ -49,15 +49,17 @@ function RouteList({ routes, onItemSelected, ...props }: RouteListProps) {
   return (
     <List role="menu" {...props}>
       {routes.map(({ linkTo, icon, label }, index) => (
-        <ListItem
+        <ListItemButton
           component={Link}
+          activeClassName="Mui-selected"
+          activeExact
           to={linkTo}
           key={index}
           onClick={onItemSelected}
         >
           <ListItemIcon>{icon}</ListItemIcon>
           <ListItemText primary={label} />
-        </ListItem>
+        </ListItemButton>
       ))}
     </List>
   );
