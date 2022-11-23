@@ -11,7 +11,7 @@ import { theme } from "../app/theme";
 import { trpc } from "../app/trpc";
 import { env } from "../env/client.mjs";
 import createEmotionCache from "../app/createEmotionCache";
-import { Layout } from "../components/Layout";
+import { Layout } from "../layout/Layout";
 
 export interface MyAppProps extends AppProps<{ session?: Session }> {
   emotionCache: EmotionCache;
