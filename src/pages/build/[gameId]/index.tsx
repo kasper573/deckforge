@@ -4,10 +4,11 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemButton from "@mui/material/ListItemButton";
 import { Header } from "../../../components/Header";
 import Link from "../../../components/Link";
+import { Page } from "../../../layout/Page";
 
 export default function GameEditPage() {
   return (
-    <>
+    <Page>
       <Header>GameEditPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
@@ -37,6 +38,6 @@ export default function GameEditPage() {
           </ListItemButton>
         </List>
       </Paper>
-    </>
+    </Page>
   );
 }

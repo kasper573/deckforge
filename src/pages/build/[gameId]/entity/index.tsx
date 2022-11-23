@@ -4,10 +4,11 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemButton from "@mui/material/ListItemButton";
 import Link from "../../../../components/Link";
 import { Header } from "../../../../components/Header";
+import { Page } from "../../../../layout/Page";
 
 export default function EntityListPage() {
   return (
-    <>
+    <Page>
       <Header>EntityListPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
@@ -15,7 +16,7 @@ export default function EntityListPage() {
           <EntityListItem name="Card" />
         </List>
       </Paper>
-    </>
+    </Page>
   );
 }
 

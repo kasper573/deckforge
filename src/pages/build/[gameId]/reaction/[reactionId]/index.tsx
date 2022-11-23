@@ -1,3 +1,5 @@
+import { Page } from "../../../../../layout/Page";
+
 export default function ReactionEditPage() {
-  return <>ReactionEditPage</>;
+  return <Page>ReactionEditPage</Page>;
 }

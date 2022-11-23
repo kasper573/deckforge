@@ -1,3 +1,5 @@
+import { Page } from "../../../layout/Page";
+
 export default function GamePlayPage() {
-  return <>GamePlayPage</>;
+  return <Page>GamePlayPage</Page>;
 }
