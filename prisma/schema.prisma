@@ -9,11 +9,7 @@ generator client {
   previewFeatures = ["referentialIntegrity"]
 }
 
-model Example {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+// NextAuth entities
 
 model Account {
   id                String  @id @default(cuid())
@@ -63,4 +59,12 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// DeckForge entities
+
+model Example {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
