@@ -81,6 +81,7 @@ export function Layout({ children }: { children?: ReactNode }) {
         </Toolbar>
         <Menu onItemSelected={handleDrawerCloseRequest} />
       </Drawer>
+      <Toolbar />
       <Box component="main" sx={contentBounds}>
         {children}
       </Box>
