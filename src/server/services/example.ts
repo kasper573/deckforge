@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { t } from "../trpc/trpc";
-import { isAuthed } from "../middlewares/isAuthed";
+import { access } from "../middlewares/access";
 
 export const exampleRouter = t.router({
   hello: t.procedure
@@ -10,7 +10,7 @@ export const exampleRouter = t.router({
         greeting: `Hello ${input?.text ?? "world"}`,
       };
     }),
-  getAll: t.procedure.use(isAuthed()).query(({ ctx }) => {
+  getAll: t.procedure.use(access()).query(({ ctx }) => {
     return ctx.prisma.example.findMany();
   }),
 });
