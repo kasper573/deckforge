@@ -1,5 +1,5 @@
 import { Roboto } from "@next/font/google";
-import { createTheme } from "@mui/material/styles";
+import { createTheme as createMuiTheme } from "@mui/material/styles";
 
 export const font = Roboto({
   weight: ["300", "400", "500", "700"],
@@ -9,11 +9,13 @@ export const font = Roboto({
   fallback: ["Helvetica", "Arial", "sans-serif"],
 });
 
-export const theme = createTheme({
-  palette: {
-    mode: "dark",
-  },
-  typography: {
-    fontFamily: font.style.fontFamily,
-  },
-});
+export function createTheme() {
+  return createMuiTheme({
+    palette: {
+      mode: "dark",
+    },
+    typography: {
+      fontFamily: font.style.fontFamily,
+    },
+  });
+}
