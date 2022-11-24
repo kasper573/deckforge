@@ -8,8 +8,8 @@ import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import useTheme from "@mui/material/styles/useTheme";
 import Drawer from "@mui/material/Drawer";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { Menu as MenuIcon } from "../components/icons";
-import { useReadyMediaQuery } from "../hooks/useReadyMediaQuery";
 import { ToolbarContent } from "./ToolbarContent";
 import { Menu } from "./Menu";
 import { Logo } from "./Logo";
@@ -17,8 +17,8 @@ import { pageMaxWidth } from "./Page";
 
 export function Layout({ children }: { children?: ReactNode }) {
   const theme = useTheme();
-  const isDrawerPermanent = useReadyMediaQuery(theme.breakpoints.up("md"));
-  const [isDrawerOpen, setDrawerOpen] = useState(isDrawerPermanent === true);
+  const isDrawerPermanent = useMediaQuery(theme.breakpoints.up("md"));
+  const [isDrawerOpen, setDrawerOpen] = useState(isDrawerPermanent);
 
   useEffect(() => {
     if (isDrawerPermanent !== undefined) {
