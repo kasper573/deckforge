@@ -56,6 +56,7 @@ export const NextLinkComposed = React.forwardRef<
 
 export type LinkProps = {
   activeClassName?: string;
+  activeExact?: boolean;
   as?: NextLinkProps["as"];
   to: TypeSafePage;
   linkAs?: NextLinkProps["as"]; // Useful when the as prop is shallow by styled().
@@ -71,8 +72,9 @@ const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(function Link(
 ) {
   const {
     activeClassName = "active",
+    activeExact = false,
     as,
-    className: classNameProps,
+    className: inputClassName,
     to,
     legacyBehavior,
     linkAs: linkAsProp,
@@ -95,8 +97,9 @@ const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(function Link(
 
   const router = useRouter();
   const pathname = getRoute(to);
-  const className = clsx(classNameProps, {
-    [activeClassName]: router.pathname === to && activeClassName,
+  const className = clsx(inputClassName, {
+    [activeClassName]:
+      isActive(router.asPath, pathname, activeExact) && activeClassName,
   });
 
   const isExternal =
@@ -144,5 +147,18 @@ const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(function Link(
     />
   );
 });
+
+function isActive(
+  routerPathname: string,
+  linkPathname: string,
+  exact: boolean
+) {
+  if (exact) {
+    return routerPathname === linkPathname;
+  }
+
+  const index = routerPathname.indexOf(linkPathname);
+  return index === 0;
+}
 
 export default Link;

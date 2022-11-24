@@ -7,10 +7,11 @@ import Paper from "@mui/material/Paper";
 import { Delete, Edit, Play } from "../../components/icons";
 import Link from "../../components/Link";
 import { Header } from "../../components/Header";
+import { Page } from "../../layout/Page";
 
 export default function GameEditorListPage() {
   return (
-    <>
+    <Page>
       <Header>GameEditorListPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
@@ -20,7 +21,7 @@ export default function GameEditorListPage() {
         </List>
       </Paper>
       <Button variant="contained">Create new game</Button>
-    </>
+    </Page>
   );
 }
 

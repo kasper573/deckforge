@@ -11,10 +11,11 @@ import { Header } from "../../../components/Header";
 import { CodeEditor } from "../../../components/CodeEditor";
 import { SideMenu } from "../../../components/SideMenu";
 import { Add, Delete, Edit, More } from "../../../components/icons";
+import { Page } from "../../../layout/Page";
 
 export default function EventsPage() {
   return (
-    <>
+    <Page>
       <Header>EventsPage</Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
         <SideMenu>
@@ -28,7 +29,7 @@ export default function EventsPage() {
         </SideMenu>
         <CodeEditor sx={{ flex: 1 }} />
       </Stack>
-    </>
+    </Page>
   );
 }
 

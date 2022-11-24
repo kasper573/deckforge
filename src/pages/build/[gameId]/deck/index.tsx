@@ -7,10 +7,11 @@ import ListItemText from "@mui/material/ListItemText";
 import Link from "../../../../components/Link";
 import { Delete, Edit } from "../../../../components/icons";
 import { Header } from "../../../../components/Header";
+import { Page } from "../../../../layout/Page";
 
 export default function DeckListPage() {
   return (
-    <>
+    <Page>
       <Header>DeckListPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
@@ -20,7 +21,7 @@ export default function DeckListPage() {
         </List>
       </Paper>
       <Button variant="contained">Create new deck</Button>
-    </>
+    </Page>
   );
 }
 

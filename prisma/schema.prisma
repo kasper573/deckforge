@@ -9,6 +9,16 @@ generator client {
   previewFeatures = ["referentialIntegrity"]
 }
 
+generator zod {
+  provider              = "zod-prisma"
+  output                = "./zod"
+  relationModel         = true
+  modelCase             = "camelCase"
+  modelSuffix           = "Type"
+  useDecimalJs          = true
+  prismaJsonNullability = true
+}
+
 model Example {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
@@ -44,6 +54,7 @@ model Session {
 enum UserRole {
   Admin
   User
+  Guest
 }
 
 model User {

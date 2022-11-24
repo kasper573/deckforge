@@ -1,22 +1,24 @@
+import type { ReactNode } from "react";
 import * as React from "react";
 import type { DocumentInitialProps } from "next/document";
-import Document, { Html, Head, Main, NextScript } from "next/document";
-import type { ReactNode } from "react";
+import Document, { Head, Html, Main, NextScript } from "next/document";
 import createEmotionServer from "@emotion/server/create-instance";
 import GlobalStyles from "@mui/material/GlobalStyles";
+import type { Theme } from "@mui/material";
 import createEmotionCache from "../app/createEmotionCache";
-import { font, theme } from "../app/theme";
+import { createTheme, font } from "../app/theme";
 import type { MyAppType } from "./_app";
 
 export default class MyDocument extends Document<MyDocumentProps> {
   render() {
+    const { muiTheme, emotionStyleTags } = this.props;
     return (
       <Html lang="en" className={font.className}>
         <Head>
-          <meta name="theme-color" content={theme.palette.primary.main} />
+          <meta name="theme-color" content={muiTheme.palette.primary.main} />
           <link rel="shortcut icon" href="/favicon.ico" />
           <meta name="emotion-insertion-point" content="" />
-          {this.props.emotionStyleTags}
+          {emotionStyleTags}
         </Head>
         <body>
           <Main />
@@ -42,19 +44,27 @@ const globalStyles = (
 
 interface MyDocumentProps extends DocumentInitialProps {
   emotionStyleTags: ReactNode[];
+  muiTheme: Theme;
 }
 
 MyDocument.getInitialProps = async (ctx): Promise<MyDocumentProps> => {
   const originalRenderPage = ctx.renderPage;
-  const cache = createEmotionCache();
-  const { extractCriticalToChunks } = createEmotionServer(cache);
+  const muiTheme = createTheme();
+  const emotionCache = createEmotionCache();
+  const { extractCriticalToChunks } = createEmotionServer(emotionCache);
 
   ctx.renderPage = () =>
     originalRenderPage({
       enhanceApp: (OriginalApp) =>
         function EnhanceApp(props) {
           const EnhancedApp = OriginalApp as MyAppType;
-          return <EnhancedApp {...props} emotionCache={cache} />;
+          return (
+            <EnhancedApp
+              {...props}
+              emotionCache={emotionCache}
+              muiTheme={muiTheme}
+            />
+          );
         },
     });
 
@@ -74,5 +84,6 @@ MyDocument.getInitialProps = async (ctx): Promise<MyDocumentProps> => {
   return {
     ...initialProps,
     emotionStyleTags,
+    muiTheme,
   };
 };
