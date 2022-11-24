@@ -1,14 +1,13 @@
-import type { CSSProperties, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
-import useTheme from "@mui/material/styles/useTheme";
-import Drawer from "@mui/material/Drawer";
-import useMediaQuery from "@mui/material/useMediaQuery";
+import MuiDrawer from "@mui/material/Drawer";
+import { styled } from "@mui/material/styles";
 import { Menu as MenuIcon } from "../components/icons";
 import { ToolbarContent } from "./ToolbarContent";
 import { Menu } from "./Menu";
@@ -16,75 +15,92 @@ import { Logo } from "./Logo";
 import { pageMaxWidth } from "./Page";
 
 export function Layout({ children }: { children?: ReactNode }) {
-  const theme = useTheme();
-  const isDrawerPermanent = useMediaQuery(theme.breakpoints.up("md"));
-  const [isDrawerOpen, setDrawerOpen] = useState(isDrawerPermanent);
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const closeDrawer = () => setDrawerOpen(false);
 
-  useEffect(() => {
-    if (isDrawerPermanent !== undefined) {
-      setDrawerOpen(isDrawerPermanent);
-    }
-  }, [isDrawerPermanent]);
-
-  function handleDrawerCloseRequest() {
-    if (!isDrawerPermanent) {
-      setDrawerOpen(false);
-    }
-  }
-
-  const drawerWidth = 240;
-  const contentBounds: CSSProperties = {
-    width: isDrawerPermanent ? `calc(100% - ${drawerWidth}px)` : undefined,
-    marginLeft: isDrawerPermanent ? `${drawerWidth}px` : undefined,
-    display: "flex",
-    flexDirection: "column",
-    flex: 1,
+  const drawerProps = {
+    "aria-label": "Main menu",
+    children: (
+      <>
+        <Toolbar sx={{ "&": { padding: 0 } }}>
+          <Box sx={{ display: "flex", justifyContent: "center", flex: 1 }}>
+            <Logo onClick={closeDrawer} />
+          </Box>
+        </Toolbar>
+        <Menu onItemSelected={closeDrawer} />
+      </>
+    ),
   };
 
   return (
     <>
-      <AppBar position="fixed" sx={contentBounds}>
+      <AppBar position="fixed">
         <Toolbar disableGutters>
           <Container maxWidth={pageMaxWidth} sx={{ display: "flex" }}>
             <ToolbarContent>
-              {!isDrawerPermanent && (
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <IconButton
-                    aria-label="Open main menu"
-                    onClick={() => setDrawerOpen(true)}
-                  >
-                    <MenuIcon />
-                  </IconButton>
-                  <Logo>Deck Forge</Logo>
-                </Stack>
-              )}
+              <SmallDeviceToolbarTitle
+                direction="row"
+                spacing={1}
+                alignItems="center"
+              >
+                <IconButton
+                  aria-label="Open main menu"
+                  onClick={() => setDrawerOpen(true)}
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Logo />
+              </SmallDeviceToolbarTitle>
             </ToolbarContent>
           </Container>
         </Toolbar>
       </AppBar>
-      <Drawer
-        aria-label="Main menu"
-        variant={isDrawerPermanent ? "permanent" : "temporary"}
+
+      <LargeDeviceDrawer variant="permanent" open {...drawerProps} />
+      <SmallDeviceDrawer
+        variant="temporary"
         open={isDrawerOpen}
-        onClose={handleDrawerCloseRequest}
-        sx={{
-          "& .MuiDrawer-paper": {
-            boxSizing: "border-box",
-            width: drawerWidth,
-          },
-        }}
-      >
-        <Toolbar sx={{ "&": { padding: 0 } }}>
-          <Box sx={{ display: "flex", justifyContent: "center", flex: 1 }}>
-            <Logo onClick={handleDrawerCloseRequest}>Deck Forge</Logo>
-          </Box>
-        </Toolbar>
-        <Menu onItemSelected={handleDrawerCloseRequest} />
-      </Drawer>
+        disablePortal
+        onClose={closeDrawer}
+        {...drawerProps}
+      />
+
       <Toolbar />
-      <Box component="main" sx={contentBounds}>
-        {children}
-      </Box>
+
+      <Content>{children}</Content>
     </>
   );
 }
+
+const breakpoint = "md" as const;
+const drawerWidth = 240;
+
+const Drawer = styled(MuiDrawer)`
+  .MuiDrawer-paper {
+    width: ${drawerWidth}px;
+  }
+`;
+
+const Content = styled("main")`
+  ${({ theme }) => theme.breakpoints.up(breakpoint)} {
+    margin-left: ${drawerWidth}px;
+  }
+`;
+
+const LargeDeviceDrawer = styled(Drawer)`
+  ${({ theme }) => theme.breakpoints.down(breakpoint)} {
+    display: none;
+  }
+`;
+
+const SmallDeviceDrawer = styled(Drawer)`
+  ${({ theme }) => theme.breakpoints.up(breakpoint)} {
+    display: none;
+  }
+`;
+
+const SmallDeviceToolbarTitle = styled(Stack)`
+  ${({ theme }) => theme.breakpoints.up(breakpoint)} {
+    display: none;
+  }
+`;

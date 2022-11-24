@@ -2,7 +2,6 @@ import type { ComponentProps } from "react";
 import Link from "../components/Link";
 
 export function Logo({
-  children,
   to = "/",
   ...props
 }: Partial<ComponentProps<typeof Link>>) {
@@ -18,7 +17,7 @@ export function Logo({
       to={to}
       {...props}
     >
-      {children}
+      Deck Forge
     </Link>
   );
 }
