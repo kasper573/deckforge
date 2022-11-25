@@ -9,15 +9,8 @@ export function loadEnv<T extends ZodType>(
   if (result.success === true) {
     return result.data;
   }
-  const formattedErrors = Object.entries(result.error.format())
-    .map(([name, value]) =>
-      "_errors" in value
-        ? `${name}: ${(value._errors as unknown[]).join(", ")}\n`
-        : undefined
-    )
-    .filter(Boolean);
 
   throw new Error(
-    "Invalid environment variables:\n" + formattedErrors.join("\n")
+    "Invalid environment variables:\n" + JSON.stringify(result.error, null, 2)
   );
 }
