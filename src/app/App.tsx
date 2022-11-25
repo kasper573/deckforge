@@ -15,14 +15,14 @@ interface AppProps {
 
 function App({ theme }: AppProps) {
   return (
-    <Auth0Provider {...env.Auth0}>
+    <Auth0Provider {...env.auth0}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         {globalStyles}
         <Layout>
           <HomePage />
         </Layout>
-        {env.ENABLE_ANALYTICS ? <Analytics /> : undefined}
+        {env.enableAnalytics ? <Analytics /> : undefined}
       </ThemeProvider>
     </Auth0Provider>
   );

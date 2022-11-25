@@ -3,15 +3,19 @@ import { z } from "zod";
 import { loadEnv } from "../shared/util/loadEnv";
 import { zodNumeric } from "../shared/util/zod/zodNumeric";
 
-dotEnvFlow.config({ default_node_env: "development" });
+dotEnvFlow.config({
+  default_node_env: "development",
+  purge_dotenv: true,
+});
 
 const schema = z.object({
-  API_PORT: zodNumeric.optional(),
-  DATABASE_URL: z.string().url(),
-  NODE_ENV: z.enum(["development", "test", "production"]),
+  apiPort: zodNumeric.optional(),
+  databaseUrl: z.string().url(),
+  environment: z.enum(["development", "test", "production"]),
 });
 
 export const env = loadEnv(schema, {
-  ...process.env,
-  API_PORT: process.env.VITE_API_PORT,
+  apiPort: process.env.VITE_API_PORT,
+  databaseUrl: process.env.DATABASE_URL,
+  environment: process.env.NODE_ENV,
 });

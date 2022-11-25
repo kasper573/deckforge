@@ -11,10 +11,12 @@ export function createPrismaClient() {
     global.prisma ||
     new PrismaClient({
       log:
-        env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+        env.environment === "development"
+          ? ["query", "error", "warn"]
+          : ["error"],
     });
 
-  if (env.NODE_ENV !== "production") {
+  if (env.environment !== "production") {
     global.prisma = client;
   }
 

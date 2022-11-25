@@ -17,7 +17,7 @@ export const trpcClient = trpc.createClient({
       enabled(opts) {
         const canUseLoggerLink =
           opts.direction === "down" && opts.result instanceof Error;
-        return canUseLoggerLink && env.ENABLE_LOGGER_LINK;
+        return canUseLoggerLink && env.enableLoggerLink;
       },
     }),
     httpBatchLink({
@@ -28,7 +28,7 @@ export const trpcClient = trpc.createClient({
 
 function getApiBaseUrl() {
   return `//${window.location.hostname}${
-    env.API_PORT ? `:${env.API_PORT}` : ""
+    env.apiPort ? `:${env.apiPort}` : ""
   }/api`;
 }
 
