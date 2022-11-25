@@ -1,6 +1,6 @@
 import { t } from "./trpc";
 
-export function createApiRouter () {
+export function createApiRouter() {
   return t.router({
     foo: t.procedure.query(() => "foo"),
     bar: t.procedure.query(() => "bar"),
