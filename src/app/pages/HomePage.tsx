@@ -6,7 +6,7 @@ export default function HomePage() {
   const { data } = trpc.foo.useQuery();
   return (
     <Page>
-      <Header>Home</Header>
+      <Header>HomePage</Header>
       Response from tRPC: {data}
     </Page>
   );
