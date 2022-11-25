@@ -23,4 +23,11 @@ model Example {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  role      UserRole @default(Guest)
+}
+
+enum UserRole {
+  Guest
+  User
+  Admin
 }
