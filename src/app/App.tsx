@@ -20,7 +20,7 @@ function App({ theme }: AppProps) {
       <Layout>
         <HomePage />
       </Layout>
-      {env.VITE_ENABLE_ANALYTICS ? <Analytics /> : undefined}
+      {env.ENABLE_ANALYTICS ? <Analytics /> : undefined}
     </ThemeProvider>
   );
 }
