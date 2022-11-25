@@ -51,7 +51,7 @@ jobs:
       - name: Directory access permissions
         run: |
           chmod -R a+rwX ./node_modules/.prisma
-          chmod -R a+rwX ./node_modules/.vite
+          mkdir ./node_modules/.vite && chmod -R a+rwX ./node_modules/.vite
           chmod -R a+rwX ./cypress
           chmod -R a+rwX ./prisma
       - name: Push database
