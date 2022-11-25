@@ -1,6 +1,7 @@
 import * as path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import checker from "vite-plugin-checker";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -10,6 +11,13 @@ export default defineConfig({
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    checker({
+      eslint: { lintCommand: "lint" },
+      typescript: true,
+      overlay: false,
+    }),
+  ],
   envDir: __dirname,
 });

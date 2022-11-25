@@ -23,7 +23,7 @@
   "dependencies": {
     "@emotion/react": "11.10.5",
     "@emotion/styled": "11.10.5",
-    "@fontsource/roboto": "^4.5.8",
+    "@fontsource/roboto": "4.5.8",
     "@mui/icons-material": "5.10.14",
     "@mui/material": "5.10.14",
     "@prisma/client": "4.6.1",
@@ -78,6 +78,7 @@
     "tsx": "3.12.1",
     "typescript": "4.9.3",
     "vite": "3.2.3",
+    "vite-plugin-checker": "0.5.1",
     "zod-prisma": "0.5.4"
   }
 }
