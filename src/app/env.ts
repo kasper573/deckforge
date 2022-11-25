@@ -11,6 +11,8 @@ const schema = z.object({
     domain: z.string(),
     clientId: z.string(),
     redirectUri: z.string(),
+    returnUri: z.string(),
+    cacheLocation: z.enum(["memory", "localstorage"]),
   }),
 });
 
@@ -21,6 +23,8 @@ export const env = loadEnv(schema, {
   auth0: {
     domain: import.meta.env.VITE_AUTH0_DOMAIN,
     clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
+    cacheLocation: import.meta.env.VITE_AUTH0_CACHE_LOCATION,
     redirectUri: window.location.origin,
+    returnUri: window.location.origin,
   },
 });

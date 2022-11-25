@@ -7,14 +7,18 @@ import ListItemText from "@mui/material/ListItemText";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import type { ReactNode } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import { MenuOn } from "../components/MenuOn";
 import { Auth } from "../components/Auth";
 import { OnlineBadge } from "../components/OnlineBadge";
-import { useAuthControls, useSession } from "../hooks/useSession";
+import { useSession } from "../hooks/useSession";
+import { env } from "../env";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
   const { data: session } = useSession();
-  const { signIn, signOut } = useAuthControls();
+  const auth0 = useAuth0();
+  const signOut = () => auth0.logout({ returnTo: env.auth0.returnUri });
+  const signIn = () => auth0.loginWithRedirect();
   return (
     <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
       <Box>{children}</Box>
