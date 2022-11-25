@@ -1,2 +1,2 @@
-src/@types/next-type-safe-routes
 prisma/zod
+dist
