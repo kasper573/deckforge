@@ -17,6 +17,7 @@ export default defineConfig({
       eslint: { lintCommand: "lint" },
       typescript: true,
       overlay: false,
+      enableBuild: false,
     }),
   ],
   envDir: __dirname,
