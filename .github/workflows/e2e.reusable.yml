@@ -36,6 +36,7 @@ jobs:
       DATABASE_URL: "mysql://deckforge:deckforge@db:3306/deckforge"
       VITE_AUTH_IMPLEMENTATION: "fake"
       CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
+      CYPRESS_BASE_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v3
 
