@@ -60,14 +60,11 @@ export class StatefulAuth0Client<
       return;
     }
 
-    const [user, token] = await Promise.allSettled([
-      this.getUser<TUser>(),
-      this.getTokenSilently(),
-    ]);
+    const user = await this.getUser<TUser>().catch(() => undefined);
 
     this.setState({
       isAuthenticated,
-      user: user.status === "fulfilled" ? user.value : undefined,
+      user,
     });
   };
 
