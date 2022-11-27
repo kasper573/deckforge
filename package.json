@@ -16,9 +16,11 @@
     "lint:fix": "eslint . --fix && prettier . --write",
     "test:unit": "jest",
     "test:e2e": "cross-var start-server-and-test prod $CYPRESS_BASE_URL 'cypress run'",
-    "db:seed": "cross-env NODE_ENV=development prisma db seed",
-    "db:push": "prisma db push",
-    "db:deploy": "pscale deploy-request create deckforge"
+    "db:reset": "dotenv-flow \"prisma migrate reset --force\"",
+    "db:create-migration": "dotenv-flow prisma migrate dev",
+    "db:seed": "dotenv-flow prisma db seed",
+    "db:push": "dotenv-flow prisma db push",
+    "db:deploy": "dotenv-flow pscale deploy-request create deckforge"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -76,6 +78,7 @@
     "cypress": "11.2.0",
     "cypress-dotenv-flow": "1.2.2",
     "dotenv-flow": "3.2.0",
+    "dotenv-flow-cli": "^1.0.0",
     "eslint": "8.27.0",
     "eslint-config-next": "13.0.3",
     "eslint-config-prettier": "8.5.0",

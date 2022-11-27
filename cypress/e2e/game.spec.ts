@@ -1,6 +1,7 @@
-import { clickMainMenuOption, signIn } from "../support/actions";
+import { clickMainMenuOption, resetData, signIn } from "../support/actions";
 
 beforeEach(() => {
+  resetData();
   cy.visit("/");
   signIn();
   clickMainMenuOption(/build/i);

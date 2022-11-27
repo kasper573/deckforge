@@ -25,6 +25,10 @@ export function clickMainMenuOption(name: ElementFilter) {
     .click();
 }
 
+export function resetData() {
+  cy.exec(`yarn db:reset`);
+}
+
 export type ElementFilter =
   | RegExp
   | string
