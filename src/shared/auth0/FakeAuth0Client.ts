@@ -7,11 +7,11 @@ export class FakeAuth0Client
   extends Stateful<Auth0State>
   implements BaseAuth0Client
 {
-  getTokenSilently = async () => "fake";
+  constructor(private fakeToken: string, private fakeUser: Auth0State["user"]) {
+    super({ isAuthenticated: false });
+  }
+  getTokenSilently = async () => this.fakeToken;
   loginWithRedirect = async () =>
-    this.setState({
-      isAuthenticated: true,
-      user: { name: "Fake" } as Auth0State["user"],
-    });
+    this.setState({ isAuthenticated: true, user: this.fakeUser });
   logout = async () => this.setState(emptyState());
 }

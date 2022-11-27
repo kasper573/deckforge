@@ -4,6 +4,7 @@ import { expressJwtSecret } from "jwks-rsa";
 import type { NextFunction, Response } from "express";
 import { env } from "../../env";
 import type { AuthContext } from "./types";
+import { fake } from "./fake";
 
 export const createJWTMiddleware = {
   real: createRealMiddleware,
@@ -26,12 +27,8 @@ function createRealMiddleware() {
 
 function createFakeMiddleware() {
   return (req: JWTRequest<AuthContext>, res: Response, next: NextFunction) => {
-    if (req.header("Authorization") === "Bearer fake") {
-      req.auth = {
-        name: "Fake",
-        id: "fake",
-        role: "User",
-      };
+    if (req.header("Authorization") === `Bearer ${fake.token}`) {
+      req.auth = fake.user;
     }
   };
 }
