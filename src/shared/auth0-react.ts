@@ -75,7 +75,6 @@ export class StatefulAuth0Client<
       Object.assign(draft, changes);
     });
     if (prevState !== this._state) {
-      console.log("Auth state changed", this._state);
       this.changeListeners.forEach((listener) => listener(this._state));
     }
   }
