@@ -2,11 +2,13 @@ import { z } from "zod";
 import { loadEnv } from "../shared/util/loadEnv";
 import { zodNumeric } from "../shared/util/zod/zodNumeric";
 import { zodBooleanish } from "../shared/util/zod/zodBooleanish";
+import { authImplementationType } from "./auth";
 
 const schema = z.object({
   apiPort: zodNumeric.optional(),
   enableLoggerLink: zodBooleanish.default(false),
   enableAnalytics: zodBooleanish.default(false),
+  authImplementation: authImplementationType,
   auth0: z.object({
     domain: z.string(),
     clientId: z.string(),
@@ -28,6 +30,7 @@ export const env = loadEnv(schema, {
   apiPort: import.meta.env.VITE_API_PORT,
   enableLoggerLink: import.meta.env.VITE_ENABLE_LOGGER_LINK,
   enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS,
+  authImplementation: import.meta.env.VITE_AUTH_IMPLEMENTATION,
   auth0: {
     domain: import.meta.env.VITE_AUTH0_DOMAIN,
     issuer: import.meta.env.VITE_AUTH0_ISSUER,
