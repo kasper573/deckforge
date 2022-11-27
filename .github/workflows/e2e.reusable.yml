@@ -34,6 +34,7 @@ jobs:
           MYSQL_ROOT_HOST: "%"
     env:
       DATABASE_URL: "mysql://deckforge:deckforge@db:3306/deckforge"
+      VITE_AUTH_IMPLEMENTATION: "fake"
       CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
       CYPRESS_BASE_URL: http://localhost:5173
     steps:

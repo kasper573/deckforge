@@ -10,25 +10,35 @@ export const trpc = createTRPCReact<ApiRouter>();
 
 export const queryClient = new QueryClient();
 
-export const trpcClient = trpc.createClient({
-  transformer: superjson,
-  links: [
-    loggerLink({
-      enabled(opts) {
-        const canUseLoggerLink =
-          opts.direction === "down" && opts.result instanceof Error;
-        return canUseLoggerLink && env.ENABLE_LOGGER_LINK;
-      },
-    }),
-    httpBatchLink({
-      url: getApiBaseUrl(),
-    }),
-  ],
-});
+export function createTRPCClient(getBearerToken: () => Promise<string>) {
+  return trpc.createClient({
+    transformer: superjson,
+    links: [
+      loggerLink({
+        enabled(opts) {
+          const canUseLoggerLink =
+            opts.direction === "down" && opts.result instanceof Error;
+          return canUseLoggerLink && env.enableLoggerLink;
+        },
+      }),
+      httpBatchLink({
+        url: getApiBaseUrl(),
+        async headers() {
+          try {
+            const token = await getBearerToken();
+            return { Authorization: "Bearer " + token };
+          } catch {
+            return {};
+          }
+        },
+      }),
+    ],
+  });
+}
 
 function getApiBaseUrl() {
   return `//${window.location.hostname}${
-    env.API_PORT ? `:${env.API_PORT}` : ""
+    env.apiPort ? `:${env.apiPort}` : ""
   }/api`;
 }
 

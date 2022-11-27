@@ -9,11 +9,11 @@ import ListItemButton from "@mui/material/ListItemButton";
 import { Play } from "../components/icons";
 import type { LinkTo } from "../components/Link";
 import Link from "../components/Link";
-import { useSession } from "../hooks/useSession";
 import { defined } from "../../shared/util/defined";
+import { useAuth0 } from "../../shared/auth0/useAuth0";
 
 export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
-  const { data: session } = useSession();
+  const { user } = useAuth0();
   return (
     <>
       <Typography id="main-menu" sx={{ pl: 2 }}>
@@ -29,7 +29,7 @@ export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
             label: "Play",
             icon: <Play />,
           },
-          session?.user && {
+          user && {
             linkTo: "/build",
             label: "Build",
             icon: <Construction />,
