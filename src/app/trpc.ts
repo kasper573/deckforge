@@ -15,10 +15,10 @@ export function createTRPCClient(getBearerToken: () => Promise<string>) {
     transformer: superjson,
     links: [
       loggerLink({
-        enabled(opts) {
-          const canUseLoggerLink =
-            opts.direction === "down" && opts.result instanceof Error;
-          return canUseLoggerLink && env.enableLoggerLink;
+        enabled: () => env.enableLoggerLink,
+        console: {
+          log: console.info,
+          error: console.error,
         },
       }),
       httpBatchLink({
