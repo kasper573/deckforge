@@ -1,34 +1,46 @@
+import { createTRPCReact } from "@trpc/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
-import { createTRPCNext } from "@trpc/next";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
+import type { ApiRouter } from "../api/router";
+import { env } from "./env";
 
-import { type ApiRouter } from "../server/trpc/router";
+export const trpc = createTRPCReact<ApiRouter>();
 
-const getBaseUrl = () => {
-  if (typeof window !== "undefined") return ""; // browser should use relative url
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
-  return `http://localhost:${process.env.PORT ?? 3000}`; // dev SSR should use localhost
-};
+export const queryClient = new QueryClient();
 
-export const trpc = createTRPCNext<ApiRouter>({
-  config() {
-    return {
-      transformer: superjson,
-      links: [
-        loggerLink({
-          enabled: (opts) =>
-            process.env.NODE_ENV === "development" ||
-            (opts.direction === "down" && opts.result instanceof Error),
-        }),
-        httpBatchLink({
-          url: `${getBaseUrl()}/api/trpc`,
-        }),
-      ],
-    };
-  },
-  ssr: false,
-});
+export function createTRPCClient(getBearerToken: () => Promise<string>) {
+  return trpc.createClient({
+    transformer: superjson,
+    links: [
+      loggerLink({
+        enabled: () => env.enableLoggerLink,
+        console: {
+          log: console.info,
+          error: console.error,
+        },
+      }),
+      httpBatchLink({
+        url: getApiBaseUrl(),
+        async headers() {
+          try {
+            const token = await getBearerToken();
+            return { Authorization: "Bearer " + token };
+          } catch {
+            return {};
+          }
+        },
+      }),
+    ],
+  });
+}
+
+function getApiBaseUrl() {
+  return `//${window.location.hostname}${
+    env.apiPort ? `:${env.apiPort}` : ""
+  }/api`;
+}
 
 /**
  * Inference helper for inputs

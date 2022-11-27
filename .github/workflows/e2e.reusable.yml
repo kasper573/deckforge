@@ -34,12 +34,9 @@ jobs:
           MYSQL_ROOT_HOST: "%"
     env:
       DATABASE_URL: "mysql://deckforge:deckforge@db:3306/deckforge"
+      VITE_AUTH_IMPLEMENTATION: "fake"
       CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
       CYPRESS_BASE_URL: http://localhost:3000
-      NEXTAUTH_URL: http://localhost:3000
-      NEXTAUTH_SECRET: 0
-      DISCORD_CLIENT_ID: 0
-      DISCORD_CLIENT_SECRET: 0
     steps:
       - uses: actions/checkout@v3
 
@@ -55,7 +52,7 @@ jobs:
       - name: Directory access permissions
         run: |
           chmod -R a+rwX ./node_modules/.prisma
-          chmod -R a+rwX ./src/@types
+          mkdir ./node_modules/.vite && chmod -R a+rwX ./node_modules/.vite
           chmod -R a+rwX ./cypress
           chmod -R a+rwX ./prisma
       - name: Push database
