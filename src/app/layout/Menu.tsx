@@ -5,12 +5,12 @@ import List from "@mui/material/List";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Construction from "@mui/icons-material/Construction";
-import ListItemButton from "@mui/material/ListItemButton";
 import { Play } from "../components/icons";
 import type { LinkTo } from "../components/Link";
-import Link from "../components/Link";
 import { defined } from "../../shared/util/defined";
 import { useAuth0 } from "../../shared/auth0/useAuth0";
+import { router } from "../router";
+import { LinkListItem } from "../components/Link";
 
 export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
   const { user } = useAuth0();
@@ -25,12 +25,12 @@ export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
         onClick={onItemSelected}
         routes={defined([
           {
-            linkTo: { route: "/play/[gameId]", params: { gameId: "foo" } },
+            linkTo: router.play(),
             label: "Play",
             icon: <Play />,
           },
           user && {
-            linkTo: "/build",
+            linkTo: router.build(),
             label: "Build",
             icon: <Construction />,
           },
@@ -49,17 +49,10 @@ function RouteList({ routes, onItemSelected, ...props }: RouteListProps) {
   return (
     <List role="menu" {...props}>
       {routes.map(({ linkTo, icon, label }, index) => (
-        <ListItemButton
-          component={Link}
-          activeClassName="Mui-selected"
-          activeExact
-          to={linkTo}
-          key={index}
-          onClick={onItemSelected}
-        >
+        <LinkListItem to={linkTo} key={index} onClick={onItemSelected}>
           <ListItemIcon>{icon}</ListItemIcon>
           <ListItemText primary={label} />
-        </ListItemButton>
+        </LinkListItem>
       ))}
     </List>
   );

@@ -1,35 +1,39 @@
 import Paper from "@mui/material/Paper";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemButton from "@mui/material/ListItemButton";
-import Link from "../components/Link";
+import { useRouteParams } from "react-typesafe-routes";
 import { Header } from "../components/Header";
 import { Page } from "../layout/Page";
+import { LinkListItem } from "../components/Link";
+import { router } from "../router";
 
 export default function EntityListPage() {
+  const { gameId } = useRouteParams(router.build().game);
   return (
     <Page>
-      <Header>EntityListPage</Header>
+      <Header>Game: {gameId}. Entity List</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
-          <EntityListItem name="Player" />
-          <EntityListItem name="Card" />
+          <EntityListItem gameId={gameId} entityId="Player" />
+          <EntityListItem gameId={gameId} entityId="Card" />
         </List>
       </Paper>
     </Page>
   );
 }
 
-export function EntityListItem({ name }: { name: string }) {
+export function EntityListItem({
+  gameId,
+  entityId,
+}: {
+  gameId: string;
+  entityId: string;
+}) {
   return (
-    <ListItemButton
-      component={Link}
-      to={{
-        route: "/build/[gameId]/entity/[entityId]",
-        params: { gameId: "gameId", entityId: "entityId" },
-      }}
+    <LinkListItem
+      to={router.build().game({ gameId }).entity().edit({ entityId })}
     >
-      <ListItemText primary={name} />
-    </ListItemButton>
+      <ListItemText primary={entityId} />
+    </LinkListItem>
   );
 }

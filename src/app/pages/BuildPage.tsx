@@ -5,19 +5,20 @@ import List from "@mui/material/List";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import { Delete, Edit, Play } from "../components/icons";
-import Link from "../components/Link";
 import { Header } from "../components/Header";
 import { Page } from "../layout/Page";
+import { LinkIconButton } from "../components/Link";
+import { router } from "../router";
 
-export default function GameEditorListPage() {
+export default function BuildPage() {
   return (
     <Page>
-      <Header>GameEditorListPage</Header>
+      <Header>BuildPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
-          <GameListItem />
-          <GameListItem />
-          <GameListItem />
+          <GameListItem gameId="foo" />
+          <GameListItem gameId="bar" />
+          <GameListItem gameId="baz" />
         </List>
       </Paper>
       <Button variant="contained">Create new game</Button>
@@ -25,32 +26,27 @@ export default function GameEditorListPage() {
   );
 }
 
-export function GameListItem() {
+export function GameListItem({ gameId }: { gameId: string }) {
   return (
     <ListItem
       secondaryAction={
         <>
-          <IconButton
-            component={Link}
-            to={{ route: "/play/[gameId]", params: { gameId: "foo" } }}
-            aria-label="play"
-          >
+          <LinkIconButton to={router.play().game({ gameId })} aria-label="play">
             <Play />
-          </IconButton>
-          <IconButton
-            component={Link}
-            to={{ route: "/build/[gameId]", params: { gameId: "foo" } }}
+          </LinkIconButton>
+          <LinkIconButton
+            to={router.build().game({ gameId })}
             aria-label="edit"
           >
             <Edit />
-          </IconButton>
+          </LinkIconButton>
           <IconButton edge="end" aria-label="delete">
             <Delete />
           </IconButton>
         </>
       }
     >
-      <ListItemText primary="Game name" />
+      <ListItemText primary={gameId} />
     </ListItem>
   );
 }

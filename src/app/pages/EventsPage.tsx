@@ -7,16 +7,20 @@ import ListItem from "@mui/material/ListItem";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { styled } from "@mui/system";
+import { useRouteParams } from "react-typesafe-routes";
 import { Header } from "../components/Header";
 import { CodeEditor } from "../components/CodeEditor";
 import { SideMenu } from "../components/SideMenu";
 import { Add, Delete, Edit, More } from "../components/icons";
 import { Page } from "../layout/Page";
+import { router } from "../router";
 
 export default function EventsPage() {
+  const { gameId } = useRouteParams(router.build().game);
+
   return (
     <Page>
-      <Header>EventsPage</Header>
+      <Header>Game: {gameId}</Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
         <SideMenu>
           <Button variant="contained">Create action</Button>

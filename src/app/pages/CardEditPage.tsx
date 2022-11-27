@@ -1,14 +1,25 @@
 import Stack from "@mui/material/Stack";
+import { useRouteParams } from "react-typesafe-routes";
 import { Header } from "../components/Header";
 import { CodeEditor } from "../components/CodeEditor";
 import { PropertyEditor } from "../components/PropertyEditor";
 import { SideMenu } from "../components/SideMenu";
 import { Page } from "../layout/Page";
+import { router } from "../router";
 
 export default function CardEditPage() {
+  const { gameId } = useRouteParams(router.build().game);
+  const { deckId } = useRouteParams(
+    router.build().game({ gameId }).deck().edit
+  );
+  const { cardId } = useRouteParams(
+    router.build().game({ gameId }).deck().edit({ deckId }).card
+  );
   return (
     <Page>
-      <Header>CardEditPage</Header>
+      <Header>
+        Game: {gameId}. Deck: {deckId}. Card: {cardId}
+      </Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
         <SideMenu>
           <PropertyEditor />
