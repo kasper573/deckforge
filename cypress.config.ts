@@ -7,7 +7,11 @@ export default defineConfig({
   e2e: {
     specPattern: "cypress/**/*.spec.ts",
     setupNodeEvents(on, config) {
-      return dotenvFlowPlugin(config, { default_node_env: "test" }, true);
+      return dotenvFlowPlugin(
+        config,
+        { default_node_env: "development" },
+        true
+      );
     },
   },
 });
