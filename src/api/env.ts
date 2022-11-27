@@ -12,10 +12,11 @@ dotEnvFlow.config({
 // prettier-ignore
 const algorithmType = z.enum(["HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"]);
 
+const prismaLogType = z.enum(["error", "query", "warn"]);
+
 const schema = z.object({
-  apiPort: zodNumeric.optional(),
-  databaseUrl: z.string().url(),
-  environment: z.enum(["development", "test", "production"]),
+  apiPort: zodNumeric,
+  prismaLogs: z.array(prismaLogType).default([]),
   authImplementation: authImplementationType,
   jwks: z.object({
     requestsPerMinute: zodNumeric,
@@ -29,6 +30,7 @@ const schema = z.object({
 });
 
 export const env = loadEnv(schema, {
+  prismaLogs: process.env.PRISMA_LOGS?.split(","),
   apiPort: process.env.VITE_API_PORT,
   databaseUrl: process.env.DATABASE_URL,
   environment: process.env.NODE_ENV,
