@@ -37,9 +37,8 @@ export function createTRPCClient(getBearerToken: () => Promise<string>) {
 }
 
 function getApiBaseUrl() {
-  return `//${window.location.hostname}${
-    env.apiPort ? `:${env.apiPort}` : ""
-  }/api`;
+  const isNon80 = (env.apiPort ?? 80) !== 80;
+  return `//${window.location.hostname}${isNon80 ? `:${env.apiPort}` : ""}/api`;
 }
 
 /**
