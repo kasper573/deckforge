@@ -4,10 +4,7 @@ import { loadEnv } from "../shared/util/loadEnv";
 import { zodNumeric } from "../shared/util/zod/zodNumeric";
 import { authImplementationType } from "./services/auth/types";
 
-dotEnvFlow.config({
-  default_node_env: "development",
-  purge_dotenv: true,
-});
+dotEnvFlow.config({ purge_dotenv: true });
 
 // prettier-ignore
 const algorithmType = z.enum(["HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"]);
