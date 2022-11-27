@@ -10,7 +10,7 @@ import { Play } from "../components/icons";
 import type { LinkTo } from "../components/Link";
 import Link from "../components/Link";
 import { defined } from "../../shared/util/defined";
-import { useAuth0 } from "../../shared/auth0-react";
+import { useAuth0 } from "../../shared/auth0/useAuth0";
 
 export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
   const { user } = useAuth0();

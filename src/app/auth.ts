@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StatefulAuth0Client } from "../shared/auth0-react";
+import { StatefulAuth0Client } from "../shared/auth0/StatefulAuth0Client";
 import { env } from "./env";
 
 export type AuthImplementation = z.infer<typeof authImplementationType>;

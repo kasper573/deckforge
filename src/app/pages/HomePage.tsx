@@ -1,7 +1,7 @@
 import { Page } from "../layout/Page";
 import { trpc } from "../trpc";
 import { Header } from "../layout/Header";
-import { useAuth0 } from "../../shared/auth0-react";
+import { useAuth0 } from "../../shared/auth0/useAuth0";
 
 export default function HomePage() {
   const { user } = useAuth0();

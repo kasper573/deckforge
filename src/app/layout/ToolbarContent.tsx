@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { MenuOn } from "../components/MenuOn";
 import { Auth } from "../components/Auth";
 import { OnlineBadge } from "../components/OnlineBadge";
-import { useAuth0 } from "../../shared/auth0-react";
+import { useAuth0 } from "../../shared/auth0/useAuth0";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
   const { user, loginWithRedirect, logout } = useAuth0();
