@@ -8,7 +8,9 @@ import { Auth0Client } from "@auth0/auth0-spa-js";
 import produce from "immer";
 
 export type StatefulAuth0ClientOptions = Auth0ClientOptions &
-  Pick<LogoutUrlOptions, "logoutParams">;
+  Pick<LogoutUrlOptions, "logoutParams"> & {
+    onRedirectCallback?: () => void;
+  };
 
 export class StatefulAuth0Client<
   TUser extends User = User
@@ -24,7 +26,10 @@ export class StatefulAuth0Client<
     super(statefulOptions);
     this.handleRedirectCallback()
       .catch(() => {})
-      .then(this.refreshState);
+      .then(() => {
+        statefulOptions.onRedirectCallback?.();
+        return this.refreshState();
+      });
   }
 
   loginWithPopup: Auth0Client["loginWithPopup"] = async (...args) => {
