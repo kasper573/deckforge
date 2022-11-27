@@ -1,7 +1,12 @@
+import "dotenv-flow/config";
 import * as path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import checker from "vite-plugin-checker";
+
+const port = process.env.VITE_APP_PORT
+  ? parseInt(process.env.VITE_APP_PORT, 10)
+  : undefined;
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -21,4 +26,6 @@ export default defineConfig({
     }),
   ],
   envDir: __dirname,
+  server: { port },
+  preview: { port },
 });

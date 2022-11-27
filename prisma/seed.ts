@@ -3,21 +3,22 @@ import { createPrismaClient } from "../src/api/prisma";
 async function main() {
   const id = "cl9ebqhxk00003b600tymydho";
   const client = createPrismaClient();
-  await client.example.upsert({
-    where: {
-      id,
-    },
-    create: {
-      id,
-    },
-    update: {},
-  });
+  try {
+    await client.example.upsert({
+      where: {
+        id,
+      },
+      create: {
+        id,
+      },
+      update: {},
+    });
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  } finally {
+    await client.$disconnect();
+  }
 }
 
-main()
-  .then(() => prisma.$disconnect())
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+main();
