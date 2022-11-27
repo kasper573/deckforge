@@ -1,5 +1,3 @@
-import Divider from "@mui/material/Divider";
-import Typography from "@mui/material/Typography";
 import type { ComponentProps, ReactNode } from "react";
 import List from "@mui/material/List";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -12,16 +10,15 @@ import { useAuth0 } from "../../shared/auth0/useAuth0";
 import { router } from "../router";
 import { LinkListItem } from "../components/Link";
 
-export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
+export function Navigation({
+  onItemSelected,
+}: {
+  onItemSelected?: () => void;
+}) {
   const { user } = useAuth0();
   return (
-    <>
-      <Typography id="main-menu" sx={{ pl: 2 }}>
-        Main menu
-      </Typography>
-      <Divider />
+    <nav aria-label="Main menu">
       <RouteList
-        aria-labelledby="main-menu"
         onClick={onItemSelected}
         routes={defined([
           {
@@ -36,7 +33,7 @@ export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
           },
         ])}
       />
-    </>
+    </nav>
   );
 }
 
@@ -47,7 +44,7 @@ interface RouteListProps extends ComponentProps<typeof List> {
 
 function RouteList({ routes, onItemSelected, ...props }: RouteListProps) {
   return (
-    <List role="menu" {...props}>
+    <List {...props}>
       {routes.map(({ linkTo, icon, label }, index) => (
         <LinkListItem to={linkTo} key={index} onClick={onItemSelected}>
           <ListItemIcon>{icon}</ListItemIcon>

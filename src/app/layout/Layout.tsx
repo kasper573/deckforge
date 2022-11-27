@@ -10,7 +10,7 @@ import MuiDrawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
 import { Menu as MenuIcon } from "../components/icons";
 import { ToolbarContent } from "./ToolbarContent";
-import { Menu } from "./Menu";
+import { Navigation } from "./Navigation";
 import { Logo } from "./Logo";
 import { pageMaxWidth } from "./Page";
 
@@ -27,7 +27,7 @@ export function Layout({ children }: { children?: ReactNode }) {
             <Logo onClick={closeDrawer} />
           </Box>
         </Toolbar>
-        <Menu onItemSelected={closeDrawer} />
+        <Navigation onItemSelected={closeDrawer} />
       </>
     ),
   };

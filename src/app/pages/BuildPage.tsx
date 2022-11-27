@@ -26,7 +26,7 @@ export default function BuildPage() {
   );
 }
 
-export function GameListItem({ gameId }: { gameId: string }) {
+function GameListItem({ gameId }: { gameId: string }) {
   return (
     <ListItem
       secondaryAction={

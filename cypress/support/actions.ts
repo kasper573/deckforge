@@ -9,12 +9,23 @@ export function signOut() {
   cy.findByRole(/button|menuitem/, { name: /sign out/i }).click();
 }
 
-export function showUserMenu() {
-  cy.findByRole("button", { name: /show user menu/i }).click();
-}
-
 export function assertSignedIn(shouldBeSignedIn = true) {
   cy.findByTestId("online-indicator").should(
     shouldBeSignedIn ? "exist" : "not.exist"
   );
 }
+
+export function showUserMenu() {
+  cy.findByRole("button", { name: /show user menu/i }).click();
+}
+
+export function clickMainMenuOption(name: ElementFilter) {
+  cy.findByRole("navigation", { name: /main menu/i })
+    .findByRole("link", { name })
+    .click();
+}
+
+export type ElementFilter =
+  | RegExp
+  | string
+  | ((accessibleName: string, element: Element) => boolean);
