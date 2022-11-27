@@ -13,7 +13,7 @@ import { OnlineBadge } from "../components/OnlineBadge";
 import { useAuth0 } from "../../shared/auth0-react";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
-  const [{ user }, { loginWithRedirect, logout }] = useAuth0();
+  const { user, loginWithRedirect, logout } = useAuth0();
 
   return (
     <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>

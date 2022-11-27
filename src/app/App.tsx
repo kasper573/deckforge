@@ -7,6 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import ThemeProvider from "@mui/material/styles/ThemeProvider";
 import type { Theme } from "@mui/material";
 import type { TRPCClient } from "@trpc/client";
+import type { ReactNode } from "react";
 import type { ApiRouter } from "../api/router";
 import type { StatefulAuth0Client } from "../shared/auth0-react";
 import { Auth0Context } from "../shared/auth0-react";
@@ -20,11 +21,13 @@ export function App({
   trpcClient,
   queryClient,
   theme,
+  children,
 }: {
   authClient: StatefulAuth0Client;
   trpcClient: TRPCClient<ApiRouter>;
   queryClient: QueryClient;
   theme: Theme;
+  children?: ReactNode;
 }) {
   return (
     <React.StrictMode>
@@ -36,6 +39,7 @@ export function App({
               {globalStyles}
               <Layout>
                 <HomePage />
+                {children}
               </Layout>
               {env.enableAnalytics ? <Analytics /> : undefined}
             </ThemeProvider>

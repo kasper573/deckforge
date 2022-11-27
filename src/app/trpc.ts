@@ -10,7 +10,7 @@ export const trpc = createTRPCReact<ApiRouter>();
 
 export const queryClient = new QueryClient();
 
-export function createTRPCClient(getBearerToken: () => string | undefined) {
+export function createTRPCClient(getBearerToken: () => Promise<string>) {
   return trpc.createClient({
     transformer: superjson,
     links: [
@@ -23,9 +23,13 @@ export function createTRPCClient(getBearerToken: () => string | undefined) {
       }),
       httpBatchLink({
         url: getApiBaseUrl(),
-        headers() {
-          const token = getBearerToken();
-          return token ? { Authorization: "Bearer " + token } : {};
+        async headers() {
+          try {
+            const token = await getBearerToken();
+            return { Authorization: "Bearer " + token };
+          } catch {
+            return {};
+          }
         },
       }),
     ],

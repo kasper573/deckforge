@@ -8,7 +8,7 @@ import { env } from "./env";
 
 const theme = createTheme();
 const authClient = new StatefulAuth0Client(env.auth0);
-const trpcClient = createTRPCClient(() => authClient.state.token);
+const trpcClient = createTRPCClient(() => authClient.getTokenSilently());
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <App

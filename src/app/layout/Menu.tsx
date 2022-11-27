@@ -13,7 +13,7 @@ import { defined } from "../../shared/util/defined";
 import { useAuth0 } from "../../shared/auth0-react";
 
 export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
-  const [{ user }] = useAuth0();
+  const { user } = useAuth0();
   return (
     <>
       <Typography id="main-menu" sx={{ pl: 2 }}>

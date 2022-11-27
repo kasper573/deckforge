@@ -4,7 +4,7 @@ import { Header } from "../layout/Header";
 import { useAuth0 } from "../../shared/auth0-react";
 
 export default function HomePage() {
-  const [{ user }] = useAuth0();
+  const { user } = useAuth0();
   const { data: publicData = null } = trpc.public.useQuery();
   const { data: privateData = null } = trpc.private.useQuery(undefined, {
     enabled: !!user,

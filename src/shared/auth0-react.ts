@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import type { Auth0ClientOptions, User } from "@auth0/auth0-spa-js";
+import type {
+  Auth0ClientOptions,
+  User,
+  LogoutUrlOptions,
+} from "@auth0/auth0-spa-js";
 import { Auth0Client } from "@auth0/auth0-spa-js";
-import type { LogoutUrlOptions } from "@auth0/auth0-spa-js/src/global";
 import produce from "immer";
 
 export type StatefulAuth0ClientOptions = Auth0ClientOptions &
@@ -65,7 +68,6 @@ export class StatefulAuth0Client<
     this.setState({
       isAuthenticated,
       user: user.status === "fulfilled" ? user.value : undefined,
-      token: token.status === "fulfilled" ? token.value : undefined,
     });
   };
 
@@ -93,13 +95,11 @@ export class StatefulAuth0Client<
 const emptyState = <TUser extends User = User>(): Auth0State<TUser> => ({
   isAuthenticated: false,
   user: undefined,
-  token: undefined,
 });
 
 export type Auth0State<TUser extends User = User> = Readonly<{
   user?: Readonly<TUser>;
   isAuthenticated: boolean;
-  token?: string;
 }>;
 
 export function useAuth0() {
@@ -107,7 +107,7 @@ export function useAuth0() {
   const [state, setState] = useState(client.state);
   useEffect(() => client.subscribe(setState), [client]);
 
-  return [state, client] as const;
+  return { ...state, ...client };
 }
 
 export const Auth0Context = createContext<StatefulAuth0Client>(

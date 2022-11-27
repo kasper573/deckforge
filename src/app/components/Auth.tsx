@@ -17,7 +17,7 @@ export type AuthProps =
  * Renders children only when the user has the required access level
  */
 export function Auth({ children, fallback, ...props }: AuthProps) {
-  const [{ isAuthenticated }] = useAuth0();
+  const { isAuthenticated } = useAuth0();
   const accessLevel = getAccessLevel(isAuthenticated ? "User" : "Guest");
 
   let allowAccess = false;
