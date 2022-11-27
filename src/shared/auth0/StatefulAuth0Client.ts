@@ -1,47 +1,39 @@
-import type {
-  Auth0ClientOptions,
-  LogoutUrlOptions,
-  User,
-} from "@auth0/auth0-spa-js";
+import type { Auth0ClientOptions, LogoutUrlOptions } from "@auth0/auth0-spa-js";
 import { Auth0Client } from "@auth0/auth0-spa-js";
-import produce from "immer";
+import { Stateful } from "../Stateful";
+import type { BaseAuth0Client } from "./BaseAuth0Client";
+import type { Auth0State } from "./Auth0State";
+import { emptyState } from "./Auth0State";
 
 export type StatefulAuth0ClientOptions = Auth0ClientOptions &
   Pick<LogoutUrlOptions, "logoutParams"> & {
     onRedirectCallback?: () => void;
   };
 
-export class StatefulAuth0Client<
-  TUser extends User = User
-> extends Auth0Client {
-  private changeListeners: ((state: Auth0State<TUser>) => void)[] = [];
+export class StatefulAuth0Client
+  extends Stateful<Auth0State>
+  implements BaseAuth0Client
+{
+  private auth0Client: Auth0Client;
 
-  private _state = emptyState<TUser>();
-  get state() {
-    return this._state;
-  }
-
-  constructor(private statefulOptions: StatefulAuth0ClientOptions) {
-    super(statefulOptions);
-    this.handleRedirectCallback()
+  constructor(private options: StatefulAuth0ClientOptions) {
+    super(emptyState());
+    this.auth0Client = new Auth0Client(this.options);
+    this.auth0Client
+      .handleRedirectCallback()
       .catch(() => {})
       .then(() => {
-        statefulOptions.onRedirectCallback?.();
+        options.onRedirectCallback?.();
         return this.refreshState();
       });
   }
 
-  loginWithPopup: Auth0Client["loginWithPopup"] = async (...args) => {
-    try {
-      return await super.loginWithPopup(...args);
-    } finally {
-      await this.refreshState();
-    }
-  };
+  getTokenSilently: BaseAuth0Client["getTokenSilently"] = (...args) =>
+    this.auth0Client.getTokenSilently(...args);
 
-  loginWithRedirect: Auth0Client["loginWithRedirect"] = async (...args) => {
+  loginWithRedirect: BaseAuth0Client["loginWithRedirect"] = async (...args) => {
     try {
-      return await super.loginWithRedirect(...args);
+      return await this.auth0Client.loginWithRedirect(...args);
     } finally {
       await this.refreshState();
     }
@@ -49,8 +41,8 @@ export class StatefulAuth0Client<
 
   logout = async () => {
     try {
-      return super.logout({
-        logoutParams: this.statefulOptions.logoutParams,
+      return this.auth0Client.logout({
+        logoutParams: this.options.logoutParams,
       });
     } finally {
       await this.refreshState();
@@ -58,47 +50,19 @@ export class StatefulAuth0Client<
   };
 
   private refreshState = async () => {
-    const isAuthenticated = await this.isAuthenticated().catch(() => false);
+    const isAuthenticated = await this.auth0Client
+      .isAuthenticated()
+      .catch(() => false);
     if (!isAuthenticated) {
       this.setState(emptyState());
       return;
     }
 
-    const user = await this.getUser<TUser>().catch(() => undefined);
+    const user = await this.auth0Client.getUser().catch(() => undefined);
 
     this.setState({
       isAuthenticated,
       user,
     });
   };
-
-  private setState(changes: Partial<Auth0State<TUser>>) {
-    const prevState = this._state;
-    this._state = produce(this._state, (draft) => {
-      Object.assign(draft, changes);
-    });
-    if (prevState !== this._state) {
-      this.changeListeners.forEach((listener) => listener(this._state));
-    }
-  }
-
-  subscribe(listener: (state: Auth0State<TUser>) => void) {
-    this.changeListeners.push(listener);
-    return () => {
-      const index = this.changeListeners.indexOf(listener);
-      if (index !== -1) {
-        this.changeListeners.splice(index, 1);
-      }
-    };
-  }
 }
-
-const emptyState = <TUser extends User = User>(): Auth0State<TUser> => ({
-  isAuthenticated: false,
-  user: undefined,
-});
-
-export type Auth0State<TUser extends User = User> = Readonly<{
-  user?: Readonly<TUser>;
-  isAuthenticated: boolean;
-}>;

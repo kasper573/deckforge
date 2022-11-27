@@ -10,7 +10,7 @@ import type { TRPCClient } from "@trpc/client";
 import type { ReactNode } from "react";
 import type { ApiRouter } from "../api/router";
 import { Auth0Context } from "../shared/auth0/useAuth0";
-import type { StatefulAuth0Client } from "../shared/auth0/StatefulAuth0Client";
+import type { BaseAuth0Client } from "../shared/auth0/BaseAuth0Client";
 import { Layout } from "./layout/Layout";
 import { env } from "./env";
 import HomePage from "./pages/HomePage";
@@ -23,7 +23,7 @@ export function App({
   theme,
   children,
 }: {
-  authClient: StatefulAuth0Client;
+  authClient: BaseAuth0Client;
   trpcClient: TRPCClient<ApiRouter>;
   queryClient: QueryClient;
   theme: Theme;
