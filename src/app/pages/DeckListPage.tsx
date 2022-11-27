@@ -4,20 +4,23 @@ import Button from "@mui/material/Button";
 import ListItem from "@mui/material/ListItem";
 import IconButton from "@mui/material/IconButton";
 import ListItemText from "@mui/material/ListItemText";
-import Link from "../components/Link";
+import { useRouteParams } from "react-typesafe-routes";
+import { LinkIconButton } from "../components/Link";
 import { Delete, Edit } from "../components/icons";
 import { Header } from "../components/Header";
 import { Page } from "../layout/Page";
+import { router } from "../router";
 
 export default function DeckListPage() {
+  const { gameId } = useRouteParams(router.build().game);
   return (
     <Page>
       <Header>DeckListPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
-          <DeckListItem />
-          <DeckListItem />
-          <DeckListItem />
+          <DeckListItem gameId={gameId} deckId="deck1" />
+          <DeckListItem gameId={gameId} deckId="deck2" />
+          <DeckListItem gameId={gameId} deckId="deck3" />
         </List>
       </Paper>
       <Button variant="contained">Create new deck</Button>
@@ -25,28 +28,30 @@ export default function DeckListPage() {
   );
 }
 
-export function DeckListItem() {
+export function DeckListItem({
+  gameId,
+  deckId,
+}: {
+  gameId: string;
+  deckId: string;
+}) {
   return (
     <ListItem
       secondaryAction={
         <>
-          <IconButton
-            component={Link}
-            to={{
-              route: "/build/[gameId]/deck/[deckId]",
-              params: { gameId: "foo", deckId: "bar" },
-            }}
+          <LinkIconButton
+            to={router.build().game({ gameId: "foo" }).deck().edit({ deckId })}
             aria-label="edit"
           >
             <Edit />
-          </IconButton>
+          </LinkIconButton>
           <IconButton edge="end" aria-label="delete">
             <Delete />
           </IconButton>
         </>
       }
     >
-      <ListItemText primary="Deck name" />
+      <ListItemText primary={deckId} />
     </ListItem>
   );
 }

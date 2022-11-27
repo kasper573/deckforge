@@ -1,10 +1,10 @@
 import Paper from "@mui/material/Paper";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemButton from "@mui/material/ListItemButton";
-import Link from "../components/Link";
 import { Header } from "../components/Header";
 import { Page } from "../layout/Page";
+import { LinkListItem } from "../components/Link";
+import { router } from "../router";
 
 export default function EntityListPage() {
   return (
@@ -22,14 +22,14 @@ export default function EntityListPage() {
 
 export function EntityListItem({ name }: { name: string }) {
   return (
-    <ListItemButton
-      component={Link}
-      to={{
-        route: "/build/[gameId]/entity/[entityId]",
-        params: { gameId: "gameId", entityId: "entityId" },
-      }}
+    <LinkListItem
+      to={router
+        .build()
+        .game({ gameId: "gameId" })
+        .entity()
+        .edit({ entityId: name })}
     >
       <ListItemText primary={name} />
-    </ListItemButton>
+    </LinkListItem>
   );
 }

@@ -1,41 +1,28 @@
 import Paper from "@mui/material/Paper";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemButton from "@mui/material/ListItemButton";
+import { useRouteParams } from "react-typesafe-routes";
 import { Header } from "../components/Header";
-import Link from "../components/Link";
+import { LinkListItem } from "../components/Link";
 import { Page } from "../layout/Page";
+import { router } from "../router";
 
 export default function GameEditPage() {
+  const { gameId } = useRouteParams(router.build().game);
   return (
     <Page>
       <Header>GameEditPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
-          <ListItemButton
-            component={Link}
-            to={{ route: "/build/[gameId]/deck", params: { gameId: "gameId" } }}
-          >
+          <LinkListItem to={router.build().game({ gameId }).deck()}>
             <ListItemText primary="Decks" />
-          </ListItemButton>
-          <ListItemButton
-            component={Link}
-            to={{
-              route: "/build/[gameId]/entity",
-              params: { gameId: "gameId" },
-            }}
-          >
+          </LinkListItem>
+          <LinkListItem to={router.build().game({ gameId }).entity()}>
             <ListItemText primary="Entities" />
-          </ListItemButton>
-          <ListItemButton
-            component={Link}
-            to={{
-              route: "/build/[gameId]/events",
-              params: { gameId: "gameId" },
-            }}
-          >
+          </LinkListItem>
+          <LinkListItem to={router.build().game({ gameId }).events()}>
             <ListItemText primary="Events" />
-          </ListItemButton>
+          </LinkListItem>
         </List>
       </Paper>
     </Page>
