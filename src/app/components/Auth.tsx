@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { UserRole } from "@prisma/client";
-import { getAccessLevel } from "../../api/services/auth/getAccessLevel";
 import { useAuth0 } from "../../shared/auth0/useAuth0";
+import { getAccessLevel } from "../../api/services/auth/utils";
 
 type AuthPropsBase = {
   children: ReactNode | (() => ReactNode);

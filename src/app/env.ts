@@ -2,7 +2,7 @@ import { z } from "zod";
 import { loadEnv } from "../shared/util/loadEnv";
 import { zodNumeric } from "../shared/util/zod/zodNumeric";
 import { zodBooleanish } from "../shared/util/zod/zodBooleanish";
-import { authImplementationType } from "./auth";
+import { authImplementationType } from "../api/services/auth/types";
 
 const schema = z.object({
   apiPort: zodNumeric.optional(),

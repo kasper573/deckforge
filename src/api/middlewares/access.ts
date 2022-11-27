@@ -1,7 +1,7 @@
 import type { UserRole } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import { getAccessLevel } from "../services/auth/getAccessLevel";
 import { t } from "../trpc";
+import { getAccessLevel } from "../services/auth/utils";
 
 export function access(requiredRole: UserRole = "User") {
   return t.middleware(({ ctx, next }) => {

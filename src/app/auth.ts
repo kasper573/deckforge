@@ -1,11 +1,7 @@
-import { z } from "zod";
 import { StatefulAuth0Client } from "../shared/auth0/StatefulAuth0Client";
 import type { BaseAuth0Client } from "../shared/auth0/BaseAuth0Client";
 import { FakeAuth0Client } from "../shared/auth0/FakeAuth0Client";
 import { env } from "./env";
-
-export type AuthImplementation = z.infer<typeof authImplementationType>;
-export const authImplementationType = z.enum(["real", "fake"]);
 
 export function createAuthClient(): BaseAuth0Client {
   switch (env.authImplementation) {
