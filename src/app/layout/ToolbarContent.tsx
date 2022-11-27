@@ -7,18 +7,14 @@ import ListItemText from "@mui/material/ListItemText";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import type { ReactNode } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
 import { MenuOn } from "../components/MenuOn";
 import { Auth } from "../components/Auth";
 import { OnlineBadge } from "../components/OnlineBadge";
-import { useSession } from "../hooks/useSession";
-import { env } from "../env";
+import { useAuth0 } from "../../shared/auth0-react";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
-  const { data: session } = useSession();
-  const auth0 = useAuth0();
-  const signOut = () => auth0.logout({ returnTo: env.auth0.returnUri });
-  const signIn = () => auth0.loginWithRedirect();
+  const [{ user }, { loginWithRedirect, logout }] = useAuth0();
+
   return (
     <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
       <Box>{children}</Box>
@@ -31,7 +27,7 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
               sx={{ ml: 1 }}
               onClick={toggle}
             >
-              {session?.user ? (
+              {user ? (
                 <OnlineBadge>
                   <AccountCircle />
                 </OnlineBadge>
@@ -41,22 +37,22 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
             </IconButton>
           )}
         >
+          <Auth exact="Guest">
+            <MenuItem onClick={() => loginWithRedirect()}>Sign in</MenuItem>
+          </Auth>
           <Auth>
             <ListItem sx={{ pt: 0 }}>
               <ListItemText
                 primaryTypographyProps={{ noWrap: true }}
                 primary={
                   <>
-                    Signed in as <strong>{session?.user?.name}</strong>
+                    Signed in as <strong>{user?.name}</strong>
                   </>
                 }
               />
             </ListItem>
             <Divider sx={{ mb: 1 }} />
-            <MenuItem onClick={() => signOut()}>Sign out</MenuItem>
-          </Auth>
-          <Auth exact="Guest">
-            <MenuItem onClick={() => signIn()}>Sign in</MenuItem>
+            <MenuItem onClick={() => logout()}>Sign out</MenuItem>
           </Auth>
         </MenuOn>
       </Box>

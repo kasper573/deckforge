@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { UserRole } from "@prisma/client";
 import { getAccessLevel } from "../../api/services/auth/getAccessLevel";
-import { useSession } from "../hooks/useSession";
+import { useAuth0 } from "../../shared/auth0-react";
 
 type AuthPropsBase = {
   children: ReactNode | (() => ReactNode);
@@ -17,8 +17,8 @@ export type AuthProps =
  * Renders children only when the user has the required access level
  */
 export function Auth({ children, fallback, ...props }: AuthProps) {
-  const { data: session } = useSession();
-  const accessLevel = getAccessLevel(session?.user?.role ?? "Guest");
+  const [{ isAuthenticated }] = useAuth0();
+  const accessLevel = getAccessLevel(isAuthenticated ? "User" : "Guest");
 
   let allowAccess = false;
   if ("exact" in props) {

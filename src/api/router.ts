@@ -1,9 +1,10 @@
 import { t } from "./trpc";
+import { access } from "./middlewares/access";
 
 export function createApiRouter() {
   return t.router({
-    foo: t.procedure.query(() => "foo"),
-    bar: t.procedure.query(() => "bar"),
+    public: t.procedure.query(() => "public data"),
+    private: t.procedure.use(access()).query(() => "private data"),
   });
 }
 

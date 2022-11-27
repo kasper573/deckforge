@@ -1,18 +1,20 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { QueryClientProvider } from "@tanstack/react-query";
-import App from "./App";
-import { queryClient, trpc, trpcClient } from "./trpc";
+import { StatefulAuth0Client } from "../shared/auth0-react";
+import { App } from "./App";
+import { queryClient, createTRPCClient } from "./trpc";
 import { createTheme } from "./theme";
+import { env } from "./env";
 
 const theme = createTheme();
+const authClient = new StatefulAuth0Client(env.auth0);
+const trpcClient = createTRPCClient(() => authClient.state.token);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <App theme={theme} />
-      </QueryClientProvider>
-    </trpc.Provider>
-  </React.StrictMode>
+  <App
+    theme={theme}
+    authClient={authClient}
+    trpcClient={trpcClient}
+    queryClient={queryClient}
+  />
 );

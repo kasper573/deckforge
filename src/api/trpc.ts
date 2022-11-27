@@ -10,15 +10,13 @@ export const t = initTRPC.context<Context>().create({
   },
 });
 
-export interface Session {
-  user: {
-    id: string;
-    name: string;
-    role: UserRole;
-  };
+export interface JWTPayload {
+  id: string;
+  name: string;
+  role: UserRole;
 }
 
 export type Context = {
-  session?: Session;
+  auth?: JWTPayload;
   prisma: PrismaClient;
 };
