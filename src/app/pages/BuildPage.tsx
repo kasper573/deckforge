@@ -31,7 +31,7 @@ export function GameListItem({ gameId }: { gameId: string }) {
     <ListItem
       secondaryAction={
         <>
-          <LinkIconButton to={router.play({ gameId })} aria-label="play">
+          <LinkIconButton to={router.play().game({ gameId })} aria-label="play">
             <Play />
           </LinkIconButton>
           <LinkIconButton

@@ -11,7 +11,7 @@ export default function GameEditPage() {
   const { gameId } = useRouteParams(router.build().game);
   return (
     <Page>
-      <Header>GameEditPage</Header>
+      <Header>Game: {gameId}</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
           <LinkListItem to={router.build().game({ gameId }).deck()}>

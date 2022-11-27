@@ -18,7 +18,9 @@ export default function DeckEditPage() {
   );
   return (
     <Page>
-      <Header>CardEditPage</Header>
+      <Header>
+        Game: {gameId}. Deck: {deckId}
+      </Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
           <CardListItem {...{ gameId, deckId, cardId: "card1" }} />

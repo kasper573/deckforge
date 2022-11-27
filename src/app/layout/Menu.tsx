@@ -25,7 +25,7 @@ export function Menu({ onItemSelected }: { onItemSelected?: () => void }) {
         onClick={onItemSelected}
         routes={defined([
           {
-            linkTo: router.play({ gameId: "foo" }),
+            linkTo: router.play(),
             label: "Play",
             icon: <Play />,
           },

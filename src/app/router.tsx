@@ -9,18 +9,21 @@ import CardEditPage from "./pages/CardEditPage";
 import EntityListPage from "./pages/EntityListPage";
 import EntityEditPage from "./pages/EntityEditPage";
 import EventsPage from "./pages/EventsPage";
+import GameBrowsePage from "./pages/GameBrowsePage";
 
 export const router = OptionsRouter({}, (route) => ({
   home: route("", {
     exact: true,
     component: HomePage,
   }),
-  play: route("play/:gameId", {
-    component: GamePlayPage,
-    params: {
-      gameId: stringParser,
-    },
-  }),
+  play: route("play", { component: GameBrowsePage }, (route) => ({
+    game: route(":gameId", {
+      component: GamePlayPage,
+      params: {
+        gameId: stringParser,
+      },
+    }),
+  })),
   build: route("build", { component: BuildPage }, (route) => ({
     game: route(
       ":gameId",

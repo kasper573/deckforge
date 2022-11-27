@@ -15,7 +15,7 @@ export default function DeckListPage() {
   const { gameId } = useRouteParams(router.build().game);
   return (
     <Page>
-      <Header>DeckListPage</Header>
+      <Header>Game: {gameId}. Deck List</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
           <DeckListItem gameId={gameId} deckId="deck1" />
@@ -40,7 +40,7 @@ export function DeckListItem({
       secondaryAction={
         <>
           <LinkIconButton
-            to={router.build().game({ gameId: "foo" }).deck().edit({ deckId })}
+            to={router.build().game({ gameId }).deck().edit({ deckId })}
             aria-label="edit"
           >
             <Edit />
