@@ -20,7 +20,9 @@ export default defineConfig({
     react(),
     checker({
       eslint: { lintCommand: "lint" },
-      typescript: true,
+      typescript: {
+        tsconfigPath: path.resolve(__dirname, "tsconfig.react.json"),
+      },
       overlay: false,
       enableBuild: false,
     }),
