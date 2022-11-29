@@ -58,7 +58,7 @@ export function App({
 const globalStyles = (
   <GlobalStyles
     styles={{
-      [`html, body, #__next`]: {
+      [`html, body, #root`]: {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",

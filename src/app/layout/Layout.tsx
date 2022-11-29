@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -9,6 +10,7 @@ import Toolbar from "@mui/material/Toolbar";
 import MuiDrawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
 import { Menu as MenuIcon } from "../components/icons";
+import { LoadingPage } from "../pages/LoadingPage";
 import { ToolbarContent } from "./ToolbarContent";
 import { Navigation } from "./Navigation";
 import { Logo } from "./Logo";
@@ -67,7 +69,9 @@ export function Layout({ children }: { children?: ReactNode }) {
 
       <Toolbar />
 
-      <Content>{children}</Content>
+      <Content>
+        <Suspense fallback={<LoadingPage />}>{children}</Suspense>
+      </Content>
     </>
   );
 }
@@ -82,6 +86,9 @@ const Drawer = styled(MuiDrawer)`
 `;
 
 const Content = styled("main")`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   ${({ theme }) => theme.breakpoints.up(breakpoint)} {
     margin-left: ${drawerWidth}px;
   }
