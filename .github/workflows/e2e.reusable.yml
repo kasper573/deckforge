@@ -21,7 +21,7 @@ jobs:
   run:
     name: ${{ inputs.width}}x${{ inputs.height }}
     runs-on: ubuntu-latest
-    container: cypress/included:10.7.0
+    container: cypress/included:11.2.0
     services:
       db:
         image: mariadb:latest
