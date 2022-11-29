@@ -56,11 +56,8 @@ jobs:
           mkdir ./node_modules/.vite && chmod -R a+rwX ./node_modules/.vite
           chmod -R a+rwX ./cypress
           chmod -R a+rwX ./prisma
-      - name: Push database
-        run: yarn db:push
-
-      - name: Seed database
-        run: yarn db:seed
+      - name: Set up database
+        run: yarn db:reset
 
       - name: Run e2e tests
         run: yarn test:e2e
