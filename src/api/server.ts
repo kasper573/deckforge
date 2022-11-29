@@ -41,7 +41,6 @@ function createAuthContext(jwt: jwt.JwtPayload): AuthContext | undefined {
   }
   return {
     id: jwt.sub,
-    name: jwt.sub,
     role: "User",
   };
 }
