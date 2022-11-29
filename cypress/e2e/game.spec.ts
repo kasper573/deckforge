@@ -19,11 +19,9 @@ describe("game", () => {
 
   it("can rename a game ", () => {});
 
-  it.only("can delete a game", () => {
+  it("can delete a game", () => {
     createGame("To be deleted");
-    findGameItem("To be deleted").within(() =>
-      cy.findByRole("button", { name: /delete/i }).click()
-    );
+    clickGameAction("To be deleted", /delete/i);
     cy.findByRole("dialog").within(() =>
       cy.findByRole("button", { name: /yes/i }).click()
     );
@@ -37,6 +35,12 @@ function findGameList() {
 
 function findGameItem(name: string) {
   return findGameList().findByRole("listitem", { name });
+}
+
+function clickGameAction(gameName: string, actionName: RegExp) {
+  findGameItem("To be deleted").within(() =>
+    cy.findByRole("button", { name: actionName }).click()
+  );
 }
 
 function createGame(name: string) {
