@@ -6,6 +6,5 @@ export const authImplementationType = z.enum(["real", "fake"]);
 
 export interface AuthContext {
   id: string;
-  name: string;
   role: UserRole;
 }

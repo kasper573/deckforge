@@ -21,7 +21,7 @@ jobs:
   run:
     name: ${{ inputs.width}}x${{ inputs.height }}
     runs-on: ubuntu-latest
-    container: cypress/included:10.7.0
+    container: cypress/included:11.2.0
     services:
       db:
         image: mariadb:latest
@@ -34,7 +34,9 @@ jobs:
           MYSQL_ROOT_HOST: "%"
     env:
       DATABASE_URL: "mysql://deckforge:deckforge@db:3306/deckforge"
+      VITE_SHOW_ERROR_DETAILS: true
       VITE_AUTH_IMPLEMENTATION: "fake"
+      EXPOSE_INTERNAL_ERRORS: true
       CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
       CYPRESS_BASE_URL: http://localhost:3000
     steps:
@@ -55,11 +57,8 @@ jobs:
           mkdir ./node_modules/.vite && chmod -R a+rwX ./node_modules/.vite
           chmod -R a+rwX ./cypress
           chmod -R a+rwX ./prisma
-      - name: Push database
-        run: yarn db:push
-
-      - name: Seed database
-        run: yarn db:seed
+      - name: Set up database
+        run: yarn db:reset
 
       - name: Run e2e tests
         run: yarn test:e2e

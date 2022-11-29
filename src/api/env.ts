@@ -2,6 +2,7 @@ import * as dotEnvFlow from "dotenv-flow";
 import { z } from "zod";
 import { loadEnv } from "../shared/util/loadEnv";
 import { zodNumeric } from "../shared/util/zod/zodNumeric";
+import { zodBooleanish } from "../shared/util/zod/zodBooleanish";
 import { authImplementationType } from "./services/auth/types";
 
 dotEnvFlow.config({ purge_dotenv: true });
@@ -14,6 +15,7 @@ const prismaLogType = z.enum(["error", "query", "warn"]);
 const schema = z.object({
   apiPort: zodNumeric,
   prismaLogs: z.array(prismaLogType).default([]),
+  exposeInternalErrors: zodBooleanish.default(false),
   authImplementation: authImplementationType,
   jwks: z.object({
     requestsPerMinute: zodNumeric,
@@ -31,6 +33,7 @@ export const env = loadEnv(schema, {
   apiPort: process.env.VITE_API_PORT,
   databaseUrl: process.env.DATABASE_URL,
   environment: process.env.NODE_ENV,
+  exposeInternalErrors: process.env.EXPOSE_INTERNAL_ERRORS,
   authImplementation: process.env.VITE_AUTH_IMPLEMENTATION,
   jwks: {
     uri: process.env.JWKS_URI,

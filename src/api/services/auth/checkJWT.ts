@@ -3,7 +3,6 @@ import { expressjwt } from "express-jwt";
 import { expressJwtSecret } from "jwks-rsa";
 import type { NextFunction, Response } from "express";
 import { env } from "../../env";
-import type { AuthContext } from "./types";
 import { fake } from "./fake";
 
 export const createJWTMiddleware = {
@@ -26,9 +25,9 @@ function createRealMiddleware() {
 }
 
 function createFakeMiddleware() {
-  return (req: JWTRequest<AuthContext>, res: Response, next: NextFunction) => {
+  return (req: JWTRequest, res: Response, next: NextFunction) => {
     if (req.header("Authorization") === `Bearer ${fake.token}`) {
-      req.auth = fake.user;
+      req.auth = fake.jwt;
     }
   };
 }

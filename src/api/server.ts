@@ -1,6 +1,7 @@
 import express from "express";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import type { Request as JWTRequest } from "express-jwt";
+import type * as jwt from "jsonwebtoken";
 import { createApiRouter } from "./router";
 import { createPrismaClient } from "./prisma";
 import type { Context } from "./trpc";
@@ -20,15 +21,26 @@ export function createServer() {
         req,
         res,
       }: {
-        req: JWTRequest<AuthContext>;
+        req: JWTRequest;
         res: express.Response;
       }): Promise<Context> {
         await checkJWT(req, res, () => {});
         const { auth } = req;
-        return { prisma, auth };
+        return { prisma, auth: auth ? createAuthContext(auth) : undefined };
       },
     })
   );
 
   return server;
+}
+
+function createAuthContext(jwt: jwt.JwtPayload): AuthContext | undefined {
+  if (!jwt.sub) {
+    console.warn(`JWT does not contain a string "sub" property`, jwt);
+    return;
+  }
+  return {
+    id: jwt.sub,
+    role: "User",
+  };
 }

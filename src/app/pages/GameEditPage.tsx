@@ -6,12 +6,24 @@ import { Header } from "../components/Header";
 import { LinkListItem } from "../components/Link";
 import { Page } from "../layout/Page";
 import { router } from "../router";
+import { trpc } from "../trpc";
+import { TextField } from "../controls/TextField";
 
 export default function GameEditPage() {
   const { gameId } = useRouteParams(router.build().game);
+  const game = trpc.game.read.useQuery(gameId);
+  const renameGame = trpc.game.rename.useMutation();
+
   return (
     <Page>
-      <Header>Game: {gameId}</Header>
+      <Header>
+        <TextField
+          debounce
+          label="Game name"
+          value={game.data?.name ?? ""}
+          onValueChange={(name) => renameGame.mutate({ id: gameId, name })}
+        />
+      </Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
           <LinkListItem to={router.build().game({ gameId }).deck()}>

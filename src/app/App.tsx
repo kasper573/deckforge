@@ -13,10 +13,16 @@ import type { History } from "history";
 import type { ApiRouter } from "../api/router";
 import { Auth0Context } from "../shared/auth0/useAuth0";
 import type { BaseAuth0Client } from "../shared/auth0/BaseAuth0Client";
+import { DialogOutlet } from "../shared/useDialog";
 import { Layout } from "./layout/Layout";
 import { env } from "./env";
 import { trpc } from "./trpc";
 import { router } from "./router";
+import {
+  ErrorBoundary,
+  PlainErrorFallback,
+  PrettyErrorFallback,
+} from "./ErrorFallback";
 
 export function App({
   authClient,
@@ -33,22 +39,30 @@ export function App({
 }) {
   return (
     <React.StrictMode>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          <Auth0Context.Provider value={authClient}>
-            <Router history={history}>
-              <ThemeProvider theme={theme}>
-                <CssBaseline />
-                {globalStyles}
-                <Layout>
-                  <RouterSwitch router={router} />
-                </Layout>
-                {env.enableAnalytics ? <Analytics /> : undefined}
-              </ThemeProvider>
-            </Router>
-          </Auth0Context.Provider>
-        </QueryClientProvider>
-      </trpc.Provider>
+      <ErrorBoundary fallback={PlainErrorFallback} onError={console.error}>
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <Auth0Context.Provider value={authClient}>
+              <Router history={history}>
+                <ThemeProvider theme={theme}>
+                  <CssBaseline />
+                  {globalStyles}
+                  <Layout>
+                    <ErrorBoundary
+                      fallback={PrettyErrorFallback}
+                      onError={console.error}
+                    >
+                      <RouterSwitch router={router} />
+                    </ErrorBoundary>
+                  </Layout>
+                  {env.enableAnalytics ? <Analytics /> : undefined}
+                  <DialogOutlet />
+                </ThemeProvider>
+              </Router>
+            </Auth0Context.Provider>
+          </QueryClientProvider>
+        </trpc.Provider>
+      </ErrorBoundary>
     </React.StrictMode>
   );
 }
@@ -56,7 +70,7 @@ export function App({
 const globalStyles = (
   <GlobalStyles
     styles={{
-      [`html, body, #__next`]: {
+      [`html, body, #root`]: {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
