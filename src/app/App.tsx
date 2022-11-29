@@ -13,6 +13,7 @@ import type { History } from "history";
 import type { ApiRouter } from "../api/router";
 import { Auth0Context } from "../shared/auth0/useAuth0";
 import type { BaseAuth0Client } from "../shared/auth0/BaseAuth0Client";
+import { DialogOutlet } from "../shared/useDialog";
 import { Layout } from "./layout/Layout";
 import { env } from "./env";
 import { trpc } from "./trpc";
@@ -44,6 +45,7 @@ export function App({
                   <RouterSwitch router={router} />
                 </Layout>
                 {env.enableAnalytics ? <Analytics /> : undefined}
+                <DialogOutlet />
               </ThemeProvider>
             </Router>
           </Auth0Context.Provider>
