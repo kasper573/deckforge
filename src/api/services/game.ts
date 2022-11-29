@@ -45,7 +45,7 @@ export const gameService = t.router({
     .output(createResultType(gameType))
     .query(async ({ input: { offset, limit }, ctx: { prisma, auth } }) => {
       const [total, entities] = await Promise.all([
-        prisma.game.count(),
+        prisma.game.count({ where: { userId: auth.id } }),
         prisma.game.findMany({
           take: limit,
           skip: offset,
