@@ -4,7 +4,7 @@ beforeEach(() => {
   resetData();
   cy.visit("/");
   signIn();
-  clickMainMenuOption(/build/i);
+  gotoGameList();
 });
 
 describe("game", () => {
@@ -17,7 +17,15 @@ describe("game", () => {
     findGameItem("New game").should("exist");
   });
 
-  it("can rename a game ", () => {});
+  it("can rename a game", () => {
+    createGame("To be renamed");
+    clickGameAction("To be renamed", /edit/i);
+    cy.findByRole("textbox", { name: /game name/i })
+      .clear()
+      .type("Renamed");
+    gotoGameList();
+    findGameItem("Renamed").should("exist");
+  });
 
   it("can delete a game", () => {
     createGame("To be deleted");
@@ -29,6 +37,10 @@ describe("game", () => {
   });
 });
 
+function gotoGameList() {
+  clickMainMenuOption(/build/i);
+}
+
 function findGameList() {
   return cy.findByRole("list", { name: /games/i });
 }
@@ -38,8 +50,8 @@ function findGameItem(name: string) {
 }
 
 function clickGameAction(gameName: string, actionName: RegExp) {
-  findGameItem("To be deleted").within(() =>
-    cy.findByRole("button", { name: actionName }).click()
+  findGameItem(gameName).within(() =>
+    cy.findByRole(/button|link/, { name: actionName }).click()
   );
 }
 

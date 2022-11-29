@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Game } from "@prisma/client";
 import { t } from "../trpc";
 import { access } from "../middlewares/access";
 import { createResultType, filterType } from "../utils/search";
@@ -11,17 +12,19 @@ export const gameService = t.router({
     .mutation(async ({ input: data, ctx }) => {
       await ctx.prisma.game.create({ data: { ...data, userId: ctx.auth.id } });
     }),
-  delete: t.procedure
-    .use(access())
-    .input(gameType.shape.id)
-    .mutation(async ({ input: id, ctx }) => {
-      const game = await ctx.prisma.game.findUnique({
+  rename: t.procedure
+    .input(gameType.pick({ id: true, name: true }))
+    .use(assertGameAccess((input: { id: string }) => input.id))
+    .mutation(async ({ input: { id, name }, ctx }) => {
+      await ctx.prisma.game.update({
         where: { id },
-        select: { userId: true },
+        data: { name },
       });
-      if (game?.userId !== ctx.auth.id) {
-        throw new Error("You do not have permission to delete this game.");
-      }
+    }),
+  delete: t.procedure
+    .input(gameType.shape.id)
+    .use(assertGameAccess((input: string) => input))
+    .mutation(async ({ input: id, ctx }) => {
       await ctx.prisma.game.delete({ where: { id } });
     }),
   read: t.procedure
@@ -36,8 +39,8 @@ export const gameService = t.router({
       return game;
     }),
   myGameList: t.procedure
-    .use(access())
     .input(filterType)
+    .use(access())
     .output(createResultType(gameType))
     .query(async ({ input: { offset, limit }, ctx: { prisma, auth } }) => {
       const [total, entities] = await Promise.all([
@@ -51,3 +54,17 @@ export const gameService = t.router({
       return { total, entities };
     }),
 });
+
+function assertGameAccess<Input>(selectId: (input: Input) => Game["id"]) {
+  return t.middleware(async ({ ctx, input, next }) => {
+    const id = selectId(input as Input);
+    const game = await ctx.prisma.game.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+    if (!ctx.auth || game?.userId !== ctx.auth.id) {
+      throw new Error("You do not have permission to delete this game.");
+    }
+    return next({ ctx: { auth: ctx.auth } });
+  });
+}
