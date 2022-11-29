@@ -4,6 +4,7 @@ import { t } from "../trpc";
 import { access } from "../middlewares/access";
 import { createResultType, filterType } from "../utils/search";
 import { gameType } from "../../../prisma/zod";
+import { UserFacingError } from "../utils/UserFacingError";
 
 export const gameService = t.router({
   create: t.procedure
@@ -34,7 +35,7 @@ export const gameService = t.router({
     .query(async ({ input: id, ctx }) => {
       const game = await ctx.prisma.game.findUnique({ where: { id } });
       if (!game) {
-        throw new Error("Game not found");
+        throw new UserFacingError("Game not found");
       }
       return game;
     }),
@@ -63,7 +64,9 @@ function assertGameAccess<Input>(selectId: (input: Input) => Game["id"]) {
       select: { userId: true },
     });
     if (!ctx.auth || game?.userId !== ctx.auth.id) {
-      throw new Error("You do not have permission to delete this game.");
+      throw new UserFacingError(
+        "You do not have permission to delete this game."
+      );
     }
     return next({ ctx: { auth: ctx.auth } });
   });
