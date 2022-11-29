@@ -17,7 +17,7 @@ import { trpc } from "../trpc";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
 
 export default function BuildPage() {
-  const gameList = trpc.game.list.useQuery({ offset: 0, limit: 10 });
+  const gameList = trpc.game.myGameList.useQuery({ offset: 0, limit: 10 });
   const createGame = trpc.game.create.useMutation();
   const prompt = useDialog(PromptDialog);
 

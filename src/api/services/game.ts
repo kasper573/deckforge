@@ -24,7 +24,18 @@ export const gameService = t.router({
       }
       await ctx.prisma.game.delete({ where: { id } });
     }),
-  list: t.procedure
+  read: t.procedure
+    .use(access())
+    .input(gameType.shape.id)
+    .output(gameType)
+    .query(async ({ input: id, ctx }) => {
+      const game = await ctx.prisma.game.findUnique({ where: { id } });
+      if (!game) {
+        throw new Error("Game not found");
+      }
+      return game;
+    }),
+  myGameList: t.procedure
     .use(access())
     .input(filterType)
     .output(createResultType(gameType))

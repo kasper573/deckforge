@@ -6,12 +6,14 @@ import { Header } from "../components/Header";
 import { LinkListItem } from "../components/Link";
 import { Page } from "../layout/Page";
 import { router } from "../router";
+import { trpc } from "../trpc";
 
 export default function GameEditPage() {
   const { gameId } = useRouteParams(router.build().game);
+  const game = trpc.game.read.useQuery(gameId);
   return (
     <Page>
-      <Header>Game: {gameId}</Header>
+      <Header>{game.data?.name}</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense>
           <LinkListItem to={router.build().game({ gameId }).deck()}>
