@@ -11,6 +11,19 @@ export const gameService = t.router({
     .mutation(async ({ input: data, ctx }) => {
       await ctx.prisma.game.create({ data: { ...data, userId: ctx.auth.id } });
     }),
+  delete: t.procedure
+    .use(access())
+    .input(gameType.shape.id)
+    .mutation(async ({ input: id, ctx }) => {
+      const game = await ctx.prisma.game.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+      if (game?.userId !== ctx.auth.id) {
+        throw new Error("You do not have permission to delete this game.");
+      }
+      await ctx.prisma.game.delete({ where: { id } });
+    }),
   list: t.procedure
     .use(access())
     .input(filterType)

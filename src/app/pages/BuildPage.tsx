@@ -14,6 +14,7 @@ import { Page } from "../layout/Page";
 import { Header } from "../components/Header";
 import { Delete, Edit, Play } from "../components/icons";
 import { trpc } from "../trpc";
+import { ConfirmDialog } from "../dialogs/ConfirmDialog";
 
 export default function BuildPage() {
   const gameList = trpc.game.list.useQuery({ offset: 0, limit: 10 });
@@ -54,6 +55,19 @@ export default function BuildPage() {
 }
 
 function GameListItem({ id, name }: Pick<Game, "id" | "name">) {
+  const confirm = useDialog(ConfirmDialog);
+  const deleteGame = trpc.game.delete.useMutation();
+
+  async function confirmDelete() {
+    const shouldDelete = await confirm({
+      title: "Delete game",
+      content: `Are you sure you want to delete "${name}". This action cannot be reversed.`,
+    });
+    if (shouldDelete) {
+      deleteGame.mutate(id);
+    }
+  }
+
   return (
     <ListItem
       aria-label={name}
@@ -71,7 +85,7 @@ function GameListItem({ id, name }: Pick<Game, "id" | "name">) {
           >
             <Edit />
           </LinkIconButton>
-          <IconButton edge="end" aria-label="delete">
+          <IconButton edge="end" aria-label="delete" onClick={confirmDelete}>
             <Delete />
           </IconButton>
         </>
