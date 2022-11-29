@@ -16,7 +16,7 @@ describe("game", () => {
     cy.findByRole("button", { name: /new game/i }).click();
     cy.findByRole("dialog").within(() => {
       cy.findByRole("textbox", { name: /name/i }).type("My Game");
-      cy.find("form").submit();
+      cy.findByRole("form").submit();
     });
     findGameList().findByRole("listitem", { name: "My Game" }).should("exist");
   });
