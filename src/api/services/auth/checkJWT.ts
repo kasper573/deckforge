@@ -27,7 +27,7 @@ function createRealMiddleware() {
 function createFakeMiddleware() {
   return (req: JWTRequest, res: Response, next: NextFunction) => {
     if (req.header("Authorization") === `Bearer ${fake.token}`) {
-      req.auth = fake.user;
+      req.auth = fake.jwt;
     }
   };
 }

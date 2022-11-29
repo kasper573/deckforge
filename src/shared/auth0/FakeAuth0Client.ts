@@ -12,6 +12,11 @@ export class FakeAuth0Client
   }
   getTokenSilently = async () => this.fakeToken;
   loginWithRedirect = async () =>
-    this.setState({ isAuthenticated: true, user: this.fakeUser });
+    this.setState({
+      isAuthenticated: true,
+      user: {
+        name: this.fakeUser?.name,
+      },
+    });
   logout = async () => this.setState(emptyState());
 }

@@ -36,7 +36,7 @@ export function createServer() {
 
 function createAuthContext(jwt: jwt.JwtPayload): AuthContext | undefined {
   if (!jwt.sub) {
-    console.warn("JWT does not contain a string sub property", jwt);
+    console.warn(`JWT does not contain a string "sub" property`, jwt);
     return;
   }
   return {

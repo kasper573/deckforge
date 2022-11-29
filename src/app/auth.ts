@@ -18,6 +18,6 @@ export function createAuthClient(): BaseAuth0Client {
         },
       });
     case "fake":
-      return new FakeAuth0Client(fake.token, fake.user);
+      return new FakeAuth0Client(fake.token, fake.jwt);
   }
 }
