@@ -7,7 +7,9 @@ import { createTRPCClient } from "./trpc";
 import { createTheme } from "./theme";
 import { createAuthClient } from "./auth";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { suspense: true } },
+});
 const history = createBrowserHistory();
 const theme = createTheme();
 const trpcClient = createTRPCClient(() => authClient.getTokenSilently());
