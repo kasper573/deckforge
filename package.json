@@ -22,6 +22,9 @@
     "db:push": "dotenv-flow prisma db push",
     "db:deploy": "dotenv-flow pscale deploy-request create deckforge"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@auth0/auth0-spa-js": "2.0.0",
     "@emotion/react": "11.10.5",
