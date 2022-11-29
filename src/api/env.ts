@@ -15,7 +15,7 @@ const prismaLogType = z.enum(["error", "query", "warn"]);
 const schema = z.object({
   apiPort: zodNumeric,
   prismaLogs: z.array(prismaLogType).default([]),
-  exposeInternalErrors: zodBooleanish,
+  exposeInternalErrors: zodBooleanish.default(false),
   authImplementation: authImplementationType,
   jwks: z.object({
     requestsPerMinute: zodNumeric,
