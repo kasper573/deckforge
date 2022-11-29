@@ -30,7 +30,7 @@ export function ConfirmDialog({
       <DialogContent>{content}</DialogContent>
       <DialogActions>
         <Button onClick={cancel}>{cancelLabel}</Button>
-        <Button type="submit" variant="contained" onClick={confirm}>
+        <Button type="submit" variant="contained" autoFocus onClick={confirm}>
           {confirmLabel}
         </Button>
       </DialogActions>
