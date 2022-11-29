@@ -1,60 +1,72 @@
 import { OptionsRouter, stringParser } from "react-typesafe-routes";
-import HomePage from "./pages/HomePage";
-import GamePlayPage from "./pages/GamePlayPage";
-import BuildPage from "./pages/BuildPage";
-import GameEditPage from "./pages/GameEditPage";
-import DeckListPage from "./pages/DeckListPage";
-import DeckEditPage from "./pages/DeckEditPage";
-import CardEditPage from "./pages/CardEditPage";
-import EntityListPage from "./pages/EntityListPage";
-import EntityEditPage from "./pages/EntityEditPage";
-import EventsPage from "./pages/EventsPage";
-import GameBrowsePage from "./pages/GameBrowsePage";
+import { lazy } from "react";
 
 export const router = OptionsRouter({}, (route) => ({
   home: route("", {
     exact: true,
-    component: HomePage,
+    component: lazy(() => import("./pages/HomePage")),
   }),
-  play: route("play", { component: GameBrowsePage }, (route) => ({
-    game: route(":gameId", {
-      component: GamePlayPage,
-      params: {
-        gameId: stringParser,
-      },
-    }),
-  })),
-  build: route("build", { component: BuildPage }, (route) => ({
-    game: route(
-      ":gameId",
-      {
-        component: GameEditPage,
-        params: { gameId: stringParser },
-      },
-      (route) => ({
-        deck: route("deck", { component: DeckListPage }, (route) => ({
-          edit: route(
-            ":deckId",
+  play: route(
+    "play",
+    { component: lazy(() => import("./pages/GameBrowsePage")) },
+    (route) => ({
+      game: route(":gameId", {
+        component: lazy(() => import("./pages/GamePlayPage")),
+        params: {
+          gameId: stringParser,
+        },
+      }),
+    })
+  ),
+  build: route(
+    "build",
+    { component: lazy(() => import("./pages/BuildPage")) },
+    (route) => ({
+      game: route(
+        ":gameId",
+        {
+          component: lazy(() => import("./pages/GameEditPage")),
+          params: { gameId: stringParser },
+        },
+        (route) => ({
+          deck: route(
+            "deck",
             {
-              component: DeckEditPage,
-              params: { deckId: stringParser },
+              component: lazy(() => import("./pages/DeckListPage")),
             },
             (route) => ({
-              card: route(":cardId", {
-                component: CardEditPage,
-                params: { cardId: stringParser },
+              edit: route(
+                ":deckId",
+                {
+                  component: lazy(() => import("./pages/DeckEditPage")),
+                  params: { deckId: stringParser },
+                },
+                (route) => ({
+                  card: route(":cardId", {
+                    component: lazy(() => import("./pages/CardEditPage")),
+                    params: { cardId: stringParser },
+                  }),
+                })
+              ),
+            })
+          ),
+          entity: route(
+            "entity",
+            {
+              component: lazy(() => import("./pages/EntityListPage")),
+            },
+            (route) => ({
+              edit: route(":entityId", {
+                component: lazy(() => import("./pages/EntityEditPage")),
+                params: { entityId: stringParser },
               }),
             })
           ),
-        })),
-        entity: route("entity", { component: EntityListPage }, (route) => ({
-          edit: route(":entityId", {
-            component: EntityEditPage,
-            params: { entityId: stringParser },
+          events: route("events", {
+            component: lazy(() => import("./pages/EventsPage")),
           }),
-        })),
-        events: route("events", { component: EventsPage }),
-      })
-    ),
-  })),
+        })
+      ),
+    })
+  ),
 }));
