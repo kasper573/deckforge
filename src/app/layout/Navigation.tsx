@@ -17,7 +17,7 @@ export function Navigation({
 }) {
   const { user } = useAuth0();
   return (
-    <nav aria-label="Main menu">
+    <>
       <RouteList
         onClick={onItemSelected}
         routes={defined([
@@ -33,7 +33,7 @@ export function Navigation({
           },
         ])}
       />
-    </nav>
+    </>
   );
 }
 

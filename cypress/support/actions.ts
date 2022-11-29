@@ -20,9 +20,19 @@ export function showUserMenu() {
 }
 
 export function clickMainMenuOption(name: ElementFilter) {
+  ensureMainMenuVisible();
   cy.findByRole("navigation", { name: /main menu/i })
     .findByRole("link", { name })
     .click();
+}
+
+function ensureMainMenuVisible() {
+  cy.get("body").then(($body) => {
+    const [menuTrigger] = $body.find(`button[aria-label="Show main menu"]`);
+    if (menuTrigger) {
+      menuTrigger.click();
+    }
+  });
 }
 
 export function resetData() {

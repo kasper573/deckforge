@@ -9,6 +9,8 @@ import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import MuiDrawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
+import useTheme from "@mui/material/styles/useTheme";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { Menu as MenuIcon } from "../components/icons";
 import { LoadingPage } from "../pages/LoadingPage";
 import { ToolbarContent } from "./ToolbarContent";
@@ -17,22 +19,10 @@ import { Logo } from "./Logo";
 import { pageMaxWidth } from "./Page";
 
 export function Layout({ children }: { children?: ReactNode }) {
+  const theme = useTheme();
+  const isLargeDisplay = useMediaQuery(theme.breakpoints.up(breakpoint));
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = () => setDrawerOpen(false);
-
-  const drawerProps = {
-    "aria-label": "Main menu",
-    children: (
-      <>
-        <Toolbar sx={{ "&": { padding: 0 } }}>
-          <Box sx={{ display: "flex", justifyContent: "center", flex: 1 }}>
-            <Logo onClick={closeDrawer} />
-          </Box>
-        </Toolbar>
-        <Navigation onItemSelected={closeDrawer} />
-      </>
-    ),
-  };
 
   return (
     <>
@@ -46,7 +36,7 @@ export function Layout({ children }: { children?: ReactNode }) {
                 alignItems="center"
               >
                 <IconButton
-                  aria-label="Open main menu"
+                  aria-label="Show main menu"
                   onClick={() => setDrawerOpen(true)}
                 >
                   <MenuIcon />
@@ -58,14 +48,20 @@ export function Layout({ children }: { children?: ReactNode }) {
         </Toolbar>
       </AppBar>
 
-      <LargeDeviceDrawer variant="permanent" open {...drawerProps} />
-      <SmallDeviceDrawer
-        variant="temporary"
+      <Drawer
+        role="navigation"
+        aria-label="Main menu"
+        variant={isLargeDisplay ? "permanent" : "temporary"}
         open={isDrawerOpen}
-        disablePortal
         onClose={closeDrawer}
-        {...drawerProps}
-      />
+      >
+        <Toolbar sx={{ "&": { padding: 0 } }}>
+          <Box sx={{ display: "flex", justifyContent: "center", flex: 1 }}>
+            <Logo onClick={closeDrawer} />
+          </Box>
+        </Toolbar>
+        <Navigation onItemSelected={closeDrawer} />
+      </Drawer>
 
       <Toolbar />
 
@@ -91,18 +87,6 @@ const Content = styled("main")`
   flex: 1;
   ${({ theme }) => theme.breakpoints.up(breakpoint)} {
     margin-left: ${drawerWidth}px;
-  }
-`;
-
-const LargeDeviceDrawer = styled(Drawer)`
-  ${({ theme }) => theme.breakpoints.down(breakpoint)} {
-    display: none;
-  }
-`;
-
-const SmallDeviceDrawer = styled(Drawer)`
-  ${({ theme }) => theme.breakpoints.up(breakpoint)} {
-    display: none;
   }
 `;
 
