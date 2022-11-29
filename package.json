@@ -16,7 +16,7 @@
     "lint:fix": "eslint . --fix && prettier . --write",
     "test:unit": "jest",
     "test:e2e": "cross-var start-server-and-test prod $CYPRESS_BASE_URL 'cypress run'",
-    "db:reset": "dotenv-flow \"prisma migrate reset --force\"",
+    "db:reset": "dotenv-flow -- prisma migrate reset --force",
     "db:create-migration": "dotenv-flow prisma migrate dev",
     "db:seed": "dotenv-flow prisma db seed",
     "db:push": "dotenv-flow prisma db push",
