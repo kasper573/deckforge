@@ -18,6 +18,11 @@ import { Layout } from "./layout/Layout";
 import { env } from "./env";
 import { trpc } from "./trpc";
 import { router } from "./router";
+import {
+  ErrorBoundary,
+  PlainErrorFallback,
+  PrettyErrorFallback,
+} from "./ErrorFallback";
 
 export function App({
   authClient,
@@ -34,23 +39,30 @@ export function App({
 }) {
   return (
     <React.StrictMode>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          <Auth0Context.Provider value={authClient}>
-            <Router history={history}>
-              <ThemeProvider theme={theme}>
-                <CssBaseline />
-                {globalStyles}
-                <Layout>
-                  <RouterSwitch router={router} />
-                </Layout>
-                {env.enableAnalytics ? <Analytics /> : undefined}
-                <DialogOutlet />
-              </ThemeProvider>
-            </Router>
-          </Auth0Context.Provider>
-        </QueryClientProvider>
-      </trpc.Provider>
+      <ErrorBoundary fallback={PlainErrorFallback} onError={console.error}>
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <Auth0Context.Provider value={authClient}>
+              <Router history={history}>
+                <ThemeProvider theme={theme}>
+                  <CssBaseline />
+                  {globalStyles}
+                  <Layout>
+                    <ErrorBoundary
+                      fallback={PrettyErrorFallback}
+                      onError={console.error}
+                    >
+                      <RouterSwitch router={router} />
+                    </ErrorBoundary>
+                  </Layout>
+                  {env.enableAnalytics ? <Analytics /> : undefined}
+                  <DialogOutlet />
+                </ThemeProvider>
+              </Router>
+            </Auth0Context.Provider>
+          </QueryClientProvider>
+        </trpc.Provider>
+      </ErrorBoundary>
     </React.StrictMode>
   );
 }

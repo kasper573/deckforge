@@ -9,6 +9,7 @@ const schema = z.object({
   enableLoggerLink: zodBooleanish.default(false),
   enableAnalytics: zodBooleanish.default(false),
   authImplementation: authImplementationType,
+  showErrorDetails: zodBooleanish.default(false),
   auth0: z.object({
     domain: z.string(),
     clientId: z.string(),
@@ -31,6 +32,7 @@ export const env = loadEnv(schema, {
   enableLoggerLink: import.meta.env.VITE_ENABLE_LOGGER_LINK,
   enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS,
   authImplementation: import.meta.env.VITE_AUTH_IMPLEMENTATION,
+  showErrorDetails: import.meta.env.VITE_SHOW_ERROR_DETAILS,
   auth0: {
     domain: import.meta.env.VITE_AUTH0_DOMAIN,
     issuer: import.meta.env.VITE_AUTH0_ISSUER,
