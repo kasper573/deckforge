@@ -4,7 +4,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import type { TextFieldProps } from "@mui/material/TextField";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useRef } from "react";
 import Dialog from "@mui/material/Dialog";
 import type { DialogProps } from "../../shared/useDialog";
@@ -12,10 +12,10 @@ import type { DialogProps } from "../../shared/useDialog";
 export type PromptDialogProps = DialogProps<
   string | undefined,
   {
-    title: string;
+    title: ReactNode;
     fieldProps?: TextFieldProps;
-    submitLabel?: string;
-    cancelLabel?: string;
+    submitLabel?: ReactNode;
+    cancelLabel?: ReactNode;
   }
 >;
 
