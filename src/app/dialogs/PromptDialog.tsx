@@ -44,7 +44,7 @@ export function PromptDialog({
   }
 
   return (
-    <Dialog fullWidth open={open} onClose={cancel}>
+    <Dialog disableRestoreFocus fullWidth open={open} onClose={cancel}>
       <form name="prompt" onSubmit={submit}>
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
