@@ -8,7 +8,14 @@ import { createTheme } from "./theme";
 import { createAuthClient } from "./auth";
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { suspense: true } },
+  defaultOptions: {
+    queries: {
+      suspense: true,
+      // 4s to match cypress timeout
+      retry: 4,
+      retryDelay: 1000,
+    },
+  },
 });
 const history = createBrowserHistory();
 const theme = createTheme();
