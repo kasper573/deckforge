@@ -9,7 +9,7 @@ import { UserFacingError } from "./utils/UserFacingError";
 export const t = initTRPC.context<Context>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
-    return env.exposeInternalErrors || error instanceof UserFacingError
+    return env.exposeInternalErrors || error.cause instanceof UserFacingError
       ? shape
       : stripInternalError(shape);
   },
