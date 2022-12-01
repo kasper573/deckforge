@@ -17,7 +17,34 @@
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error",
-    "mui-path-imports/mui-path-imports": "error"
+    "mui-path-imports/mui-path-imports": "error",
+    "import/no-restricted-paths": [
+      "error",
+      {
+        "zones": [
+          {
+            "from": "./src/api/**/*",
+            "target": "./src/shared/**/*",
+            "message": "Shared may not depend on Api."
+          },
+          {
+            "from": "./src/app/**/*",
+            "target": "./src/shared/**/*",
+            "message": "Shared may not depend on App."
+          },
+          {
+            "from": "./src/app/**/*",
+            "target": "./src/api/**/*",
+            "message": "Api may not depend on App."
+          },
+          {
+            "from": "./src/api/env.ts",
+            "target": "./src/app/**/*",
+            "message": "App may not use Api environment variables."
+          }
+        ]
+      }
+    ]
   },
   "overrides": [
     {
