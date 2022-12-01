@@ -10,7 +10,7 @@
 - API: [tRPC](https://trpc.io/) + [Express](https://expressjs.com/), hosted on [Vercel Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions)
 - DB: [Prisma](https://www.prisma.io/) (mysql) + [PlanetScale](https://planetscale.com) (via [auto migrations](https://planetscale.com/docs/tutorials/automatic-prisma-migrations))
 - Auth: [Auth0](https://auth0.com/)
-- Tests: [Jest](https://jestjs.io/) / [Cypress](https://www.cypress.io/) + [react-testing-library](https://testing-library.com/)
+- Tests: [Jest](https://jestjs.io/) (unit) / [Cypress](https://www.cypress.io/) (component/e2e) + [Testing Library](https://testing-library.com/)
 
 ## Getting started
 
