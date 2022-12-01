@@ -22,7 +22,7 @@ import {
   ErrorBoundary,
   PlainErrorFallback,
   PrettyErrorFallback,
-} from "./ErrorFallback";
+} from "./ErrorBoundary";
 
 export function App({
   authClient,
