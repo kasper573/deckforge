@@ -1,6 +1,6 @@
 # Deck Forge
 
-[deckforge.io](https://deckforge.io) is a service that lets users easily create their own deck builder games. The games can be played directly in the browser and can be shared with friends.
+[deckforge.io](https://deckforge.io) is a service for creating and sharing deck builder games.
 
 > Deck Forge is currently in development. The site is open but not stable and will undergo heavy changes and database resets. Use at your own risk.
 
