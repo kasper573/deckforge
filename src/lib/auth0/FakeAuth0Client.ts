@@ -1,4 +1,4 @@
-import { Stateful } from "../Stateful";
+import { Stateful } from "./Stateful";
 import type { BaseAuth0Client } from "./BaseAuth0Client";
 import type { Auth0State } from "./Auth0State";
 import { emptyState } from "./Auth0State";
