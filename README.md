@@ -30,4 +30,5 @@ VITE_AUTH_IMPLEMENTATION=fake # Only necessary for auth related e2e tests to wor
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or PR to discuss any changes. Make sure your contributions are accompanied by e2e and/or unit tests. PRs will only be merged are well tested and pass all checks.
+Contributions are welcome! Please open an issue or PR to discuss any changes.
+PRs will only be merged once they are well tested and pass all checks.
