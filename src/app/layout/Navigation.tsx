@@ -5,7 +5,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Construction from "@mui/icons-material/Construction";
 import { Play } from "../components/icons";
 import type { LinkTo } from "../components/Link";
-import { defined } from "../../lib/util/defined";
+import { defined } from "../../lib/ts-extensions/defined";
 import { useAuth0 } from "../../lib/auth0/useAuth0";
 import { router } from "../router";
 import { LinkListItem } from "../components/Link";
