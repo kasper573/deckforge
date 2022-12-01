@@ -29,5 +29,5 @@ function stripInternalError(shape: DefaultErrorShape): DefaultErrorShape {
 
 export type Context = {
   auth?: AuthContext;
-  prisma: PrismaClient;
+  db: PrismaClient;
 };

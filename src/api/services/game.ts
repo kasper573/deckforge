@@ -11,13 +11,13 @@ export const gameService = t.router({
     .use(access())
     .input(z.object({ name: z.string() }))
     .mutation(async ({ input: data, ctx }) => {
-      await ctx.prisma.game.create({ data: { ...data, userId: ctx.auth.id } });
+      await ctx.db.game.create({ data: { ...data, userId: ctx.auth.id } });
     }),
   rename: t.procedure
     .input(gameType.pick({ id: true, name: true }))
     .use(assertGameAccess((input: { id: string }) => input.id))
     .mutation(async ({ input: { id, name }, ctx }) => {
-      await ctx.prisma.game.update({
+      await ctx.db.game.update({
         where: { id },
         data: { name },
       });
@@ -26,14 +26,14 @@ export const gameService = t.router({
     .input(gameType.shape.id)
     .use(assertGameAccess((input: string) => input))
     .mutation(async ({ input: id, ctx }) => {
-      await ctx.prisma.game.delete({ where: { id } });
+      await ctx.db.game.delete({ where: { id } });
     }),
   read: t.procedure
     .use(access())
     .input(gameType.shape.id)
     .output(gameType)
     .query(async ({ input: id, ctx }) => {
-      const game = await ctx.prisma.game.findUnique({ where: { id } });
+      const game = await ctx.db.game.findUnique({ where: { id } });
       if (!game) {
         throw new UserFacingError("Game not found");
       }
@@ -43,10 +43,10 @@ export const gameService = t.router({
     .input(filterType)
     .use(access())
     .output(createResultType(gameType))
-    .query(async ({ input: { offset, limit }, ctx: { prisma, auth } }) => {
+    .query(async ({ input: { offset, limit }, ctx: { db, auth } }) => {
       const [total, entities] = await Promise.all([
-        prisma.game.count({ where: { userId: auth.id } }),
-        prisma.game.findMany({
+        db.game.count({ where: { userId: auth.id } }),
+        db.game.findMany({
           take: limit,
           skip: offset,
           where: { userId: auth.id },
@@ -59,7 +59,7 @@ export const gameService = t.router({
 function assertGameAccess<Input>(selectId: (input: Input) => Game["id"]) {
   return t.middleware(async ({ ctx, input, next }) => {
     const id = selectId(input as Input);
-    const game = await ctx.prisma.game.findUnique({
+    const game = await ctx.db.game.findUnique({
       where: { id },
       select: { userId: true },
     });

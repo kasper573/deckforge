@@ -1,6 +1,6 @@
-import { createPrismaClient } from "../src/api/prisma";
+import { createDatabaseClient } from "../src/api/db";
 
-export async function seed(client = createPrismaClient()) {
+export async function seed(client = createDatabaseClient()) {
   const id = "cl9ebqhxk00003b600tymydho";
   try {
     await client.example.upsert({

@@ -3,14 +3,14 @@ import * as trpcExpress from "@trpc/server/adapters/express";
 import type { Request as JWTRequest } from "express-jwt";
 import type * as jwt from "jsonwebtoken";
 import { createApiRouter } from "./router";
-import { createPrismaClient } from "./prisma";
+import { createDatabaseClient } from "./db";
 import type { Context } from "./trpc";
 import { createJWTMiddleware } from "./services/auth/checkJWT";
 import type { AuthContext } from "./services/auth/types";
 
 export function createServer() {
   const server = express();
-  const prisma = createPrismaClient();
+  const db = createDatabaseClient();
   const checkJWT = createJWTMiddleware();
 
   server.use(
@@ -26,7 +26,7 @@ export function createServer() {
       }): Promise<Context> {
         await checkJWT(req, res, () => {});
         const { auth } = req;
-        return { prisma, auth: auth ? createAuthContext(auth) : undefined };
+        return { db, auth: auth ? createAuthContext(auth) : undefined };
       },
     })
   );

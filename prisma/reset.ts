@@ -1,8 +1,8 @@
-import { createPrismaClient } from "../src/api/prisma";
+import { createDatabaseClient } from "../src/api/db";
 import { seed } from "./seed";
 
 export async function reset() {
-  const client = createPrismaClient();
+  const client = createDatabaseClient();
   try {
     for (const model of Object.values(client).filter(isModel)) {
       await model.deleteMany({});

@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { env } from "./env";
 
-export function createPrismaClient() {
+export function createDatabaseClient() {
   return new PrismaClient({ log: env.prismaLogs });
 }
