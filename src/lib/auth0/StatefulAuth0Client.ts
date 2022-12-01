@@ -50,9 +50,12 @@ export class StatefulAuth0Client
   };
 
   private refreshState = async () => {
+    this.setState({ isLoading: true });
+
     const isAuthenticated = await this.auth0Client
       .isAuthenticated()
       .catch(() => false);
+
     if (!isAuthenticated) {
       this.setState(emptyState());
       return;
@@ -61,6 +64,7 @@ export class StatefulAuth0Client
     const user = await this.auth0Client.getUser().catch(() => undefined);
 
     this.setState({
+      isLoading: false,
       isAuthenticated,
       user,
     });

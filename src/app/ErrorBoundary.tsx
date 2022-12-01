@@ -4,9 +4,9 @@ import Typography from "@mui/material/Typography";
 import type { ComponentType, ErrorInfo, PropsWithChildren } from "react";
 import { useHistory } from "react-router";
 import { useEffect } from "react";
-import { Layout } from "./layout/Layout";
 import { Page } from "./layout/Page";
 import { env } from "./env";
+import { Center } from "./components/Center";
 
 /**
  * Display the given error in a safe way. Should never be able to crash the app.
@@ -42,11 +42,13 @@ export function PlainErrorFallback({
  */
 export function PrettyErrorFallback(props: FallbackProps) {
   return (
-    <Layout>
+    <>
       <Page>
-        <PlainErrorFallback {...props} />
+        <Center>
+          <PlainErrorFallback {...props} />
+        </Center>
       </Page>
-    </Layout>
+    </>
   );
 }
 

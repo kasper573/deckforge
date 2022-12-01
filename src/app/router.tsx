@@ -1,5 +1,15 @@
 import { OptionsRouter, stringParser } from "react-typesafe-routes";
 import { lazy } from "react";
+import { createAccessFactory } from "./middlewares/access";
+import { NotPermittedPage } from "./pages/NotPermittedPage";
+import { NotAuthenticatedPage } from "./pages/NotAuthenticatedPage";
+import { LoadingPage } from "./pages/LoadingPage";
+
+const access = createAccessFactory({
+  NotPermittedPage,
+  NotAuthenticatedPage,
+  LoadingPage,
+});
 
 export const router = OptionsRouter({}, (route) => ({
   home: route("", {
@@ -20,7 +30,10 @@ export const router = OptionsRouter({}, (route) => ({
   ),
   build: route(
     "build",
-    { component: lazy(() => import("./pages/BuildPage")) },
+    {
+      middleware: access("User"),
+      component: lazy(() => import("./pages/BuildPage")),
+    },
     (route) => ({
       game: route(
         ":gameId",
