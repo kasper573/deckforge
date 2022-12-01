@@ -14,7 +14,7 @@
 
 ## Getting started
 
-Before you get started, create a `.env.local` file in the root of the project and add the following:
+After cloning the repo, create a `.env.local` file in the root of the project and add the following:
 
 ```bash
 DATABASE_URL=<connection string to your development mysql database>
