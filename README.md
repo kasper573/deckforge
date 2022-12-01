@@ -12,9 +12,16 @@
 - Auth: [Auth0](https://auth0.com/)
 - Tests: [Jest](https://jestjs.io/) / [Cypress](https://www.cypress.io/) + [react-testing-library](https://testing-library.com/)
 
-## Usage
+## Getting started
 
-Before you get started
+Before you get started, create a `.env.local` file in the root of the project and add the following:
+
+```bash
+DATABASE_URL=<connection string to your local mysql database>
+VITE_AUTH_IMPLEMENTATION=fake # Only necessary for auth related e2e tests to work
+```
+
+## Usage
 
 - `yarn dev` To start the local development server
 - `yarn test:unit` (`-- watch`) to run unit tests
