@@ -8,7 +8,7 @@ export class FakeAuth0Client
   implements BaseAuth0Client
 {
   constructor(private fakeToken: string, private fakeUser: Auth0State["user"]) {
-    super({ isAuthenticated: false });
+    super({ isAuthenticated: false, isLoading: false });
   }
   getTokenSilently = async () => this.fakeToken;
   loginWithRedirect = async () =>
