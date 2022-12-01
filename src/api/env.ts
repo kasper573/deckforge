@@ -13,7 +13,7 @@ const prismaLogType = z.enum(["error", "query", "warn"]);
 
 const schema = z.object({
   apiPort: zodNumeric,
-  prismaLogs: z.array(prismaLogType).default([]),
+  databaseLogs: z.array(prismaLogType).default([]),
   exposeInternalErrors: zodBooleanish.default(false),
   authImplementation: authImplementationType,
   jwks: z.object({
@@ -28,7 +28,7 @@ const schema = z.object({
 });
 
 export const env = schema.parse({
-  prismaLogs: process.env.PRISMA_LOGS?.split(","),
+  databaseLogs: process.env.DATABASE_LOGS?.split(","),
   apiPort: process.env.VITE_API_PORT,
   databaseUrl: process.env.DATABASE_URL,
   environment: process.env.NODE_ENV,
