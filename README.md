@@ -24,7 +24,7 @@ VITE_AUTH_IMPLEMENTATION=fake # Only necessary for auth related e2e tests to wor
 ## Usage
 
 - `yarn dev` To start the local development server
-- `yarn test:unit` (`-- watch`) to run unit tests
+- `yarn test:unit` to run unit tests
 - `cypress open|run` to develop or run e2e tests (needs the local dev server running)
 - `yarn lint|lint:fix` to display or fix linting errors
 
