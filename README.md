@@ -17,7 +17,7 @@
 Before you get started, create a `.env.local` file in the root of the project and add the following:
 
 ```bash
-DATABASE_URL=<connection string to your local mysql database>
+DATABASE_URL=<connection string to your development mysql database>
 VITE_AUTH_IMPLEMENTATION=fake # Only necessary for auth related e2e tests to work
 ```
 
