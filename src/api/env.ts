@@ -1,6 +1,5 @@
 import * as dotEnvFlow from "dotenv-flow";
 import { z } from "zod";
-import { loadEnv } from "../shared/util/loadEnv";
 import { zodNumeric } from "../shared/util/zod/zodNumeric";
 import { zodBooleanish } from "../shared/util/zod/zodBooleanish";
 import { authImplementationType } from "./services/auth/types";
@@ -28,7 +27,7 @@ const schema = z.object({
   }),
 });
 
-export const env = loadEnv(schema, {
+export const env = schema.parse({
   prismaLogs: process.env.PRISMA_LOGS?.split(","),
   apiPort: process.env.VITE_API_PORT,
   databaseUrl: process.env.DATABASE_URL,

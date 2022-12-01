@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { loadEnv } from "../shared/util/loadEnv";
 import { zodNumeric } from "../shared/util/zod/zodNumeric";
 import { zodBooleanish } from "../shared/util/zod/zodBooleanish";
 import { authImplementationType } from "../api/services/auth/types";
@@ -27,7 +26,7 @@ const schema = z.object({
   }),
 });
 
-export const env = loadEnv(schema, {
+export const env = schema.parse({
   apiPort: import.meta.env.VITE_API_PORT,
   enableLoggerLink: import.meta.env.VITE_ENABLE_LOGGER_LINK,
   enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS,
