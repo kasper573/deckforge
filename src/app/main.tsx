@@ -20,7 +20,9 @@ const queryClient = new QueryClient({
 const history = createBrowserHistory();
 const theme = createTheme();
 const trpcClient = createTRPCClient(() => authClient.getTokenSilently());
-const authClient = createAuthClient();
+const authClient = createAuthClient(() =>
+  history.replace(history.location.pathname)
+);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <App
