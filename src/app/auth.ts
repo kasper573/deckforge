@@ -1,6 +1,6 @@
-import { StatefulAuth0Client } from "../shared/auth0/StatefulAuth0Client";
-import type { BaseAuth0Client } from "../shared/auth0/BaseAuth0Client";
-import { FakeAuth0Client } from "../shared/auth0/FakeAuth0Client";
+import { StatefulAuth0Client } from "../lib/auth0/StatefulAuth0Client";
+import type { BaseAuth0Client } from "../lib/auth0/BaseAuth0Client";
+import { FakeAuth0Client } from "../lib/auth0/FakeAuth0Client";
 import { fake } from "../api/services/auth/fake";
 import { env } from "./env";
 

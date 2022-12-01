@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { UserRole } from "@prisma/client";
-import { useAuth0 } from "../../shared/auth0/useAuth0";
+import { useAuth0 } from "../../lib/auth0/useAuth0";
 import { getAccessLevel } from "../../api/services/auth/utils";
 
 type AuthPropsBase = {

@@ -1,7 +1,7 @@
 import * as dotEnvFlow from "dotenv-flow";
 import { z } from "zod";
-import { zodNumeric } from "../shared/util/zod/zodNumeric";
-import { zodBooleanish } from "../shared/util/zod/zodBooleanish";
+import { zodNumeric } from "../lib/util/zod/zodNumeric";
+import { zodBooleanish } from "../lib/util/zod/zodBooleanish";
 import { authImplementationType } from "./services/auth/types";
 
 dotEnvFlow.config({ purge_dotenv: true });

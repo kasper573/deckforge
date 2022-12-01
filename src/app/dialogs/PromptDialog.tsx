@@ -7,7 +7,7 @@ import TextField from "@mui/material/TextField";
 import type { FormEvent, ReactNode } from "react";
 import { useRef } from "react";
 import Dialog from "@mui/material/Dialog";
-import type { DialogProps } from "../../shared/useDialog";
+import type { DialogProps } from "../../lib/useDialog";
 
 export type PromptDialogProps = DialogProps<
   string | undefined,

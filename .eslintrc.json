@@ -24,13 +24,13 @@
         "zones": [
           {
             "from": "./src/api/**/*",
-            "target": "./src/shared/**/*",
-            "message": "Shared may not depend on Api."
+            "target": "./src/lib/**/*",
+            "message": "Lib may not depend on Api."
           },
           {
             "from": "./src/app/**/*",
-            "target": "./src/shared/**/*",
-            "message": "Shared may not depend on App."
+            "target": "./src/lib/**/*",
+            "message": "Lib may not depend on App."
           },
           {
             "from": "./src/app/**/*",

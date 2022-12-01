@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { DialogProps } from "../../src/shared/useDialog";
-import { DialogOutlet, useDialog } from "../../src/shared/useDialog";
+import type { DialogProps } from "../../src/lib/useDialog";
+import { DialogOutlet, useDialog } from "../../src/lib/useDialog";
 
 describe("useDialog.cy.ts", () => {
   it("can wait for and receive dialog resolution value based on input", () => {

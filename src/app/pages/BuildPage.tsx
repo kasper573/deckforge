@@ -7,7 +7,7 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import type { Game } from "@prisma/client";
 import { PromptDialog } from "../dialogs/PromptDialog";
-import { useDialog } from "../../shared/useDialog";
+import { useDialog } from "../../lib/useDialog";
 import { router } from "../router";
 import { LinkIconButton } from "../components/Link";
 import { Page } from "../layout/Page";

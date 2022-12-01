@@ -6,7 +6,7 @@ import type {
   HTMLAttributes,
 } from "react";
 import { useState } from "react";
-import { concatFunctions } from "../../shared/util/concatFunctions";
+import { concatFunctions } from "../../lib/util/concatFunctions";
 
 export interface MenuOnProps<T extends Element>
   extends Omit<ComponentProps<typeof Menu>, "open"> {

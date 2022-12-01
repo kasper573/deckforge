@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { zodNumeric } from "../shared/util/zod/zodNumeric";
-import { zodBooleanish } from "../shared/util/zod/zodBooleanish";
+import { zodNumeric } from "../lib/util/zod/zodNumeric";
+import { zodBooleanish } from "../lib/util/zod/zodBooleanish";
 import { authImplementationType } from "../api/services/auth/types";
 
 const schema = z.object({
