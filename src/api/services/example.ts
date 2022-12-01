@@ -11,6 +11,6 @@ export const exampleRouter = t.router({
       };
     }),
   getAll: t.procedure.use(access()).query(({ ctx }) => {
-    return ctx.prisma.example.findMany();
+    return ctx.db.example.findMany();
   }),
 });

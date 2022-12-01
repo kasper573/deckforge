@@ -1,8 +1,7 @@
-import { createPrismaClient } from "../src/api/prisma";
+import { createDatabaseClient } from "../src/api/db";
 
-async function main() {
+export async function seed(client = createDatabaseClient()) {
   const id = "cl9ebqhxk00003b600tymydho";
-  const client = createPrismaClient();
   try {
     await client.example.upsert({
       where: {
@@ -21,4 +20,6 @@ async function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  seed();
+}
