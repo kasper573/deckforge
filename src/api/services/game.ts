@@ -13,7 +13,7 @@ export function createGameService() {
       .use(access())
       .input(z.object({ name: z.string() }))
       .mutation(async ({ input: data, ctx }) => {
-        await ctx.db.game.create({ data: { ...data, userId: ctx.user.id } });
+        await ctx.db.game.create({ data: { ...data, ownerId: ctx.user.id } });
       }),
     rename: t.procedure
       .input(gameType.pick({ id: true, name: true }))
@@ -47,11 +47,11 @@ export function createGameService() {
       .output(createResultType(gameType))
       .query(async ({ input: { offset, limit }, ctx: { db, user } }) => {
         const [total, entities] = await Promise.all([
-          db.game.count({ where: { userId: user.id } }),
+          db.game.count({ where: { ownerId: user.id } }),
           db.game.findMany({
             take: limit,
             skip: offset,
-            where: { userId: user.id },
+            where: { ownerId: user.id },
           }),
         ]);
         return { total, entities };
@@ -64,9 +64,9 @@ function assertGameAccess<Input>(selectId: (input: Input) => Game["id"]) {
     const id = selectId(input as Input);
     const game = await ctx.db.game.findUnique({
       where: { id },
-      select: { userId: true },
+      select: { ownerId: true },
     });
-    if (!ctx.user || game?.userId !== ctx.user.id) {
+    if (!ctx.user || game?.ownerId !== ctx.user.id) {
       throw new UserFacingError(
         "You do not have permission to delete this game."
       );
