@@ -11,7 +11,7 @@ export const gameService = t.router({
     .use(access())
     .input(z.object({ name: z.string() }))
     .mutation(async ({ input: data, ctx }) => {
-      await ctx.db.game.create({ data: { ...data, userId: ctx.auth.id } });
+      await ctx.db.game.create({ data: { ...data, userId: ctx.user.id } });
     }),
   rename: t.procedure
     .input(gameType.pick({ id: true, name: true }))
@@ -43,13 +43,13 @@ export const gameService = t.router({
     .input(filterType)
     .use(access())
     .output(createResultType(gameType))
-    .query(async ({ input: { offset, limit }, ctx: { db, auth } }) => {
+    .query(async ({ input: { offset, limit }, ctx: { db, user } }) => {
       const [total, entities] = await Promise.all([
-        db.game.count({ where: { userId: auth.id } }),
+        db.game.count({ where: { userId: user.id } }),
         db.game.findMany({
           take: limit,
           skip: offset,
-          where: { userId: auth.id },
+          where: { userId: user.id },
         }),
       ]);
       return { total, entities };
@@ -63,11 +63,11 @@ function assertGameAccess<Input>(selectId: (input: Input) => Game["id"]) {
       where: { id },
       select: { userId: true },
     });
-    if (!ctx.auth || game?.userId !== ctx.auth.id) {
+    if (!ctx.user || game?.userId !== ctx.user.id) {
       throw new UserFacingError(
         "You do not have permission to delete this game."
       );
     }
-    return next({ ctx: { auth: ctx.auth } });
+    return next({ ctx: { auth: ctx.user } });
   });
 }

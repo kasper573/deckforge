@@ -1,14 +1,12 @@
-import { OptionsRouter, stringParser } from "react-typesafe-routes";
+import { OptionsRouter, stringParser, Redirect } from "react-typesafe-routes";
 import { lazy } from "react";
-import { createAccessFactory } from "./middlewares/access";
+import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./pages/NotPermittedPage";
 import { NotAuthenticatedPage } from "./pages/NotAuthenticatedPage";
-import { LoadingPage } from "./pages/LoadingPage";
 
 const access = createAccessFactory({
   NotPermittedPage,
   NotAuthenticatedPage,
-  LoadingPage,
 });
 
 export const router = OptionsRouter({}, (route) => ({
@@ -28,10 +26,23 @@ export const router = OptionsRouter({}, (route) => ({
       }),
     })
   ),
+  user: route(
+    "user",
+    { component: () => <Redirect to={loginRedirect} /> },
+    (route) => ({
+      login: route("login", {
+        component: lazy(() => import("./pages/LoginPage")),
+      }),
+      profile: route("profile", {
+        middleware: access(),
+        component: lazy(() => import("./pages/ProfilePage")),
+      }),
+    })
+  ),
   build: route(
     "build",
     {
-      middleware: access("User"),
+      middleware: access(),
       component: lazy(() => import("./pages/BuildPage")),
     },
     (route) => ({
@@ -83,3 +94,6 @@ export const router = OptionsRouter({}, (route) => ({
     })
   ),
 }));
+
+export const logoutRedirect = router.user().login();
+export const loginRedirect = router.user();

@@ -1,29 +1,25 @@
-import type { UserRole } from "@prisma/client";
 import type { RouteMiddleware } from "react-typesafe-routes";
 import type { ComponentType } from "react";
-import { useAuth0 } from "../../lib/auth0/useAuth0";
-import { getAccessLevel } from "../../api/services/auth/utils";
+import { UserAccessLevel } from "../../../api/services/user/types";
+import { useAuth } from "./store";
 
 export function createAccessFactory({
-  LoadingPage,
   NotAuthenticatedPage,
   NotPermittedPage,
 }: {
-  LoadingPage: ComponentType;
   NotAuthenticatedPage: ComponentType;
   NotPermittedPage: ComponentType;
 }) {
-  return function access(requiredRole: UserRole = "User"): RouteMiddleware {
+  return function access(
+    requiredAccess = UserAccessLevel.User
+  ): RouteMiddleware {
     return (LockedPage) => {
       function Access() {
-        const { isAuthenticated, isLoading } = useAuth0();
-        if (isLoading) {
-          return <LoadingPage />;
-        }
+        const { isAuthenticated, user } = useAuth();
         if (!isAuthenticated) {
           return <NotAuthenticatedPage />;
         }
-        if (getAccessLevel("User") < getAccessLevel(requiredRole)) {
+        if (!user || user?.access < requiredAccess) {
           return <NotPermittedPage />;
         }
         return <LockedPage />;

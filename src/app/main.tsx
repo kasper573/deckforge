@@ -5,7 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { App } from "./App";
 import { createTRPCClient } from "./trpc";
 import { createTheme } from "./theme";
-import { createAuthClient } from "./auth";
+import { getAuthToken, setupAuthBehavior } from "./features/auth/store";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,16 +19,13 @@ const queryClient = new QueryClient({
 });
 const history = createBrowserHistory();
 const theme = createTheme();
-const trpcClient = createTRPCClient(() => authClient.getTokenSilently());
-const authClient = createAuthClient(() =>
-  history.replace(history.location.pathname)
-);
+const trpcClient = createTRPCClient(getAuthToken);
+setupAuthBehavior({ history });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <App
     theme={theme}
     history={history}
-    authClient={authClient}
     trpcClient={trpcClient}
     queryClient={queryClient}
   />

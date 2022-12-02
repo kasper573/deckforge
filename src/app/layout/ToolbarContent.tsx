@@ -8,12 +8,15 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import type { ReactNode } from "react";
 import { MenuOn } from "../components/MenuOn";
-import { Auth } from "../components/Auth";
+import { Auth } from "../features/auth/Auth";
 import { OnlineBadge } from "../components/OnlineBadge";
-import { useAuth0 } from "../../lib/auth0/useAuth0";
+import { useAuth } from "../features/auth/store";
+import { LinkMenuItem } from "../components/Link";
+import { router } from "../router";
+import { UserAccessLevel } from "../../api/services/user/types";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
-  const { user, loginWithRedirect, logout } = useAuth0();
+  const { user, logout } = useAuth();
 
   return (
     <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
@@ -37,8 +40,8 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
             </IconButton>
           )}
         >
-          <Auth exact="Guest">
-            <MenuItem onClick={() => loginWithRedirect()}>Sign in</MenuItem>
+          <Auth exact={UserAccessLevel.Guest}>
+            <LinkMenuItem to={router.user().login()}>Sign in</LinkMenuItem>
           </Auth>
           <Auth>
             <ListItem sx={{ pt: 0 }}>

@@ -22,7 +22,6 @@
     "db:deploy": "dotenv-flow pscale deploy-request create deckforge"
   },
   "dependencies": {
-    "@auth0/auth0-spa-js": "2.0.0",
     "@emotion/react": "11.10.5",
     "@emotion/styled": "11.10.5",
     "@fontsource/roboto": "4.5.8",
