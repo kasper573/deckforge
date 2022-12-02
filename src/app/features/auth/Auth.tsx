@@ -24,6 +24,8 @@ export function Auth({ children, fallback, ...props }: AuthProps) {
     allowAccess = access === props.exact;
   } else if ("atLeast" in props) {
     allowAccess = access >= props.atLeast;
+  } else {
+    allowAccess = access > UserAccessLevel.Guest;
   }
 
   const childrenFn = typeof children === "function" ? children : () => children;

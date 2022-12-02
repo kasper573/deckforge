@@ -12,7 +12,7 @@ import { createUserService } from "./services/user/service";
 export function createServer() {
   const server = express();
   const db = createDatabaseClient();
-  const authenticator = createAuthenticator(env.auth);
+  const authenticator = createAuthenticator({ secret: env.jwtSecret });
 
   server.use(
     "/api", // Has to be /api because of Vercel's Serverless Function entrypoint
