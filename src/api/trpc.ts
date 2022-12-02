@@ -1,10 +1,10 @@
 import type { DefaultErrorShape } from "@trpc/server";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
-import type { PrismaClient } from "@prisma/client";
 import { env } from "./env";
 import { UserFacingError } from "./utils/UserFacingError";
 import type { JWTUser } from "./services/user/types";
+import type { DatabaseClient } from "./db";
 
 export const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -29,5 +29,5 @@ function stripInternalError(shape: DefaultErrorShape): DefaultErrorShape {
 
 export type Context = {
   user?: JWTUser;
-  db: PrismaClient;
+  db: DatabaseClient;
 };
