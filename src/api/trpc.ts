@@ -4,7 +4,6 @@ import superjson from "superjson";
 import type { PrismaClient } from "@prisma/client";
 import { env } from "./env";
 import { UserFacingError } from "./utils/UserFacingError";
-import type { Authenticator } from "./services/user/authenticator";
 import type { JWTUser } from "./services/user/types";
 
 export const t = initTRPC.context<Context>().create({
@@ -30,6 +29,5 @@ function stripInternalError(shape: DefaultErrorShape): DefaultErrorShape {
 
 export type Context = {
   user?: JWTUser;
-  authenticator: Authenticator;
   db: PrismaClient;
 };
