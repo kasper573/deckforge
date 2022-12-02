@@ -7,7 +7,7 @@ import type { JWTUser } from "./types";
 export function createAuthenticator({
   secret,
   tokenLifetime = 24 * 60 * 60,
-  algorithms = ["RS256"],
+  algorithms = ["HS256"],
 }: {
   secret: string;
   tokenLifetime?: number;
@@ -23,22 +23,15 @@ export function createAuthenticator({
     return jwt.sign(payload, secret, { expiresIn: tokenLifetime });
   }
 
-  async function check(
-    req: express.Request,
-    res: express.Response
-  ): Promise<JWTUser | undefined> {
-    await middleware(req, res, noop);
-    const { auth } = req as JWTRequest<JWTUser>;
-    console.log("auth", auth);
-    return auth;
+  function check(req: express.Request) {
+    return (req as JWTRequest<JWTUser>).auth;
   }
 
   return {
     sign,
+    middleware,
     check,
   };
 }
 
 export type Authenticator = ReturnType<typeof createAuthenticator>;
-
-const noop = () => {};
