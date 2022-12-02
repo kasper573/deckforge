@@ -30,6 +30,9 @@ export const router = OptionsRouter({}, (route) => ({
     "user",
     { component: () => <Redirect to={loginRedirect} /> },
     (route) => ({
+      register: route("register", {
+        component: lazy(() => import("./pages/RegisterPage")),
+      }),
       login: route("login", {
         component: lazy(() => import("./pages/LoginPage")),
       }),
