@@ -13,14 +13,15 @@ export function createServer() {
   const server = express();
   const db = createDatabaseClient();
   const authenticator = createAuthenticator({ secret: env.jwtSecret });
+  const router = createApiRouter({
+    game: createGameService(),
+    user: createUserService(authenticator),
+  });
 
   server.use(
     "/api", // Has to be /api because of Vercel's Serverless Function entrypoint
     trpcExpress.createExpressMiddleware({
-      router: createApiRouter({
-        game: createGameService(),
-        user: createUserService(authenticator),
-      }),
+      router: router,
       async createContext({
         req,
         res,

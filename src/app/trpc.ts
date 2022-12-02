@@ -34,7 +34,7 @@ export function createTRPCClient(getBearerToken: () => string | undefined) {
         url: getApiBaseUrl(),
         headers() {
           const token = getBearerToken();
-          return token ? { Authorization: "Bearer " + token } : {};
+          return token ? { Authorization: `Bearer ${token}` } : {};
         },
       }),
     ],
