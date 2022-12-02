@@ -30,8 +30,20 @@ model Game {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    String
   name      String
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  name         String   @unique
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(User)
+  games        Game[]
 }
 
 enum UserRole {

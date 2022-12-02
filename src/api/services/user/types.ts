@@ -1,5 +1,17 @@
+import { UserRole } from "@prisma/client";
 import { z } from "zod";
 import { createPropertyMatchRefiner } from "../../../lib/zod-extensions/zodRefiner";
+
+export function roleToAccessLevel(role: UserRole): UserAccessLevel {
+  switch (role) {
+    case UserRole.Admin:
+      return UserAccessLevel.Admin;
+    case UserRole.User:
+      return UserAccessLevel.User;
+    case UserRole.Guest:
+      return UserAccessLevel.Guest;
+  }
+}
 
 export enum UserAccessLevel {
   Guest,
@@ -16,24 +28,22 @@ const passwordMatcher = createPropertyMatchRefiner(
 export const usernameType = z.string().min(6).max(12);
 export const passwordType = z.string().min(12).max(36);
 
-export type UserProfileMutation = z.infer<typeof userProfileMutationType>;
-export const userProfileMutationType = z
-  .object({
-    email: z.string().email(),
-    password: passwordType.optional(),
-    passwordConfirm: passwordType.optional(),
-  })
-  .refine(...passwordMatcher);
+const mutableUserProfile = z.object({
+  email: z.string().email(),
+  password: passwordType,
+  passwordConfirm: passwordType,
+});
 
 export type UserRegisterPayload = z.infer<typeof userRegisterPayloadType>;
 export const userRegisterPayloadType = z
-  .object({
-    username: usernameType,
-    email: z.string().email(),
-    password: passwordType,
-    passwordConfirm: passwordType,
-  })
+  .object({ username: usernameType })
+  .and(mutableUserProfile)
   .refine(...passwordMatcher);
+
+export type UserProfileMutation = z.infer<typeof userProfileMutationType>;
+export const userProfileMutationType = mutableUserProfile.refine(
+  ...passwordMatcher
+);
 
 export type JWTUser = z.infer<typeof jwtUserType>;
 export const jwtUserType = z.object({
