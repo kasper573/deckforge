@@ -29,35 +29,33 @@ const store = createStore<{
 export function useAuth() {
   const { token, user, isAuthenticated, update } = useStore(store);
   const history = useHistory();
-  const loginMutation = trpc.user.login.useMutation();
+  const {
+    mutateAsync: loginMutateAsync,
+    mutate: loginMutate,
+    ...loginMutationProps
+  } = trpc.user.login.useMutation();
 
-  async function login(
+  async function enhancedLogin(
     payload: LoginPayload,
     { destination = loginRedirect }: { destination?: typeof loginRedirect } = {}
   ) {
     try {
-      const result = await loginMutation.mutateAsync(payload);
-      if (result.success) {
-        update(result);
-        history.push(destination.$);
-      }
-      return result;
-    } catch (e) {
-      return {
-        success: false,
-        message:
-          e instanceof Error
-            ? e.message
-            : "Something went wrong while signing in",
-      };
-    }
+      const result = await loginMutateAsync(payload);
+      update(result);
+      history.push(destination.$);
+    } catch (e) {}
   }
+
+  const enhancedLoginMutation = {
+    ...loginMutationProps,
+    mutateAsync: enhancedLogin,
+  };
 
   return {
     token,
     user,
     isAuthenticated,
-    login,
+    login: enhancedLoginMutation,
     logout: () => logout(history),
   };
 }

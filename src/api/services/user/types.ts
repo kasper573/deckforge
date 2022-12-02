@@ -36,7 +36,7 @@ const mutableUserProfile = z.object({
 
 export type UserRegisterPayload = z.infer<typeof userRegisterPayloadType>;
 export const userRegisterPayloadType = z
-  .object({ username: usernameType })
+  .object({ name: usernameType })
   .and(mutableUserProfile)
   .refine(...passwordMatcher);
 
@@ -58,16 +58,8 @@ export const loginPayloadType = z.object({
   password: z.string(),
 });
 
-export type LoginResult = z.infer<typeof loginResultType>;
-export const loginResultType = z
-  .object({
-    success: z.literal(true),
-    token: z.string(),
-    user: jwtUserType,
-  })
-  .or(
-    z.object({
-      success: z.literal(false),
-      message: z.string(),
-    })
-  );
+export type LoginSuccess = z.infer<typeof loginSuccessType>;
+export const loginSuccessType = z.object({
+  token: z.string(),
+  user: jwtUserType,
+});

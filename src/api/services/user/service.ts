@@ -1,8 +1,9 @@
 import { t } from "../../trpc";
+import { UserFacingError } from "../../utils/UserFacingError";
 import type { JWTUser } from "./types";
 import {
   loginPayloadType,
-  loginResultType,
+  loginSuccessType,
   roleToAccessLevel,
   userProfileMutationType,
   userRegisterPayloadType,
@@ -20,7 +21,7 @@ export function createUserService({ verifyPassword, sign }: Authenticator) {
     }),
     login: t.procedure
       .input(loginPayloadType)
-      .output(loginResultType)
+      .output(loginSuccessType)
       .mutation(async ({ ctx, input: { username, password } }) => {
         const user = await ctx.db.user.findFirst({
           where: { name: username },
@@ -30,7 +31,7 @@ export function createUserService({ verifyPassword, sign }: Authenticator) {
           user && (await verifyPassword(password, user.passwordHash));
 
         if (!isValidCredentials) {
-          return { success: false, message: "Invalid username or password" };
+          throw new UserFacingError("Invalid username or password");
         }
 
         const jwtUser: JWTUser = {
