@@ -27,7 +27,7 @@ const store = createStore<{
 );
 
 export function useAuth() {
-  const { token, user, isAuthenticated, update } = useStore(store);
+  const { token, user, isAuthenticated } = useStore(store);
   const history = useHistory();
   const {
     mutateAsync: loginMutateAsync,
@@ -41,8 +41,10 @@ export function useAuth() {
   ) {
     try {
       const result = await loginMutateAsync(payload);
-      update(result);
-      history.push(destination.$);
+      store.getState().update(result);
+      if (store.getState().isAuthenticated) {
+        history.push(destination.$);
+      }
     } catch (e) {}
   }
 
