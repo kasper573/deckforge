@@ -13,8 +13,14 @@ import type { ApiRouter } from "../../api/router";
 /**
  * zod + tRPC + mui specific composition of react-hook-form
  */
-export function useForm<T extends ZodType>(schema: T) {
-  const form = useRHF<z.infer<T>>({ resolver: zodResolver(schema) });
+export function useForm<T extends ZodType>(
+  schema: T,
+  options: { defaultValues?: z.infer<T> } = {}
+) {
+  const form = useRHF<z.infer<T>>({
+    resolver: zodResolver(schema),
+    ...options,
+  });
   const {
     register,
     formState: { errors },

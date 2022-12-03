@@ -29,22 +29,27 @@ const passwordMatcher = createPropertyMatchRefiner(
 export const usernameType = z.string().min(6).max(12);
 export const passwordType = z.string().min(12).max(36);
 
-const mutableUserProfileFields = z.object({
-  email: z.string().email(),
-  password: passwordType,
-  passwordConfirm: passwordType,
-});
+export type UserProfile = z.infer<typeof userProfileType>;
+export const userProfileType = userType.pick({ name: true, email: true });
 
 export type RegisterUserPayload = z.infer<typeof registerUserPayloadType>;
 export const registerUserPayloadType = z
-  .object({ name: usernameType })
-  .and(mutableUserProfileFields)
+  .object({
+    name: usernameType,
+    email: z.string().email(),
+    password: passwordType,
+    passwordConfirm: passwordType,
+  })
   .refine(...passwordMatcher);
 
 export type UpdateProfilePayload = z.infer<typeof updateProfilePayloadType>;
-export const updateProfilePayloadType = mutableUserProfileFields
-  .refine(...passwordMatcher)
-  .or(mutableUserProfileFields.omit({ password: true, passwordConfirm: true }));
+export const updateProfilePayloadType = z
+  .object({
+    email: z.string().email(),
+    password: passwordType.optional(),
+    passwordConfirm: passwordType.optional(),
+  })
+  .refine(...passwordMatcher);
 
 export type JWTUser = z.infer<typeof jwtUserType>;
 export const jwtUserType = z.object({

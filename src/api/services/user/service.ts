@@ -10,6 +10,7 @@ import {
   roleToAccessLevel,
   updateProfilePayloadType,
   registerUserPayloadType,
+  userProfileType,
 } from "./types";
 import type { Authenticator } from "./authenticator";
 
@@ -71,12 +72,20 @@ export function createUserService({
           user: jwtUser,
         };
       }),
+    profile: t.procedure
+      .use(access())
+      .output(userProfileType)
+      .query(({ ctx }) =>
+        ctx.db.user.findFirstOrThrow({
+          where: { id: ctx.user.id },
+        })
+      ),
     updateProfile: t.procedure
       .input(updateProfilePayloadType)
       .use(access())
       .mutation(async ({ input, ctx: { db, user } }) => {
         let data: Partial<User> = { email: input.email };
-        if ("password" in input) {
+        if (input.password) {
           data = {
             ...data,
             passwordHash: await createPasswordHash(input.password),
