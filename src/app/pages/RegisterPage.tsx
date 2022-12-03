@@ -8,11 +8,17 @@ import { trpc } from "../trpc";
 import { registerUserPayloadType } from "../../api/services/user/types";
 import { useForm } from "../hooks/useForm";
 import { Header } from "../layout/Header";
+import { useAuth } from "../features/auth/store";
 
 export default function RegisterPage() {
+  const { login } = useAuth();
   const form = useForm(registerUserPayloadType);
   const register = trpc.user.register.useMutation();
-  const { submit, error } = form.useMutation(register);
+  const { submit, error } = form.useMutation(register, {
+    onSuccess(res, user) {
+      login.mutateAsync({ username: user.name, password: user.password });
+    },
+  });
 
   return (
     <Page>

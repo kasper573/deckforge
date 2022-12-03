@@ -26,8 +26,10 @@ export function useForm<T extends ZodType>(
     formState: { errors },
   } = form;
 
-  const useMutation = (mutation: AnyFormMutation<T>) =>
-    useFormMutation(form, mutation);
+  const useMutation = <Response>(
+    mutation: AnyFormMutation<z.infer<T>, Response>,
+    options?: UseFormMutationOptions<z.infer<T>, Response>
+  ) => useFormMutation(form, mutation, options);
 
   const muiRegister: typeof register = useCallback(
     (path, ...rest) => {
@@ -49,16 +51,24 @@ export function useForm<T extends ZodType>(
   };
 }
 
-function useFormMutation<T extends ZodType>(
-  form: UseFormReturn<z.infer<T>>,
-  mutation: AnyFormMutation<T>
+interface UseFormMutationOptions<Payload, Response> {
+  onSuccess?: (response: Response, payload: Payload) => void;
+  onError?: (error: TRPCClientErrorLike<ApiRouter>) => void;
+}
+
+function useFormMutation<Payload extends FieldValues, Response>(
+  form: UseFormReturn<Payload>,
+  mutation: AnyFormMutation<Payload, Response>,
+  options?: UseFormMutationOptions<Payload, Response>
 ) {
-  const submit = form.handleSubmit(async (data) => {
+  const submit = form.handleSubmit(async (payload) => {
     try {
-      await mutation.mutateAsync(data);
+      const response = await mutation.mutateAsync(payload);
+      options?.onSuccess?.(response, payload);
     } catch (error) {
       if (error instanceof TRPCClientError) {
         setFieldErrors(form, error);
+        options?.onError?.(error);
       }
     }
   });
@@ -72,15 +82,16 @@ function setFieldErrors<Data extends FieldValues>(
   form: UseFormReturn<Data>,
   error: TRPCClientError<ApiRouter>
 ) {
-  if (error.data?.zodError) {
-    for (const [path, messages] of Object.entries(
-      error.data.zodError.fieldErrors
-    )) {
-      if (messages && messages.length > 0) {
-        form.setError(path as FieldPath<Data>, {
-          message: messages.join(", "),
-        });
-      }
+  if (!error.data?.zodError) {
+    return;
+  }
+  for (const [path, messages] of Object.entries(
+    error.data.zodError.fieldErrors
+  )) {
+    if (messages && messages.length > 0) {
+      form.setError(path as FieldPath<Data>, {
+        message: messages.join(", "),
+      });
     }
   }
 }
@@ -91,11 +102,11 @@ function generalMutationError(mutation: AnyFormMutation) {
     : undefined;
 }
 
-type AnyFormMutation<T extends ZodType = ZodType> = UseTRPCMutationResult<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyFormMutation<Payload = any, Response = any> = UseTRPCMutationResult<
+  Response,
   TRPCClientErrorLike<ApiRouter>,
-  z.infer<T>,
+  Payload,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any
 >;
