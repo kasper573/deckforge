@@ -52,6 +52,7 @@ export function useForm<T extends ZodType>(
 }
 
 interface UseFormMutationOptions<Payload, Response> {
+  onSubmit?: (payload: Payload) => void;
   onSuccess?: (response: Response, payload: Payload) => void;
   onError?: (error: TRPCClientErrorLike<ApiRouter>) => void;
 }
@@ -63,6 +64,7 @@ function useFormMutation<Payload extends FieldValues, Response>(
 ) {
   const submit = form.handleSubmit(async (payload) => {
     try {
+      options?.onSubmit?.(payload);
       const response = await mutation.mutateAsync(payload);
       options?.onSuccess?.(response, payload);
     } catch (error) {
