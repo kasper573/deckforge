@@ -2,33 +2,39 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
-import type { FormEvent } from "react";
 import { Page } from "../layout/Page";
 import { Center } from "../components/Center";
 import { trpc } from "../trpc";
+import { userRegisterPayloadType } from "../../api/services/user/types";
+import { useForm } from "../hooks/useForm";
 
 export default function RegisterPage() {
+  const form = useForm(userRegisterPayloadType);
   const register = trpc.user.register.useMutation();
-
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    register.mutate({
-      name: "",
-      password: "",
-      passwordConfirm: "",
-      email: "",
-    });
-  }
 
   return (
     <Page>
       <Center>
-        <form onSubmit={submit}>
+        <form onSubmit={form.handleSubmit(register.mutate)}>
           <Stack direction="column" spacing={2} sx={{ width: 350 }}>
-            <TextField size="small" label="Username" />
-            <TextField size="small" label="E-mail" />
-            <TextField size="small" type="password" label="Password" />
             <TextField
+              {...form.register("name")}
+              size="small"
+              label="Username"
+            />
+            <TextField
+              {...form.register("email")}
+              size="small"
+              label="E-mail"
+            />
+            <TextField
+              {...form.register("password")}
+              size="small"
+              type="password"
+              label="Password"
+            />
+            <TextField
+              {...form.register("passwordConfirm")}
               size="small"
               type="password"
               label="Password (confirm)"
