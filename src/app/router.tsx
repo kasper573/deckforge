@@ -99,4 +99,4 @@ export const router = OptionsRouter({}, (route) => ({
 }));
 
 export const logoutRedirect = router.user().login();
-export const loginRedirect = router.user();
+export const loginRedirect = router.user().profile();
