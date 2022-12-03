@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { t } from "../../trpc";
 import { UserFacingError } from "../../utils/UserFacingError";
 import type { JWTUser } from "./types";
@@ -11,11 +12,36 @@ import {
 import type { Authenticator } from "./authenticator";
 
 export type UserService = ReturnType<typeof createUserService>;
-export function createUserService({ verifyPassword, sign }: Authenticator) {
+export function createUserService({
+  verifyPassword,
+  createPasswordHash,
+  sign,
+}: Authenticator) {
   return t.router({
-    register: t.procedure.input(userRegisterPayloadType).mutation(() => {
-      throw new Error("Not implemented");
-    }),
+    register: t.procedure
+      .input(userRegisterPayloadType)
+      .mutation(async ({ input, ctx }) => {
+        try {
+          await ctx.db.user.create({
+            data: {
+              name: input.name,
+              email: input.email,
+              passwordHash: await createPasswordHash(input.password),
+            },
+          });
+        } catch (e) {
+          if (e instanceof Prisma.PrismaClientKnownRequestError) {
+            if (e.code === "P2002") {
+              throw new UserFacingError(
+                `${
+                  e.message.includes("email") ? "Email" : "Username"
+                } already in use`
+              );
+            }
+          }
+          throw e;
+        }
+      }),
     updateProfile: t.procedure.input(userProfileMutationType).mutation(() => {
       throw new Error("Not implemented");
     }),
