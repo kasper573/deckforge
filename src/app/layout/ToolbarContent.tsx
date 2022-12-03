@@ -42,6 +42,7 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
         >
           <Auth exact={UserAccessLevel.Guest}>
             <LinkMenuItem to={router.user().login()}>Sign in</LinkMenuItem>
+            <LinkMenuItem to={router.user().register()}>Register</LinkMenuItem>
           </Auth>
           <Auth>
             <ListItem sx={{ pt: 0 }}>
