@@ -7,6 +7,7 @@ import { Center } from "../components/Center";
 import { trpc } from "../trpc";
 import { userRegisterPayloadType } from "../../api/services/user/types";
 import { useForm } from "../hooks/useForm";
+import { Header } from "../layout/Header";
 
 export default function RegisterPage() {
   const form = useForm(userRegisterPayloadType);
@@ -15,6 +16,7 @@ export default function RegisterPage() {
 
   return (
     <Page>
+      <Header>Register an account</Header>
       <Center>
         <form onSubmit={submit}>
           <Stack direction="column" spacing={2} sx={{ width: 350 }}>

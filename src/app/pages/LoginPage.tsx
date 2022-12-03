@@ -43,7 +43,7 @@ export default function LoginPage() {
               </Typography>
               <div>
                 <Button type="submit" variant="contained">
-                  Login
+                  Sign in
                 </Button>
               </div>
             </Stack>
