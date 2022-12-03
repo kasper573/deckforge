@@ -28,7 +28,7 @@ export default function LoginPage() {
   return (
     <Page>
       <Center>
-        <form onSubmit={submit}>
+        <form name="login" onSubmit={submit}>
           <Stack direction="column" spacing={2} sx={{ width: 350 }}>
             <TextField size="small" label="Username" inputRef={usernameRef} />
             <TextField

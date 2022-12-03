@@ -19,24 +19,20 @@ export default function ProfilePage() {
     <Page>
       <Header>Profile</Header>
       <Center>
-        <form onSubmit={submit}>
+        <form name="profile" onSubmit={submit}>
           <Stack direction="column" spacing={2} sx={{ width: 350 }}>
-            <TextField
-              {...form.register("email")}
-              size="small"
-              label="E-mail"
-            />
+            <TextField {...form.register("email")} size="small" label="Email" />
             <TextField
               {...form.register("password")}
               size="small"
               type="password"
-              label="Password"
+              label="New password"
             />
             <TextField
               {...form.register("passwordConfirm")}
               size="small"
               type="password"
-              label="Password (confirm)"
+              label="New password (confirm)"
             />
             <Stack direction="row" spacing={2} alignItems="center">
               <Typography color="error" sx={{ flex: 1 }}>

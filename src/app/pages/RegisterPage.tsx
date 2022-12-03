@@ -18,18 +18,14 @@ export default function RegisterPage() {
     <Page>
       <Header>Register an account</Header>
       <Center>
-        <form onSubmit={submit}>
+        <form name="register" onSubmit={submit}>
           <Stack direction="column" spacing={2} sx={{ width: 350 }}>
             <TextField
               {...form.register("name")}
               size="small"
               label="Username"
             />
-            <TextField
-              {...form.register("email")}
-              size="small"
-              label="E-mail"
-            />
+            <TextField {...form.register("email")} size="small" label="Email" />
             <TextField
               {...form.register("password")}
               size="small"
