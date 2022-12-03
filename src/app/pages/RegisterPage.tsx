@@ -5,12 +5,12 @@ import Stack from "@mui/material/Stack";
 import { Page } from "../layout/Page";
 import { Center } from "../components/Center";
 import { trpc } from "../trpc";
-import { userRegisterPayloadType } from "../../api/services/user/types";
+import { registerUserPayloadType } from "../../api/services/user/types";
 import { useForm } from "../hooks/useForm";
 import { Header } from "../layout/Header";
 
 export default function RegisterPage() {
-  const form = useForm(userRegisterPayloadType);
+  const form = useForm(registerUserPayloadType);
   const register = trpc.user.register.useMutation();
   const { submit, error } = form.useMutation(register);
 

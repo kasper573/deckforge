@@ -1,13 +1,15 @@
+import type { User } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { t } from "../../trpc";
 import { UserFacingError } from "../../utils/UserFacingError";
+import { access } from "../../middlewares/access";
 import type { JWTUser } from "./types";
 import {
   loginPayloadType,
   loginSuccessType,
   roleToAccessLevel,
-  userProfileMutationType,
-  userRegisterPayloadType,
+  updateProfilePayloadType,
+  registerUserPayloadType,
 } from "./types";
 import type { Authenticator } from "./authenticator";
 
@@ -19,7 +21,7 @@ export function createUserService({
 }: Authenticator) {
   return t.router({
     register: t.procedure
-      .input(userRegisterPayloadType)
+      .input(registerUserPayloadType)
       .mutation(async ({ input, ctx }) => {
         try {
           await ctx.db.user.create({
@@ -42,9 +44,6 @@ export function createUserService({
           throw e;
         }
       }),
-    updateProfile: t.procedure.input(userProfileMutationType).mutation(() => {
-      throw new Error("Not implemented");
-    }),
     login: t.procedure
       .input(loginPayloadType)
       .output(loginSuccessType)
@@ -71,6 +70,19 @@ export function createUserService({
           token: sign(jwtUser),
           user: jwtUser,
         };
+      }),
+    updateProfile: t.procedure
+      .input(updateProfilePayloadType)
+      .use(access())
+      .mutation(async ({ input, ctx: { db, user } }) => {
+        let data: Partial<User> = { email: input.email };
+        if ("password" in input) {
+          data = {
+            ...data,
+            passwordHash: await createPasswordHash(input.password),
+          };
+        }
+        return db.user.update({ where: { id: user.id }, data });
       }),
   });
 }
