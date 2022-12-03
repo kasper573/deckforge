@@ -30,8 +30,13 @@ export default function LoginPage() {
       <Center>
         <form onSubmit={submit}>
           <Stack direction="column" spacing={2} sx={{ width: 350 }}>
-            <TextField size="small" label="Username" ref={usernameRef} />
-            <TextField size="small" label="Password" ref={passwordRef} />
+            <TextField size="small" label="Username" inputRef={usernameRef} />
+            <TextField
+              size="small"
+              type="password"
+              label="Password"
+              inputRef={passwordRef}
+            />
             <Stack direction="row" spacing={2} alignItems="center">
               <Typography color="error" sx={{ flex: 1 }}>
                 {login.error?.message}
