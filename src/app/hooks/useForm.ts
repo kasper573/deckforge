@@ -6,7 +6,7 @@ import get from "lodash.get";
 import type { UseTRPCMutationResult } from "@trpc/react-query/shared";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import { TRPCClientError } from "@trpc/client";
-import type { FieldPath } from "react-hook-form/dist/types/path";
+import type { FieldPath } from "react-hook-form";
 import type { ApiRouter } from "../../api/router";
 
 /**
