@@ -7,13 +7,14 @@ import type { UseTRPCMutationResult } from "@trpc/react-query/shared";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import { TRPCClientError } from "@trpc/client";
 import type { FieldPath } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import type { ApiRouter } from "../../api/router";
 
 /**
  * zod + tRPC + mui specific composition of react-hook-form
  */
 export function useForm<T extends ZodType>(schema: T) {
-  const form = useRHF<z.infer<T>>({});
+  const form = useRHF<z.infer<T>>({ resolver: zodResolver(schema) });
   const {
     register,
     formState: { errors },
