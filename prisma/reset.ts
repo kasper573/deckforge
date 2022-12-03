@@ -1,11 +1,15 @@
 import { createDatabaseClient } from "../src/api/db";
 import { seed } from "./seed";
 
-export async function reset() {
+export async function reset(modelNames?: string[]) {
   const client = createDatabaseClient();
+  if (!modelNames) {
+    modelNames = Object.keys(client).filter((key) => isModel(client[key]));
+  }
   try {
-    for (const model of Object.values(client).filter(isModel)) {
-      await model.deleteMany({});
+    for (const modelName of modelNames) {
+      console.log(`Deleting all entries for model "${modelName}"`);
+      await client[modelName].deleteMany({});
     }
   } catch (e) {
     console.error(e);
@@ -22,5 +26,6 @@ function isModel(value: unknown) {
 }
 
 if (require.main === module) {
-  reset();
+  const modelName = process.argv[2]?.trim();
+  reset(modelName ? [modelName] : undefined);
 }
