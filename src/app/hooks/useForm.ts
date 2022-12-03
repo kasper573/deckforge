@@ -1,24 +1,26 @@
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useForm as useRHF } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod/dist/zod";
 import type { z, ZodType } from "zod";
 import { useCallback } from "react";
 import get from "lodash.get";
+import type { UseTRPCMutationResult } from "@trpc/react-query/shared";
+import type { TRPCClientErrorLike } from "@trpc/client";
+import { TRPCClientError } from "@trpc/client";
+import type { FieldPath } from "react-hook-form/dist/types/path";
+import type { ApiRouter } from "../../api/router";
 
 /**
  * zod + tRPC + mui specific composition of react-hook-form
  */
 export function useForm<T extends ZodType>(schema: T) {
-  const form = useRHF<z.infer<T>>({ resolver: zodResolver(schema) });
+  const form = useRHF<z.infer<T>>({});
   const {
-    handleSubmit,
     register,
     formState: { errors },
   } = form;
 
-  const trpcHandleSubmit = useCallback(
-    (callback: (data: z.infer<T>) => void) => handleSubmit(callback),
-    [handleSubmit]
-  );
+  const useMutation = (mutation: AnyFormMutation<T>) =>
+    useFormMutation(form, mutation);
 
   const muiRegister: typeof register = useCallback(
     (path, ...rest) => {
@@ -35,7 +37,58 @@ export function useForm<T extends ZodType>(schema: T) {
 
   return {
     ...form,
-    handleSubmit: trpcHandleSubmit,
+    useMutation,
     register: muiRegister,
   };
 }
+
+function useFormMutation<T extends ZodType>(
+  form: UseFormReturn<z.infer<T>>,
+  mutation: AnyFormMutation<T>
+) {
+  const submit = form.handleSubmit(async (data) => {
+    try {
+      await mutation.mutateAsync(data);
+    } catch (error) {
+      if (error instanceof TRPCClientError) {
+        setFieldErrors(form, error);
+      }
+    }
+  });
+
+  const error = generalMutationError(mutation);
+
+  return { submit, error };
+}
+
+function setFieldErrors<Data extends FieldValues>(
+  form: UseFormReturn<Data>,
+  error: TRPCClientError<ApiRouter>
+) {
+  if (error.data?.zodError) {
+    for (const [path, messages] of Object.entries(
+      error.data.zodError.fieldErrors
+    )) {
+      if (messages && messages.length > 0) {
+        form.setError(path as FieldPath<Data>, {
+          message: messages.join(", "),
+        });
+      }
+    }
+  }
+}
+
+function generalMutationError(mutation: AnyFormMutation) {
+  return mutation.error && !mutation.error.data?.zodError
+    ? mutation.error.message
+    : undefined;
+}
+
+type AnyFormMutation<T extends ZodType = ZodType> = UseTRPCMutationResult<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  TRPCClientErrorLike<ApiRouter>,
+  z.infer<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any
+>;

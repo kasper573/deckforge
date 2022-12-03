@@ -11,11 +11,12 @@ import { useForm } from "../hooks/useForm";
 export default function RegisterPage() {
   const form = useForm(userRegisterPayloadType);
   const register = trpc.user.register.useMutation();
+  const { submit, error } = form.useMutation(register);
 
   return (
     <Page>
       <Center>
-        <form onSubmit={form.handleSubmit(register.mutate)}>
+        <form onSubmit={submit}>
           <Stack direction="column" spacing={2} sx={{ width: 350 }}>
             <TextField
               {...form.register("name")}
@@ -41,7 +42,7 @@ export default function RegisterPage() {
             />
             <Stack direction="row" spacing={2} alignItems="center">
               <Typography color="error" sx={{ flex: 1 }}>
-                {register.error?.message}
+                {error}
               </Typography>
               <div>
                 <Button type="submit" variant="contained">
