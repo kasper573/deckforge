@@ -55,6 +55,7 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
               />
             </ListItem>
             <Divider sx={{ mb: 1 }} />
+            <LinkMenuItem to={router.user().profile()}>Settings</LinkMenuItem>
             <MenuItem onClick={() => logout()}>Sign out</MenuItem>
           </Auth>
         </MenuOn>
