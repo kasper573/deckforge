@@ -53,7 +53,7 @@ export function updateProfile({
   email?: string;
 }) {
   showUserMenu().within(() => {
-    cy.findByRole(/link/, { name: /register/i }).click();
+    cy.findByRole(/link/, { name: /settings/i }).click();
   });
 
   cy.findByRole("form")
@@ -67,6 +67,8 @@ export function updateProfile({
       }
     })
     .submit();
+
+  cy.findByRole("alert").should("contain", "Profile updated");
 }
 
 export function signOut() {
