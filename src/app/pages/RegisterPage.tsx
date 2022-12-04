@@ -1,5 +1,4 @@
 import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { Page } from "../layout/Page";
@@ -9,6 +8,7 @@ import { registerUserPayloadType } from "../../api/services/user/types";
 import { useForm } from "../hooks/useForm";
 import { Header } from "../layout/Header";
 import { useAuth } from "../features/auth/store";
+import { ProgressButton } from "../components/ProgressButton";
 
 export default function RegisterPage() {
   const { login } = useAuth();
@@ -49,9 +49,13 @@ export default function RegisterPage() {
                 {error}
               </Typography>
               <div>
-                <Button type="submit" variant="contained">
+                <ProgressButton
+                  isLoading={register.isLoading}
+                  type="submit"
+                  variant="contained"
+                >
                   Register
-                </Button>
+                </ProgressButton>
               </div>
             </Stack>
           </Stack>
