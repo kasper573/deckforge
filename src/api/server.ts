@@ -19,11 +19,8 @@ export function createServer() {
   server.use(
     "/api",
     trpcExpress.createExpressMiddleware({
-      router: router,
-      createContext({req}) {
-        const result = auth.check(req);
-        return { db, user: result.isOk ? result.value : undefined };
-      },
+      router,
+      createContext: ({req}) => ({ db, user: auth.check(req) }),
     })
   );
 

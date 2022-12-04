@@ -1,8 +1,10 @@
 import { createTRPCReact } from "@trpc/react-query";
-import { httpBatchLink, loggerLink } from "@trpc/client";
+import { httpBatchLink, loggerLink, TRPCClientError } from "@trpc/client";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
+import { QueryClient } from "@tanstack/react-query";
 import type { ApiRouter } from "../api/router";
+import { isBadTokenError } from "../api/services/user/constants";
 import { env } from "./env";
 
 export const trpc = createTRPCReact<ApiRouter>({
@@ -19,7 +21,30 @@ export const trpc = createTRPCReact<ApiRouter>({
   },
 });
 
-export function createTRPCClient(getBearerToken: () => string | undefined) {
+export function createQueryClient(onBadToken?: () => void) {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        suspense: true,
+        // 4s to match cypress timeout
+        retry: 4,
+        retryDelay: 1000,
+        onError: handleError,
+      },
+      mutations: {
+        onError: handleError,
+      },
+    },
+  });
+
+  function handleError(error: unknown) {
+    if (error instanceof TRPCClientError && isBadTokenError(error)) {
+      onBadToken?.();
+    }
+  }
+}
+
+export function createTRPCClient(getAuthToken: () => string | undefined) {
   return trpc.createClient({
     transformer: superjson,
     links: [
@@ -33,7 +58,7 @@ export function createTRPCClient(getBearerToken: () => string | undefined) {
       httpBatchLink({
         url: getApiBaseUrl(),
         headers() {
-          const token = getBearerToken();
+          const token = getAuthToken();
           return token ? { Authorization: `Bearer ${token}` } : {};
         },
       }),

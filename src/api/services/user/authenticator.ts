@@ -1,8 +1,9 @@
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
 import type express from "express";
-import { Result } from "@badrap/result";
+import { TRPCError } from "@trpc/server";
 import type { JWTUser } from "./types";
+import { badTokenMessage } from "./constants";
 
 export function createAuthenticator({
   jwtSecret,
@@ -24,23 +25,23 @@ export function createAuthenticator({
       | string
       | undefined;
     if (!header) {
-      return Result.err(new Error("Missing authorization header"));
+      return;
     }
 
     const [scheme, token] = header.split(" ");
     if (scheme !== "Bearer") {
-      return Result.err(new Error("Invalid authorization scheme"));
+      return;
     }
 
     try {
       const decoded = jwt.decode(token, { complete: true });
       if (!decoded) {
-        return Result.err(new Error("Failed to decode token"));
+        throw new TRPCError({ code: "UNAUTHORIZED", message: badTokenMessage });
       }
       jwt.verify(token, jwtSecret, { algorithms: jwtAlgorithms });
-      return Result.ok(decoded.payload as JWTUser);
+      return decoded.payload as JWTUser;
     } catch (err) {
-      return Result.err(err instanceof Error ? err : new Error("Invalid token"));
+      throw new TRPCError({ code: "UNAUTHORIZED", message: badTokenMessage });
     }
   }
 
