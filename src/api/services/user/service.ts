@@ -1,8 +1,11 @@
 import type { User } from "@prisma/client";
-import { Prisma } from "../../db";
 import { t } from "../../trpc";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { access } from "../../middlewares/access";
+import {
+  getUniqueConflictingFieldName,
+  isUniqueConstraintError,
+} from "../../utils/isUniqueConstraintError";
 import type { JWTUser } from "./types";
 import {
   loginPayloadType,
@@ -32,14 +35,13 @@ export function createUserService({
             },
           });
         } catch (e) {
-          if (e instanceof Prisma.PrismaClientKnownRequestError) {
-            if (e.code === "P2002") {
-              throw new UserFacingError(
-                `${
-                  e.message.includes("email") ? "Email" : "Username"
-                } already in use`
-              );
-            }
+          const fieldName = getUniqueConflictingFieldName<User>(e);
+          if (fieldName) {
+            throw new UserFacingError(`This ${fieldName} is already taken`);
+          } else if (isUniqueConstraintError(e)) {
+            throw new UserFacingError(
+              "This email or username is already taken"
+            );
           }
           throw e;
         }
