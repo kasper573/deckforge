@@ -6,6 +6,8 @@ import { loginRedirect, logoutRedirect } from "../../router";
 import { trpc } from "../../trpc";
 import type { JWTUser, LoginPayload } from "../../../api/services/user/types";
 
+const localStorageKey = "auth" as const;
+
 const store = createStore<{
   token?: string;
   user?: JWTUser;
@@ -22,7 +24,7 @@ const store = createStore<{
           return newState;
         }),
     }),
-    { name: "auth" }
+    { name: localStorageKey }
   )
 );
 
@@ -63,14 +65,17 @@ export function useAuth() {
 }
 
 function logout(history: History) {
-  const state = store.getState();
-  state.update({ token: undefined, user: undefined });
-  localStorage.removeItem("auth");
+  resetAuthToken();
+  localStorage.removeItem(localStorageKey);
   history.push(logoutRedirect.$);
 }
 
 export function getAuthToken() {
   return store.getState().token;
+}
+
+export function resetAuthToken() {
+  store.getState().update({ token: undefined, user: undefined });
 }
 
 export function setupAuthBehavior<State>({
