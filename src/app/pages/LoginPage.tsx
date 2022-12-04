@@ -1,7 +1,6 @@
 import TextField from "@mui/material/TextField";
 import type { FormEvent } from "react";
 import { useRef } from "react";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
@@ -10,6 +9,7 @@ import { Center } from "../components/Center";
 import { useAuth } from "../features/auth/store";
 import { Link } from "../components/Link";
 import { router } from "../router";
+import { ProgressButton } from "../components/ProgressButton";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -42,9 +42,13 @@ export default function LoginPage() {
                 {login.error?.message}
               </Typography>
               <div>
-                <Button type="submit" variant="contained">
+                <ProgressButton
+                  isLoading={login.isLoading}
+                  type="submit"
+                  variant="contained"
+                >
                   Sign in
-                </Button>
+                </ProgressButton>
               </div>
             </Stack>
             <Box sx={{ textAlign: "right" }}>
