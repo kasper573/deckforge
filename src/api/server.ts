@@ -21,6 +21,11 @@ export function createServer() {
     trpcExpress.createExpressMiddleware({
       router,
       createContext: ({ req }) => ({ db, user: auth.check(req) }),
+      onError({ error }) {
+        if (env.serverLogs.includes("error")) {
+          console.error(error);
+        }
+      },
     })
   );
 
