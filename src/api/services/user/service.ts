@@ -1,5 +1,5 @@
 import type { User } from "@prisma/client";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../db";
 import { t } from "../../trpc";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { access } from "../../middlewares/access";

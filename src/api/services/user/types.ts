@@ -1,7 +1,7 @@
-import { UserRole } from "@prisma/client";
 import { z } from "zod";
 import { createPropertyMatchRefiner } from "../../../lib/zod-extensions/zodRefiner";
 import { userType } from "../../../../prisma/zod";
+import { UserRole } from "../../../../prisma/zod/enums";
 
 export function roleToAccessLevel(role: UserRole): UserAccessLevel {
   switch (role) {

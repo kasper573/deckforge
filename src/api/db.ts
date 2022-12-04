@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-restricted-imports */
+export { Prisma } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
 import { env } from "./env";
 
