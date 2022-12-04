@@ -39,6 +39,7 @@ jobs:
       EXPOSE_INTERNAL_ERRORS: true
       CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
       CYPRESS_BASE_URL: http://localhost:3000
+      AUTH_SECRET: "ci-e2e-secret"
     steps:
       - uses: actions/checkout@v3
 
