@@ -1,7 +1,6 @@
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import { useState } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
@@ -11,6 +10,7 @@ import { updateProfilePayloadType } from "../../api/services/user/types";
 import { trpc } from "../trpc";
 import { Center } from "../components/Center";
 import { Header } from "../layout/Header";
+import { ProgressButton } from "../components/ProgressButton";
 
 export default function ProfilePage() {
   const [isToastOpen, setIsToastOpen] = useState(false);
@@ -50,9 +50,13 @@ export default function ProfilePage() {
                 {error}
               </Typography>
               <div>
-                <Button type="submit" variant="contained">
+                <ProgressButton
+                  isLoading={updateProfile.isLoading}
+                  type="submit"
+                  variant="contained"
+                >
                   Save
-                </Button>
+                </ProgressButton>
               </div>
             </Stack>
           </Stack>
