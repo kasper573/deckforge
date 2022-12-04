@@ -13,7 +13,6 @@ import { OnlineBadge } from "../components/OnlineBadge";
 import { useAuth } from "../features/auth/store";
 import { LinkMenuItem } from "../components/Link";
 import { router } from "../router";
-import { UserAccessLevel } from "../../api/services/user/types";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
   const { user, logout } = useAuth();
@@ -40,7 +39,7 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
             </IconButton>
           )}
         >
-          <Auth exact={UserAccessLevel.Guest}>
+          <Auth exact="Guest">
             <LinkMenuItem to={router.user().login()}>Sign in</LinkMenuItem>
             <LinkMenuItem to={router.user().register()}>Register</LinkMenuItem>
           </Auth>

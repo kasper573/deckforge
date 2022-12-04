@@ -7,7 +7,6 @@ import type { JWTUser } from "./types";
 import {
   loginPayloadType,
   loginSuccessType,
-  roleToAccessLevel,
   updateProfilePayloadType,
   registerUserPayloadType,
   userProfileType,
@@ -62,7 +61,7 @@ export function createUserService({
 
         const jwtUser: JWTUser = {
           id: user.id,
-          access: roleToAccessLevel(user.role),
+          access: user.accessLevel,
           name: user.name,
         };
 

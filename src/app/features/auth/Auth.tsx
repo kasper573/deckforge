@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { UserAccessLevel } from "../../../api/services/user/types";
+import type { UserRole } from "../../../api/services/user/types";
+import { roleToAccessLevel } from "../../../api/services/user/types";
 import { useAuth } from "./store";
 
 type AuthPropsBase = {
@@ -8,8 +9,8 @@ type AuthPropsBase = {
 };
 
 export type AuthProps =
-  | (AuthPropsBase & { exact: UserAccessLevel })
-  | (AuthPropsBase & { atLeast: UserAccessLevel })
+  | (AuthPropsBase & { exact: UserRole })
+  | (AuthPropsBase & { atLeast: UserRole })
   | AuthPropsBase;
 
 /**
@@ -18,14 +19,14 @@ export type AuthProps =
 export function Auth({ children, fallback, ...props }: AuthProps) {
   const { user } = useAuth();
 
-  const access = user?.access ?? UserAccessLevel.Guest;
+  const access = user?.access ?? roleToAccessLevel("Guest");
   let allowAccess = false;
   if ("exact" in props) {
-    allowAccess = access === props.exact;
+    allowAccess = access === roleToAccessLevel(props.exact);
   } else if ("atLeast" in props) {
-    allowAccess = access >= props.atLeast;
+    allowAccess = access >= roleToAccessLevel(props.atLeast);
   } else {
-    allowAccess = access > UserAccessLevel.Guest;
+    allowAccess = access > roleToAccessLevel("Guest");
   }
 
   const childrenFn = typeof children === "function" ? children : () => children;

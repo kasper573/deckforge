@@ -1,24 +1,13 @@
 import { z } from "zod";
 import { createPropertyMatchRefiner } from "../../../lib/zod-extensions/zodRefiner";
 import { userType } from "../../../../prisma/zod";
-import { UserRole } from "../../../../prisma/zod/enums";
 
-export function roleToAccessLevel(role: UserRole): UserAccessLevel {
-  switch (role) {
-    case UserRole.Admin:
-      return UserAccessLevel.Admin;
-    case UserRole.User:
-      return UserAccessLevel.User;
-    case UserRole.Guest:
-      return UserAccessLevel.Guest;
-  }
+export function roleToAccessLevel(role: UserRole): number {
+  return userRoleType._def.values.indexOf(role);
 }
 
-export enum UserAccessLevel {
-  Guest,
-  User,
-  Admin,
-}
+export type UserRole = z.infer<typeof userRoleType>;
+export const userRoleType = z.enum(["Guest", "User", "Admin"]);
 
 const passwordMatcher = createPropertyMatchRefiner(
   "password",
@@ -54,7 +43,7 @@ export const updateProfilePayloadType = z
 export type JWTUser = z.infer<typeof jwtUserType>;
 export const jwtUserType = z.object({
   id: z.string(),
-  access: z.nativeEnum(UserAccessLevel),
+  access: userType.shape.accessLevel,
   name: usernameType,
 });
 

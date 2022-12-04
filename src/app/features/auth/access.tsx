@@ -1,6 +1,7 @@
 import type { RouteMiddleware } from "react-typesafe-routes";
 import type { ComponentType } from "react";
-import { UserAccessLevel } from "../../../api/services/user/types";
+import type { UserRole } from "../../../api/services/user/types";
+import { roleToAccessLevel } from "../../../api/services/user/types";
 import { useAuth } from "./store";
 
 export function createAccessFactory({
@@ -11,7 +12,7 @@ export function createAccessFactory({
   NotPermittedPage: ComponentType;
 }) {
   return function access(
-    requiredAccess = UserAccessLevel.User
+    leastRequiredRole: UserRole = "User"
   ): RouteMiddleware {
     return (LockedPage) => {
       function Access() {
@@ -19,7 +20,7 @@ export function createAccessFactory({
         if (!isAuthenticated) {
           return <NotAuthenticatedPage />;
         }
-        if (!user || user?.access < requiredAccess) {
+        if (!user || user?.access < roleToAccessLevel(leastRequiredRole)) {
           return <NotPermittedPage />;
         }
         return <LockedPage />;

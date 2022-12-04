@@ -41,6 +41,6 @@ model User {
   name         String   @unique
   email        String   @unique
   passwordHash String
-  accessLevel  Int      @default(0)
+  accessLevel  Int      @default(1)
   games        Game[]
 }
