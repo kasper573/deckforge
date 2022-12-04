@@ -1,5 +1,4 @@
-import { z } from "zod"
-import { UserRole } from "./enums"
+import * as z from "zod"
 import { CompleteGame, relatedGameType } from "./index"
 
 export const userType = z.object({
@@ -9,7 +8,7 @@ export const userType = z.object({
   name: z.string(),
   email: z.string(),
   passwordHash: z.string(),
-  role: z.nativeEnum(UserRole),
+  accessLevel: z.number().int(),
 })
 
 export interface CompleteUser extends z.infer<typeof userType> {

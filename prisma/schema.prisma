@@ -17,14 +17,12 @@ generator zod {
   modelSuffix           = "Type"
   useDecimalJs          = true
   prismaJsonNullability = true
-  enumFile              = "enums"
 }
 
 model Example {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  role      UserRole @default(Guest)
 }
 
 model Game {
@@ -43,12 +41,6 @@ model User {
   name         String   @unique
   email        String   @unique
   passwordHash String
-  role         UserRole @default(User)
+  accessLevel  Int      @default(0)
   games        Game[]
-}
-
-enum UserRole {
-  Guest
-  User
-  Admin
 }
