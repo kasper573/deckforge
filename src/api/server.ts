@@ -20,7 +20,7 @@ export function createServer() {
     "/api",
     trpcExpress.createExpressMiddleware({
       router,
-      createContext: ({req}) => ({ db, user: auth.check(req) }),
+      createContext: ({ req }) => ({ db, user: auth.check(req) }),
     })
   );
 
