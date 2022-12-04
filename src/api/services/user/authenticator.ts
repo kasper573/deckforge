@@ -20,7 +20,7 @@ export function createAuthenticator({
     return jwt.sign(payload, jwtSecret, { expiresIn: jwtLifetime });
   }
 
-  function check(req: express.Request) {
+  function check(req: express.Request): JWTUser | undefined {
     const header = (req.headers.Authorization ?? req.headers.authorization) as
       | string
       | undefined;
@@ -35,14 +35,13 @@ export function createAuthenticator({
 
     try {
       const decoded = jwt.decode(token, { complete: true });
-      if (!decoded) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: badTokenMessage });
+      if (decoded) {
+        jwt.verify(token, jwtSecret, { algorithms: jwtAlgorithms });
+        return decoded.payload as JWTUser;
       }
-      jwt.verify(token, jwtSecret, { algorithms: jwtAlgorithms });
-      return decoded.payload as JWTUser;
-    } catch (err) {
-      throw new TRPCError({ code: "UNAUTHORIZED", message: badTokenMessage });
-    }
+    } catch {}
+
+    throw new TRPCError({ code: "UNAUTHORIZED", message: badTokenMessage });
   }
 
   function createPasswordHash(plain: string) {
