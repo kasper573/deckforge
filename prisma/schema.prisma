@@ -17,6 +17,7 @@ generator zod {
   modelSuffix           = "Type"
   useDecimalJs          = true
   prismaJsonNullability = true
+  enumFile              = "enums"
 }
 
 model Example {

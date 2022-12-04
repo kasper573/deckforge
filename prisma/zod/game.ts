@@ -1,4 +1,4 @@
-import * as z from "zod"
+import { z } from "zod"
 import { CompleteUser, relatedUserType } from "./index"
 
 export const gameType = z.object({

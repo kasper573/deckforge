@@ -1,5 +1,5 @@
-import * as z from "zod"
-import { UserRole } from "@prisma/client"
+import { z } from "zod"
+import { UserRole } from "./enums"
 import { CompleteGame, relatedGameType } from "./index"
 
 export const userType = z.object({

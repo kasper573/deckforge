@@ -1,3 +1,3 @@
-export * from "./example"
-export * from "./game"
-export * from "./user"
+export * from "./Example"
+export * from "./Game"
+export * from "./User"

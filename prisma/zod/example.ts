@@ -1,5 +1,5 @@
-import * as z from "zod"
-import { UserRole } from "@prisma/client"
+import { z } from "zod"
+import { UserRole } from "./enums"
 
 export const exampleType = z.object({
   id: z.string(),
