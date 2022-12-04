@@ -5,8 +5,9 @@ import { zodBooleanish } from "../lib/zod-extensions/zodBooleanish";
 const schema = z.object({
   apiPort: zodNumeric.optional(),
   enableLoggerLink: zodBooleanish.default(false),
-  enableAnalytics: zodBooleanish.default(false),
   showErrorDetails: zodBooleanish.default(false),
+  webVitalsUrl: z.string().url().optional(),
+  analyticsId: z.string().optional(),
 });
 
 export const env = schema.parse({
@@ -15,4 +16,6 @@ export const env = schema.parse({
   enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS,
   authImplementation: import.meta.env.VITE_AUTH_IMPLEMENTATION,
   showErrorDetails: import.meta.env.VITE_SHOW_ERROR_DETAILS,
+  webVitalsUrl: import.meta.env.VITE_WEBVITALS_URL,
+  analyticsId: import.meta.env.VITE_ANALYTICS_ID,
 });

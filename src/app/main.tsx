@@ -11,9 +11,13 @@ import {
   setupAuthBehavior,
 } from "./features/auth/store";
 import { env } from "./env";
+import { sendWebVitals } from "./webVitals";
 
-if (env.enableAnalytics) {
+if (env.analyticsId) {
   inject();
+  if (env.webVitalsUrl) {
+    sendWebVitals({ url: env.webVitalsUrl, dsn: env.analyticsId });
+  }
 }
 
 const queryClient = createQueryClient(resetAuthToken);

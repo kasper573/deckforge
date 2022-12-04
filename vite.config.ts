@@ -30,4 +30,10 @@ export default defineConfig({
   envDir: __dirname,
   server: { port },
   preview: { port },
+  define: {
+    // Since we cannot rename Vercel's env vars we need use define to make them available
+    "import.meta.env.VITE_ANALYTICS_ID": JSON.stringify(
+      process.env.VERCEL_ANALYTICS_ID
+    ),
+  },
 });
