@@ -6,16 +6,16 @@ import Construction from "@mui/icons-material/Construction";
 import { Play } from "../components/icons";
 import type { LinkTo } from "../components/Link";
 import { defined } from "../../lib/ts-extensions/defined";
-import { useAuth0 } from "../../lib/auth0/useAuth0";
 import { router } from "../router";
 import { LinkListItem } from "../components/Link";
+import { useAuth } from "../features/auth/store";
 
 export function Navigation({
   onItemSelected,
 }: {
   onItemSelected?: () => void;
 }) {
-  const { user } = useAuth0();
+  const { user } = useAuth();
   return (
     <>
       <RouteList

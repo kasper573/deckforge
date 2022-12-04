@@ -11,8 +11,6 @@ import { Router } from "react-router";
 import { RouterSwitch } from "react-typesafe-routes";
 import type { History } from "history";
 import type { ApiRouter } from "../api/router";
-import { Auth0Context } from "../lib/auth0/useAuth0";
-import type { BaseAuth0Client } from "../lib/auth0/BaseAuth0Client";
 import { DialogOutlet } from "../lib/useDialog";
 import { Layout } from "./layout/Layout";
 import { env } from "./env";
@@ -25,13 +23,11 @@ import {
 } from "./ErrorBoundary";
 
 export function App({
-  authClient,
   trpcClient,
   queryClient,
   theme,
   history,
 }: {
-  authClient: BaseAuth0Client;
   trpcClient: TRPCClient<ApiRouter>;
   queryClient: QueryClient;
   theme: Theme;
@@ -42,24 +38,22 @@ export function App({
       <ErrorBoundary fallback={PlainErrorFallback} onError={console.error}>
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <Auth0Context.Provider value={authClient}>
-              <Router history={history}>
-                <ThemeProvider theme={theme}>
-                  <CssBaseline />
-                  {globalStyles}
-                  <Layout>
-                    <ErrorBoundary
-                      fallback={PrettyErrorFallback}
-                      onError={console.error}
-                    >
-                      <RouterSwitch router={router} />
-                    </ErrorBoundary>
-                  </Layout>
-                  {env.enableAnalytics ? <Analytics /> : undefined}
-                  <DialogOutlet />
-                </ThemeProvider>
-              </Router>
-            </Auth0Context.Provider>
+            <Router history={history}>
+              <ThemeProvider theme={theme}>
+                <CssBaseline />
+                {globalStyles}
+                <Layout>
+                  <ErrorBoundary
+                    fallback={PrettyErrorFallback}
+                    onError={console.error}
+                  >
+                    <RouterSwitch router={router} />
+                  </ErrorBoundary>
+                </Layout>
+                {env.enableAnalytics ? <Analytics /> : undefined}
+                <DialogOutlet />
+              </ThemeProvider>
+            </Router>
           </QueryClientProvider>
         </trpc.Provider>
       </ErrorBoundary>

@@ -18,6 +18,18 @@
     "@typescript-eslint/no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error",
     "mui-path-imports/mui-path-imports": "error",
+    "@typescript-eslint/no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@prisma/client",
+            "message": "Only compile time types can be imported from @prisma/client. Use <projectRoot>/prisma/zod for runtime types.",
+            "allowTypeImports": true
+          }
+        ]
+      }
+    ],
     "import/no-restricted-paths": [
       "error",
       {

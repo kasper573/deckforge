@@ -23,19 +23,24 @@ model Example {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  role      UserRole @default(Guest)
 }
 
 model Game {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    String
   name      String
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
 }
 
-enum UserRole {
-  Guest
-  User
-  Admin
+model User {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  name         String   @unique
+  email        String   @unique
+  passwordHash String
+  accessLevel  Int      @default(1)
+  games        Game[]
 }

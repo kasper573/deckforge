@@ -8,12 +8,14 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import type { ReactNode } from "react";
 import { MenuOn } from "../components/MenuOn";
-import { Auth } from "../components/Auth";
+import { Auth } from "../features/auth/Auth";
 import { OnlineBadge } from "../components/OnlineBadge";
-import { useAuth0 } from "../../lib/auth0/useAuth0";
+import { useAuth } from "../features/auth/store";
+import { LinkMenuItem } from "../components/Link";
+import { router } from "../router";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
-  const { user, loginWithRedirect, logout } = useAuth0();
+  const { user, logout } = useAuth();
 
   return (
     <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
@@ -38,7 +40,8 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
           )}
         >
           <Auth exact="Guest">
-            <MenuItem onClick={() => loginWithRedirect()}>Sign in</MenuItem>
+            <LinkMenuItem to={router.user().login()}>Sign in</LinkMenuItem>
+            <LinkMenuItem to={router.user().register()}>Register</LinkMenuItem>
           </Auth>
           <Auth>
             <ListItem sx={{ pt: 0 }}>
@@ -52,6 +55,7 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
               />
             </ListItem>
             <Divider sx={{ mb: 1 }} />
+            <LinkMenuItem to={router.user().profile()}>Settings</LinkMenuItem>
             <MenuItem onClick={() => logout()}>Sign out</MenuItem>
           </Auth>
         </MenuOn>

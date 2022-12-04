@@ -1,10 +1,10 @@
 import { Page } from "../layout/Page";
 import { trpc } from "../trpc";
 import { Header } from "../layout/Header";
-import { useAuth0 } from "../../lib/auth0/useAuth0";
+import { useAuth } from "../features/auth/store";
 
 export default function HomePage() {
-  const { user } = useAuth0();
+  const { user } = useAuth();
   const { data: publicData = null } = trpc.public.useQuery();
   const { data: privateData = null } = trpc.private.useQuery(undefined, {
     enabled: !!user,

@@ -1,46 +1,33 @@
 import express from "express";
 import * as trpcExpress from "@trpc/server/adapters/express";
-import type { Request as JWTRequest } from "express-jwt";
-import type * as jwt from "jsonwebtoken";
 import { createApiRouter } from "./router";
 import { createDatabaseClient } from "./db";
-import type { Context } from "./trpc";
-import { createJWTMiddleware } from "./services/auth/checkJWT";
-import type { AuthContext } from "./services/auth/types";
+import { env } from "./env";
+import { createAuthenticator } from "./services/user/authenticator";
+import { createGameService } from "./services/game";
+import { createUserService } from "./services/user/service";
 
 export function createServer() {
   const server = express();
   const db = createDatabaseClient();
-  const checkJWT = createJWTMiddleware();
+  const auth = createAuthenticator({ jwtSecret: env.jwtSecret });
+  const router = createApiRouter({
+    game: createGameService(),
+    user: createUserService(auth),
+  });
 
   server.use(
-    "/api", // Has to be /api because of Vercel's Serverless Function entrypoint
+    "/api",
     trpcExpress.createExpressMiddleware({
-      router: createApiRouter(),
-      async createContext({
-        req,
-        res,
-      }: {
-        req: JWTRequest;
-        res: express.Response;
-      }): Promise<Context> {
-        await checkJWT(req, res, () => {});
-        const { auth } = req;
-        return { db, auth: auth ? createAuthContext(auth) : undefined };
+      router,
+      createContext: ({ req }) => ({ db, user: auth.check(req) }),
+      onError({ error }) {
+        if (env.serverLogs.includes("error")) {
+          console.error(error);
+        }
       },
     })
   );
 
   return server;
-}
-
-function createAuthContext(jwt: jwt.JwtPayload): AuthContext | undefined {
-  if (!jwt.sub) {
-    console.warn(`JWT does not contain a string "sub" property`, jwt);
-    return;
-  }
-  return {
-    id: jwt.sub,
-    role: "User",
-  };
 }

@@ -39,7 +39,7 @@ export function LinkButton(
       component={TypesafeRouterLink}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       {...(props as any)}
-      role={undefined}
+      role="link"
     />
   );
 }
@@ -52,7 +52,7 @@ export function LinkIconButton(
       component={TypesafeRouterLink}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       {...(props as any)}
-      role={undefined}
+      role="link"
     />
   );
 }
@@ -66,7 +66,7 @@ export function LinkListItem(
       selected={useIsActive(props.to)}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       {...(props as any)}
-      role={undefined}
+      role="link"
     />
   );
 }
@@ -79,6 +79,7 @@ export function LinkMenuItem(
       component={TypesafeRouterLink}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       {...(props as any)}
+      role="link"
     />
   );
 }

@@ -1,9 +1,13 @@
-import { clickMainMenuOption, resetData, signIn } from "../support/actions";
+import { clickMainMenuOption, resetData } from "../support/actions/common";
+import { register } from "../support/actions/user";
+
+before(() => {
+  cy.visit("/");
+  register("gameTester", "foobarfoobar", "game@testers.com");
+});
 
 beforeEach(() => {
-  resetData();
-  cy.visit("/");
-  signIn();
+  resetData("game");
   gotoGameList();
 });
 
