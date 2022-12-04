@@ -58,4 +58,18 @@ describe("user", () => {
     signIn(user.name, "my very long new password");
     assertSignedIn(user.name);
   });
+
+  describe("gets signed out automatically", () => {
+    it("when token expires", () => {
+      throw new Error("Not implemented");
+    });
+
+    it("when trying to access a restricted page with a valid token but unknown user", () => {
+      throw new Error("Not implemented");
+    });
+
+    it("when trying to access a restricted page with an invalid token", () => {
+      throw new Error("Not implemented");
+    });
+  });
 });
