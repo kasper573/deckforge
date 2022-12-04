@@ -22,6 +22,7 @@
     "db:deploy": "dotenv-flow pscale deploy-request create deckforge"
   },
   "dependencies": {
+    "@badrap/result": "^0.2.13",
     "@emotion/react": "11.10.5",
     "@emotion/styled": "11.10.5",
     "@fontsource/roboto": "4.5.8",
@@ -38,9 +39,9 @@
     "bcrypt": "^5.1.0",
     "cors": "2.8.5",
     "express": "4.18.2",
-    "express-jwt": "7.7.7",
     "history": "4.10.1",
     "immer": "9.0.16",
+    "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "3.0.0",
     "lodash.get": "^4.4.2",
     "morgan": "1.10.0",

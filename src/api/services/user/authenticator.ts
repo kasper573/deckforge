@@ -1,8 +1,7 @@
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
-import type { Request as JWTRequest } from "express-jwt";
-import { expressjwt } from "express-jwt";
 import type express from "express";
+import { Result } from "@badrap/result";
 import type { JWTUser } from "./types";
 
 export function createAuthenticator({
@@ -16,18 +15,33 @@ export function createAuthenticator({
   jwtAlgorithms?: jwt.Algorithm[];
   hashSaltRounds?: number;
 }) {
-  const middleware = expressjwt({
-    secret: jwtSecret,
-    algorithms: jwtAlgorithms,
-    credentialsRequired: false,
-  });
-
   function sign(payload: JWTUser) {
     return jwt.sign(payload, jwtSecret, { expiresIn: jwtLifetime });
   }
 
   function check(req: express.Request) {
-    return (req as JWTRequest<JWTUser>).auth;
+    const header = (req.headers.Authorization ?? req.headers.authorization) as
+      | string
+      | undefined;
+    if (!header) {
+      return Result.err(new Error("Missing authorization header"));
+    }
+
+    const [scheme, token] = header.split(" ");
+    if (scheme !== "Bearer") {
+      return Result.err(new Error("Invalid authorization scheme"));
+    }
+
+    try {
+      const decoded = jwt.decode(token, { complete: true });
+      if (!decoded) {
+        return Result.err(new Error("Failed to decode token"));
+      }
+      jwt.verify(token, jwtSecret, { algorithms: jwtAlgorithms });
+      return Result.ok(decoded.payload as JWTUser);
+    } catch (err) {
+      return Result.err(err instanceof Error ? err : new Error("Invalid token"));
+    }
   }
 
   function createPasswordHash(plain: string) {
@@ -40,7 +54,6 @@ export function createAuthenticator({
 
   return {
     sign,
-    middleware,
     check,
     createPasswordHash,
     verifyPassword,

@@ -1,6 +1,5 @@
 import express from "express";
 import * as trpcExpress from "@trpc/server/adapters/express";
-import type { Request as JWTRequest } from "express-jwt";
 import { createApiRouter } from "./router";
 import { createDatabaseClient } from "./db";
 import { env } from "./env";
@@ -17,13 +16,13 @@ export function createServer() {
     user: createUserService(auth),
   });
 
-  server.use(auth.middleware);
   server.use(
     "/api",
     trpcExpress.createExpressMiddleware({
       router: router,
-      createContext({ req }: { req: JWTRequest }) {
-        return { db, user: auth.check(req) };
+      createContext({req}) {
+        const result = auth.check(req);
+        return { db, user: result.isOk ? result.value : undefined };
       },
     })
   );
