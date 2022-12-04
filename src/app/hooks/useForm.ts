@@ -8,18 +8,21 @@ import type { TRPCClientErrorLike } from "@trpc/client";
 import { TRPCClientError } from "@trpc/client";
 import type { FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ZodString } from "zod";
 import type { ApiRouter } from "../../api/router";
+import { zodTypeAtPath } from "../../lib/zod-extensions/zodTypeAtPath";
+import { normalizeType } from "../../lib/zod-extensions/zodNormalize";
 
 /**
  * zod + tRPC + mui specific composition of react-hook-form
  */
 export function useForm<T extends ZodType>(
   schema: T,
-  options: { defaultValues?: z.infer<T> } = {}
+  formOptions: { defaultValues?: z.infer<T> } = {}
 ) {
   const form = useRHF<z.infer<T>>({
     resolver: zodResolver(schema),
-    ...options,
+    ...formOptions,
   });
   const {
     register,
@@ -32,16 +35,26 @@ export function useForm<T extends ZodType>(
   ) => useFormMutation(form, mutation, options);
 
   const muiRegister: typeof register = useCallback(
-    (path, ...rest) => {
+    (path, fieldOptions) => {
       const error = get(errors, path);
-      const rhfProps = register(path, ...rest);
+      const fieldType = zodTypeAtPath(schema, path);
+      if (!fieldType) {
+        throw new Error(`Schema does not contain a field on path "${path}"`);
+      }
+
+      const rhfProps = register(path, {
+        setValueAs: createFieldValueSetter(fieldType),
+        ...fieldOptions,
+      });
+
       const muiProps = {
         error: error !== undefined,
         helperText: error?.message,
       };
+
       return { ...rhfProps, ...muiProps };
     },
-    [errors, register]
+    [schema, errors, register]
   );
 
   return {
@@ -49,6 +62,14 @@ export function useForm<T extends ZodType>(
     useMutation,
     register: muiRegister,
   };
+}
+
+function createFieldValueSetter<T extends ZodType>(fieldType: T) {
+  const emptyTextShouldBecomeUndefined =
+    fieldType.isOptional() && normalizeType(fieldType) instanceof ZodString;
+  if (emptyTextShouldBecomeUndefined) {
+    return (text: string) => (text ? text : undefined);
+  }
 }
 
 interface UseFormMutationOptions<Payload, Response> {
