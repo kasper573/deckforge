@@ -1,5 +1,4 @@
 import CssBaseline from "@mui/material/CssBaseline";
-import { Analytics } from "@vercel/analytics/react";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import * as React from "react";
 import type { QueryClient } from "@tanstack/react-query";
@@ -13,7 +12,6 @@ import type { History } from "history";
 import type { ApiRouter } from "../api/router";
 import { DialogOutlet } from "../lib/useDialog";
 import { Layout } from "./layout/Layout";
-import { env } from "./env";
 import { trpc } from "./trpc";
 import { router } from "./router";
 import {
@@ -50,7 +48,6 @@ export function App({
                     <RouterSwitch router={router} />
                   </ErrorBoundary>
                 </Layout>
-                {env.enableAnalytics ? <Analytics /> : undefined}
                 <DialogOutlet />
               </ThemeProvider>
             </Router>

@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserHistory } from "history";
+import { inject } from "@vercel/analytics";
 import { App } from "./App";
 import { createQueryClient, createTRPCClient } from "./trpc";
 import { createTheme } from "./theme";
@@ -9,6 +10,11 @@ import {
   resetAuthToken,
   setupAuthBehavior,
 } from "./features/auth/store";
+import { env } from "./env";
+
+if (env.enableAnalytics) {
+  inject();
+}
 
 const queryClient = createQueryClient(resetAuthToken);
 const trpcClient = createTRPCClient(getAuthToken);
