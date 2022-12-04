@@ -53,9 +53,9 @@ describe("user", () => {
   });
 
   it("can change their password", () => {
-    updateProfile({ password: "password2" });
+    updateProfile({ password: "my very long new password" });
     signOut();
-    signIn(user.name, "password2");
+    signIn(user.name, "my very long new password");
     assertSignedIn(user.name);
   });
 });
