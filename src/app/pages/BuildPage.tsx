@@ -37,8 +37,8 @@ export default function BuildPage() {
       <Header>BuildPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense aria-label="Games">
-          {gameList.data?.entities.map(({ id, name }) => (
-            <GameListItem key={id} id={id} name={name} />
+          {gameList.data?.entities.map((game) => (
+            <GameListItem key={game.id} {...game} />
           ))}
           {gameList.data?.total === 0 && (
             <Typography align="center">
@@ -54,7 +54,7 @@ export default function BuildPage() {
   );
 }
 
-function GameListItem({ id, name }: Pick<Game, "id" | "name">) {
+function GameListItem({ id, name }: Game) {
   const confirm = useModal(ConfirmDialog);
   const deleteGame = trpc.game.delete.useMutation();
 
