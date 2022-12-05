@@ -16,6 +16,17 @@ export function createCardService() {
       .output(cardType)
       .use((opts) => assertGameAccess(opts, opts.input.deckId))
       .mutation(({ input: data, ctx }) => ctx.db.card.create({ data })),
+    read: t.procedure
+      .input(cardType.shape.id)
+      .output(cardType)
+      .use((opts) => assertCardAccess(opts, opts.input))
+      .query(async ({ input: id, ctx }) => {
+        const card = await ctx.db.card.findUnique({ where: { id } });
+        if (!card) {
+          throw new UserFacingError("Card not found");
+        }
+        return card;
+      }),
     rename: t.procedure
       .input(cardType.pick({ id: true, name: true }))
       .use((opts) => assertCardAccess(opts, opts.input.id))
@@ -30,17 +41,6 @@ export function createCardService() {
       .use((opts) => assertCardAccess(opts, opts.input))
       .mutation(async ({ input: id, ctx }) => {
         await ctx.db.card.delete({ where: { id } });
-      }),
-    read: t.procedure
-      .input(cardType.shape.id)
-      .output(cardType)
-      .use((opts) => assertCardAccess(opts, opts.input))
-      .query(async ({ input: id, ctx }) => {
-        const card = await ctx.db.card.findUnique({ where: { id } });
-        if (!card) {
-          throw new UserFacingError("Card not found");
-        }
-        return card;
       }),
     list: t.procedure
       .input(createFilterType(z.object({ deckId: gameType.shape.id })))

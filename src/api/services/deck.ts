@@ -15,6 +15,17 @@ export function createDeckService() {
       .output(deckType)
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
       .mutation(({ input: data, ctx }) => ctx.db.deck.create({ data })),
+    read: t.procedure
+      .input(deckType.shape.id)
+      .output(deckType)
+      .use((opts) => assertDeckAccess(opts, opts.input))
+      .query(async ({ input: id, ctx }) => {
+        const deck = await ctx.db.deck.findUnique({ where: { id } });
+        if (!deck) {
+          throw new UserFacingError("Deck not found");
+        }
+        return deck;
+      }),
     rename: t.procedure
       .input(deckType.pick({ id: true, name: true }))
       .use((opts) => assertDeckAccess(opts, opts.input.id))
@@ -29,17 +40,6 @@ export function createDeckService() {
       .use((opts) => assertDeckAccess(opts, opts.input))
       .mutation(async ({ input: id, ctx }) => {
         await ctx.db.deck.delete({ where: { id } });
-      }),
-    read: t.procedure
-      .input(deckType.shape.id)
-      .output(deckType)
-      .use((opts) => assertDeckAccess(opts, opts.input))
-      .query(async ({ input: id, ctx }) => {
-        const deck = await ctx.db.deck.findUnique({ where: { id } });
-        if (!deck) {
-          throw new UserFacingError("Deck not found");
-        }
-        return deck;
       }),
     list: t.procedure
       .input(createFilterType(z.object({ gameId: gameType.shape.id })))

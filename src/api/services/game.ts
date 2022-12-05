@@ -17,6 +17,17 @@ export function createGameService() {
       .mutation(async ({ input: data, ctx }) => {
         await ctx.db.game.create({ data: { ...data, ownerId: ctx.user.id } });
       }),
+    read: t.procedure
+      .use(access())
+      .input(gameType.shape.id)
+      .output(gameType)
+      .query(async ({ input: id, ctx }) => {
+        const game = await ctx.db.game.findUnique({ where: { id } });
+        if (!game) {
+          throw new UserFacingError("Game not found");
+        }
+        return game;
+      }),
     rename: t.procedure
       .input(gameType.pick({ id: true, name: true }))
       .use((opts) => assertGameAccess(opts, opts.input.id))
@@ -31,17 +42,6 @@ export function createGameService() {
       .use((opts) => assertGameAccess(opts, opts.input))
       .mutation(async ({ input: id, ctx }) => {
         await ctx.db.game.delete({ where: { id } });
-      }),
-    read: t.procedure
-      .use(access())
-      .input(gameType.shape.id)
-      .output(gameType)
-      .query(async ({ input: id, ctx }) => {
-        const game = await ctx.db.game.findUnique({ where: { id } });
-        if (!game) {
-          throw new UserFacingError("Game not found");
-        }
-        return game;
       }),
     list: t.procedure
       .input(createFilterType(z.unknown().optional()))
