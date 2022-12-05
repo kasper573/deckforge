@@ -44,7 +44,7 @@ export default function DeckListPage() {
     <Page>
       <Header>Game: {game?.name}. Deck List</Header>
       <Paper sx={{ mb: 3 }}>
-        <List dense>
+        <List dense aria-label="Decks">
           {decks?.entities.map((deck) => (
             <DeckListItem key={deck.id} {...deck} />
           ))}
@@ -78,6 +78,7 @@ export function DeckListItem({ gameId, id: deckId, name }: Deck) {
 
   return (
     <ListItem
+      aria-label={name}
       secondaryAction={
         <>
           <LinkIconButton
