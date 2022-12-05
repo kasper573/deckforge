@@ -19,25 +19,6 @@ generator zod {
   prismaJsonNullability = true
 }
 
-model Game {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String
-  ownerId   String
-  owner     User     @relation(fields: [ownerId], references: [id])
-  Deck      Deck[]
-}
-
-model Deck {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String
-  gameId    String
-  game      Game     @relation(fields: [gameId], references: [id])
-}
-
 model User {
   id           String   @id @default(cuid())
   createdAt    DateTime @default(now())
@@ -48,3 +29,23 @@ model User {
   accessLevel  Int      @default(1)
   games        Game[]
 }
+
+model Game {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  Deck      Deck[]
+}
+
+model Deck {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
