@@ -1,16 +1,10 @@
 import { createDatabaseClient } from "../src/api/db";
 
 export async function seed(client = createDatabaseClient()) {
-  const id = "cl9ebqhxk00003b600tymydho";
   try {
-    await client.example.upsert({
-      where: {
-        id,
-      },
-      create: {
-        id,
-      },
-      update: {},
+    // NOTE: this can be removed when real seeds are added
+    client.user.create({
+      data: { email: "seed@seed.com", passwordHash: "1234", name: "seed" },
     });
   } catch (e) {
     console.error(e);
