@@ -1,31 +1,31 @@
 import { useState } from "react";
-import type { DialogProps } from "../../src/lib/useDialog";
-import { DialogOutlet, useDialog } from "../../src/lib/useDialog";
+import type { ModalProps } from "../../src/lib/useModal";
+import { ModalOutlet, useModal } from "../../src/lib/useModal";
 
-describe("useDialog.cy.ts", () => {
-  it("can wait for and receive dialog resolution value based on input", () => {
+describe("useModal.cy.ts", () => {
+  it("can wait for and receive modal resolution value based on input", () => {
     function ExampleApp() {
       const [response, setResponse] = useState("");
-      const openDialog = useDialog(ExampleDialog);
+      const openModal = useModal(ExampleModal);
       return (
         <>
           {response && <span>Response: {response}</span>}
           <button
             onClick={async () =>
-              setResponse(await openDialog({ count: 123, title: "Title" }))
+              setResponse(await openModal({ count: 123, title: "Title" }))
             }
           >
-            Open dialog
+            Open modal
           </button>
-          <DialogOutlet />
+          <ModalOutlet />
         </>
       );
     }
 
     cy.mount(<ExampleApp />);
-    cy.findByRole("button", { name: "Open dialog" }).click();
-    cy.findByRole("dialog").should("be.visible");
-    cy.findByRole("dialog").within(() => {
+    cy.findByRole("button", { name: "Open modal" }).click();
+    cy.findByRole("modal").should("be.visible");
+    cy.findByRole("modal").within(() => {
       cy.findByRole("heading", { name: "Title" }).should("exist");
       cy.findByRole("button", { name: "OK" }).click();
     });
@@ -33,7 +33,7 @@ describe("useDialog.cy.ts", () => {
   });
 });
 
-type ExampleDialogProps = DialogProps<
+type ExampleModalProps = ModalProps<
   string,
   {
     count: number;
@@ -41,13 +41,13 @@ type ExampleDialogProps = DialogProps<
   }
 >;
 
-function ExampleDialog({
+function ExampleModal({
   open,
   input: { title, count },
   resolve,
-}: ExampleDialogProps) {
+}: ExampleModalProps) {
   return (
-    <div role="dialog" style={{ display: open ? "block" : "none" }}>
+    <div role="modal" style={{ display: open ? "block" : "none" }}>
       <h1>{title}</h1>
       <button onClick={() => resolve(`Hello ${count}`)}>OK</button>
     </div>

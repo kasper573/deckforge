@@ -4,9 +4,9 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import type { ReactNode } from "react";
 import Dialog from "@mui/material/Dialog";
-import type { DialogProps } from "../../lib/useDialog";
+import type { ModalProps } from "../../lib/useModal";
 
-export type ConfirmDialogProps = DialogProps<
+export type ConfirmDialogProps = ModalProps<
   boolean,
   {
     title: ReactNode;
