@@ -21,7 +21,7 @@ export default function GameEditPage() {
           debounce
           label="Game name"
           value={game.data?.name ?? ""}
-          onValueChange={(name) => renameGame.mutate({ id: gameId, name })}
+          onValueChange={(name) => renameGame.mutate({ gameId, name })}
         />
       </Header>
       <Paper sx={{ mb: 3 }}>

@@ -38,7 +38,7 @@ export default function BuildPage() {
       <Paper sx={{ mb: 3 }}>
         <List dense aria-label="Games">
           {gameList.data?.entities.map((game) => (
-            <GameListItem key={game.id} {...game} />
+            <GameListItem key={game.gameId} {...game} />
           ))}
           {gameList.data?.total === 0 && (
             <Typography align="center">
@@ -54,7 +54,7 @@ export default function BuildPage() {
   );
 }
 
-function GameListItem({ id, name }: Game) {
+function GameListItem({ gameId, name }: Game) {
   const confirm = useModal(ConfirmDialog);
   const deleteGame = trpc.game.delete.useMutation();
 
@@ -64,7 +64,7 @@ function GameListItem({ id, name }: Game) {
       content: `Are you sure you want to delete "${name}". This action cannot be reversed.`,
     });
     if (shouldDelete) {
-      deleteGame.mutate(id);
+      deleteGame.mutate(gameId);
     }
   }
 
@@ -73,14 +73,11 @@ function GameListItem({ id, name }: Game) {
       aria-label={name}
       secondaryAction={
         <>
-          <LinkIconButton
-            to={router.play().game({ gameId: id })}
-            aria-label="play"
-          >
+          <LinkIconButton to={router.play().game({ gameId })} aria-label="play">
             <Play />
           </LinkIconButton>
           <LinkIconButton
-            to={router.build().game({ gameId: id })}
+            to={router.build().game({ gameId })}
             aria-label="edit"
           >
             <Edit />

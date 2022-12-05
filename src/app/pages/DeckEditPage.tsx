@@ -57,7 +57,7 @@ export default function DeckEditPage() {
               debounce
               label="Deck name"
               value={deck?.name ?? ""}
-              onValueChange={(name) => renameDeck.mutate({ id: deckId, name })}
+              onValueChange={(name) => renameDeck.mutate({ deckId, name })}
             />
           </span>
         </Stack>
@@ -65,7 +65,7 @@ export default function DeckEditPage() {
       <Paper sx={{ mb: 3 }}>
         <List dense aria-label="Cards">
           {cards?.entities.map((card) => (
-            <CardListItem key={card.id} {...card} />
+            <CardListItem key={card.cardId} {...card} />
           ))}
           {cards?.total === 0 && (
             <Typography align="center">
@@ -81,7 +81,7 @@ export default function DeckEditPage() {
   );
 }
 
-export function CardListItem({ gameId, deckId, id: cardId, name }: Card) {
+export function CardListItem({ gameId, deckId, cardId, name }: Card) {
   const confirm = useModal(ConfirmDialog);
   const deleteCard = trpc.card.delete.useMutation();
 

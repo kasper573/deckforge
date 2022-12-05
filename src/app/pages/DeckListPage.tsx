@@ -46,7 +46,7 @@ export default function DeckListPage() {
       <Paper sx={{ mb: 3 }}>
         <List dense aria-label="Decks">
           {decks?.entities.map((deck) => (
-            <DeckListItem key={deck.id} {...deck} />
+            <DeckListItem key={deck.deckId} {...deck} />
           ))}
           {decks?.total === 0 && (
             <Typography align="center">
@@ -62,7 +62,7 @@ export default function DeckListPage() {
   );
 }
 
-export function DeckListItem({ gameId, id: deckId, name }: Deck) {
+export function DeckListItem({ gameId, deckId, name }: Deck) {
   const confirm = useModal(ConfirmDialog);
   const deleteDeck = trpc.deck.delete.useMutation();
 

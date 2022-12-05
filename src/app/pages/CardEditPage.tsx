@@ -26,7 +26,7 @@ export default function CardEditPage() {
           debounce
           label="Card name"
           value={card?.name ?? ""}
-          onValueChange={(name) => renameCard.mutate({ id: cardId, name })}
+          onValueChange={(name) => renameCard.mutate({ cardId, name })}
         />
       </Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>

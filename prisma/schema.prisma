@@ -20,7 +20,7 @@ generator zod {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  userId       String   @id @default(cuid())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   name         String   @unique
@@ -31,33 +31,33 @@ model User {
 }
 
 model Game {
-  id        String   @id @default(cuid())
+  gameId    String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   name      String
   ownerId   String
-  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner     User     @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
   decks     Deck[]
   cards     Card[]
 }
 
 model Deck {
-  id        String   @id @default(cuid())
+  deckId    String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   name      String
   gameId    String
-  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game      Game     @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
   cards     Card[]
 }
 
 model Card {
-  id        String   @id @default(cuid())
+  cardId    String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   name      String
   gameId    String
-  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game      Game     @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
   deckId    String
-  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  deck      Deck     @relation(fields: [deckId], references: [deckId], onDelete: Cascade)
 }

@@ -42,7 +42,7 @@ export const updateProfilePayloadType = z
 
 export type JWTUser = z.infer<typeof jwtUserType>;
 export const jwtUserType = z.object({
-  id: z.string(),
+  userId: userType.shape.userId,
   access: userType.shape.accessLevel,
   name: usernameType,
 });

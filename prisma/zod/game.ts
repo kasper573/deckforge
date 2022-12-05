@@ -2,7 +2,7 @@ import * as z from "zod"
 import { CompleteUser, relatedUserType, CompleteDeck, relatedDeckType, CompleteCard, relatedCardType } from "./index"
 
 export const gameType = z.object({
-  id: z.string(),
+  gameId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
   name: z.string(),

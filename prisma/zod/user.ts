@@ -2,7 +2,7 @@ import * as z from "zod"
 import { CompleteGame, relatedGameType } from "./index"
 
 export const userType = z.object({
-  id: z.string(),
+  userId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
   name: z.string(),

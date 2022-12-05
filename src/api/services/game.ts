@@ -15,33 +15,35 @@ export function createGameService() {
       .use(access())
       .input(z.object({ name: z.string() }))
       .mutation(async ({ input: data, ctx }) => {
-        await ctx.db.game.create({ data: { ...data, ownerId: ctx.user.id } });
+        await ctx.db.game.create({
+          data: { ...data, ownerId: ctx.user.userId },
+        });
       }),
     read: t.procedure
       .use(access())
-      .input(gameType.shape.id)
+      .input(gameType.shape.gameId)
       .output(gameType)
-      .query(async ({ input: id, ctx }) => {
-        const game = await ctx.db.game.findUnique({ where: { id } });
+      .query(async ({ input: gameId, ctx }) => {
+        const game = await ctx.db.game.findUnique({ where: { gameId } });
         if (!game) {
           throw new UserFacingError("Game not found");
         }
         return game;
       }),
     rename: t.procedure
-      .input(gameType.pick({ id: true, name: true }))
-      .use((opts) => assertGameAccess(opts, opts.input.id))
-      .mutation(async ({ input: { id, name }, ctx }) => {
+      .input(gameType.pick({ gameId: true, name: true }))
+      .use((opts) => assertGameAccess(opts, opts.input.gameId))
+      .mutation(async ({ input: { gameId, name }, ctx }) => {
         await ctx.db.game.update({
-          where: { id },
+          where: { gameId },
           data: { name },
         });
       }),
     delete: t.procedure
-      .input(gameType.shape.id)
+      .input(gameType.shape.gameId)
       .use((opts) => assertGameAccess(opts, opts.input))
-      .mutation(async ({ input: id, ctx }) => {
-        await ctx.db.game.delete({ where: { id } });
+      .mutation(async ({ input: gameId, ctx }) => {
+        await ctx.db.game.delete({ where: { gameId } });
       }),
     list: t.procedure
       .input(createFilterType(z.unknown().optional()))
@@ -49,11 +51,11 @@ export function createGameService() {
       .output(createResultType(gameType))
       .query(async ({ input: { offset, limit }, ctx: { db, user } }) => {
         const [total, entities] = await Promise.all([
-          db.game.count({ where: { ownerId: user.id } }),
+          db.game.count({ where: { ownerId: user.userId } }),
           db.game.findMany({
             take: limit,
             skip: offset,
-            where: { ownerId: user.id },
+            where: { ownerId: user.userId },
           }),
         ]);
         return { total, entities };
@@ -63,16 +65,16 @@ export function createGameService() {
 
 export async function assertGameAccess<Input>(
   { ctx, next }: MiddlewareOptions,
-  id?: Game["id"]
+  gameId?: Game["gameId"]
 ) {
   const game =
-    id !== undefined
+    gameId !== undefined
       ? await ctx.db.game.findUnique({
-          where: { id },
+          where: { gameId },
           select: { ownerId: true },
         })
       : undefined;
-  if (!ctx.user || game?.ownerId !== ctx.user.id) {
+  if (!ctx.user || game?.ownerId !== ctx.user.userId) {
     throw new UserFacingError("You do not have access to this game");
   }
   return next({ ctx: { auth: ctx.user } });

@@ -1,4 +1,3 @@
-import { z } from "zod";
 import type { Deck } from "@prisma/client";
 import type { MiddlewareOptions } from "../trpc";
 import { t } from "../trpc";
@@ -12,38 +11,38 @@ export type DeckService = ReturnType<typeof createDeckService>;
 export function createDeckService() {
   return t.router({
     create: t.procedure
-      .input(z.object({ name: z.string(), gameId: gameType.shape.id }))
+      .input(deckType.pick({ name: true, gameId: true }))
       .output(deckType)
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
       .mutation(({ input: data, ctx }) => ctx.db.deck.create({ data })),
     read: t.procedure
-      .input(deckType.shape.id)
+      .input(deckType.shape.deckId)
       .output(deckType)
       .use((opts) => assertDeckAccess(opts, opts.input))
-      .query(async ({ input: id, ctx }) => {
-        const deck = await ctx.db.deck.findUnique({ where: { id } });
+      .query(async ({ input: deckId, ctx }) => {
+        const deck = await ctx.db.deck.findUnique({ where: { deckId } });
         if (!deck) {
           throw new UserFacingError("Deck not found");
         }
         return deck;
       }),
     rename: t.procedure
-      .input(deckType.pick({ id: true, name: true }))
-      .use((opts) => assertDeckAccess(opts, opts.input.id))
-      .mutation(async ({ input: { id, name }, ctx }) => {
+      .input(deckType.pick({ deckId: true, name: true }))
+      .use((opts) => assertDeckAccess(opts, opts.input.deckId))
+      .mutation(async ({ input: { deckId, name }, ctx }) => {
         await ctx.db.deck.update({
-          where: { id },
+          where: { deckId },
           data: { name },
         });
       }),
     delete: t.procedure
-      .input(deckType.shape.id)
+      .input(deckType.shape.deckId)
       .use((opts) => assertDeckAccess(opts, opts.input))
-      .mutation(async ({ input: id, ctx }) => {
-        await ctx.db.deck.delete({ where: { id } });
+      .mutation(async ({ input: deckId, ctx }) => {
+        await ctx.db.deck.delete({ where: { deckId } });
       }),
     list: t.procedure
-      .input(createFilterType(z.object({ gameId: gameType.shape.id })))
+      .input(createFilterType(gameType.pick({ gameId: true })))
       .output(createResultType(deckType))
       .use((opts) => assertGameAccess(opts, opts.input.filter.gameId))
       .query(
@@ -68,12 +67,12 @@ export function createDeckService() {
 
 export async function assertDeckAccess<Input>(
   opts: MiddlewareOptions,
-  id?: Deck["id"]
+  deckId?: Deck["deckId"]
 ) {
   const deck =
-    id !== undefined
+    deckId !== undefined
       ? await opts.ctx.db.deck.findUnique({
-          where: { id },
+          where: { deckId },
           select: { gameId: true },
         })
       : undefined;
