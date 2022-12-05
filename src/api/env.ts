@@ -25,6 +25,14 @@ const schema = z.object({
     .optional(),
 });
 
+const adminUser = {
+  name: process.env.SEED_ADMIN_NAME,
+  email: process.env.SEED_ADMIN_EMAIL,
+  password: process.env.SEED_ADMIN_PASSWORD,
+};
+
+const hasAdminUser = Object.values(adminUser).filter(Boolean).length > 0;
+
 export const env = schema.parse({
   databaseLogs: process.env.DATABASE_LOGS?.split(","),
   serverLogs: process.env.SERVER_LOGS?.split(","),
@@ -33,11 +41,5 @@ export const env = schema.parse({
   environment: process.env.NODE_ENV,
   exposeInternalErrors: process.env.EXPOSE_INTERNAL_ERRORS,
   jwtSecret: process.env.AUTH_SECRET,
-  seed: {
-    adminUser: {
-      name: process.env.SEED_ADMIN_NAME,
-      email: process.env.SEED_ADMIN_EMAIL,
-      password: process.env.SEED_ADMIN_PASSWORD,
-    },
-  },
+  seed: hasAdminUser ? { adminUser } : undefined,
 });
