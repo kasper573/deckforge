@@ -31,7 +31,7 @@ describe("card", () => {
     findCardItem("New card").should("exist");
   });
 
-  it.only("can rename a card", () => {
+  it("can rename a card", () => {
     createCard("To be renamed");
     clickCardAction("To be renamed", /edit/i);
     cy.findByRole("textbox", { name: /card name/i })

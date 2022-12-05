@@ -6,6 +6,8 @@ import { PropertyEditor } from "../components/PropertyEditor";
 import { SideMenu } from "../components/SideMenu";
 import { Page } from "../layout/Page";
 import { router } from "../router";
+import { TextField } from "../controls/TextField";
+import { trpc } from "../trpc";
 
 export default function CardEditPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -15,10 +17,17 @@ export default function CardEditPage() {
   const { cardId } = useRouteParams(
     router.build().game({ gameId }).deck().edit({ deckId }).card
   );
+  const { data: card } = trpc.card.read.useQuery(cardId);
+  const renameCard = trpc.card.rename.useMutation();
   return (
     <Page>
       <Header>
-        Game: {gameId}. Deck: {deckId}. Card: {cardId}
+        <TextField
+          debounce
+          label="Card name"
+          value={card?.name ?? ""}
+          onValueChange={(name) => renameCard.mutate({ id: cardId, name })}
+        />
       </Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
         <SideMenu>
