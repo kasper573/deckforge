@@ -6,6 +6,7 @@ import { env } from "./env";
 import { createAuthenticator } from "./services/user/authenticator";
 import { createGameService } from "./services/game";
 import { createUserService } from "./services/user/service";
+import { createDeckService } from "./services/deck";
 
 export function createServer() {
   const server = express();
@@ -14,6 +15,7 @@ export function createServer() {
   const router = createApiRouter({
     game: createGameService(),
     user: createUserService(auth),
+    deck: createDeckService(),
   });
 
   server.use(

@@ -26,6 +26,16 @@ model Game {
   name      String
   ownerId   String
   owner     User     @relation(fields: [ownerId], references: [id])
+  Deck      Deck[]
+}
+
+model Deck {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id])
 }
 
 model User {

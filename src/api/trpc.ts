@@ -37,3 +37,7 @@ export type Context = {
   user?: JWTUser;
   db: DatabaseClient;
 };
+
+export type MiddlewareOptions = Parameters<
+  Parameters<typeof t.middleware>[0]
+>[0];

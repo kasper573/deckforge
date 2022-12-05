@@ -1,12 +1,14 @@
 import { z } from "zod";
 import type { Game } from "@prisma/client";
+import type { MiddlewareOptions } from "../trpc";
 import { t } from "../trpc";
 import { access } from "../middlewares/access";
-import { createResultType, filterType } from "../utils/search";
+import { createFilterType, createResultType } from "../utils/search";
 import { gameType } from "../../../prisma/zod";
 import { UserFacingError } from "../utils/UserFacingError";
 
 export type GameService = ReturnType<typeof createGameService>;
+
 export function createGameService() {
   return t.router({
     create: t.procedure
@@ -17,7 +19,7 @@ export function createGameService() {
       }),
     rename: t.procedure
       .input(gameType.pick({ id: true, name: true }))
-      .use(assertGameAccess((input: { id: string }) => input.id))
+      .use((opts) => assertGameAccess(opts, opts.input.id))
       .mutation(async ({ input: { id, name }, ctx }) => {
         await ctx.db.game.update({
           where: { id },
@@ -26,7 +28,7 @@ export function createGameService() {
       }),
     delete: t.procedure
       .input(gameType.shape.id)
-      .use(assertGameAccess((input: string) => input))
+      .use((opts) => assertGameAccess(opts, opts.input))
       .mutation(async ({ input: id, ctx }) => {
         await ctx.db.game.delete({ where: { id } });
       }),
@@ -42,7 +44,7 @@ export function createGameService() {
         return game;
       }),
     list: t.procedure
-      .input(filterType)
+      .input(createFilterType(z.unknown().optional()))
       .use(access())
       .output(createResultType(gameType))
       .query(async ({ input: { offset, limit }, ctx: { db, user } }) => {
@@ -59,18 +61,19 @@ export function createGameService() {
   });
 }
 
-function assertGameAccess<Input>(selectId: (input: Input) => Game["id"]) {
-  return t.middleware(async ({ ctx, input, next }) => {
-    const id = selectId(input as Input);
-    const game = await ctx.db.game.findUnique({
-      where: { id },
-      select: { ownerId: true },
-    });
-    if (!ctx.user || game?.ownerId !== ctx.user.id) {
-      throw new UserFacingError(
-        "You do not have permission to delete this game."
-      );
-    }
-    return next({ ctx: { auth: ctx.user } });
-  });
+export async function assertGameAccess<Input>(
+  { ctx, next }: MiddlewareOptions,
+  id?: Game["id"]
+) {
+  const game =
+    id !== undefined
+      ? await ctx.db.game.findUnique({
+          where: { id },
+          select: { ownerId: true },
+        })
+      : undefined;
+  if (!ctx.user || game?.ownerId !== ctx.user.id) {
+    throw new UserFacingError("You do not have access to this game");
+  }
+  return next({ ctx: { auth: ctx.user } });
 }

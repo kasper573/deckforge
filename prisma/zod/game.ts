@@ -1,5 +1,5 @@
 import * as z from "zod"
-import { CompleteUser, relatedUserType } from "./index"
+import { CompleteUser, relatedUserType, CompleteDeck, relatedDeckType } from "./index"
 
 export const gameType = z.object({
   id: z.string(),
@@ -11,6 +11,7 @@ export const gameType = z.object({
 
 export interface CompleteGame extends z.infer<typeof gameType> {
   owner: CompleteUser
+  Deck: CompleteDeck[]
 }
 
 /**
@@ -20,4 +21,5 @@ export interface CompleteGame extends z.infer<typeof gameType> {
  */
 export const relatedGameType: z.ZodSchema<CompleteGame> = z.lazy(() => gameType.extend({
   owner: relatedUserType,
+  Deck: relatedDeckType.array(),
 }))
