@@ -7,6 +7,7 @@ import { createAuthenticator } from "./services/user/authenticator";
 import { createGameService } from "./services/game";
 import { createUserService } from "./services/user/service";
 import { createDeckService } from "./services/deck";
+import { createCardService } from "./services/card";
 
 export function createServer() {
   const server = express();
@@ -16,6 +17,7 @@ export function createServer() {
     game: createGameService(),
     user: createUserService(auth),
     deck: createDeckService(),
+    card: createCardService(),
   });
 
   server.use(

@@ -6,6 +6,8 @@ import IconButton from "@mui/material/IconButton";
 import ListItemText from "@mui/material/ListItemText";
 import { useRouteParams } from "react-typesafe-routes";
 import Stack from "@mui/material/Stack";
+import type { Card } from "@prisma/client";
+import Typography from "@mui/material/Typography";
 import { LinkIconButton } from "../components/Link";
 import { Delete, Edit } from "../components/icons";
 import { Header } from "../components/Header";
@@ -13,6 +15,9 @@ import { Page } from "../layout/Page";
 import { router } from "../router";
 import { TextField } from "../controls/TextField";
 import { trpc } from "../trpc";
+import { useModal } from "../../lib/useModal";
+import { PromptDialog } from "../dialogs/PromptDialog";
+import { ConfirmDialog } from "../dialogs/ConfirmDialog";
 
 export default function DeckEditPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -21,6 +26,27 @@ export default function DeckEditPage() {
   );
   const { data: deck } = trpc.deck.read.useQuery(deckId);
   const renameDeck = trpc.deck.rename.useMutation();
+
+  const { data: cards } = trpc.card.list.useQuery({
+    filter: { deckId },
+    offset: 0,
+    limit: 10,
+  });
+
+  const createCard = trpc.card.create.useMutation();
+  const prompt = useModal(PromptDialog);
+
+  async function enterNameAndCreateDeck() {
+    const name = await prompt({
+      title: "Create new card",
+      fieldProps: { label: "Card name" },
+    });
+    if (!name) {
+      return;
+    }
+    createCard.mutate({ gameId, deckId, name });
+  }
+
   return (
     <Page>
       <Header>
@@ -37,28 +63,41 @@ export default function DeckEditPage() {
         </Stack>
       </Header>
       <Paper sx={{ mb: 3 }}>
-        <List dense>
-          <CardListItem {...{ gameId, deckId, cardId: "card1" }} />
-          <CardListItem {...{ gameId, deckId, cardId: "card2" }} />
-          <CardListItem {...{ gameId, deckId, cardId: "card3" }} />
+        <List dense aria-label="Cards">
+          {cards?.entities.map((card) => (
+            <CardListItem key={card.id} {...card} />
+          ))}
+          {cards?.total === 0 && (
+            <Typography align="center">
+              {"This deck doesn't contain any cards yet."}
+            </Typography>
+          )}
         </List>
       </Paper>
-      <Button variant="contained">Create new card</Button>
+      <Button variant="contained" onClick={enterNameAndCreateDeck}>
+        Create new card
+      </Button>
     </Page>
   );
 }
 
-export function CardListItem({
-  gameId,
-  deckId,
-  cardId,
-}: {
-  gameId: string;
-  deckId: string;
-  cardId: string;
-}) {
+export function CardListItem({ gameId, deckId, id: cardId, name }: Card) {
+  const confirm = useModal(ConfirmDialog);
+  const deleteCard = trpc.card.delete.useMutation();
+
+  async function confirmDelete() {
+    const shouldDelete = await confirm({
+      title: "Delete card",
+      content: `Are you sure you want to delete "${name}". This action cannot be reversed.`,
+    });
+    if (shouldDelete) {
+      deleteCard.mutate(cardId);
+    }
+  }
+
   return (
     <ListItem
+      aria-label={name}
       secondaryAction={
         <>
           <LinkIconButton
@@ -72,13 +111,13 @@ export function CardListItem({
           >
             <Edit />
           </LinkIconButton>
-          <IconButton edge="end" aria-label="delete">
+          <IconButton edge="end" aria-label="delete" onClick={confirmDelete}>
             <Delete />
           </IconButton>
         </>
       }
     >
-      <ListItemText primary={cardId} />
+      <ListItemText primary={name} />
     </ListItem>
   );
 }

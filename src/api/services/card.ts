@@ -5,17 +5,17 @@ import { t } from "../trpc";
 import { createFilterType, createResultType } from "../utils/search";
 import { cardType, gameType } from "../../../prisma/zod";
 import { UserFacingError } from "../utils/UserFacingError";
-import { assertGameAccess } from "./game";
 import { assertDeckAccess } from "./deck";
+import { assertGameAccess } from "./game";
 
 export type CardService = ReturnType<typeof createCardService>;
 
 export function createCardService() {
   return t.router({
     create: t.procedure
-      .input(z.object({ name: z.string(), deckId: gameType.shape.id }))
+      .input(cardType.pick({ name: true, deckId: true, gameId: true }))
       .output(cardType)
-      .use((opts) => assertGameAccess(opts, opts.input.deckId))
+      .use((opts) => assertDeckAccess(opts, opts.input.deckId))
       .mutation(({ input: data, ctx }) => ctx.db.card.create({ data })),
     read: t.procedure
       .input(cardType.shape.id)
@@ -46,7 +46,7 @@ export function createCardService() {
     list: t.procedure
       .input(createFilterType(z.object({ deckId: gameType.shape.id })))
       .output(createResultType(cardType))
-      .use((opts) => assertGameAccess(opts, opts.input.filter.deckId))
+      .use((opts) => assertDeckAccess(opts, opts.input.filter.deckId))
       .query(
         async ({
           input: {
@@ -73,7 +73,8 @@ export async function assertCardAccess<Input>(
 ) {
   const card = await opts.ctx.db.card.findUnique({
     where: { id },
-    select: { deckId: true },
+    select: { gameId: true },
   });
-  return assertDeckAccess(opts, card?.deckId);
+  console.log("assertCardAccess", { card });
+  return assertGameAccess(opts, card?.gameId);
 }
