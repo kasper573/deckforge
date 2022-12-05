@@ -1,7 +1,14 @@
 import { resetData } from "../support/actions/common";
 import { register } from "../support/actions/user";
 import { createGame, gotoGame, gotoGameList } from "../support/actions/game";
-import { createDeck, gotoDeck, gotoDeckList } from "../support/actions/deck";
+import { createDeck, gotoDeckList } from "../support/actions/deck";
+import {
+  clickCardAction,
+  createCard,
+  findCardItem,
+  findCardList,
+  gotoCardList,
+} from "../support/actions/card";
 
 const gameName = "Test Game";
 const deckName = "Test Deck";
@@ -18,7 +25,7 @@ before(() => {
 
 beforeEach(() => {
   resetData("card");
-  gotoCardList();
+  gotoCardList(gameName, deckName);
 });
 
 describe("card", () => {
@@ -38,7 +45,7 @@ describe("card", () => {
       .clear()
       .type("Renamed");
     gotoGame(gameName);
-    gotoCardList();
+    gotoCardList(gameName, deckName);
     findCardItem("Renamed").should("exist");
   });
 
@@ -51,29 +58,3 @@ describe("card", () => {
     findCardItem("To be deleted").should("not.exist");
   });
 });
-
-function gotoCardList() {
-  gotoDeck(gameName, deckName);
-}
-
-function findCardList() {
-  return cy.findByRole("list", { name: /cards/i });
-}
-
-function findCardItem(name: string) {
-  return findCardList().findByRole("listitem", { name });
-}
-
-function clickCardAction(cardName: string, actionName: RegExp) {
-  findCardItem(cardName).within(() =>
-    cy.findByRole(/button|link/, { name: actionName }).click()
-  );
-}
-
-function createCard(name: string) {
-  cy.findByRole("button", { name: /new card/i }).click();
-  cy.findByRole("dialog").within(() => {
-    cy.findByRole("textbox", { name: /name/i }).type(name);
-    cy.findByRole("form").submit();
-  });
-}
