@@ -6,7 +6,7 @@ import {
   createDeck,
   findDeckItem,
   findDeckList,
-  selectDeckList,
+  gotoDeckList,
 } from "../support/actions/deck";
 
 const gameName = "Deck Test Game";
@@ -20,7 +20,7 @@ before(() => {
 
 beforeEach(() => {
   resetData("deck");
-  selectDeckList(gameName);
+  gotoDeckList(gameName);
 });
 
 describe("deck", () => {
@@ -40,7 +40,7 @@ describe("deck", () => {
       .clear()
       .type("Renamed");
     gotoGame(gameName);
-    selectDeckList(gameName);
+    gotoDeckList(gameName);
     findDeckItem("Renamed").should("exist");
   });
 

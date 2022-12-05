@@ -1,6 +1,11 @@
 import { gotoGame } from "./game";
 
-export function selectDeckList(gameName: string) {
+export function gotoDeck(gameName: string, deckName: string) {
+  gotoDeckList(gameName);
+  clickDeckAction(deckName, /edit/i);
+}
+
+export function gotoDeckList(gameName: string) {
   gotoGame(gameName);
   cy.findByRole("link", { name: /decks/i }).click();
 }
