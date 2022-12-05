@@ -27,5 +27,5 @@ function isModel(value: unknown) {
 
 if (require.main === module) {
   const modelName = process.argv[2]?.trim();
-  reset(modelName ? [modelName] : undefined);
+  reset(modelName ? modelName.split(",").map((s) => s.trim()) : undefined);
 }
