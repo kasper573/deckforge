@@ -14,6 +14,15 @@ const schema = z.object({
   serverLogs: z.array(serverLogType).default([]),
   exposeInternalErrors: zodBooleanish.default(false),
   jwtSecret: z.string(),
+  seed: z
+    .object({
+      adminUser: z.object({
+        name: z.string(),
+        email: z.string().email(),
+        password: z.string(),
+      }),
+    })
+    .optional(),
 });
 
 export const env = schema.parse({
@@ -24,4 +33,11 @@ export const env = schema.parse({
   environment: process.env.NODE_ENV,
   exposeInternalErrors: process.env.EXPOSE_INTERNAL_ERRORS,
   jwtSecret: process.env.AUTH_SECRET,
+  seed: {
+    adminUser: {
+      name: process.env.SEED_ADMIN_NAME,
+      email: process.env.SEED_ADMIN_EMAIL,
+      password: process.env.SEED_ADMIN_PASSWORD,
+    },
+  },
 });

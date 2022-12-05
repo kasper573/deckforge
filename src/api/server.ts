@@ -11,7 +11,7 @@ import { createDeckService } from "./services/deck";
 export function createServer() {
   const server = express();
   const db = createDatabaseClient();
-  const auth = createAuthenticator({ jwtSecret: env.jwtSecret });
+  const auth = createAuthenticator();
   const router = createApiRouter({
     game: createGameService(),
     user: createUserService(auth),

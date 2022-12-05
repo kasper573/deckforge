@@ -1,11 +1,24 @@
 import { createDatabaseClient } from "../src/api/db";
+import { createAuthenticator } from "../src/api/services/user/authenticator";
+import { env } from "../src/api/env";
+import { roleToAccessLevel } from "../src/api/services/user/types";
 
-export async function seed(client = createDatabaseClient()) {
+export async function seed(
+  client = createDatabaseClient(),
+  { createPasswordHash } = createAuthenticator()
+) {
   try {
-    // NOTE: this can be removed when real seeds are added
-    client.user.create({
-      data: { email: "seed@seed.com", passwordHash: "1234", name: "seed" },
-    });
+    if (env.seed) {
+      const { name, email, password } = env.seed.adminUser;
+      await client.user.create({
+        data: {
+          accessLevel: roleToAccessLevel("Admin"),
+          name,
+          email,
+          passwordHash: await createPasswordHash(password),
+        },
+      });
+    }
   } catch (e) {
     console.error(e);
     process.exit(1);

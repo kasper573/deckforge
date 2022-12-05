@@ -2,20 +2,16 @@ import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
 import type express from "express";
 import { TRPCError } from "@trpc/server";
+import { env } from "../../env";
 import type { JWTUser } from "./types";
 import { badTokenMessage } from "./constants";
 
-export function createAuthenticator({
-  jwtSecret,
-  jwtLifetime = 24 * 60 * 60,
-  jwtAlgorithms = ["HS256"],
-  hashSaltRounds = 10,
-}: {
-  jwtSecret: string;
-  jwtLifetime?: number;
-  jwtAlgorithms?: jwt.Algorithm[];
-  hashSaltRounds?: number;
-}) {
+export function createAuthenticator() {
+  const jwtSecret = env.jwtSecret;
+  const jwtLifetime = 24 * 60 * 60;
+  const jwtAlgorithms = ["HS256" as const];
+  const hashSaltRounds = 10;
+
   function sign(payload: JWTUser) {
     return jwt.sign(payload, jwtSecret, { expiresIn: jwtLifetime });
   }
