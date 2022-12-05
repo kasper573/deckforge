@@ -1,17 +1,19 @@
 import { resetData } from "../support/actions/common";
 import { register } from "../support/actions/user";
-import { createAndEditGame } from "../support/actions/game";
+import { createGame, gotoGame, gotoGameList } from "../support/actions/game";
 
+const gameName = "Deck Test Game";
 before(() => {
   cy.visit("/");
   resetData("user");
   register("deckTester", "foobarfoobar", "deck@testers.com");
+  gotoGameList();
+  createGame(gameName);
 });
 
 beforeEach(() => {
   resetData("deck");
-  createAndEditGame("Deck Test Game");
-  gotoDeckList();
+  selectDeckList();
 });
 
 describe("deck", () => {
@@ -30,7 +32,8 @@ describe("deck", () => {
     cy.findByRole("textbox", { name: /deck name/i })
       .clear()
       .type("Renamed");
-    gotoDeckList();
+    gotoGame(gameName);
+    selectDeckList();
     findDeckItem("Renamed").should("exist");
   });
 
@@ -44,7 +47,8 @@ describe("deck", () => {
   });
 });
 
-function gotoDeckList() {
+function selectDeckList() {
+  gotoGame(gameName);
   cy.findByRole("link", { name: /decks/i }).click();
 }
 

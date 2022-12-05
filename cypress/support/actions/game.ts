@@ -4,9 +4,8 @@ export function gotoGameList() {
   clickMainMenuOption(/build/i);
 }
 
-export function createAndEditGame(gameName: string) {
+export function gotoGame(gameName: string) {
   gotoGameList();
-  createGame(gameName);
   clickGameAction(gameName, /edit/i);
 }
 
