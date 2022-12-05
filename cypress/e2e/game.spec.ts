@@ -10,6 +10,7 @@ import {
 
 before(() => {
   cy.visit("/");
+  resetData("user");
   register("gameTester", "foobarfoobar", "game@testers.com");
 });
 
