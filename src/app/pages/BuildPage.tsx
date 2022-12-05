@@ -7,7 +7,7 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import type { Game } from "@prisma/client";
 import { PromptDialog } from "../dialogs/PromptDialog";
-import { useDialog } from "../../lib/useDialog";
+import { useModal } from "../../lib/useModal";
 import { router } from "../router";
 import { LinkIconButton } from "../components/Link";
 import { Page } from "../layout/Page";
@@ -19,7 +19,7 @@ import { ConfirmDialog } from "../dialogs/ConfirmDialog";
 export default function BuildPage() {
   const gameList = trpc.game.myGameList.useQuery({ offset: 0, limit: 10 });
   const createGame = trpc.game.create.useMutation();
-  const prompt = useDialog(PromptDialog);
+  const prompt = useModal(PromptDialog);
 
   async function enterNameAndCreateGame() {
     const name = await prompt({
@@ -55,7 +55,7 @@ export default function BuildPage() {
 }
 
 function GameListItem({ id, name }: Pick<Game, "id" | "name">) {
-  const confirm = useDialog(ConfirmDialog);
+  const confirm = useModal(ConfirmDialog);
   const deleteGame = trpc.game.delete.useMutation();
 
   async function confirmDelete() {

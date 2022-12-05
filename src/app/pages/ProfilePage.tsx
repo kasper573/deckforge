@@ -1,9 +1,6 @@
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
 import { Page } from "../layout/Page";
 import { useForm } from "../hooks/useForm";
 import { updateProfilePayloadType } from "../../api/services/user/types";
@@ -11,19 +8,16 @@ import { trpc } from "../trpc";
 import { Center } from "../components/Center";
 import { Header } from "../layout/Header";
 import { ProgressButton } from "../components/ProgressButton";
+import { useModal } from "../../lib/useModal";
+import { Toast } from "../components/Toast";
 
 export default function ProfilePage() {
-  const [isToastOpen, setIsToastOpen] = useState(false);
-  const [toast, setToast] = useState<string>();
   const { data: defaultValues } = trpc.user.profile.useQuery();
   const form = useForm(updateProfilePayloadType, { defaultValues });
   const updateProfile = trpc.user.updateProfile.useMutation();
+  const showToast = useModal(Toast);
   const { submit, error } = form.useMutation(updateProfile, {
-    onSubmit: () => setIsToastOpen(false),
-    onSuccess: () => {
-      setIsToastOpen(true);
-      setToast("Profile updated");
-    },
+    onSuccess: () => showToast({ content: "Profile updated!" }),
   });
 
   return (
@@ -62,13 +56,6 @@ export default function ProfilePage() {
           </Stack>
         </form>
       </Center>
-      <Snackbar
-        open={isToastOpen}
-        autoHideDuration={6000}
-        onClose={() => setIsToastOpen(false)}
-      >
-        <Alert severity="success">{toast}</Alert>
-      </Snackbar>
     </Page>
   );
 }

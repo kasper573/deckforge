@@ -10,7 +10,7 @@ import { Router } from "react-router";
 import { RouterSwitch } from "react-typesafe-routes";
 import type { History } from "history";
 import type { ApiRouter } from "../api/router";
-import { DialogOutlet } from "../lib/useDialog";
+import { ModalOutlet } from "../lib/useModal";
 import { Layout } from "./layout/Layout";
 import { trpc } from "./trpc";
 import { router } from "./router";
@@ -48,7 +48,7 @@ export function App({
                     <RouterSwitch router={router} />
                   </ErrorBoundary>
                 </Layout>
-                <DialogOutlet />
+                <ModalOutlet />
               </ThemeProvider>
             </Router>
           </QueryClientProvider>
