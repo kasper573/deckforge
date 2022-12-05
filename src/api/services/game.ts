@@ -41,7 +41,7 @@ export function createGameService() {
         }
         return game;
       }),
-    myGameList: t.procedure
+    list: t.procedure
       .input(filterType)
       .use(access())
       .output(createResultType(gameType))
