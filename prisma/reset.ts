@@ -1,5 +1,4 @@
 import { createDatabaseClient } from "../src/api/db";
-import { seed } from "./seed";
 
 export async function reset(modelNames?: string[]) {
   const client = createDatabaseClient();
@@ -17,8 +16,6 @@ export async function reset(modelNames?: string[]) {
   } finally {
     await client.$disconnect();
   }
-
-  await seed(client);
 }
 
 function isModel(value: unknown) {
