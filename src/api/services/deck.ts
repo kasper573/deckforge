@@ -67,11 +67,14 @@ export function createDeckService() {
 
 export async function assertDeckAccess<Input>(
   opts: MiddlewareOptions,
-  id: Deck["id"]
+  id?: Deck["id"]
 ) {
-  const deck = await opts.ctx.db.deck.findUnique({
-    where: { id },
-    select: { gameId: true },
-  });
+  const deck =
+    id !== undefined
+      ? await opts.ctx.db.deck.findUnique({
+          where: { id },
+          select: { gameId: true },
+        })
+      : undefined;
   return assertGameAccess(opts, deck?.gameId);
 }

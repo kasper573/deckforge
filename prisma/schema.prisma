@@ -37,7 +37,7 @@ model Game {
   name      String
   ownerId   String
   owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  Deck      Deck[]
+  decks     Deck[]
 }
 
 model Deck {
@@ -47,5 +47,14 @@ model Deck {
   name      String
   gameId    String
   game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  cards     Card[]
 }
 
+model Card {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  deckId    String
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+}

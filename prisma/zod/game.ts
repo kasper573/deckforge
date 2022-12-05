@@ -11,7 +11,7 @@ export const gameType = z.object({
 
 export interface CompleteGame extends z.infer<typeof gameType> {
   owner: CompleteUser
-  Deck: CompleteDeck[]
+  decks: CompleteDeck[]
 }
 
 /**
@@ -21,5 +21,5 @@ export interface CompleteGame extends z.infer<typeof gameType> {
  */
 export const relatedGameType: z.ZodSchema<CompleteGame> = z.lazy(() => gameType.extend({
   owner: relatedUserType,
-  Deck: relatedDeckType.array(),
+  decks: relatedDeckType.array(),
 }))
