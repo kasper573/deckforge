@@ -8,9 +8,6 @@ export const entityType = z.object({
   name: z.string(),
 });
 
-export const propertyMutationType = propertyType.pick({
-  gameId: true,
-  entityId: true,
-  name: true,
-  typeName: true,
-});
+export const propertyTypeNameType = z.enum(["string", "number", "boolean"]);
+
+export const propertyMutationPayloadType = propertyType;

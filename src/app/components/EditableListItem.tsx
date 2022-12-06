@@ -5,11 +5,15 @@ import { Delete, Edit } from "./icons";
 
 export interface EditableListItemProps extends ComponentProps<typeof ListItem> {
   readOnly?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export function EditableListItem({
   readOnly,
   sx,
+  onEdit,
+  onDelete,
   ...props
 }: EditableListItemProps) {
   return (
@@ -17,10 +21,10 @@ export function EditableListItem({
       secondaryAction={
         !readOnly && (
           <>
-            <IconButton aria-label="edit">
+            <IconButton aria-label="edit" onClick={onEdit}>
               <Edit />
             </IconButton>
-            <IconButton edge="end" aria-label="delete">
+            <IconButton edge="end" aria-label="delete" onClick={onDelete}>
               <Delete />
             </IconButton>
           </>

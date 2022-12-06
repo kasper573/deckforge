@@ -5,7 +5,7 @@ import { t } from "../../trpc";
 import { createFilterType, createResultType } from "../../utils/search";
 import { gameType, propertyType } from "../../../../prisma/zod";
 import { assertGameAccess } from "../game";
-import { entityType, propertyMutationType } from "./types";
+import { entityType, propertyMutationPayloadType } from "./types";
 
 export type EntityService = ReturnType<typeof createEntityService>;
 
@@ -19,12 +19,12 @@ export function createEntityService() {
         { entityId: "card", name: "Card", gameId },
       ]),
     createProperty: t.procedure
-      .input(propertyMutationType)
+      .input(propertyMutationPayloadType.omit({ propertyId: true }))
       .output(propertyType)
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
       .mutation(({ input: data, ctx }) => ctx.db.property.create({ data })),
     updateProperty: t.procedure
-      .input(propertyMutationType.and(propertyType.pick({ propertyId: true })))
+      .input(propertyMutationPayloadType)
       .use((opts) => assertPropertyAccess(opts, opts.input.propertyId))
       .mutation(async ({ input: { propertyId, ...data }, ctx }) => {
         await ctx.db.property.update({
@@ -40,7 +40,7 @@ export function createEntityService() {
       }),
     listProperties: t.procedure
       .input(
-        createFilterType(propertyType.pick({ gameId: true, typeName: true }))
+        createFilterType(propertyType.pick({ entityId: true, gameId: true }))
       )
       .output(createResultType(propertyType))
       .use((opts) => assertGameAccess(opts, opts.input.filter.gameId))
