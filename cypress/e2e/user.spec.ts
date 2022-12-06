@@ -80,4 +80,13 @@ describe("two different users", () => {
     signIn(user2.name, user2.password);
     assertSignedIn(user2.name);
   });
+
+  it("can only access their own profile data", () => {
+    cy.visit("/");
+    signIn(user1.name, user1.password);
+    assertProfile({ email: user1.email });
+    signOut();
+    signIn(user2.name, user2.password);
+    assertProfile({ email: user2.email });
+  });
 });
