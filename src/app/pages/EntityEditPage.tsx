@@ -65,7 +65,10 @@ export default function EntityEditPage() {
                 confirmDelete({
                   subject: "property",
                   name: property.name,
-                }).then(() => deleteProperty.mutate(property.propertyId))
+                }).then(
+                  (confirmed) =>
+                    confirmed && deleteProperty.mutate(property.propertyId)
+                )
               }
             >
               <ListItemText primary={property.name} secondary={property.type} />
