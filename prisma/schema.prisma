@@ -31,14 +31,15 @@ model User {
 }
 
 model Game {
-  gameId    String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  gameId    String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   name      String
   ownerId   String
-  owner     User     @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
+  owner     User       @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
   decks     Deck[]
   cards     Card[]
+  Property  Property[]
 }
 
 model Deck {
@@ -52,12 +53,32 @@ model Deck {
 }
 
 model Card {
-  cardId    String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String
-  gameId    String
-  game      Game     @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
-  deckId    String
-  deck      Deck     @relation(fields: [deckId], references: [deckId], onDelete: Cascade)
+  cardId           String                @id @default(cuid())
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  name             String
+  gameId           String
+  game             Game                  @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
+  deckId           String
+  deck             Deck                  @relation(fields: [deckId], references: [deckId], onDelete: Cascade)
+  propertyDefaults CardPropertyDefault[]
+}
+
+model CardPropertyDefault {
+  propertyDefaultId String   @id @default(cuid())
+  value             Json
+  cardId            String
+  card              Card     @relation(fields: [cardId], references: [cardId], onDelete: Cascade)
+  propertyId        String
+  property          Property @relation(fields: [propertyId], references: [propertyId], onDelete: Cascade)
+}
+
+model Property {
+  propertyId   String                @id @default(cuid())
+  name         String
+  typeName     String
+  entityId     String
+  gameId       String
+  game         Game                  @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
+  cardDefaults CardPropertyDefault[]
 }
