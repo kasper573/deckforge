@@ -1,10 +1,19 @@
 import { z } from "zod";
 import { createPropertyMatchRefiner } from "../../../lib/zod-extensions/zodRefiner";
-import { userType } from "../../../../prisma/zod/user";
 
 export function roleToAccessLevel(role: UserRole): number {
   return userRoleType._def.values.indexOf(role);
 }
+
+export const userType = z.object({
+  userId: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  name: z.string(),
+  email: z.string(),
+  passwordHash: z.string(),
+  accessLevel: z.number().int(),
+});
 
 export type UserRole = z.infer<typeof userRoleType>;
 export const userRoleType = z.enum(["Guest", "User", "Admin"]);
