@@ -46,9 +46,9 @@ export function App({
                     onError={console.error}
                   >
                     <RouterSwitch router={router} />
+                    <ModalOutlet />
                   </ErrorBoundary>
                 </Layout>
-                <ModalOutlet />
               </ThemeProvider>
             </Router>
           </QueryClientProvider>
