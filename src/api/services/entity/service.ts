@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { createFilterType, createResultType } from "../../utils/search";
-import { propertyType } from "../../../../prisma/zod";
+import { gameType, propertyType } from "../../../../prisma/zod";
 import { assertGameAccess } from "../game";
 import { entityType, propertyMutationType } from "./types";
 
@@ -11,10 +11,13 @@ export type EntityService = ReturnType<typeof createEntityService>;
 
 export function createEntityService() {
   return t.router({
-    listEntities: t.procedure.output(z.array(entityType)).query(() => [
-      { entityId: "player", name: "Player" },
-      { entityId: "card", name: "Card" },
-    ]),
+    listEntities: t.procedure
+      .input(gameType.pick({ gameId: true }))
+      .output(z.array(entityType))
+      .query(({ input: { gameId } }) => [
+        { entityId: "player", name: "Player", gameId },
+        { entityId: "card", name: "Card", gameId },
+      ]),
     createProperty: t.procedure
       .input(propertyMutationType)
       .output(propertyType)
