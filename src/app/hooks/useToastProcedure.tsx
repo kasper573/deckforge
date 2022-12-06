@@ -1,12 +1,13 @@
 import { TRPCClientError } from "@trpc/client";
 import type { inferProcedureOutput } from "@trpc/server";
+import type { ReactNode } from "react";
 import { useModal } from "../../lib/useModal";
 import { Toast } from "../components/Toast";
 import type { ApiRouter } from "../../api/router";
 
 interface UseToastMutationOptions<Response> {
-  success?: (response: Response) => string | undefined;
-  error?: (error: TRPCClientError<ApiRouter>) => string | undefined;
+  success?: (response: Response) => ReactNode | undefined;
+  error?: (error: TRPCClientError<ApiRouter>) => ReactNode | undefined;
 }
 
 type ReactMutationProcedureLike<Input, Response> = {
@@ -51,5 +52,19 @@ export function useToastMutation<Input, Response>(
 const defaultSuccessParser = (response: unknown) =>
   typeof response === "string" ? response : undefined;
 
-const defaultErrorParser = (response: TRPCClientError<ApiRouter>) =>
-  response.message;
+const defaultErrorParser = (response: TRPCClientError<ApiRouter>) => {
+  if (response.data?.zodError) {
+    return (
+      <>
+        {Object.entries(response.data.zodError.fieldErrors).map(
+          ([path, messages = []]) => (
+            <div>
+              {path}: {messages.join(", ")}
+            </div>
+          )
+        )}
+      </>
+    );
+  }
+  return response.message;
+};
