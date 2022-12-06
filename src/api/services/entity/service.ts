@@ -35,9 +35,9 @@ export function createEntityService() {
     deleteProperty: t.procedure
       .input(propertyType.shape.propertyId)
       .use((opts) => assertPropertyAccess(opts, opts.input))
-      .mutation(async ({ input: propertyId, ctx }) => {
-        await ctx.db.property.delete({ where: { propertyId } });
-      }),
+      .mutation(async ({ input: propertyId, ctx }) =>
+        ctx.db.property.delete({ where: { propertyId } })
+      ),
     listProperties: t.procedure
       .input(
         createFilterType(propertyType.pick({ entityId: true, gameId: true }))
