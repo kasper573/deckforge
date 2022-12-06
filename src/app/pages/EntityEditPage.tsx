@@ -24,7 +24,7 @@ import {
 } from "../../api/services/entity/types";
 import { Select } from "../controls/Select";
 import { DeleteDialog } from "../dialogs/DeleteDialog";
-import { useToastProcedure } from "../hooks/useToastProcedure";
+import { useToastMutation } from "../hooks/useToastMutation";
 
 export default function EntityEditPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -37,9 +37,9 @@ export default function EntityEditPage() {
     limit: 10,
   });
 
-  const createProperty = useToastProcedure(trpc.entity.createProperty);
-  const updateProperty = useToastProcedure(trpc.entity.updateProperty);
-  const deleteProperty = useToastProcedure(trpc.entity.deleteProperty);
+  const createProperty = useToastMutation(trpc.entity.createProperty);
+  const updateProperty = useToastMutation(trpc.entity.updateProperty);
+  const deleteProperty = useToastMutation(trpc.entity.deleteProperty);
   const showPropertyDialog = useModal(PropertyFormDialog);
   const confirmDelete = useModal(DeleteDialog);
 

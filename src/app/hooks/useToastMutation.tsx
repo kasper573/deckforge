@@ -5,7 +5,7 @@ import { useModal } from "../../lib/useModal";
 import { Toast } from "../components/Toast";
 import type { ApiRouter } from "../../api/router";
 
-interface UseToastMutationOptions<Response> {
+export interface UseToastMutationOptions<Response> {
   success?: (response: Response) => ReactNode | undefined;
   error?: (error: TRPCClientError<ApiRouter>) => ReactNode | undefined;
 }
@@ -14,19 +14,19 @@ type ReactMutationProcedureLike<Input, Response> = {
   useMutation: () => { mutateAsync: (input: Input) => Promise<Response> };
 };
 
-export function useToastProcedure<Input, Response>(
+export function useToastMutation<Input, Response>(
   procedure: ReactMutationProcedureLike<Input, Response>,
   options?: UseToastMutationOptions<inferProcedureOutput<Response>>
 ) {
   const { mutateAsync, ...rest } = procedure.useMutation();
-  const mutateAsyncWithToast = useToastMutation<Input, Response>(
+  const mutateAsyncWithToast = useToastMutationImpl<Input, Response>(
     mutateAsync,
     options
   );
   return { mutate: mutateAsyncWithToast, ...rest };
 }
 
-export function useToastMutation<Input, Response>(
+function useToastMutationImpl<Input, Response>(
   mutate: (input: Input) => Promise<Response>,
   {
     success = defaultSuccessParser,

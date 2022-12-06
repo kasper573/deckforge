@@ -8,12 +8,12 @@ import { Page } from "../layout/Page";
 import { router } from "../router";
 import { trpc } from "../trpc";
 import { TextField } from "../controls/TextField";
-import { useToastProcedure } from "../hooks/useToastProcedure";
+import { useToastMutation } from "../hooks/useToastMutation";
 
 export default function GameEditPage() {
   const { gameId } = useRouteParams(router.build().game);
   const game = trpc.game.read.useQuery(gameId);
-  const renameGame = useToastProcedure(trpc.game.rename);
+  const renameGame = useToastMutation(trpc.game.rename);
 
   return (
     <Page>
