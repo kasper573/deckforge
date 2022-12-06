@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { gameType } from "../../../../prisma/zod/game";
+import { gameType } from "../game/types";
 
 export const propertyType = z.object({
   propertyId: z.string(),

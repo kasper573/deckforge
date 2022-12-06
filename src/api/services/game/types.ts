@@ -1,4 +1,4 @@
-import * as z from "zod"
+import { z } from "zod";
 
 export const gameType = z.object({
   gameId: z.string(),
@@ -6,4 +6,4 @@ export const gameType = z.object({
   updatedAt: z.date(),
   name: z.string(),
   ownerId: z.string(),
-})
+});

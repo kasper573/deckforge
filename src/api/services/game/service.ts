@@ -4,8 +4,8 @@ import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { access } from "../../middlewares/access";
 import { createFilterType, createResultType } from "../../utils/search";
-import { gameType } from "../../../../prisma/zod/game";
 import { UserFacingError } from "../../utils/UserFacingError";
+import { gameType } from "./types";
 
 export type GameService = ReturnType<typeof createGameService>;
 
