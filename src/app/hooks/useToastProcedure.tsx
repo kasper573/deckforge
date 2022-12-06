@@ -58,7 +58,7 @@ const defaultErrorParser = (response: TRPCClientError<ApiRouter>) => {
       <>
         {Object.entries(response.data.zodError.fieldErrors).map(
           ([path, messages = []]) => (
-            <div>
+            <div key={path}>
               {path}: {messages.join(", ")}
             </div>
           )
