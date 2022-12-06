@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { gameType, propertyType } from "../../../../prisma/zod";
+import { gameType } from "../../../../prisma/zod/game";
+import { propertyType } from "../../../../prisma/zod/property";
 
 export type Entity = z.infer<typeof entityType>;
 export const entityType = z.object({

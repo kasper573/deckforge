@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createPropertyMatchRefiner } from "../../../lib/zod-extensions/zodRefiner";
-import { userType } from "../../../../prisma/zod";
+import { userType } from "../../../../prisma/zod/user";
 
 export function roleToAccessLevel(role: UserRole): number {
   return userRoleType._def.values.indexOf(role);

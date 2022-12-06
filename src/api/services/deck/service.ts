@@ -2,7 +2,8 @@ import type { Deck } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { createFilterType, createResultType } from "../../utils/search";
-import { deckType, gameType } from "../../../../prisma/zod";
+import { gameType } from "../../../../prisma/zod/game";
+import { deckType } from "../../../../prisma/zod/deck";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { assertGameAccess } from "../game/service";
 
