@@ -65,6 +65,9 @@ const defaultErrorParser = (response: TRPCClientError<ApiRouter>) => {
   if (response.data?.zodError) {
     return (
       <>
+        {response.data.zodError.formErrors.map((message, index) => (
+          <div key={`form-error-${index}`}>{message}</div>
+        ))}
         {Object.entries(response.data.zodError.fieldErrors).map(
           ([path, messages = []]) => (
             <div key={path}>
