@@ -8,6 +8,7 @@ import { createGameService } from "./services/game";
 import { createUserService } from "./services/user/service";
 import { createDeckService } from "./services/deck";
 import { createCardService } from "./services/card";
+import { createEntityService } from "./services/entity/service";
 
 export function createServer() {
   const server = express();
@@ -18,6 +19,7 @@ export function createServer() {
     user: createUserService(auth),
     deck: createDeckService(),
     card: createCardService(),
+    entity: createEntityService(),
   });
 
   server.use(
