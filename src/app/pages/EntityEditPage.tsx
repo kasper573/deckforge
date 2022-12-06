@@ -10,7 +10,6 @@ import DialogActions from "@mui/material/DialogActions";
 import Dialog from "@mui/material/Dialog";
 import TextField from "@mui/material/TextField";
 import type { z } from "zod";
-import type { Property } from "@prisma/client";
 import { Header } from "../components/Header";
 import { Page } from "../layout/Page";
 import { router } from "../router";
@@ -24,7 +23,7 @@ import {
   propertyTypeType,
 } from "../../api/services/entity/types";
 import { Select } from "../controls/Select";
-import { ConfirmDialog } from "../dialogs/ConfirmDialog";
+import { DeleteDialog } from "../dialogs/DeleteDialog";
 
 export default function EntityEditPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -36,32 +35,11 @@ export default function EntityEditPage() {
     offset: 0,
     limit: 10,
   });
-  const createProperty = trpc.entity.createProperty.useMutation();
-  const updateProperty = trpc.entity.updateProperty.useMutation();
-  const deleteProperty = trpc.entity.deleteProperty.useMutation();
+  const createProperty = trpc.entity.createProperty.useMutation().mutate;
+  const updateProperty = trpc.entity.updateProperty.useMutation().mutate;
+  const deleteProperty = trpc.entity.deleteProperty.useMutation().mutate;
   const showPropertyDialog = useModal(PropertyFormDialog);
-  const confirm = useModal(ConfirmDialog);
-
-  async function openDialogAndMutateProperty(editedProperty?: Property) {
-    const formPayload = await showPropertyDialog(editedProperty);
-    if (formPayload) {
-      if (editedProperty) {
-        updateProperty.mutate({ ...editedProperty, ...formPayload });
-      } else {
-        createProperty.mutate({ gameId, entityId, ...formPayload });
-      }
-    }
-  }
-
-  async function confirmDelete({ propertyId, name }: Property) {
-    const shouldDelete = await confirm({
-      title: "Delete property",
-      content: `Are you sure you want to delete "${name}". This action cannot be reversed.`,
-    });
-    if (shouldDelete) {
-      deleteProperty.mutate(propertyId);
-    }
-  }
+  const confirmDelete = useModal(DeleteDialog);
 
   return (
     <Page>
@@ -74,8 +52,18 @@ export default function EntityEditPage() {
             <EditableListItem
               aria-label={property.name}
               key={property.propertyId}
-              onEdit={() => openDialogAndMutateProperty(property)}
-              onDelete={() => confirmDelete(property)}
+              onEdit={() =>
+                showPropertyDialog(property).then(
+                  (changes) =>
+                    changes && updateProperty({ ...property, ...changes })
+                )
+              }
+              onDelete={() =>
+                confirmDelete({
+                  subject: "property",
+                  name: property.name,
+                }).then(() => deleteProperty(property.propertyId))
+              }
             >
               <ListItemText primary={property.name} secondary={property.type} />
             </EditableListItem>
@@ -87,7 +75,15 @@ export default function EntityEditPage() {
           )}
         </List>
       </Paper>
-      <Button variant="contained" onClick={() => openDialogAndMutateProperty()}>
+      <Button
+        variant="contained"
+        onClick={() =>
+          showPropertyDialog().then(
+            (payload) =>
+              payload && createProperty({ gameId, entityId, ...payload })
+          )
+        }
+      >
         Create new property
       </Button>
     </Page>
