@@ -8,6 +8,7 @@ import { Page } from "../layout/Page";
 import { router } from "../router";
 import { TextField } from "../controls/TextField";
 import { trpc } from "../trpc";
+import { useToastProcedure } from "../hooks/useToastProcedure";
 
 export default function CardEditPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -18,7 +19,7 @@ export default function CardEditPage() {
     router.build().game({ gameId }).deck().edit({ deckId }).card
   );
   const { data: card } = trpc.card.read.useQuery(cardId);
-  const renameCard = trpc.card.rename.useMutation();
+  const renameCard = useToastProcedure(trpc.card.rename);
   return (
     <Page>
       <Header>

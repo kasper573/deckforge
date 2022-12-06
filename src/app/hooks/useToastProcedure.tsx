@@ -18,8 +18,12 @@ export function useToastProcedure<Input, Response>(
   procedure: ReactMutationProcedureLike<Input, Response>,
   options?: UseToastMutationOptions<inferProcedureOutput<Response>>
 ) {
-  const { mutateAsync } = procedure.useMutation();
-  return useToastMutation<Input, Response>(mutateAsync, options);
+  const { mutateAsync, ...rest } = procedure.useMutation();
+  const mutateAsyncWithToast = useToastMutation<Input, Response>(
+    mutateAsync,
+    options
+  );
+  return { mutate: mutateAsyncWithToast, ...rest };
 }
 
 export function useToastMutation<Input, Response>(

@@ -18,6 +18,7 @@ import { trpc } from "../trpc";
 import { useModal } from "../../lib/useModal";
 import { PromptDialog } from "../dialogs/PromptDialog";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
+import { useToastProcedure } from "../hooks/useToastProcedure";
 
 export default function DeckEditPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -25,7 +26,7 @@ export default function DeckEditPage() {
     router.build().game({ gameId }).deck().edit
   );
   const { data: deck } = trpc.deck.read.useQuery(deckId);
-  const renameDeck = trpc.deck.rename.useMutation();
+  const renameDeck = useToastProcedure(trpc.deck.rename);
 
   const { data: cards } = trpc.card.list.useQuery({
     filter: { deckId },
@@ -33,10 +34,10 @@ export default function DeckEditPage() {
     limit: 10,
   });
 
-  const createCard = trpc.card.create.useMutation();
+  const createCard = useToastProcedure(trpc.card.create);
   const prompt = useModal(PromptDialog);
 
-  async function enterNameAndCreateDeck() {
+  async function enterNameAndCreateCard() {
     const name = await prompt({
       title: "Create new card",
       fieldProps: { label: "Card name" },
@@ -74,7 +75,7 @@ export default function DeckEditPage() {
           )}
         </List>
       </Paper>
-      <Button variant="contained" onClick={enterNameAndCreateDeck}>
+      <Button variant="contained" onClick={enterNameAndCreateCard}>
         Create new card
       </Button>
     </Page>
@@ -83,7 +84,7 @@ export default function DeckEditPage() {
 
 export function CardListItem({ gameId, deckId, cardId, name }: Card) {
   const confirm = useModal(ConfirmDialog);
-  const deleteCard = trpc.card.delete.useMutation();
+  const deleteCard = useToastProcedure(trpc.card.delete);
 
   async function confirmDelete() {
     const shouldDelete = await confirm({

@@ -57,14 +57,15 @@ export default function EntityEditPage() {
               onEdit={() =>
                 showPropertyDialog(property).then(
                   (changes) =>
-                    changes && updateProperty({ ...property, ...changes })
+                    changes &&
+                    updateProperty.mutate({ ...property, ...changes })
                 )
               }
               onDelete={() =>
                 confirmDelete({
                   subject: "property",
                   name: property.name,
-                }).then(() => deleteProperty(property.propertyId))
+                }).then(() => deleteProperty.mutate(property.propertyId))
               }
             >
               <ListItemText primary={property.name} secondary={property.type} />
@@ -82,7 +83,7 @@ export default function EntityEditPage() {
         onClick={() =>
           showPropertyDialog().then(
             (payload) =>
-              payload && createProperty({ gameId, entityId, ...payload })
+              payload && createProperty.mutate({ gameId, entityId, ...payload })
           )
         }
       >

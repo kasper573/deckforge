@@ -15,10 +15,11 @@ import { Header } from "../components/Header";
 import { Delete, Edit, Play } from "../components/icons";
 import { trpc } from "../trpc";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
+import { useToastProcedure } from "../hooks/useToastProcedure";
 
 export default function BuildPage() {
   const gameList = trpc.game.list.useQuery({ offset: 0, limit: 10 });
-  const createGame = trpc.game.create.useMutation();
+  const createGame = useToastProcedure(trpc.game.create);
   const prompt = useModal(PromptDialog);
 
   async function enterNameAndCreateGame() {
@@ -56,7 +57,7 @@ export default function BuildPage() {
 
 function GameListItem({ gameId, name }: Game) {
   const confirm = useModal(ConfirmDialog);
-  const deleteGame = trpc.game.delete.useMutation();
+  const deleteGame = useToastProcedure(trpc.game.delete);
 
   async function confirmDelete() {
     const shouldDelete = await confirm({
