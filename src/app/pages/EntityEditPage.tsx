@@ -77,10 +77,7 @@ export default function EntityEditPage() {
               onEdit={() => openDialogAndMutateProperty(property)}
               onDelete={() => confirmDelete(property)}
             >
-              <ListItemText
-                primary={property.name}
-                secondary={property.typeName}
-              />
+              <ListItemText primary={property.name} secondary={property.type} />
             </EditableListItem>
           ))}
           {properties?.total === 0 && (
@@ -99,7 +96,7 @@ export default function EntityEditPage() {
 
 const propertyFormDialogSchema = propertyMutationPayloadType.pick({
   name: true,
-  typeName: true,
+  type: true,
 });
 
 type PropertyFormDialogProps = ModalProps<
@@ -113,7 +110,7 @@ function PropertyFormDialog({
   input: editedProperty,
 }: PropertyFormDialogProps) {
   const form = useForm(propertyFormDialogSchema, {
-    defaultValues: editedProperty ?? { typeName: "number" },
+    defaultValues: editedProperty ?? { type: "Number" },
   });
   const submit = form.handleSubmit(resolve);
   const cancel = () => resolve(undefined);
@@ -126,7 +123,7 @@ function PropertyFormDialog({
         <DialogContent>
           <TextField {...form.register("name")} size="small" label="Name" />
           <Select
-            {...form.register("typeName")}
+            {...form.register("type")}
             label="Type"
             options={propertyTypeNameType._def.values}
           />

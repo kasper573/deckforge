@@ -66,9 +66,15 @@ model CardPropertyDefault {
 model Property {
   propertyId   String                @id @default(cuid())
   name         String
-  typeName     String
+  type         PropertyType
   entityId     String
   gameId       String
   game         Game                  @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
   cardDefaults CardPropertyDefault[]
+}
+
+enum PropertyType {
+  String
+  Number
+  Boolean
 }

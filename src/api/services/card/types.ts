@@ -1,6 +1,8 @@
 import * as z from "zod";
+import type { Card } from "@prisma/client";
+import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 
-export const cardType = z.object({
+export const cardType = z.object<ZodShapeFor<Card>>({
   cardId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),

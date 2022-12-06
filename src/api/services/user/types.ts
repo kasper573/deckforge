@@ -1,5 +1,7 @@
 import { z } from "zod";
+import type { User } from "@prisma/client";
 import { createPropertyMatchRefiner } from "../../../lib/zod-extensions/zodRefiner";
+import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 
 export function roleToAccessLevel(role: UserRole): number {
   return userRoleType._def.values.indexOf(role);
@@ -8,7 +10,7 @@ export function roleToAccessLevel(role: UserRole): number {
 export const usernameType = z.string().min(6).max(12);
 export const passwordType = z.string().min(12).max(36);
 
-export const userType = z.object({
+export const userType = z.object<ZodShapeFor<User>>({
   userId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
