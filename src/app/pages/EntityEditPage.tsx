@@ -69,9 +69,10 @@ export default function EntityEditPage() {
         Game: {gameId}, Entity: {entityId}
       </Header>
       <Paper sx={{ mb: 3 }}>
-        <List dense>
+        <List dense aria-label="Properties">
           {properties?.entities.map((property) => (
             <EditableListItem
+              aria-label={property.name}
               key={property.propertyId}
               onEdit={() => openDialogAndMutateProperty(property)}
               onDelete={() => confirmDelete(property)}
@@ -124,13 +125,11 @@ function PropertyFormDialog({
         </DialogTitle>
         <DialogContent>
           <TextField {...form.register("name")} size="small" label="Name" />
-          <Select {...form.register("typeName")}>
-            {propertyTypeNameType._def.values.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </Select>
+          <Select
+            {...form.register("typeName")}
+            label="Type"
+            options={propertyTypeNameType._def.values}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={cancel}>Cancel</Button>
