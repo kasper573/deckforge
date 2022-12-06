@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserHistory } from "history";
-import { inject } from "@vercel/analytics";
 import { App } from "./App";
 import { createQueryClient, createTRPCClient } from "./trpc";
 import { createTheme } from "./theme";
@@ -11,12 +10,14 @@ import {
   setupAuthBehavior,
 } from "./features/auth/store";
 import { env } from "./env";
-import { sendWebVitals } from "./webVitals";
 
 if (env.analyticsId) {
-  inject();
+  import("@vercel/analytics").then(({ inject }) => inject());
   if (env.webVitalsUrl) {
-    sendWebVitals({ url: env.webVitalsUrl, dsn: env.analyticsId });
+    import("./webVitals").then(({ sendWebVitals }) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      sendWebVitals({ url: env.webVitalsUrl!, dsn: env.analyticsId! });
+    });
   }
 }
 
