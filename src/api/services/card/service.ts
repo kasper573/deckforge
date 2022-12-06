@@ -3,7 +3,7 @@ import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { createFilterType, createResultType } from "../../utils/search";
 import { cardType } from "../../../../prisma/zod/card";
-import { deckType } from "../../../../prisma/zod/deck";
+import { deckType } from "../deck/types";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { assertDeckAccess } from "../deck/service";
 import { assertGameAccess } from "../game/service";
