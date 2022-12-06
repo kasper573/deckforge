@@ -1,11 +1,11 @@
 import { z } from "zod";
 import type { Game } from "@prisma/client";
-import type { MiddlewareOptions } from "../trpc";
-import { t } from "../trpc";
-import { access } from "../middlewares/access";
-import { createFilterType, createResultType } from "../utils/search";
-import { gameType } from "../../../prisma/zod";
-import { UserFacingError } from "../utils/UserFacingError";
+import type { MiddlewareOptions } from "../../trpc";
+import { t } from "../../trpc";
+import { access } from "../../middlewares/access";
+import { createFilterType, createResultType } from "../../utils/search";
+import { gameType } from "../../../../prisma/zod";
+import { UserFacingError } from "../../utils/UserFacingError";
 
 export type GameService = ReturnType<typeof createGameService>;
 

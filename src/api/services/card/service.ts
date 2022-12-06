@@ -1,11 +1,11 @@
 import type { Card } from "@prisma/client";
-import type { MiddlewareOptions } from "../trpc";
-import { t } from "../trpc";
-import { createFilterType, createResultType } from "../utils/search";
-import { cardType, deckType } from "../../../prisma/zod";
-import { UserFacingError } from "../utils/UserFacingError";
-import { assertDeckAccess } from "./deck";
-import { assertGameAccess } from "./game";
+import type { MiddlewareOptions } from "../../trpc";
+import { t } from "../../trpc";
+import { createFilterType, createResultType } from "../../utils/search";
+import { cardType, deckType } from "../../../../prisma/zod";
+import { UserFacingError } from "../../utils/UserFacingError";
+import { assertDeckAccess } from "../deck/service";
+import { assertGameAccess } from "../game/service";
 
 export type CardService = ReturnType<typeof createCardService>;
 

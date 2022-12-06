@@ -4,7 +4,7 @@ import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { createFilterType, createResultType } from "../../utils/search";
 import { gameType, propertyType } from "../../../../prisma/zod";
-import { assertGameAccess } from "../game";
+import { assertGameAccess } from "../game/service";
 import { entityType, propertyMutationPayloadType } from "./types";
 
 export type EntityService = ReturnType<typeof createEntityService>;

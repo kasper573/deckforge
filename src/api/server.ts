@@ -4,10 +4,10 @@ import { createApiRouter } from "./router";
 import { createDatabaseClient } from "./db";
 import { env } from "./env";
 import { createAuthenticator } from "./services/user/authenticator";
-import { createGameService } from "./services/game";
+import { createGameService } from "./services/game/service";
 import { createUserService } from "./services/user/service";
-import { createDeckService } from "./services/deck";
-import { createCardService } from "./services/card";
+import { createDeckService } from "./services/deck/service";
+import { createCardService } from "./services/card/service";
 import { createEntityService } from "./services/entity/service";
 
 export function createServer() {
