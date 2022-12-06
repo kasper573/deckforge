@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useModal } from "../../lib/useModal";
 import { Toast } from "../components/Toast";
 import type { ApiRouter } from "../../api/router";
+import type { AnyFormMutation } from "./useForm";
 
 export interface UseToastMutationOptions<Response> {
   success?: (response: Response) => ReactNode | undefined;
@@ -11,19 +12,23 @@ export interface UseToastMutationOptions<Response> {
 }
 
 type ReactMutationProcedureLike<Input, Response> = {
-  useMutation: () => { mutateAsync: (input: Input) => Promise<Response> };
+  useMutation: () => AnyFormMutation<Input, Response>;
 };
 
 export function useToastMutation<Input, Response>(
   procedure: ReactMutationProcedureLike<Input, Response>,
   options?: UseToastMutationOptions<inferProcedureOutput<Response>>
 ) {
-  const { mutateAsync, ...rest } = procedure.useMutation();
+  const { mutateAsync, mutate, ...rest } = procedure.useMutation();
   const mutateAsyncWithToast = useToastMutationImpl<Input, Response>(
     mutateAsync,
     options
   );
-  return { mutate: mutateAsyncWithToast, ...rest };
+  return {
+    ...rest,
+    mutateAsync: mutateAsyncWithToast as typeof mutateAsync,
+    mutate: mutateAsyncWithToast as typeof mutate,
+  };
 }
 
 function useToastMutationImpl<Input, Response>(

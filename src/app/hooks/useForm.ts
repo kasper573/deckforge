@@ -125,8 +125,12 @@ function generalMutationError(mutation: AnyFormMutation) {
     : undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyFormMutation<Payload = any, Response = any> = UseTRPCMutationResult<
+export type AnyFormMutation<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Payload = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Response = any
+> = UseTRPCMutationResult<
   Response,
   TRPCClientErrorLike<ApiRouter>,
   Payload,
