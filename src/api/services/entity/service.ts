@@ -3,10 +3,9 @@ import { z } from "zod";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { createFilterType, createResultType } from "../../utils/search";
-import { propertyType } from "../../../../prisma/zod/property";
 import { gameType } from "../../../../prisma/zod/game";
 import { assertGameAccess } from "../game/service";
-import { entityType, propertyMutationPayloadType } from "./types";
+import { entityType, propertyMutationPayloadType, propertyType } from "./types";
 
 export type EntityService = ReturnType<typeof createEntityService>;
 
