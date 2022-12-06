@@ -10,12 +10,12 @@ export const entityType = z.object({
   name: z.string().min(1).max(32),
 });
 
-export const propertyTypeNameType = z.enum(["String", "Number", "Boolean"]);
+export const propertyTypeType = z.enum(["string", "number", "boolean"]);
 
 export const propertyType = z.object<ZodShapeFor<Property>>({
   propertyId: z.string(),
   name: z.string().min(1).max(32),
-  type: propertyTypeNameType,
+  type: propertyTypeType,
   entityId: entityType.shape.entityId,
   gameId: z.string(),
 });

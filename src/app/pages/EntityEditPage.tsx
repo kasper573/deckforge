@@ -21,7 +21,7 @@ import { useModal } from "../../lib/useModal";
 import { useForm } from "../hooks/useForm";
 import {
   propertyMutationPayloadType,
-  propertyTypeNameType,
+  propertyTypeType,
 } from "../../api/services/entity/types";
 import { Select } from "../controls/Select";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
@@ -110,7 +110,7 @@ function PropertyFormDialog({
   input: editedProperty,
 }: PropertyFormDialogProps) {
   const form = useForm(propertyFormDialogSchema, {
-    defaultValues: editedProperty ?? { type: "Number" },
+    defaultValues: editedProperty ?? { type: "number" },
   });
   const submit = form.handleSubmit(resolve);
   const cancel = () => resolve(undefined);
@@ -125,7 +125,7 @@ function PropertyFormDialog({
           <Select
             {...form.register("type")}
             label="Type"
-            options={propertyTypeNameType._def.values}
+            options={propertyTypeType._def.values}
           />
         </DialogContent>
         <DialogActions>
