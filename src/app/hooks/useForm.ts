@@ -6,7 +6,7 @@ import get from "lodash.get";
 import type { UseTRPCMutationResult } from "@trpc/react-query/shared";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import { TRPCClientError } from "@trpc/client";
-import type { FieldPath } from "react-hook-form";
+import type { FieldPath, DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ZodString } from "zod";
 import type { ApiRouter } from "../../api/router";
@@ -18,7 +18,7 @@ import { normalizeType } from "../../lib/zod-extensions/zodNormalize";
  */
 export function useForm<T extends ZodType>(
   schema: T,
-  formOptions: { defaultValues?: z.infer<T> } = {}
+  formOptions: { defaultValues?: DefaultValues<z.infer<T>> } = {}
 ) {
   const form = useRHF<z.infer<T>>({
     resolver: zodResolver(schema),
