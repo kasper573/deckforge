@@ -5,12 +5,15 @@ export function roleToAccessLevel(role: UserRole): number {
   return userRoleType._def.values.indexOf(role);
 }
 
+export const usernameType = z.string().min(6).max(12);
+export const passwordType = z.string().min(12).max(36);
+
 export const userType = z.object({
   userId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  name: z.string(),
-  email: z.string(),
+  name: usernameType,
+  email: z.string().email(),
   passwordHash: z.string(),
   accessLevel: z.number().int(),
 });
@@ -23,9 +26,6 @@ const passwordMatcher = createPropertyMatchRefiner(
   "passwordConfirm",
   "Passwords do not match"
 );
-
-export const usernameType = z.string().min(6).max(12);
-export const passwordType = z.string().min(12).max(36);
 
 export type UserProfile = z.infer<typeof userProfileType>;
 export const userProfileType = userType.pick({ name: true, email: true });
