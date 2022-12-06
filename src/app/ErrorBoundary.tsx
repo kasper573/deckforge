@@ -11,21 +11,11 @@ import { Center } from "./components/Center";
 /**
  * Display the given error in a safe way. Should never be able to crash the app.
  */
-export function PlainErrorFallback({
-  error,
-  resetErrorBoundary,
-}: FallbackProps) {
-  const history = useHistory();
+export function PlainErrorFallback({ error }: FallbackProps) {
   const message =
     error instanceof TRPCClientError
       ? error.message
       : "Oops, something went wrong";
-
-  // Error boundary must be reset when navigating
-  useEffect(
-    () => history.listen(resetErrorBoundary),
-    [history, resetErrorBoundary]
-  );
 
   return (
     <>
@@ -41,6 +31,13 @@ export function PlainErrorFallback({
  * Displays the error in a pretty UI. If this fails to render it will fall back to the plain version.
  */
 export function PrettyErrorFallback(props: FallbackProps) {
+  // Error boundary must be reset when navigating
+  const { resetErrorBoundary } = props;
+  const history = useHistory();
+  useEffect(
+    () => history.listen(resetErrorBoundary),
+    [history, resetErrorBoundary]
+  );
   return (
     <>
       <Page>
