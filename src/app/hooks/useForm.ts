@@ -1,7 +1,7 @@
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useForm as useRHF } from "react-hook-form";
 import type { z, ZodType } from "zod";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import get from "lodash.get";
 import type { UseTRPCMutationResult } from "@trpc/react-query/shared";
 import type { TRPCClientErrorLike } from "@trpc/client";
@@ -18,16 +18,20 @@ import { normalizeType } from "../../lib/zod-extensions/zodNormalize";
  */
 export function useForm<T extends ZodType>(
   schema: T,
-  formOptions: { defaultValues?: DefaultValues<z.infer<T>> } = {}
+  { defaultValues }: { defaultValues?: DefaultValues<z.infer<T>> } = {}
 ) {
   const form = useRHF<z.infer<T>>({
     resolver: zodResolver(schema),
-    ...formOptions,
+    defaultValues,
   });
+
   const {
     register,
     formState: { errors },
+    reset,
   } = form;
+
+  useEffect(() => reset(defaultValues), [defaultValues, reset]);
 
   const useMutation = <Response>(
     mutation: AnyFormMutation<z.infer<T>, Response>,
