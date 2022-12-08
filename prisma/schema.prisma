@@ -43,34 +43,24 @@ model Deck {
 }
 
 model Card {
-  cardId           String                @id @default(cuid())
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
+  cardId           String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
   name             String
   gameId           String
-  game             Game                  @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
+  game             Game     @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
   deckId           String
-  deck             Deck                  @relation(fields: [deckId], references: [deckId], onDelete: Cascade)
-  propertyDefaults CardPropertyDefault[]
-}
-
-model CardPropertyDefault {
-  propertyDefaultId String   @id @default(cuid())
-  value             Json
-  cardId            String
-  card              Card     @relation(fields: [cardId], references: [cardId], onDelete: Cascade)
-  propertyId        String
-  property          Property @relation(fields: [propertyId], references: [propertyId], onDelete: Cascade)
+  deck             Deck     @relation(fields: [deckId], references: [deckId], onDelete: Cascade)
+  propertyDefaults Json
 }
 
 model Property {
-  propertyId   String                @id @default(cuid())
-  name         String
-  type         PropertyType
-  entityId     String
-  gameId       String
-  game         Game                  @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
-  cardDefaults CardPropertyDefault[]
+  propertyId String       @id @default(cuid())
+  name       String
+  type       PropertyType
+  entityId   String
+  gameId     String
+  game       Game         @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
 }
 
 enum PropertyType {

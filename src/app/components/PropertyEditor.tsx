@@ -8,9 +8,10 @@ import List from "@mui/material/List";
 import produce from "immer";
 import type { PropertyRecord } from "../../api/services/entity/types";
 
-type PropertyValues<T extends PropertyRecord> = {
-  [K in keyof T]?: ControlValue<T[K]["type"]>;
-};
+export type PropertiesEditorValues<T extends PropertyRecord = PropertyRecord> =
+  {
+    [K in keyof T]?: ControlValue<T[K]["type"]>;
+  };
 
 export function PropertiesEditor<Properties extends PropertyRecord>({
   properties,
@@ -18,8 +19,8 @@ export function PropertiesEditor<Properties extends PropertyRecord>({
   onChange,
 }: {
   properties: Properties;
-  values: PropertyValues<Properties>;
-  onChange: (updated: PropertyValues<Properties>) => void;
+  values: PropertiesEditorValues<Properties>;
+  onChange: (updated: PropertiesEditorValues<Properties>) => void;
 }) {
   return (
     <List>
@@ -33,7 +34,7 @@ export function PropertiesEditor<Properties extends PropertyRecord>({
             value={values[name]}
             onChange={(newValue) =>
               onChange(
-                produce(values, (draft: PropertyValues<Properties>) => {
+                produce(values, (draft: PropertiesEditorValues<Properties>) => {
                   draft[name] = newValue;
                 })
               )

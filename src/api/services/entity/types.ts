@@ -27,3 +27,8 @@ export type PropertyRecord = z.infer<typeof propertyRecordType>;
 export const propertyRecordType = z.record(propertyType.omit({ name: true }));
 
 export const propertyMutationPayloadType = propertyType;
+
+export const propertyFilterType = propertyType.pick({
+  entityId: true,
+  gameId: true,
+});

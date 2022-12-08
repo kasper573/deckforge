@@ -1,4 +1,5 @@
 import type { Card } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { createFilterType, createResultType } from "../../utils/search";
@@ -6,7 +7,7 @@ import { deckType } from "../deck/types";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { assertDeckAccess } from "../deck/service";
 import { assertGameAccess } from "../game/service";
-import { cardType } from "./types";
+import { cardMutationPayloadType, cardType } from "./types";
 
 export type CardService = ReturnType<typeof createCardService>;
 
@@ -16,7 +17,9 @@ export function createCardService() {
       .input(cardType.pick({ name: true, deckId: true, gameId: true }))
       .output(cardType)
       .use((opts) => assertDeckAccess(opts, opts.input.deckId))
-      .mutation(({ input: data, ctx }) => ctx.db.card.create({ data })),
+      .mutation(({ input: data, ctx }) =>
+        ctx.db.card.create({ data: { ...data, propertyDefaults: {} } })
+      ),
     read: t.procedure
       .input(cardType.shape.cardId)
       .output(cardType)
@@ -28,15 +31,20 @@ export function createCardService() {
         }
         return card;
       }),
-    rename: t.procedure
-      .input(cardType.pick({ cardId: true, name: true }))
+    update: t.procedure
+      .input(cardMutationPayloadType)
       .use((opts) => assertCardAccess(opts, opts.input.cardId))
-      .mutation(async ({ input: { cardId, name }, ctx }) => {
-        await ctx.db.card.update({
-          where: { cardId },
-          data: { name },
-        });
-      }),
+      .mutation(
+        async ({ input: { cardId, propertyDefaults, ...changes }, ctx }) => {
+          await ctx.db.card.update({
+            where: { cardId },
+            data: {
+              ...changes,
+              propertyDefaults: propertyDefaults as Prisma.JsonObject,
+            },
+          });
+        }
+      ),
     delete: t.procedure
       .input(cardType.shape.cardId)
       .use((opts) => assertCardAccess(opts, opts.input))

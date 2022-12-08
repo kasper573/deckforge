@@ -54,11 +54,6 @@ export function createEntityService() {
           {} as PropertyRecord
         );
       }),
-    propertyDefault: t.procedure
-      .input(propertyType.pick({ propertyId: true }))
-      .query(({ input: { propertyId }, ctx: { db } }) => {
-        db.cardPropertyDefault.findFirstOrThrow({ where: { propertyId } });
-      }),
   });
 }
 
