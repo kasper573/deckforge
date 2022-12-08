@@ -1,10 +1,14 @@
+import { ZodType } from "zod";
 import { z } from "zod";
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { EntityId } from "@prisma/client";
 import type { Property } from "@prisma/client";
 import { gameType } from "../game/types";
-import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
+import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+import type { NominalString } from "../../../lib/NominalString";
+import { jsonPrimitiveType } from "../../utils/zodJson";
 
-export type EntityId = z.infer<typeof entityIdType>;
-export const entityIdType = z.union([z.literal("player"), z.literal("card")]);
+export const entityIdType = z.enum(["player", "card"]) satisfies ZodType<EntityId>;
 
 export type Entity = z.infer<typeof entityType>;
 export const entityType = z.object({
@@ -15,8 +19,11 @@ export const entityType = z.object({
 
 export const propertyTypeType = z.enum(["string", "number", "boolean"]);
 
-export const propertyType = z.object<ZodShapeFor<Property>>({
-  propertyId: z.string(),
+export type PropertyId = NominalString<"PropertyId">;
+export const propertyIdType = zodNominalString<PropertyId>();
+
+export const propertyType = z.object({
+  propertyId: propertyIdType,
   name: z.string().min(1).max(32),
   type: propertyTypeType,
   entityId: entityType.shape.entityId,
@@ -32,3 +39,16 @@ export const propertyFilterType = propertyType.pick({
   entityId: true,
   gameId: true,
 });
+
+export type PropertyValues = z.infer<typeof propertyValuesType>;
+export const propertyValuesType = z.record(propertyIdType, jsonPrimitiveType);
+
+export const assertRuntimeProperty = (
+  card: Property
+): z.infer<typeof propertyType> => {
+  const { propertyId, ...rest } = card;
+  return {
+    ...rest,
+    propertyId: propertyId as PropertyId,
+  };
+};

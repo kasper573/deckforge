@@ -2,7 +2,6 @@ import Stack from "@mui/material/Stack";
 import { useRouteParams } from "react-typesafe-routes";
 import { Header } from "../components/Header";
 import { CodeEditor } from "../components/CodeEditor";
-import type { PropertiesEditorValues } from "../components/PropertyEditor";
 import { PropertiesEditor } from "../components/PropertyEditor";
 import { SideMenu } from "../components/SideMenu";
 import { Page } from "../layout/Page";
@@ -41,7 +40,7 @@ export default function CardEditPage() {
           {properties && (
             <PropertiesEditor
               properties={properties}
-              values={(card?.propertyDefaults ?? {}) as PropertiesEditorValues}
+              values={card?.propertyDefaults ?? {}}
               onChange={(propertyDefaults) =>
                 updateCard.mutate({ cardId, propertyDefaults })
               }

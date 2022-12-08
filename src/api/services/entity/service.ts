@@ -6,6 +6,7 @@ import { assertGameAccess } from "../game/service";
 import { gameType } from "../game/types";
 import type { PropertyRecord } from "./types";
 import {
+  assertRuntimeProperty,
   entityType,
   propertyMutationPayloadType,
   propertyRecordType,
@@ -25,9 +26,10 @@ export function createEntityService() {
       ]),
     createProperty: t.procedure
       .input(propertyMutationPayloadType.omit({ propertyId: true }))
-      .output(propertyType)
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
-      .mutation(({ input: data, ctx }) => ctx.db.property.create({ data })),
+      .mutation(async ({ input: data, ctx }) => {
+        await ctx.db.property.create({ data });
+      }),
     updateProperty: t.procedure
       .input(propertyMutationPayloadType)
       .use((opts) => assertPropertyAccess(opts, opts.input.propertyId))
@@ -50,7 +52,10 @@ export function createEntityService() {
       .query(async ({ input: where, ctx: { db } }) => {
         const properties = await db.property.findMany({ where });
         return properties.reduce(
-          (record, prop) => ({ ...record, [prop.name]: prop }),
+          (record, prop) => ({
+            ...record,
+            [prop.name]: assertRuntimeProperty(prop),
+          }),
           {} as PropertyRecord
         );
       }),

@@ -58,7 +58,7 @@ model Property {
   propertyId String       @id @default(cuid())
   name       String
   type       PropertyType
-  entityId   String
+  entityId   EntityId
   gameId     String
   game       Game         @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
 }
@@ -67,4 +67,9 @@ enum PropertyType {
   string
   number
   boolean
+}
+
+enum EntityId {
+  card
+  player
 }

@@ -6,37 +6,34 @@ import type { ComponentType, HTMLAttributes } from "react";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import List from "@mui/material/List";
 import produce from "immer";
-import type { PropertyRecord } from "../../api/services/entity/types";
+import type {
+  PropertyRecord,
+  PropertyValues,
+} from "../../api/services/entity/types";
 import { useDebouncedControl } from "../hooks/useDebouncedControl";
 
-export type PropertiesEditorValues<T extends PropertyRecord = PropertyRecord> =
-  {
-    [K in keyof T]?: ControlValue<T[K]["type"]>;
-  };
-
-export function PropertiesEditor<Properties extends PropertyRecord>({
+export function PropertiesEditor({
   properties,
   values,
   onChange,
 }: {
-  properties: Properties;
-  values: PropertiesEditorValues<Properties>;
-  onChange: (updated: PropertiesEditorValues<Properties>) => void;
+  properties: PropertyRecord;
+  values: PropertyValues;
+  onChange: (updated: PropertyValues) => void;
 }) {
   return (
     <List>
-      {Object.entries(properties).map(([unsafeName, { propertyId, type }]) => {
-        const name = unsafeName as keyof Properties;
+      {Object.entries(properties).map(([name, { propertyId, type }]) => {
         return (
           <PropertyEditor
             key={propertyId}
             type={type}
-            name={name as string}
-            value={values[name]}
+            name={name}
+            value={values[propertyId]}
             onChange={(newValue) =>
               onChange(
-                produce(values, (draft: PropertiesEditorValues<Properties>) => {
-                  draft[name] = newValue;
+                produce(values, (draft) => {
+                  draft[propertyId] = newValue;
                 })
               )
             }

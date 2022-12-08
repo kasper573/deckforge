@@ -1,6 +1,5 @@
 import { v4 } from "uuid";
-
-type NominalString<Token extends string> = `NominalString[${Token}]`;
+import type { NominalString } from "../NominalString";
 
 export type Id<Name extends string = string> = NominalString<Name>;
 

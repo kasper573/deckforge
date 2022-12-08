@@ -1,18 +1,26 @@
 import * as z from "zod";
 import type { Card } from "@prisma/client";
-import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
-import { jsonObjectType } from "../../utils/zodJson";
+import type { PropertyValues } from "../entity/types";
+import { propertyValuesType } from "../entity/types";
 
-export const cardType = z.object<ZodShapeFor<Card>>({
+export const cardType = z.object({
   cardId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
   name: z.string().min(1).max(32),
   gameId: z.string(),
   deckId: z.string(),
-  propertyDefaults: jsonObjectType,
+  propertyDefaults: propertyValuesType,
 });
 
 export const cardMutationPayloadType = cardType
   .pick({ cardId: true })
   .and(cardType.pick({ name: true, propertyDefaults: true }).partial());
+
+export const assertRuntimeCard = (card: Card): z.infer<typeof cardType> => {
+  const { propertyDefaults, ...rest } = card;
+  return {
+    ...rest,
+    propertyDefaults: propertyDefaults as PropertyValues,
+  };
+};

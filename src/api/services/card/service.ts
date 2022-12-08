@@ -7,7 +7,7 @@ import { deckType } from "../deck/types";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { assertDeckAccess } from "../deck/service";
 import { assertGameAccess } from "../game/service";
-import { cardMutationPayloadType, cardType } from "./types";
+import { assertRuntimeCard, cardMutationPayloadType, cardType } from "./types";
 
 export type CardService = ReturnType<typeof createCardService>;
 
@@ -15,11 +15,10 @@ export function createCardService() {
   return t.router({
     create: t.procedure
       .input(cardType.pick({ name: true, deckId: true, gameId: true }))
-      .output(cardType)
       .use((opts) => assertDeckAccess(opts, opts.input.deckId))
-      .mutation(({ input: data, ctx }) =>
-        ctx.db.card.create({ data: { ...data, propertyDefaults: {} } })
-      ),
+      .mutation(async ({ input: data, ctx }) => {
+        await ctx.db.card.create({ data: { ...data, propertyDefaults: {} } });
+      }),
     read: t.procedure
       .input(cardType.shape.cardId)
       .output(cardType)
@@ -29,7 +28,7 @@ export function createCardService() {
         if (!card) {
           throw new UserFacingError("Card not found");
         }
-        return card;
+        return assertRuntimeCard(card);
       }),
     update: t.procedure
       .input(cardMutationPayloadType)
@@ -69,7 +68,7 @@ export function createCardService() {
             db.card.count({ where }),
             db.card.findMany({ take: limit, skip: offset, where }),
           ]);
-          return { total, entities };
+          return { total, entities: entities.map(assertRuntimeCard) };
         }
       ),
   });
