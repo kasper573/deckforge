@@ -26,7 +26,7 @@ export function Layout({ children }: { children?: ReactNode }) {
 
   return (
     <>
-      <AppBar position="fixed">
+      <AppBar aria-label="header" position="fixed">
         <Toolbar disableGutters>
           <Container maxWidth={pageMaxWidth} sx={{ display: "flex" }}>
             <ToolbarContent>

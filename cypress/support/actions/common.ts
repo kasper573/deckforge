@@ -10,8 +10,8 @@ export function clickMainMenuOption(name: ElementFilter) {
 }
 
 function ensureMainMenuVisible() {
-  cy.get("body").then(($body) => {
-    const [menuTrigger] = $body.find(`button[aria-label="Show main menu"]`);
+  cy.findByRole("banner", {name: /header/i}).then((header) => {
+    const [menuTrigger] = header.find(`button[aria-label="Show main menu"]`);
     if (menuTrigger) {
       menuTrigger.click();
     }
