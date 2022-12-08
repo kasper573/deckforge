@@ -49,7 +49,9 @@ export function createCardService() {
             where: { cardId },
             data: {
               ...changes,
-              propertyDefaults: propertyParser.parse(propertyDefaults),
+              propertyDefaults: propertyDefaults
+                ? propertyParser.parse(propertyDefaults)
+                : undefined,
             },
           });
         }
