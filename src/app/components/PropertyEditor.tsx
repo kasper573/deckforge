@@ -90,7 +90,7 @@ const controls: Record<PropertyType, Control<any>> = {
       label={label}
       control={
         <Checkbox
-          checked={value}
+          checked={!!value}
           onChange={(e) => onChange(e.target.checked)}
         />
       }
