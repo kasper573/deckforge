@@ -7,6 +7,7 @@ import { deckType } from "../deck/types";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { assertDeckAccess } from "../deck/service";
 import { assertGameAccess } from "../game/service";
+import { defaultsForProperties } from "../entity/types";
 import { assertRuntimeCard, cardMutationPayloadType, cardType } from "./types";
 
 export type CardService = ReturnType<typeof createCardService>;
@@ -16,8 +17,16 @@ export function createCardService() {
     create: t.procedure
       .input(cardType.pick({ name: true, deckId: true, gameId: true }))
       .use((opts) => assertDeckAccess(opts, opts.input.deckId))
-      .mutation(async ({ input: data, ctx }) => {
-        await ctx.db.card.create({ data: { ...data, propertyDefaults: {} } });
+      .mutation(async ({ input: data, ctx: { db } }) => {
+        const properties = await db.property.findMany({
+          where: { entityId: "card" },
+        });
+        await db.card.create({
+          data: {
+            ...data,
+            propertyDefaults: defaultsForProperties(properties),
+          },
+        });
       }),
     read: t.procedure
       .input(cardType.shape.cardId)

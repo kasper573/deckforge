@@ -23,9 +23,6 @@ export const propertyValueTypes = {
   boolean: z.boolean().default(false),
 };
 
-export const defaultPropertyValue = <T extends PropertyType>(type: T) =>
-  propertyValueTypes[type]._def.defaultValue();
-
 export type PropertyId = NominalString<"PropertyId">;
 export const propertyIdType = zodNominalString<PropertyId>();
 
@@ -59,3 +56,15 @@ export const assertRuntimeProperty = (
     propertyId: propertyId as PropertyId,
   };
 };
+
+export const defaultForPropertyType = <T extends PropertyType>(type: T) =>
+  propertyValueTypes[type]._def.defaultValue();
+
+export const defaultsForProperties = (properties: Property[]) =>
+  properties.reduce(
+    (acc, { propertyId, type }) => ({
+      ...acc,
+      [propertyId]: defaultForPropertyType(type),
+    }),
+    {} as PropertyValues
+  );

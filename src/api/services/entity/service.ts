@@ -8,7 +8,7 @@ import { updateCardPropertyDefaults } from "../card/updateCardPropertyDefaults";
 import type { PropertyRecord } from "./types";
 import {
   assertRuntimeProperty,
-  defaultPropertyValue,
+  defaultForPropertyType,
   entityType,
   propertyMutationPayloadType,
   propertyRecordType,
@@ -42,7 +42,7 @@ export function createEntityService() {
         });
 
         await updateCardPropertyDefaults(db, propertyId, (defaults) => {
-          defaults[propertyId] = defaultPropertyValue(data.type);
+          defaults[propertyId] = defaultForPropertyType(data.type);
         });
       }),
     deleteProperty: t.procedure
