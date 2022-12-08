@@ -23,4 +23,7 @@ export const propertyType = z.object<ZodShapeFor<Property>>({
   gameId: z.string(),
 });
 
+export type PropertyRecord = z.infer<typeof propertyRecordType>;
+export const propertyRecordType = z.record(propertyType.omit({ name: true }));
+
 export const propertyMutationPayloadType = propertyType;

@@ -4,7 +4,13 @@ import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { assertGameAccess } from "../game/service";
 import { gameType } from "../game/types";
-import { entityType, propertyMutationPayloadType, propertyType } from "./types";
+import type { PropertyRecord } from "./types";
+import {
+  entityType,
+  propertyMutationPayloadType,
+  propertyRecordType,
+  propertyType,
+} from "./types";
 
 export type EntityService = ReturnType<typeof createEntityService>;
 
@@ -37,13 +43,22 @@ export function createEntityService() {
       .mutation(async ({ input: propertyId, ctx }) =>
         ctx.db.property.delete({ where: { propertyId } })
       ),
-    listProperties: t.procedure
+    properties: t.procedure
       .input(propertyType.pick({ entityId: true, gameId: true }))
-      .output(z.array(propertyType))
+      .output(propertyRecordType)
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
-      .query(({ input: where, ctx: { db } }) =>
-        db.property.findMany({ where })
-      ),
+      .query(async ({ input: where, ctx: { db } }) => {
+        const properties = await db.property.findMany({ where });
+        return properties.reduce(
+          (record, prop) => ({ ...record, [prop.name]: prop }),
+          {} as PropertyRecord
+        );
+      }),
+    propertyDefault: t.procedure
+      .input(propertyType.pick({ propertyId: true }))
+      .query(({ input: { propertyId }, ctx: { db } }) => {
+        db.cardPropertyDefault.findFirstOrThrow({ where: { propertyId } });
+      }),
   });
 }
 

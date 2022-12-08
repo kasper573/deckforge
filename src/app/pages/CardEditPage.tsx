@@ -1,8 +1,9 @@
 import Stack from "@mui/material/Stack";
 import { useRouteParams } from "react-typesafe-routes";
+import { useState } from "react";
 import { Header } from "../components/Header";
 import { CodeEditor } from "../components/CodeEditor";
-import { PropertyEditor } from "../components/PropertyEditor";
+import { PropertiesEditor } from "../components/PropertyEditor";
 import { SideMenu } from "../components/SideMenu";
 import { Page } from "../layout/Page";
 import { router } from "../router";
@@ -11,6 +12,7 @@ import { trpc } from "../trpc";
 import { useToastMutation } from "../hooks/useToastMutation";
 
 export default function CardEditPage() {
+  const [propertyValues, setPropertyValues] = useState<Record<string, any>>({});
   const { gameId } = useRouteParams(router.build().game);
   const { deckId } = useRouteParams(
     router.build().game({ gameId }).deck().edit
@@ -18,7 +20,7 @@ export default function CardEditPage() {
   const { cardId } = useRouteParams(
     router.build().game({ gameId }).deck().edit({ deckId }).card
   );
-  const { data: properties = [] } = trpc.entity.listProperties.useQuery({
+  const { data: properties } = trpc.entity.properties.useQuery({
     entityId: "card",
     gameId,
   });
@@ -37,7 +39,13 @@ export default function CardEditPage() {
       </Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
         <SideMenu>
-          <PropertyEditor properties={properties} />
+          {properties && (
+            <PropertiesEditor
+              properties={properties}
+              values={propertyValues}
+              onChange={setPropertyValues}
+            />
+          )}
         </SideMenu>
         <CodeEditor sx={{ flex: 1 }} />
       </Stack>

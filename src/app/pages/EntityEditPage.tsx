@@ -31,7 +31,10 @@ export default function EntityEditPage() {
   const { entityId } = useRouteParams(
     router.build().game({ gameId }).entity().edit
   );
-  const properties = trpc.entity.listProperties.useQuery({ gameId, entityId });
+  const properties = trpc.entity.properties.useQuery({ gameId, entityId });
+  const propertyEntries = properties.data
+    ? Object.entries(properties.data)
+    : [];
 
   const createProperty = useToastMutation(trpc.entity.createProperty);
   const updateProperty = useToastMutation(trpc.entity.updateProperty);
@@ -46,12 +49,12 @@ export default function EntityEditPage() {
       </Header>
       <Paper sx={{ mb: 3 }}>
         <List dense aria-label="Properties">
-          {properties.data?.map((property) => (
+          {propertyEntries.map(([name, property]) => (
             <EditableListItem
-              aria-label={property.name}
+              aria-label={name}
               key={property.propertyId}
               onEdit={() =>
-                showPropertyDialog(property).then(
+                showPropertyDialog({ name, ...property }).then(
                   (changes) =>
                     changes &&
                     updateProperty.mutate({ ...property, ...changes })
@@ -60,17 +63,17 @@ export default function EntityEditPage() {
               onDelete={() =>
                 confirmDelete({
                   subject: "property",
-                  name: property.name,
+                  name: name,
                 }).then(
                   (confirmed) =>
                     confirmed && deleteProperty.mutate(property.propertyId)
                 )
               }
             >
-              <ListItemText primary={property.name} secondary={property.type} />
+              <ListItemText primary={name} secondary={property.type} />
             </EditableListItem>
           ))}
-          {properties.data?.length === 0 && (
+          {propertyEntries.length === 0 && (
             <Typography align="center">
               {"This entity contains no properties yet."}
             </Typography>
