@@ -7,6 +7,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import List from "@mui/material/List";
 import produce from "immer";
 import type { PropertyRecord } from "../../api/services/entity/types";
+import { useDebouncedControl } from "../hooks/useDebouncedControl";
 
 export type PropertiesEditorValues<T extends PropertyRecord = PropertyRecord> =
   {
@@ -54,13 +55,19 @@ export function PropertyEditor<T extends PropertyType>({
 }: {
   type: T;
   name: string;
-  value?: ControlValue<T>;
+  value: ControlValue<T>;
   onChange: (newValue: ControlValue<T>) => void;
 }) {
+  const control = useDebouncedControl({ value, onChange });
   const ValueControl = controls[type] as Control<ControlValue<T>>;
+
   return (
     <ListItem>
-      <ValueControl label={name} value={value} onChange={onChange} />
+      <ValueControl
+        label={name}
+        value={control.value}
+        onChange={control.setValue}
+      />
     </ListItem>
   );
 }
