@@ -18,8 +18,13 @@ export default function CardEditPage() {
   const { cardId } = useRouteParams(
     router.build().game({ gameId }).deck().edit({ deckId }).card
   );
+  const { data: properties = [] } = trpc.entity.listProperties.useQuery({
+    entityId: "card",
+    gameId,
+  });
   const { data: card } = trpc.card.read.useQuery(cardId);
   const renameCard = useToastMutation(trpc.card.rename);
+
   return (
     <Page>
       <Header>
@@ -32,7 +37,7 @@ export default function CardEditPage() {
       </Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
         <SideMenu>
-          <PropertyEditor />
+          <PropertyEditor properties={properties} />
         </SideMenu>
         <CodeEditor sx={{ flex: 1 }} />
       </Stack>

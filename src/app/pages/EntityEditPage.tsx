@@ -31,11 +31,7 @@ export default function EntityEditPage() {
   const { entityId } = useRouteParams(
     router.build().game({ gameId }).entity().edit
   );
-  const { data: properties } = trpc.entity.listProperties.useQuery({
-    filter: { gameId, entityId },
-    offset: 0,
-    limit: 10,
-  });
+  const properties = trpc.entity.listProperties.useQuery({ gameId, entityId });
 
   const createProperty = useToastMutation(trpc.entity.createProperty);
   const updateProperty = useToastMutation(trpc.entity.updateProperty);
@@ -50,7 +46,7 @@ export default function EntityEditPage() {
       </Header>
       <Paper sx={{ mb: 3 }}>
         <List dense aria-label="Properties">
-          {properties?.entities.map((property) => (
+          {properties.data?.map((property) => (
             <EditableListItem
               aria-label={property.name}
               key={property.propertyId}
@@ -74,7 +70,7 @@ export default function EntityEditPage() {
               <ListItemText primary={property.name} secondary={property.type} />
             </EditableListItem>
           ))}
-          {properties?.total === 0 && (
+          {properties.data?.length === 0 && (
             <Typography align="center">
               {"This entity contains no properties yet."}
             </Typography>

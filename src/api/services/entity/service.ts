@@ -2,7 +2,6 @@ import type { Property } from "@prisma/client";
 import { z } from "zod";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
-import { createFilterType, createResultType } from "../../utils/search";
 import { assertGameAccess } from "../game/service";
 import { gameType } from "../game/types";
 import { entityType, propertyMutationPayloadType, propertyType } from "./types";
@@ -39,19 +38,11 @@ export function createEntityService() {
         ctx.db.property.delete({ where: { propertyId } })
       ),
     listProperties: t.procedure
-      .input(
-        createFilterType(propertyType.pick({ entityId: true, gameId: true }))
-      )
-      .output(createResultType(propertyType))
-      .use((opts) => assertGameAccess(opts, opts.input.filter.gameId))
-      .query(
-        async ({ input: { filter: where, offset, limit }, ctx: { db } }) => {
-          const [total, entities] = await Promise.all([
-            db.property.count({ where }),
-            db.property.findMany({ take: limit, skip: offset, where }),
-          ]);
-          return { total, entities };
-        }
+      .input(propertyType.pick({ entityId: true, gameId: true }))
+      .output(z.array(propertyType))
+      .use((opts) => assertGameAccess(opts, opts.input.gameId))
+      .query(({ input: where, ctx: { db } }) =>
+        db.property.findMany({ where })
       ),
   });
 }
