@@ -1,14 +1,12 @@
-import { ZodType } from "zod";
 import { z } from "zod";
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { EntityId } from "@prisma/client";
 import type { Property } from "@prisma/client";
+import type { PropertyType } from "@prisma/client";
 import { gameType } from "../game/types";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 import type { NominalString } from "../../../lib/NominalString";
 import { jsonPrimitiveType } from "../../utils/zodJson";
 
-export const entityIdType = z.enum(["player", "card"]) satisfies ZodType<EntityId>;
+export const entityIdType = z.enum(["player", "card"]);
 
 export type Entity = z.infer<typeof entityType>;
 export const entityType = z.object({
@@ -18,6 +16,15 @@ export const entityType = z.object({
 });
 
 export const propertyTypeType = z.enum(["string", "number", "boolean"]);
+
+export const propertyValueTypes = {
+  string: z.string().default(""),
+  number: z.number().default(0),
+  boolean: z.boolean().default(false),
+};
+
+export const defaultPropertyValue = <T extends PropertyType>(type: T) =>
+  propertyValueTypes[type]._def.defaultValue();
 
 export type PropertyId = NominalString<"PropertyId">;
 export const propertyIdType = zodNominalString<PropertyId>();

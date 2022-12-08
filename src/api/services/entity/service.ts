@@ -4,9 +4,11 @@ import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { assertGameAccess } from "../game/service";
 import { gameType } from "../game/types";
+import { updateCardPropertyDefaults } from "../card/updateCardPropertyDefaults";
 import type { PropertyRecord } from "./types";
 import {
   assertRuntimeProperty,
+  defaultPropertyValue,
   entityType,
   propertyMutationPayloadType,
   propertyRecordType,
@@ -33,18 +35,25 @@ export function createEntityService() {
     updateProperty: t.procedure
       .input(propertyMutationPayloadType)
       .use((opts) => assertPropertyAccess(opts, opts.input.propertyId))
-      .mutation(async ({ input: { propertyId, ...data }, ctx }) => {
-        await ctx.db.property.update({
+      .mutation(async ({ input: { propertyId, ...data }, ctx: { db } }) => {
+        await db.property.update({
           where: { propertyId },
           data,
+        });
+
+        await updateCardPropertyDefaults(db, propertyId, (defaults) => {
+          defaults[propertyId] = defaultPropertyValue(data.type);
         });
       }),
     deleteProperty: t.procedure
       .input(propertyType.shape.propertyId)
       .use((opts) => assertPropertyAccess(opts, opts.input))
-      .mutation(async ({ input: propertyId, ctx }) =>
-        ctx.db.property.delete({ where: { propertyId } })
-      ),
+      .mutation(async ({ input: propertyId, ctx: { db } }) => {
+        await db.property.delete({ where: { propertyId } });
+        await updateCardPropertyDefaults(db, propertyId, (defaults) => {
+          delete defaults[propertyId];
+        });
+      }),
     properties: t.procedure
       .input(propertyType.pick({ entityId: true, gameId: true }))
       .output(propertyRecordType)
