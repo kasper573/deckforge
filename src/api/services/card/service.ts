@@ -1,5 +1,4 @@
 import type { Card } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { createFilterType, createResultType } from "../../utils/search";
@@ -7,7 +6,8 @@ import { deckType } from "../deck/types";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { assertDeckAccess } from "../deck/service";
 import { assertGameAccess } from "../game/service";
-import { defaultsForProperties } from "../entity/types";
+import { defaultsForProperties, parserForProperties } from "../entity/types";
+import type { DatabaseClient } from "../../db";
 import { assertRuntimeCard, cardMutationPayloadType, cardType } from "./types";
 
 export type CardService = ReturnType<typeof createCardService>;
@@ -18,13 +18,10 @@ export function createCardService() {
       .input(cardType.pick({ name: true, deckId: true, gameId: true }))
       .use((opts) => assertDeckAccess(opts, opts.input.deckId))
       .mutation(async ({ input: data, ctx: { db } }) => {
-        const properties = await db.property.findMany({
-          where: { entityId: "card" },
-        });
         await db.card.create({
           data: {
             ...data,
-            propertyDefaults: defaultsForProperties(properties),
+            propertyDefaults: defaultsForProperties(await cardProperties(db)),
           },
         });
       }),
@@ -43,12 +40,16 @@ export function createCardService() {
       .input(cardMutationPayloadType)
       .use((opts) => assertCardAccess(opts, opts.input.cardId))
       .mutation(
-        async ({ input: { cardId, propertyDefaults, ...changes }, ctx }) => {
-          await ctx.db.card.update({
+        async ({
+          input: { cardId, propertyDefaults, ...changes },
+          ctx: { db },
+        }) => {
+          const propertyParser = parserForProperties(await cardProperties(db));
+          await db.card.update({
             where: { cardId },
             data: {
               ...changes,
-              propertyDefaults: propertyDefaults as Prisma.JsonObject,
+              propertyDefaults: propertyParser.parse(propertyDefaults),
             },
           });
         }
@@ -82,6 +83,11 @@ export function createCardService() {
       ),
   });
 }
+
+const cardProperties = (db: DatabaseClient) =>
+  db.property.findMany({
+    where: { entityId: "card" },
+  });
 
 export async function assertCardAccess<Input>(
   opts: MiddlewareOptions,

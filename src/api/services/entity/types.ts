@@ -1,6 +1,8 @@
+import type { ZodType } from "zod";
 import { z } from "zod";
 import type { Property } from "@prisma/client";
 import type { PropertyType } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { gameType } from "../game/types";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 import type { NominalString } from "../../../lib/NominalString";
@@ -68,3 +70,14 @@ export const defaultsForProperties = (properties: Property[]) =>
     }),
     {} as PropertyValues
   );
+
+export const parserForProperties = (properties: Property[]) =>
+  z.object(
+    properties.reduce(
+      (acc, { propertyId, type }) => ({
+        ...acc,
+        [propertyId]: propertyValueTypes[type],
+      }),
+      {} as Record<PropertyId, z.ZodTypeAny>
+    )
+  ) as ZodType<Prisma.JsonObject>;
