@@ -63,8 +63,8 @@ describe("card", () => {
   });
 });
 
-describe("properties", () => {
-  const typeNames = ["string", "number", "boolean"];
+describe("card property list", () => {
+  const typeNames = ["string", "number", "boolean"] as const;
   const cardName = "Card With Property";
   const propertyName = (typeName: string) => `${typeName} property`;
 
@@ -80,11 +80,28 @@ describe("properties", () => {
     clickCardAction(cardName, /edit/i);
   });
 
+  const editTests = {
+    string() {
+      cy.findByLabelText("string property").clear().type("foo");
+      cy.findByLabelText("string property").should("have.value", "foo");
+    },
+    number() {
+      cy.findByLabelText("number property").clear().type("123");
+      cy.findByLabelText("number property").should("have.value", "123");
+    },
+    boolean() {
+      cy.findByLabelText("boolean property").check();
+      cy.findByLabelText("boolean property").should("be.checked");
+    },
+  };
+
   for (const typeName of typeNames) {
-    describe(typeName, () => {
-      it("property list can display the property", () => {
+    describe(`${typeName} property`, () => {
+      it("is visible", () => {
         cy.findByLabelText(propertyName(typeName)).should("exist");
       });
+
+      it("can be edited", editTests[typeName]);
     });
   }
 });
