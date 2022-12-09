@@ -1,5 +1,6 @@
 import Stack from "@mui/material/Stack";
 import { useRouteParams } from "react-typesafe-routes";
+import Paper from "@mui/material/Paper";
 import { Header } from "../components/Header";
 import { CodeEditor } from "../components/CodeEditor";
 import { PropertiesEditor } from "../components/PropertyEditor";
@@ -47,7 +48,12 @@ export default function CardEditPage() {
             />
           )}
         </SideMenu>
-        <CodeEditor sx={{ flex: 1 }} />
+        <Paper sx={{ flex: 1 }}>
+          <CodeEditor
+            value={card?.code}
+            onChange={(code) => updateCard.mutate({ cardId, code })}
+          />
+        </Paper>
       </Stack>
     </Page>
   );

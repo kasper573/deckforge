@@ -48,6 +48,7 @@ model Card {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   name             String
+  code             String
   gameId           String
   game             Game     @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
   deckId           String

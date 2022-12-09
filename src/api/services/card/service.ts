@@ -15,7 +15,9 @@ export type CardService = ReturnType<typeof createCardService>;
 export function createCardService() {
   return t.router({
     create: t.procedure
-      .input(cardType.pick({ name: true, deckId: true, gameId: true }))
+      .input(
+        cardType.pick({ name: true, deckId: true, gameId: true, code: true })
+      )
       .use((opts) => assertDeckAccess(opts, opts.input.deckId))
       .mutation(async ({ input: data, ctx: { db } }) => {
         await db.card.create({

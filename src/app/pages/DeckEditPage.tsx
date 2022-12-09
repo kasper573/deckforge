@@ -45,7 +45,7 @@ export default function DeckEditPage() {
     if (!name) {
       return;
     }
-    createCard.mutate({ gameId, deckId, name });
+    createCard.mutate({ gameId, deckId, name, code: "" });
   }
 
   return (

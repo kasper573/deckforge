@@ -7,6 +7,7 @@ export const cardType = z.object({
   cardId: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
+  code: z.string(),
   name: z.string().min(1).max(32),
   gameId: z.string(),
   deckId: z.string(),
@@ -15,7 +16,9 @@ export const cardType = z.object({
 
 export const cardMutationPayloadType = cardType
   .pick({ cardId: true })
-  .and(cardType.pick({ name: true, propertyDefaults: true }).partial());
+  .and(
+    cardType.pick({ name: true, propertyDefaults: true, code: true }).partial()
+  );
 
 export const assertRuntimeCard = (card: Card): z.infer<typeof cardType> => {
   const { propertyDefaults, ...rest } = card;
