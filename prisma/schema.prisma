@@ -21,15 +21,16 @@ model User {
 }
 
 model Game {
-  gameId    String     @id @default(cuid())
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  name      String
-  ownerId   String
-  owner     User       @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
-  decks     Deck[]
-  cards     Card[]
-  Property  Property[]
+  gameId     String     @id @default(cuid())
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  name       String
+  ownerId    String
+  owner      User       @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
+  decks      Deck[]
+  cards      Card[]
+  properties Property[]
+  actions    Action[]
 }
 
 model Deck {
@@ -72,4 +73,21 @@ enum PropertyType {
 enum EntityId {
   card
   player
+}
+
+model Action {
+  actionId  String     @id @default(cuid())
+  name      String
+  gameId    String
+  code      String
+  game      Game       @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
+  reactions Reaction[]
+}
+
+model Reaction {
+  reactionId String @id @default(cuid())
+  name       String
+  code       String
+  actionId   String
+  action     Action @relation(fields: [actionId], references: [actionId], onDelete: Cascade)
 }
