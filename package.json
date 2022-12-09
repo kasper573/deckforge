@@ -21,6 +21,9 @@
     "db:reset": "dotenv-flow tsx prisma/reset.ts",
     "db:deploy": "dotenv-flow pscale deploy-request create deckforge"
   },
+  "prisma": {
+    "seed": "yarn db:seed"
+  },
   "dependencies": {
     "@emotion/react": "11.10.5",
     "@emotion/styled": "11.10.5",
