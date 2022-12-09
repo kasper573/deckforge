@@ -22,6 +22,7 @@ DATABASE_URL=<connection string to your development mysql database>
 ```
 
 Run `yarn db:push` to update your development database
+Run `yarn db:seed` to seed your database
 
 ## Usage
 
