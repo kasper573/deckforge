@@ -3,8 +3,9 @@ import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import { useRouteParams } from "react-typesafe-routes";
 import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
+import { Suspense } from "react";
 import { Header } from "../../components/Header";
-import { CodeEditor } from "../../components/CodeEditor";
 import { SideMenu } from "../../components/SideMenu";
 import { Page } from "../../layout/Page";
 import { router } from "../../router";
@@ -12,7 +13,10 @@ import { trpc } from "../../trpc";
 import { useToastMutation } from "../../hooks/useToastMutation";
 import { useModal } from "../../../lib/useModal";
 import { PromptDialog } from "../../dialogs/PromptDialog";
+import { LoadingIndicator } from "../../components/LoadingIndicator";
+import { Center } from "../../components/Center";
 import { ActionListItem } from "./ActionListItem";
+import { EventCodeEditor } from "./EventCodeEditor";
 
 export default function EventsPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -49,7 +53,17 @@ export default function EventsPage() {
             )}
           </List>
         </SideMenu>
-        <CodeEditor sx={{ flex: 1 }} />
+        <Paper sx={{ flex: 1, position: "relative" }}>
+          <Suspense
+            fallback={
+              <Center>
+                <LoadingIndicator />
+              </Center>
+            }
+          >
+            <EventCodeEditor />
+          </Suspense>
+        </Paper>
       </Stack>
     </Page>
   );

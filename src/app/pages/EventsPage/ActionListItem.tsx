@@ -13,8 +13,10 @@ import { PromptDialog } from "../../dialogs/PromptDialog";
 import { MenuOn } from "../../components/MenuOn";
 import { More } from "../../components/icons";
 import { ReactionListItem } from "./ReactionListItem";
+import { useEventsPageState } from "./eventsPageState";
 
 export function ActionListItem({ actionId, name }: Action) {
+  const { activeObjectId, setActiveObjectId } = useEventsPageState();
   const { data: reactions } = trpc.event.reactions.useQuery(actionId);
   const deleteAction = useToastMutation(trpc.event.deleteAction);
   const updateAction = useToastMutation(trpc.event.updateAction);
@@ -24,11 +26,18 @@ export function ActionListItem({ actionId, name }: Action) {
   return (
     <>
       <ListItem
+        button
+        onClick={() => setActiveObjectId({ type: "action", actionId })}
+        selected={
+          activeObjectId?.type === "action" &&
+          activeObjectId.actionId === actionId
+        }
         secondaryAction={
           <MenuOn
             MenuListProps={{ "aria-label": `Options for ${name}` }}
             trigger={({ toggle }) => (
               <IconButton
+                size="small"
                 aria-label={`Show options for ${name}`}
                 onClick={toggle}
               >
@@ -36,7 +45,6 @@ export function ActionListItem({ actionId, name }: Action) {
               </IconButton>
             )}
           >
-            <MenuItem>Edit</MenuItem>
             <MenuItem
               onClick={() =>
                 prompt({

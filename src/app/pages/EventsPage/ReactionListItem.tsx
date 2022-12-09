@@ -2,7 +2,6 @@ import type { Reaction } from "@prisma/client";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import ListItemText from "@mui/material/ListItemText";
-import { styled } from "@mui/system";
 import ListItem from "@mui/material/ListItem";
 import { useToastMutation } from "../../hooks/useToastMutation";
 import { trpc } from "../../trpc";
@@ -11,20 +10,29 @@ import { DeleteDialog } from "../../dialogs/DeleteDialog";
 import { PromptDialog } from "../../dialogs/PromptDialog";
 import { MenuOn } from "../../components/MenuOn";
 import { More } from "../../components/icons";
+import { useEventsPageState } from "./eventsPageState";
 
 export function ReactionListItem({ reactionId, name }: Reaction) {
+  const { activeObjectId, setActiveObjectId } = useEventsPageState();
   const deleteReaction = useToastMutation(trpc.event.deleteReaction);
   const updateReaction = useToastMutation(trpc.event.updateReaction);
   const confirmDelete = useModal(DeleteDialog);
   const prompt = useModal(PromptDialog);
 
   return (
-    <ListItemWithShowActionsOnHover
+    <ListItem
+      button
+      onClick={() => setActiveObjectId({ type: "reaction", reactionId })}
+      selected={
+        activeObjectId?.type === "reaction" &&
+        activeObjectId.reactionId === reactionId
+      }
       secondaryAction={
         <MenuOn
           MenuListProps={{ "aria-label": `Options for ${name}` }}
           trigger={({ toggle }) => (
             <IconButton
+              size="small"
               aria-label={`Show options for ${name}`}
               onClick={toggle}
             >
@@ -32,7 +40,6 @@ export function ReactionListItem({ reactionId, name }: Reaction) {
             </IconButton>
           )}
         >
-          <MenuItem>Edit</MenuItem>
           <MenuItem
             onClick={() =>
               prompt({
@@ -58,12 +65,6 @@ export function ReactionListItem({ reactionId, name }: Reaction) {
       }
     >
       <ListItemText primary={name} />
-    </ListItemWithShowActionsOnHover>
+    </ListItem>
   );
 }
-
-const ListItemWithShowActionsOnHover = styled(ListItem)`
-  &:not(:hover) .MuiButtonBase-root {
-    display: none;
-  }
-`;

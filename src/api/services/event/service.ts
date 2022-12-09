@@ -9,12 +9,26 @@ export type EventService = ReturnType<typeof createEventService>;
 
 export function createEventService() {
   return t.router({
+    action: t.procedure
+      .input(actionType.shape.actionId)
+      .use((opts) => assertActionAccess(opts, opts.input))
+      .output(actionType)
+      .query(({ ctx: { db }, input: actionId }) =>
+        db.action.findUniqueOrThrow({ where: { actionId } })
+      ),
     actions: t.procedure
       .input(actionType.shape.gameId)
       .use((opts) => assertGameAccess(opts, opts.input))
       .output(z.array(actionType))
       .query(({ ctx: { db }, input: gameId }) =>
         db.action.findMany({ where: { gameId } })
+      ),
+    reaction: t.procedure
+      .input(reactionType.shape.reactionId)
+      .use((opts) => assertReactionAccess(opts, opts.input))
+      .output(reactionType)
+      .query(({ ctx: { db }, input: reactionId }) =>
+        db.reaction.findUniqueOrThrow({ where: { reactionId } })
       ),
     reactions: t.procedure
       .input(actionType.shape.actionId)
@@ -33,7 +47,7 @@ export function createEventService() {
           .pick({ actionId: true })
           .and(actionType.omit({ actionId: true }).partial())
       )
-      .use((opts) => assertReactionAccess(opts, opts.input.actionId))
+      .use((opts) => assertActionAccess(opts, opts.input.actionId))
       .mutation(({ input: { actionId, ...data }, ctx: { db } }) =>
         db.action.update({ data, where: { actionId } })
       ),
