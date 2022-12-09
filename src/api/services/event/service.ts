@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Reaction } from "@prisma/client";
+import type { Action } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { assertGameAccess } from "../game/service";
@@ -12,6 +13,12 @@ export function createEventService() {
       .input(actionType.omit({ actionId: true }))
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
       .mutation(({ input, ctx: { db } }) => db.action.create({ data: input })),
+    deleteAction: t.procedure
+      .input(actionType.shape.actionId)
+      .use((opts) => assertActionAccess(opts, opts.input))
+      .mutation(({ input: actionId, ctx: { db } }) =>
+        db.action.delete({ where: { actionId } })
+      ),
     actions: t.procedure
       .input(actionType.shape.gameId)
       .use((opts) => assertGameAccess(opts, opts.input))
@@ -26,12 +33,24 @@ export function createEventService() {
       .query(({ ctx: { db }, input: actionId }) =>
         db.reaction.findMany({ where: { actionId } })
       ),
+    createReaction: t.procedure
+      .input(reactionType.omit({ reactionId: true }))
+      .use((opts) => assertActionAccess(opts, opts.input.actionId))
+      .mutation(({ input, ctx: { db } }) =>
+        db.reaction.create({ data: input })
+      ),
+    deleteReaction: t.procedure
+      .input(reactionType.shape.reactionId)
+      .use((opts) => assertReactionAccess(opts, opts.input))
+      .mutation(({ input: reactionId, ctx: { db } }) =>
+        db.reaction.delete({ where: { reactionId } })
+      ),
   });
 }
 
 export async function assertActionAccess<Input>(
   opts: MiddlewareOptions,
-  actionId?: Reaction["actionId"]
+  actionId?: Action["actionId"]
 ) {
   const action =
     actionId !== undefined
@@ -41,4 +60,18 @@ export async function assertActionAccess<Input>(
         })
       : undefined;
   return assertGameAccess(opts, action?.gameId);
+}
+
+export async function assertReactionAccess<Input>(
+  opts: MiddlewareOptions,
+  reactionId?: Reaction["reactionId"]
+) {
+  const reaction =
+    reactionId !== undefined
+      ? await opts.ctx.db.reaction.findUnique({
+          where: { reactionId },
+          select: { actionId: true },
+        })
+      : undefined;
+  return assertActionAccess(opts, reaction?.actionId);
 }

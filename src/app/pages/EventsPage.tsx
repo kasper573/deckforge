@@ -17,17 +17,37 @@ import { Add, Delete, Edit, More } from "../components/icons";
 import { Page } from "../layout/Page";
 import { router } from "../router";
 import { trpc } from "../trpc";
+import { useToastMutation } from "../hooks/useToastMutation";
+import { useModal } from "../../lib/useModal";
+import { DeleteDialog } from "../dialogs/DeleteDialog";
+import { PromptDialog } from "../dialogs/PromptDialog";
 
 export default function EventsPage() {
   const { gameId } = useRouteParams(router.build().game);
   const { data: actions } = trpc.event.actions.useQuery(gameId);
+
+  const createAction = useToastMutation(trpc.event.createAction);
+  const prompt = useModal(PromptDialog);
 
   return (
     <Page>
       <Header>Game: {gameId}</Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
         <SideMenu>
-          <Button variant="contained">Create action</Button>
+          <Button
+            variant="contained"
+            onClick={() =>
+              prompt({
+                title: `Add action`,
+                fieldProps: { label: "Action name" },
+              }).then(
+                (name) =>
+                  name && createAction.mutate({ gameId, name, code: "" })
+              )
+            }
+          >
+            Create action
+          </Button>
           <List dense>
             {actions?.map((action) => (
               <ActionListItem key={action.actionId} {...action} />
@@ -45,6 +65,10 @@ export default function EventsPage() {
 
 function ActionListItem({ actionId, name }: Action) {
   const { data: reactions } = trpc.event.reactions.useQuery(actionId);
+  const deleteAction = useToastMutation(trpc.event.deleteAction);
+  const createReaction = useToastMutation(trpc.event.createReaction);
+  const confirmDelete = useModal(DeleteDialog);
+  const prompt = useModal(PromptDialog);
   return (
     <>
       <ListItem
@@ -53,11 +77,31 @@ function ActionListItem({ actionId, name }: Action) {
             <IconButton aria-label="edit">
               <Edit />
             </IconButton>
-            <IconButton aria-label="delete">
+            <IconButton
+              aria-label="delete"
+              onClick={() =>
+                confirmDelete({ subject: "action", name }).then(
+                  (confirmed) => confirmed && deleteAction.mutate(actionId)
+                )
+              }
+            >
               <Delete />
             </IconButton>
             <Tooltip title="Add reaction">
-              <IconButton edge="end" aria-label="Add reaction">
+              <IconButton
+                edge="end"
+                aria-label="Add reaction"
+                onClick={() =>
+                  prompt({
+                    title: `Add reaction to ${name}`,
+                    fieldProps: { label: "Reaction name" },
+                  }).then(
+                    (name) =>
+                      name &&
+                      createReaction.mutate({ actionId, name, code: "" })
+                  )
+                }
+              >
                 <Add />
               </IconButton>
             </Tooltip>
