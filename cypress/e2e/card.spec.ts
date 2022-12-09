@@ -9,6 +9,10 @@ import {
   findCardList,
   gotoCardList,
 } from "../support/actions/card";
+import {
+  createEntityProperty,
+  gotoEntityEdit,
+} from "../support/actions/entity";
 
 const gameName = "Test Game";
 const deckName = "Test Deck";
@@ -23,12 +27,12 @@ before(() => {
   createDeck(deckName);
 });
 
-beforeEach(() => {
-  resetData("card");
-  gotoCardList(gameName, deckName);
-});
-
 describe("card", () => {
+  beforeEach(() => {
+    resetData("card");
+    gotoCardList(gameName, deckName);
+  });
+
   it("card list should be empty for new cards", () => {
     findCardList().findAllByRole("listitem").should("have.length", 0);
   });
@@ -57,4 +61,30 @@ describe("card", () => {
     );
     findCardItem("To be deleted").should("not.exist");
   });
+});
+
+describe("properties", () => {
+  const typeNames = ["string", "number", "boolean"];
+  const cardName = "Card With Property";
+  const propertyName = (typeName: string) => `${typeName} property`;
+
+  before(() => {
+    gotoEntityEdit(gameName, "card");
+    for (const typeName of typeNames) {
+      createEntityProperty(propertyName(typeName), typeName);
+    }
+
+    resetData("card");
+    gotoCardList(gameName, deckName);
+    createCard(cardName);
+    clickCardAction(cardName, /edit/i);
+  });
+
+  for (const typeName of typeNames) {
+    describe(typeName, () => {
+      it("property list can display the property", () => {
+        cy.findByLabelText(propertyName(typeName)).should("exist");
+      });
+    });
+  }
 });
