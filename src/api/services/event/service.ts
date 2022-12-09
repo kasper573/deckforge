@@ -9,16 +9,6 @@ export type EventService = ReturnType<typeof createEventService>;
 
 export function createEventService() {
   return t.router({
-    createAction: t.procedure
-      .input(actionType.omit({ actionId: true }))
-      .use((opts) => assertGameAccess(opts, opts.input.gameId))
-      .mutation(({ input, ctx: { db } }) => db.action.create({ data: input })),
-    deleteAction: t.procedure
-      .input(actionType.shape.actionId)
-      .use((opts) => assertActionAccess(opts, opts.input))
-      .mutation(({ input: actionId, ctx: { db } }) =>
-        db.action.delete({ where: { actionId } })
-      ),
     actions: t.procedure
       .input(actionType.shape.gameId)
       .use((opts) => assertGameAccess(opts, opts.input))
@@ -33,11 +23,41 @@ export function createEventService() {
       .query(({ ctx: { db }, input: actionId }) =>
         db.reaction.findMany({ where: { actionId } })
       ),
+    createAction: t.procedure
+      .input(actionType.omit({ actionId: true }))
+      .use((opts) => assertGameAccess(opts, opts.input.gameId))
+      .mutation(({ input, ctx: { db } }) => db.action.create({ data: input })),
+    updateAction: t.procedure
+      .input(
+        actionType
+          .pick({ actionId: true })
+          .and(actionType.omit({ actionId: true }).partial())
+      )
+      .use((opts) => assertReactionAccess(opts, opts.input.actionId))
+      .mutation(({ input: { actionId, ...data }, ctx: { db } }) =>
+        db.action.update({ data, where: { actionId } })
+      ),
+    deleteAction: t.procedure
+      .input(actionType.shape.actionId)
+      .use((opts) => assertActionAccess(opts, opts.input))
+      .mutation(({ input: actionId, ctx: { db } }) =>
+        db.action.delete({ where: { actionId } })
+      ),
     createReaction: t.procedure
       .input(reactionType.omit({ reactionId: true }))
       .use((opts) => assertActionAccess(opts, opts.input.actionId))
       .mutation(({ input, ctx: { db } }) =>
         db.reaction.create({ data: input })
+      ),
+    updateReaction: t.procedure
+      .input(
+        reactionType
+          .pick({ reactionId: true })
+          .and(reactionType.omit({ reactionId: true }).partial())
+      )
+      .use((opts) => assertReactionAccess(opts, opts.input.reactionId))
+      .mutation(({ input: { reactionId, ...data }, ctx: { db } }) =>
+        db.reaction.update({ data, where: { reactionId } })
       ),
     deleteReaction: t.procedure
       .input(reactionType.shape.reactionId)

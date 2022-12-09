@@ -92,7 +92,7 @@ export const router = OptionsRouter({}, (route) => ({
             })
           ),
           events: route("events", {
-            component: lazy(() => import("./pages/EventsPage")),
+            component: lazy(() => import("./pages/EventsPage/EventsPage")),
           }),
         })
       ),
