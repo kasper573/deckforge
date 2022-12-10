@@ -4,6 +4,7 @@ import type {
   Action,
   ActionId,
   Card,
+  CardId,
   Deck,
   DeckId,
   EntityId,
@@ -83,6 +84,8 @@ export const selectors = {
   decks: (state: EditorState) => state.game.definition.decks,
   deck: (deckId: DeckId) => (state: EditorState) =>
     state.game.definition.decks.find((d) => d.deckId === deckId),
+  card: (cardId: CardId) => (state: EditorState) =>
+    state.game.definition.cards.find((c) => c.cardId === cardId),
   actions: (state: EditorState) => state.game.definition.actions,
   action: (actionId: ActionId) => (state: EditorState) =>
     state.game.definition.actions.find((a) => a.actionId === actionId),

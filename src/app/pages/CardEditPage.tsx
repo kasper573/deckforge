@@ -8,23 +8,21 @@ import { SideMenu } from "../components/SideMenu";
 import { Page } from "../layout/Page";
 import { router } from "../router";
 import { TextField } from "../controls/TextField";
-import { trpc } from "../trpc";
-import { useToastProcedure } from "../hooks/useToastProcedure";
+import { useSelector } from "../store";
+import { editorActions, selectors } from "../features/editor/editorState";
+import { useActions } from "../../lib/useActions";
 
 export default function CardEditPage() {
-  const { gameId } = useRouteParams(router.build().game);
+  const { gameId } = useSelector(selectors.game);
   const { deckId } = useRouteParams(
     router.build().game({ gameId }).deck().edit
   );
   const { cardId } = useRouteParams(
     router.build().game({ gameId }).deck().edit({ deckId }).card
   );
-  const { data: properties } = trpc.entity.properties.useQuery({
-    entityId: "card",
-    gameId,
-  });
-  const { data: card } = trpc.card.read.useQuery(cardId);
-  const updateCard = useToastProcedure(trpc.card.update);
+  const properties = useSelector(selectors.propertiesFor("card"));
+  const card = useSelector(selectors.card(cardId));
+  const { updateCard } = useActions(editorActions);
 
   return (
     <Page>
@@ -33,7 +31,7 @@ export default function CardEditPage() {
           debounce
           label="Card name"
           value={card?.name ?? ""}
-          onValueChange={(name) => updateCard.mutate({ cardId, name })}
+          onValueChange={(name) => updateCard({ cardId, name })}
         />
       </Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
@@ -43,7 +41,7 @@ export default function CardEditPage() {
               properties={properties}
               values={card?.propertyDefaults ?? {}}
               onChange={(propertyDefaults) =>
-                updateCard.mutate({ cardId, propertyDefaults })
+                updateCard({ cardId, propertyDefaults })
               }
             />
           )}
@@ -51,7 +49,7 @@ export default function CardEditPage() {
         <Paper sx={{ flex: 1 }}>
           <CodeEditor
             value={card?.code}
-            onChange={(code) => updateCard.mutate({ cardId, code })}
+            onChange={(code) => updateCard({ cardId, code })}
           />
         </Paper>
       </Stack>
