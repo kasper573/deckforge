@@ -1,37 +1,35 @@
-import type { Action } from "@prisma/client";
 import ListItem from "@mui/material/ListItem";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import ListItemText from "@mui/material/ListItemText";
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
-import { trpc } from "../../trpc";
-import { useToastProcedure } from "../../hooks/useToastProcedure";
 import { useModal } from "../../../lib/useModal";
 import { DeleteDialog } from "../../dialogs/DeleteDialog";
 import { PromptDialog } from "../../dialogs/PromptDialog";
 import { MenuOn } from "../../components/MenuOn";
 import { More } from "../../components/icons";
+import { useSelector } from "../../store";
+import { editorActions, selectors } from "../../features/editor/editorState";
+import { useActions } from "../../../lib/useActions";
+import type { Action } from "../../../api/services/game/types";
 import { ReactionListItem } from "./ReactionListItem";
-import { useEventsPageState } from "./eventsPageState";
 
 export function ActionListItem({ actionId, name }: Action) {
-  const { activeObjectId, setActiveObjectId, onObjectDeleted } =
-    useEventsPageState();
-  const { data: reactions } = trpc.event.reactions.useQuery(actionId);
-  const deleteAction = useToastProcedure(trpc.event.deleteAction);
-  const updateAction = useToastProcedure(trpc.event.updateAction);
-  const createReaction = useToastProcedure(trpc.event.createReaction);
+  const reactions = useSelector(selectors.reactionsFor(actionId));
+  const selectedObject = useSelector(selectors.selectedObject);
+  const { deleteAction, updateAction, createReaction, selectObject } =
+    useActions(editorActions);
   const confirmDelete = useModal(DeleteDialog);
   const prompt = useModal(PromptDialog);
   return (
     <>
       <ListItem
         button
-        onClick={() => setActiveObjectId({ type: "action", actionId })}
+        onClick={() => selectObject({ type: "action", actionId })}
         selected={
-          activeObjectId?.type === "action" &&
-          activeObjectId.actionId === actionId
+          selectedObject?.type === "action" &&
+          selectedObject.actionId === actionId
         }
         secondaryAction={
           <MenuOn
@@ -51,21 +49,16 @@ export function ActionListItem({ actionId, name }: Action) {
                 prompt({
                   title: `Rename ${name}`,
                   fieldProps: { label: "New name" },
-                }).then(
-                  (name) => name && updateAction.mutate({ actionId, name })
-                )
+                }).then((name) => name && updateAction({ actionId, name }))
               }
             >
               Rename
             </MenuItem>
             <MenuItem
               onClick={() =>
-                confirmDelete({ subject: "action", name }).then((confirmed) => {
-                  if (confirmed) {
-                    onObjectDeleted(activeObjectId);
-                    deleteAction.mutate(actionId);
-                  }
-                })
+                confirmDelete({ subject: "action", name }).then(
+                  (confirmed) => confirmed && deleteAction(actionId)
+                )
               }
             >
               Delete
@@ -76,8 +69,7 @@ export function ActionListItem({ actionId, name }: Action) {
                   title: `Add reaction to ${name}`,
                   fieldProps: { label: "Reaction name" },
                 }).then(
-                  (name) =>
-                    name && createReaction.mutate({ actionId, name, code: "" })
+                  (name) => name && createReaction({ actionId, name, code: "" })
                 )
               }
             >
@@ -88,10 +80,10 @@ export function ActionListItem({ actionId, name }: Action) {
       >
         <ListItemText primary={name} />
       </ListItem>
-      {reactions?.length !== 0 && (
+      {reactions.length !== 0 && (
         <Box sx={{ ml: 2 }}>
           <List dense sx={{ pt: 0 }}>
-            {reactions?.map((reaction) => (
+            {reactions.map((reaction) => (
               <ReactionListItem key={reaction.reactionId} {...reaction} />
             ))}
           </List>

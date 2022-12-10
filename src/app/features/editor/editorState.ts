@@ -81,6 +81,8 @@ export const selectors = {
     state.game.definition.actions.find((a) => a.actionId === actionId),
   reaction: (reactionId: ReactionId) => (state: EditorState) =>
     state.game.definition.reactions.find((r) => r.reactionId === reactionId),
+  reactionsFor: (actionId: ActionId) => (state: EditorState) =>
+    state.game.definition.reactions.filter((r) => r.actionId === actionId),
 };
 
 export const noUndoActionList: Array<keyof typeof editorActions> = [];
