@@ -22,11 +22,10 @@ export const propertyIdType = zodNominalString<PropertyId>();
 
 export type Property = z.infer<typeof propertyType>;
 export const propertyType = z.object({
+  entityId: entityIdType,
   propertyId: propertyIdType,
   name: z.string().min(1).max(32),
   type: propertyValueType,
-  entityId: entityIdType,
-  gameId: z.string(),
 });
 
 export type PropertyValues = z.infer<typeof propertyValuesType>;
@@ -60,7 +59,6 @@ export type Deck = z.infer<typeof deckType>;
 export const deckType = z.object({
   deckId: deckIdType,
   name: z.string().min(1).max(32),
-  gameId: z.string(),
 });
 
 export type CardId = NominalString<"CardId">;
@@ -71,7 +69,6 @@ export const cardType = z.object({
   cardId: cardIdType,
   code: codeType,
   name: z.string().min(1).max(32),
-  gameId: z.string(),
   deckId: z.string(),
   propertyDefaults: propertyValuesType,
 });

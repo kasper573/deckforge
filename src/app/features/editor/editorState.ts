@@ -5,6 +5,7 @@ import type {
   ActionId,
   Card,
   Deck,
+  EntityId,
   Game,
   Property,
   Reaction,
@@ -83,6 +84,8 @@ export const selectors = {
     state.game.definition.reactions.find((r) => r.reactionId === reactionId),
   reactionsFor: (actionId: ActionId) => (state: EditorState) =>
     state.game.definition.reactions.filter((r) => r.actionId === actionId),
+  propertiesFor: (entityId: EntityId) => (state: EditorState) =>
+    state.game.definition.properties.filter((p) => p.entityId === entityId),
 };
 
 export const noUndoActionList: Array<keyof typeof editorActions> = [];

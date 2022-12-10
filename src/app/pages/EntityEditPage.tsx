@@ -14,66 +14,56 @@ import { Header } from "../components/Header";
 import { Page } from "../layout/Page";
 import { router } from "../router";
 import { EditableListItem } from "../components/EditableListItem";
-import { trpc } from "../trpc";
 import type { ModalProps } from "../../lib/useModal";
 import { useModal } from "../../lib/useModal";
 import { useForm } from "../hooks/useForm";
-import {
-  propertyMutationPayloadType,
-  propertyTypeType,
-} from "../../api/services/entity/types";
 import { Select } from "../controls/Select";
 import { DeleteDialog } from "../dialogs/DeleteDialog";
-import { useToastProcedure } from "../hooks/useToastProcedure";
+import { useSelector } from "../store";
+import { editorActions, selectors } from "../features/editor/editorState";
+import { useActions } from "../../lib/useActions";
+import { propertyType, propertyValueType } from "../../api/services/game/types";
 
 export default function EntityEditPage() {
   const { gameId } = useRouteParams(router.build().game);
   const { entityId } = useRouteParams(
     router.build().game({ gameId }).entity().edit
   );
-  const properties = trpc.entity.properties.useQuery({ gameId, entityId });
-  const propertyEntries = properties.data
-    ? Object.entries(properties.data)
-    : [];
-
-  const createProperty = useToastProcedure(trpc.entity.createProperty);
-  const updateProperty = useToastProcedure(trpc.entity.updateProperty);
-  const deleteProperty = useToastProcedure(trpc.entity.deleteProperty);
+  const properties = useSelector(selectors.propertiesFor(entityId));
+  const { createProperty, deleteProperty, updateProperty } =
+    useActions(editorActions);
   const showPropertyDialog = useModal(PropertyFormDialog);
   const confirmDelete = useModal(DeleteDialog);
 
   return (
     <Page>
-      <Header>
-        Game: {gameId}, Entity: {entityId}
-      </Header>
+      <Header>Entity: {entityId}</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense aria-label="Properties">
-          {propertyEntries.map(([name, property]) => (
+          {properties.map((property) => (
             <EditableListItem
-              aria-label={name}
+              aria-label={property.name}
               key={property.propertyId}
               onEdit={() =>
-                showPropertyDialog({ name, ...property }).then(
+                showPropertyDialog(property).then(
                   (changes) =>
-                    changes &&
-                    updateProperty.mutate({ ...property, ...changes })
+                    changes && updateProperty({ ...property, ...changes })
                 )
               }
               onDelete={() =>
                 confirmDelete({
                   subject: "property",
-                  name: name,
+                  name: property.name,
                 }).then(
                   (confirmed) =>
-                    confirmed && deleteProperty.mutate(property.propertyId)
+                    confirmed && deleteProperty(property.propertyId)
                 )
               }
             >
-              <ListItemText primary={name} secondary={property.type} />
+              <ListItemText primary={property.name} secondary={property.type} />
             </EditableListItem>
           ))}
-          {propertyEntries.length === 0 && (
+          {properties.length === 0 && (
             <Typography align="center">
               {"This entity contains no properties yet."}
             </Typography>
@@ -84,8 +74,7 @@ export default function EntityEditPage() {
         variant="contained"
         onClick={() =>
           showPropertyDialog().then(
-            (payload) =>
-              payload && createProperty.mutate({ gameId, entityId, ...payload })
+            (payload) => payload && createProperty({ entityId, ...payload })
           )
         }
       >
@@ -95,7 +84,7 @@ export default function EntityEditPage() {
   );
 }
 
-const propertyFormDialogSchema = propertyMutationPayloadType.pick({
+const propertyFormDialogSchema = propertyType.pick({
   name: true,
   type: true,
 });
@@ -126,7 +115,7 @@ function PropertyFormDialog({
           <Select
             {...form.register("type")}
             label="Type"
-            options={propertyTypeType._def.values}
+            options={propertyValueType._def.values}
           />
         </DialogContent>
         <DialogActions>
