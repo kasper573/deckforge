@@ -7,8 +7,8 @@ import type { ApiRouter } from "../../api/router";
 import type { AnyFormMutation } from "./useForm";
 
 export interface UseToastMutationOptions<Response> {
-  success?: (response: Response) => ReactNode | undefined;
-  error?: (error: TRPCClientError<ApiRouter>) => ReactNode | undefined;
+  success?: (response: Response) => ReactNode | undefined | void;
+  error?: (error: TRPCClientError<ApiRouter>) => ReactNode | undefined | void;
 }
 
 type ReactMutationProcedureLike<Input, Response> = {

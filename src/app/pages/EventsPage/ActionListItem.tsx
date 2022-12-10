@@ -16,7 +16,8 @@ import { ReactionListItem } from "./ReactionListItem";
 import { useEventsPageState } from "./eventsPageState";
 
 export function ActionListItem({ actionId, name }: Action) {
-  const { activeObjectId, setActiveObjectId } = useEventsPageState();
+  const { activeObjectId, setActiveObjectId, onObjectDeleted } =
+    useEventsPageState();
   const { data: reactions } = trpc.event.reactions.useQuery(actionId);
   const deleteAction = useToastProcedure(trpc.event.deleteAction);
   const updateAction = useToastProcedure(trpc.event.updateAction);
@@ -59,9 +60,12 @@ export function ActionListItem({ actionId, name }: Action) {
             </MenuItem>
             <MenuItem
               onClick={() =>
-                confirmDelete({ subject: "action", name }).then(
-                  (confirmed) => confirmed && deleteAction.mutate(actionId)
-                )
+                confirmDelete({ subject: "action", name }).then((confirmed) => {
+                  if (confirmed) {
+                    onObjectDeleted(activeObjectId);
+                    deleteAction.mutate(actionId);
+                  }
+                })
               }
             >
               Delete

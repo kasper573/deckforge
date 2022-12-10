@@ -1,8 +1,9 @@
 import type { Action, Reaction } from "@prisma/client";
 import Box from "@mui/material/Box";
-import { trpc } from "../../trpc";
-import { useToastMutation } from "../../hooks/useToastMutation";
+import { CANCEL_INVALIDATE, trpc } from "../../trpc";
+import { useToastMutation } from "../../hooks/useToastProcedure";
 import { CodeEditor } from "../../components/CodeEditor";
+import { useQueryData } from "../../../lib/useQueryData";
 import { useEventsPageState } from "./eventsPageState";
 
 export function EventCodeEditor() {
@@ -19,13 +20,14 @@ export function EventCodeEditor() {
 }
 
 function ActionEditor({ actionId }: { actionId: Action["actionId"] }) {
-  const { data: action } = trpc.event.action.useQuery(actionId);
-  const updateAction = useToastMutation(trpc.event.updateAction);
+  const action = trpc.event.action.useQuery(actionId);
+  const mutation = useCacheMutation(action, trpc.event.updateAction);
+  const updateAction = useToastMutation(mutation.mutateAsync);
 
   return (
     <CodeEditor
-      value={action?.code}
-      onChange={(code) => updateAction.mutate({ actionId, code })}
+      value={action.data?.code}
+      onChange={(code) => updateAction({ actionId, code })}
     />
   );
 }
@@ -35,13 +37,30 @@ function ReactionEditor({
 }: {
   reactionId: Reaction["reactionId"];
 }) {
-  const { data: reaction } = trpc.event.reaction.useQuery(reactionId);
-  const updateReaction = useToastMutation(trpc.event.updateReaction);
+  const reaction = trpc.event.reaction.useQuery(reactionId);
+  const mutation = useCacheMutation(reaction, trpc.event.updateReaction);
+  const updateReaction = useToastMutation(mutation.mutateAsync);
 
   return (
     <CodeEditor
-      value={reaction?.code}
-      onChange={(code) => updateReaction.mutate({ reactionId, code })}
+      value={reaction.data?.code}
+      onChange={(code) => updateReaction({ reactionId, code })}
     />
   );
+}
+
+function useCacheMutation(queryResult: any, mutationProcedure: any) {
+  const queryData = useQueryData(queryResult);
+  return mutationProcedure.useMutation({
+    onSuccess: (data: any) => {
+      queryData.set(data);
+      return CANCEL_INVALIDATE;
+    },
+    onMutate: (changes: any) => {
+      const existing = queryData.get();
+      if (existing) {
+        queryData.set({ ...existing, ...changes });
+      }
+    },
+  });
 }

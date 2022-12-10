@@ -13,7 +13,8 @@ import { More } from "../../components/icons";
 import { useEventsPageState } from "./eventsPageState";
 
 export function ReactionListItem({ reactionId, name }: Reaction) {
-  const { activeObjectId, setActiveObjectId } = useEventsPageState();
+  const { activeObjectId, setActiveObjectId, onObjectDeleted } =
+    useEventsPageState();
   const deleteReaction = useToastProcedure(trpc.event.deleteReaction);
   const updateReaction = useToastProcedure(trpc.event.updateReaction);
   const confirmDelete = useModal(DeleteDialog);
@@ -54,9 +55,12 @@ export function ReactionListItem({ reactionId, name }: Reaction) {
           </MenuItem>
           <MenuItem
             onClick={() =>
-              confirmDelete({ subject: "action", name }).then(
-                (confirmed) => confirmed && deleteReaction.mutate(reactionId)
-              )
+              confirmDelete({ subject: "action", name }).then((confirmed) => {
+                if (confirmed) {
+                  onObjectDeleted(activeObjectId);
+                  deleteReaction.mutate(reactionId);
+                }
+              })
             }
           >
             Delete
