@@ -10,6 +10,8 @@ import {
   setupAuthBehavior,
 } from "./features/auth/store";
 import { env } from "./env";
+import { createStore } from "./store";
+import { editorSlice } from "./features/editor/editorState";
 
 if (env.analyticsId) {
   import("@vercel/analytics").then(({ inject }) => inject());
@@ -21,6 +23,7 @@ if (env.analyticsId) {
   }
 }
 
+const store = createStore(editorSlice.getInitialState());
 const queryClient = createQueryClient(resetAuthToken);
 const trpcClient = createTRPCClient(getAuthToken);
 const history = createBrowserHistory();
@@ -29,6 +32,7 @@ setupAuthBehavior({ history });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <App
+    store={store}
     theme={theme}
     history={history}
     trpcClient={trpcClient}
