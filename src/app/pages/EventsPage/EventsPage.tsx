@@ -10,7 +10,7 @@ import { useModal } from "../../../lib/useModal";
 import { PromptDialog } from "../../dialogs/PromptDialog";
 import { useSelector } from "../../store";
 import { useActions } from "../../../lib/useActions";
-import { editorActions } from "../../features/editor/editorState";
+import { editorActions, selectors } from "../../features/editor/editorState";
 import { EventCodeEditor } from "./EventCodeEditor";
 import { ActionListItem } from "./ActionListItem";
 
@@ -31,7 +31,7 @@ export default function EventsPage() {
 }
 
 function EventList() {
-  const actions = useSelector((state) => state.game.definition.actions);
+  const actions = useSelector(selectors.actions);
   const { createAction } = useActions(editorActions);
 
   const prompt = useModal(PromptDialog);

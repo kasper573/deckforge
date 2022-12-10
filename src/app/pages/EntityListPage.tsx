@@ -7,9 +7,10 @@ import { LinkListItem } from "../components/Link";
 import { router } from "../router";
 import { useSelector } from "../store";
 import type { EntityId } from "../../api/services/game/types";
+import { selectors } from "../features/editor/editorState";
 
 export default function EntityListPage() {
-  const { gameId } = useSelector((state) => state.game);
+  const { gameId } = useSelector(selectors.game);
   return (
     <Page>
       <Header>Game: {gameId}. Entity List</Header>
@@ -30,7 +31,7 @@ export function EntityListItem({
   entityId: EntityId;
   name: string;
 }) {
-  const { gameId } = useSelector((state) => state.game);
+  const { gameId } = useSelector(selectors.game);
   return (
     <LinkListItem
       to={router.build().game({ gameId }).entity().edit({ entityId })}

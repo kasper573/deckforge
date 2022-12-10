@@ -78,6 +78,9 @@ export const {
 
 export const selectors = {
   selectedObject: (state: EditorState) => state.selectedObject,
+  game: (state: EditorState) => state.game,
+  decks: (state: EditorState) => state.game.definition.decks,
+  actions: (state: EditorState) => state.game.definition.actions,
   action: (actionId: ActionId) => (state: EditorState) =>
     state.game.definition.actions.find((a) => a.actionId === actionId),
   reaction: (reactionId: ReactionId) => (state: EditorState) =>

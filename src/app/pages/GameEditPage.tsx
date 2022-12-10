@@ -7,12 +7,12 @@ import { Page } from "../layout/Page";
 import { router } from "../router";
 import { TextField } from "../controls/TextField";
 import { useSelector } from "../store";
-import { editorActions } from "../features/editor/editorState";
+import { editorActions, selectors } from "../features/editor/editorState";
 import { useActions } from "../../lib/useActions";
 
 export default function GameEditPage() {
   const { renameGame } = useActions(editorActions);
-  const { name, gameId } = useSelector((state) => state.game);
+  const { name, gameId } = useSelector(selectors.game);
 
   return (
     <Page>
