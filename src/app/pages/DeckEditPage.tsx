@@ -6,7 +6,6 @@ import IconButton from "@mui/material/IconButton";
 import ListItemText from "@mui/material/ListItemText";
 import { useRouteParams } from "react-typesafe-routes";
 import Stack from "@mui/material/Stack";
-import type { Card } from "@prisma/client";
 import Typography from "@mui/material/Typography";
 import { LinkIconButton } from "../components/Link";
 import { Delete, Edit } from "../components/icons";
@@ -14,27 +13,22 @@ import { Header } from "../components/Header";
 import { Page } from "../layout/Page";
 import { router } from "../router";
 import { TextField } from "../controls/TextField";
-import { trpc } from "../trpc";
 import { useModal } from "../../lib/useModal";
 import { PromptDialog } from "../dialogs/PromptDialog";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
-import { useToastProcedure } from "../hooks/useToastProcedure";
+import { useSelector } from "../store";
+import { editorActions, selectors } from "../features/editor/editorState";
+import { useActions } from "../../lib/useActions";
+import type { Card } from "../../api/services/game/types";
 
 export default function DeckEditPage() {
-  const { gameId } = useRouteParams(router.build().game);
+  const { gameId } = useSelector(selectors.game);
   const { deckId } = useRouteParams(
     router.build().game({ gameId }).deck().edit
   );
-  const { data: deck } = trpc.deck.read.useQuery(deckId);
-  const renameDeck = useToastProcedure(trpc.deck.rename);
-
-  const { data: cards } = trpc.card.list.useQuery({
-    filter: { deckId },
-    offset: 0,
-    limit: 10,
-  });
-
-  const createCard = useToastProcedure(trpc.card.create);
+  const deck = useSelector(selectors.deck(deckId));
+  const cards = useSelector(selectors.cardsFor(deckId));
+  const { updateDeck, createCard } = useActions(editorActions);
   const prompt = useModal(PromptDialog);
 
   async function enterNameAndCreateCard() {
@@ -45,7 +39,7 @@ export default function DeckEditPage() {
     if (!name) {
       return;
     }
-    createCard.mutate({ gameId, deckId, name, code: "" });
+    createCard({ deckId, name, code: "", propertyDefaults: {} });
   }
 
   return (
@@ -58,17 +52,17 @@ export default function DeckEditPage() {
               debounce
               label="Deck name"
               value={deck?.name ?? ""}
-              onValueChange={(name) => renameDeck.mutate({ deckId, name })}
+              onValueChange={(name) => updateDeck({ deckId, name })}
             />
           </span>
         </Stack>
       </Header>
       <Paper sx={{ mb: 3 }}>
         <List dense aria-label="Cards">
-          {cards?.entities.map((card) => (
+          {cards.map((card) => (
             <CardListItem key={card.cardId} {...card} />
           ))}
-          {cards?.total === 0 && (
+          {cards.length === 0 && (
             <Typography align="center">
               {"This deck doesn't contain any cards yet."}
             </Typography>
@@ -82,9 +76,10 @@ export default function DeckEditPage() {
   );
 }
 
-export function CardListItem({ gameId, deckId, cardId, name }: Card) {
+export function CardListItem({ deckId, cardId, name }: Card) {
+  const { gameId } = useSelector(selectors.game);
   const confirm = useModal(ConfirmDialog);
-  const deleteCard = useToastProcedure(trpc.card.delete);
+  const { deleteCard } = useActions(editorActions);
 
   async function confirmDelete() {
     const shouldDelete = await confirm({
@@ -92,7 +87,7 @@ export function CardListItem({ gameId, deckId, cardId, name }: Card) {
       content: `Are you sure you want to delete "${name}". This action cannot be reversed.`,
     });
     if (shouldDelete) {
-      deleteCard.mutate(cardId);
+      deleteCard(cardId);
     }
   }
 

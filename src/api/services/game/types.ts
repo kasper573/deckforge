@@ -69,7 +69,7 @@ export const cardType = z.object({
   cardId: cardIdType,
   code: codeType,
   name: z.string().min(1).max(32),
-  deckId: z.string(),
+  deckId: deckIdType,
   propertyDefaults: propertyValuesType,
 });
 

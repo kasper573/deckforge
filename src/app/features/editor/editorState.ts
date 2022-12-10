@@ -5,6 +5,7 @@ import type {
   ActionId,
   Card,
   Deck,
+  DeckId,
   EntityId,
   Game,
   Property,
@@ -80,6 +81,8 @@ export const selectors = {
   selectedObject: (state: EditorState) => state.selectedObject,
   game: (state: EditorState) => state.game,
   decks: (state: EditorState) => state.game.definition.decks,
+  deck: (deckId: DeckId) => (state: EditorState) =>
+    state.game.definition.decks.find((d) => d.deckId === deckId),
   actions: (state: EditorState) => state.game.definition.actions,
   action: (actionId: ActionId) => (state: EditorState) =>
     state.game.definition.actions.find((a) => a.actionId === actionId),
@@ -89,6 +92,8 @@ export const selectors = {
     state.game.definition.reactions.filter((r) => r.actionId === actionId),
   propertiesFor: (entityId: EntityId) => (state: EditorState) =>
     state.game.definition.properties.filter((p) => p.entityId === entityId),
+  cardsFor: (deckId: DeckId) => (state: EditorState) =>
+    state.game.definition.cards.filter((p) => p.deckId === deckId),
 };
 
 export const noUndoActionList: Array<keyof typeof editorActions> = [];

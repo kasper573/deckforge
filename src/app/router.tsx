@@ -1,13 +1,8 @@
 import type { RouteMiddleware } from "react-typesafe-routes";
-import {
-  OptionsRouter,
-  stringParser,
-  Redirect,
-  useRouteParams,
-} from "react-typesafe-routes";
+import { OptionsRouter, Redirect, useRouteParams } from "react-typesafe-routes";
 import { lazy, useEffect } from "react";
 import { literalParser } from "../lib/literalParser";
-import type { GameId } from "../api/services/game/types";
+import type { CardId, DeckId, GameId } from "../api/services/game/types";
 import { entityIdType } from "../api/services/game/types";
 import { useActions } from "../lib/useActions";
 import { createAccessFactory } from "./features/auth/access";
@@ -33,7 +28,7 @@ export const router = OptionsRouter({}, (route) => ({
       game: route(":gameId", {
         component: lazy(() => import("./pages/GamePlayPage")),
         params: {
-          gameId: stringParser,
+          gameId: literalParser<GameId>(),
         },
       }),
     })
@@ -79,12 +74,12 @@ export const router = OptionsRouter({}, (route) => ({
                 ":deckId",
                 {
                   component: lazy(() => import("./pages/DeckEditPage")),
-                  params: { deckId: stringParser },
+                  params: { deckId: literalParser<DeckId>() },
                 },
                 (route) => ({
                   card: route(":cardId", {
                     component: lazy(() => import("./pages/CardEditPage")),
-                    params: { cardId: stringParser },
+                    params: { cardId: literalParser<CardId>() },
                   }),
                 })
               ),
