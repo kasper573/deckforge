@@ -1,5 +1,5 @@
 import { useDebouncedCallback } from "use-debounce";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const defaultDebounceTime = 250;
 
@@ -12,13 +12,22 @@ export function useDebouncedControl<Value>({
   value: Value;
   onChange?: (newValue: Value) => void;
 }) {
-  const [value, setValue] = useReinitializingState(inputValue);
+  const [value, setValue] = useState(inputValue);
 
   const debounceTime = debounce === true ? defaultDebounceTime : debounce || 0;
   const enqueueChange = useDebouncedCallback(
     (output: Value) => onChange?.(output),
     debounceTime
   );
+
+  const latestEnqueueChange = useRef(enqueueChange);
+  latestEnqueueChange.current = enqueueChange;
+
+  useEffect(() => {
+    if (!latestEnqueueChange.current.isPending()) {
+      setValue(inputValue);
+    }
+  }, [inputValue]);
 
   return {
     value,
@@ -28,10 +37,4 @@ export function useDebouncedControl<Value>({
       enqueueChange(newValue);
     },
   };
-}
-
-function useReinitializingState<State>(initialState: State) {
-  const [state, setState] = useState(initialState);
-  useEffect(() => setState(initialState), [initialState]);
-  return [state, setState] as const;
 }
