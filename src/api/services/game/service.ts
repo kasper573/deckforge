@@ -1,10 +1,10 @@
 import { z } from "zod";
-import type { Game } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { access } from "../../middlewares/access";
 import { createFilterType, createResultType } from "../../utils/search";
 import { UserFacingError } from "../../utils/UserFacingError";
+import type { Game } from "./types";
 import { gameType } from "./types";
 
 export type GameService = ReturnType<typeof createGameService>;
@@ -13,10 +13,10 @@ export function createGameService() {
   return t.router({
     create: t.procedure
       .use(access())
-      .input(z.object({ name: z.string() }))
-      .mutation(async ({ input: data, ctx }) => {
+      .input(gameType.pick({ name: true, definition: true }))
+      .mutation(async ({ input, ctx }) => {
         await ctx.db.game.create({
-          data: { ...data, ownerId: ctx.user.userId },
+          data: { ownerId: ctx.user.userId, ...input },
         });
       }),
     read: t.procedure
@@ -28,15 +28,19 @@ export function createGameService() {
         if (!game) {
           throw new UserFacingError("Game not found");
         }
-        return game;
+        return game as unknown as Game;
       }),
-    rename: t.procedure
-      .input(gameType.pick({ gameId: true, name: true }))
+    update: t.procedure
+      .input(
+        gameType
+          .pick({ gameId: true })
+          .and(gameType.pick({ name: true, definition: true }).partial())
+      )
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
-      .mutation(async ({ input: { gameId, name }, ctx }) => {
+      .mutation(async ({ input: { gameId, ...data }, ctx }) => {
         await ctx.db.game.update({
           where: { gameId },
-          data: { name },
+          data,
         });
       }),
     delete: t.procedure
@@ -48,7 +52,7 @@ export function createGameService() {
     list: t.procedure
       .input(createFilterType(z.unknown().optional()))
       .use(access())
-      .output(createResultType(gameType))
+      .output(createResultType(gameType.omit({ definition: true })))
       .query(async ({ input: { offset, limit }, ctx: { db, user } }) => {
         const [total, entities] = await Promise.all([
           db.game.count({ where: { ownerId: user.userId } }),
@@ -58,7 +62,7 @@ export function createGameService() {
             where: { ownerId: user.userId },
           }),
         ]);
-        return { total, entities };
+        return { total, entities: entities as unknown as Game[] };
       }),
   });
 }

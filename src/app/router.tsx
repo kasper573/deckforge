@@ -1,7 +1,8 @@
 import { OptionsRouter, stringParser, Redirect } from "react-typesafe-routes";
 import { lazy } from "react";
 import { literalParser } from "../lib/literalParser";
-import { entityIdType } from "../api/services/entity/types";
+import type { GameId } from "../api/services/game/types";
+import { entityIdType } from "../api/services/game/types";
 import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./pages/NotPermittedPage";
 import { NotAuthenticatedPage } from "./pages/NotAuthenticatedPage";
@@ -55,7 +56,7 @@ export const router = OptionsRouter({}, (route) => ({
         ":gameId",
         {
           component: lazy(() => import("./pages/GameEditPage")),
-          params: { gameId: stringParser },
+          params: { gameId: literalParser<GameId>() },
         },
         (route) => ({
           deck: route(

@@ -1,4 +1,3 @@
-import type { PropertyType } from "@prisma/client";
 import ListItem from "@mui/material/ListItem";
 import Checkbox from "@mui/material/Checkbox";
 import TextField from "@mui/material/TextField";
@@ -6,24 +5,25 @@ import type { ComponentType, HTMLAttributes } from "react";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import List from "@mui/material/List";
 import produce from "immer";
-import type {
-  PropertyRecord,
-  PropertyValues,
-} from "../../api/services/entity/types";
 import { useDebouncedControl } from "../hooks/useDebouncedControl";
+import type {
+  Property,
+  PropertyType,
+  PropertyValues,
+} from "../../api/services/game/types";
 
 export function PropertiesEditor({
   properties,
   values,
   onChange,
 }: {
-  properties: PropertyRecord;
+  properties: Property[];
   values: PropertyValues;
   onChange: (updated: PropertyValues) => void;
 }) {
   return (
     <List>
-      {Object.entries(properties).map(([name, { propertyId, type }]) => {
+      {properties.map(({ propertyId, name, type }) => {
         return (
           <PropertyEditor
             key={propertyId}
