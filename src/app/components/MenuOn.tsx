@@ -29,7 +29,10 @@ export function MenuOn<T extends Element>({
 }: MenuOnProps<T>) {
   const [anchor, setAnchor] = useState<null | T>(null);
   const isOpen = !!anchor;
-  const open = (event: MouseEvent<T>) => setAnchor(event.currentTarget);
+  const open = (event: MouseEvent<T>) => {
+    event.stopPropagation();
+    setAnchor(event.currentTarget);
+  };
   const toggle = (event: MouseEvent<T>) => (isOpen ? close() : open(event));
   const close = () => setAnchor(null);
   return (

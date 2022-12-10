@@ -1,19 +1,22 @@
 import { t } from "./trpc";
-import { access } from "./middlewares/access";
-import type { GameService } from "./services/game";
+import type { GameService } from "./services/game/service";
 import type { UserService } from "./services/user/service";
+import type { DeckService } from "./services/deck/service";
+import type { CardService } from "./services/card/service";
+import type { EntityService } from "./services/entity/service";
+import type { EventService } from "./services/event/service";
 
 export function createApiRouter(services: ApiServices) {
-  return t.router({
-    public: t.procedure.query(() => "public data"),
-    private: t.procedure.use(access()).query(() => "private data"),
-    ...services,
-  });
+  return t.router(services);
 }
 
-export interface ApiServices {
+export type ApiServices = {
   game: GameService;
   user: UserService;
-}
+  deck: DeckService;
+  card: CardService;
+  entity: EntityService;
+  event: EventService;
+};
 
 export type ApiRouter = ReturnType<typeof createApiRouter>;

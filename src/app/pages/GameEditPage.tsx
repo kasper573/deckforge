@@ -8,11 +8,12 @@ import { Page } from "../layout/Page";
 import { router } from "../router";
 import { trpc } from "../trpc";
 import { TextField } from "../controls/TextField";
+import { useToastProcedure } from "../hooks/useToastProcedure";
 
 export default function GameEditPage() {
   const { gameId } = useRouteParams(router.build().game);
   const game = trpc.game.read.useQuery(gameId);
-  const renameGame = trpc.game.rename.useMutation();
+  const renameGame = useToastProcedure(trpc.game.rename);
 
   return (
     <Page>
@@ -21,7 +22,7 @@ export default function GameEditPage() {
           debounce
           label="Game name"
           value={game.data?.name ?? ""}
-          onValueChange={(name) => renameGame.mutate({ id: gameId, name })}
+          onValueChange={(name) => renameGame.mutate({ gameId, name })}
         />
       </Header>
       <Paper sx={{ mb: 3 }}>

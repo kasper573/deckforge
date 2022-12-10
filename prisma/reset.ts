@@ -1,24 +1,21 @@
+import type { DatabaseClient } from "../src/api/db";
 import { createDatabaseClient } from "../src/api/db";
-import { seed } from "./seed";
+import { seed, withClient } from "./seed";
 
-export async function reset(modelNames?: string[]) {
-  const client = createDatabaseClient();
+async function reset(modelNames?: string[]) {
+  await withClient(createDatabaseClient(), async (client) => {
+    await deleteAll(client, modelNames);
+    await seed(client);
+  });
+}
+
+function deleteAll(client: DatabaseClient, modelNames?: string[]) {
   if (!modelNames) {
     modelNames = Object.keys(client).filter((key) => isModel(client[key]));
   }
-  try {
-    for (const modelName of modelNames) {
-      console.log(`Deleting all entries for model "${modelName}"`);
-      await client[modelName].deleteMany({});
-    }
-  } catch (e) {
-    console.error(e);
-    process.exit(1);
-  } finally {
-    await client.$disconnect();
-  }
-
-  await seed(client);
+  return client.$transaction(
+    modelNames.map((modelName) => client[modelName].deleteMany())
+  );
 }
 
 function isModel(value: unknown) {
@@ -27,5 +24,5 @@ function isModel(value: unknown) {
 
 if (require.main === module) {
   const modelName = process.argv[2]?.trim();
-  reset(modelName ? [modelName] : undefined);
+  reset(modelName ? modelName.split(",").map((s) => s.trim()) : undefined);
 }

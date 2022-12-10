@@ -71,6 +71,10 @@ export function updateProfile({
   cy.findByRole("alert").should("contain", "Profile updated");
 }
 
+export function assertProfile({ email }: { email: string }) {
+  cy.findByLabelText("Email").should("have.value", email);
+}
+
 export function signOut() {
   showUserMenu().within(() => {
     cy.findByRole(/button|menuitem/, { name: /sign out/i }).click();
@@ -82,8 +86,13 @@ export function showUserMenu() {
   return cy.findByRole("menu", { name: /user menu/i });
 }
 
+export function closeUserMenu() {
+  cy.get("body").click("bottomRight");
+}
+
 export function assertSignedIn(username?: string) {
   showUserMenu().contains("Signed in" + (username ? ` as ${username}` : ""));
+  closeUserMenu();
 }
 
 export function assertSignedOut() {

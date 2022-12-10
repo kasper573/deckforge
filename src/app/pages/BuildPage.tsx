@@ -15,10 +15,11 @@ import { Header } from "../components/Header";
 import { Delete, Edit, Play } from "../components/icons";
 import { trpc } from "../trpc";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
+import { useToastProcedure } from "../hooks/useToastProcedure";
 
 export default function BuildPage() {
-  const gameList = trpc.game.myGameList.useQuery({ offset: 0, limit: 10 });
-  const createGame = trpc.game.create.useMutation();
+  const gameList = trpc.game.list.useQuery({ offset: 0, limit: 10 });
+  const createGame = useToastProcedure(trpc.game.create);
   const prompt = useModal(PromptDialog);
 
   async function enterNameAndCreateGame() {
@@ -37,8 +38,8 @@ export default function BuildPage() {
       <Header>BuildPage</Header>
       <Paper sx={{ mb: 3 }}>
         <List dense aria-label="Games">
-          {gameList.data?.entities.map(({ id, name }) => (
-            <GameListItem key={id} id={id} name={name} />
+          {gameList.data?.entities.map((game) => (
+            <GameListItem key={game.gameId} {...game} />
           ))}
           {gameList.data?.total === 0 && (
             <Typography align="center">
@@ -54,9 +55,9 @@ export default function BuildPage() {
   );
 }
 
-function GameListItem({ id, name }: Pick<Game, "id" | "name">) {
+function GameListItem({ gameId, name }: Game) {
   const confirm = useModal(ConfirmDialog);
-  const deleteGame = trpc.game.delete.useMutation();
+  const deleteGame = useToastProcedure(trpc.game.delete);
 
   async function confirmDelete() {
     const shouldDelete = await confirm({
@@ -64,7 +65,7 @@ function GameListItem({ id, name }: Pick<Game, "id" | "name">) {
       content: `Are you sure you want to delete "${name}". This action cannot be reversed.`,
     });
     if (shouldDelete) {
-      deleteGame.mutate(id);
+      deleteGame.mutate(gameId);
     }
   }
 
@@ -73,14 +74,11 @@ function GameListItem({ id, name }: Pick<Game, "id" | "name">) {
       aria-label={name}
       secondaryAction={
         <>
-          <LinkIconButton
-            to={router.play().game({ gameId: id })}
-            aria-label="play"
-          >
+          <LinkIconButton to={router.play().game({ gameId })} aria-label="play">
             <Play />
           </LinkIconButton>
           <LinkIconButton
-            to={router.build().game({ gameId: id })}
+            to={router.build().game({ gameId })}
             aria-label="edit"
           >
             <Edit />

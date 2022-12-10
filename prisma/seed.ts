@@ -1,17 +1,36 @@
+import type { DatabaseClient } from "../src/api/db";
 import { createDatabaseClient } from "../src/api/db";
+import { createAuthenticator } from "../src/api/services/user/authenticator";
+import { env } from "../src/api/env";
+import { roleToAccessLevel } from "../src/api/services/user/types";
 
-export async function seed(client = createDatabaseClient()) {
-  const id = "cl9ebqhxk00003b600tymydho";
+export async function seed(
+  client: DatabaseClient,
+  { createPasswordHash } = createAuthenticator()
+) {
+  if (!env.seed) {
+    return;
+  }
+  const { name, email, password } = env.seed.adminUser;
+  const userData = {
+    accessLevel: roleToAccessLevel("Admin"),
+    name,
+    email,
+    passwordHash: await createPasswordHash(password),
+  };
+  await client.user.upsert({
+    update: userData,
+    create: userData,
+    where: { email },
+  });
+}
+
+export async function withClient(
+  client: DatabaseClient,
+  fn: (client: DatabaseClient) => void | Promise<unknown>
+) {
   try {
-    await client.example.upsert({
-      where: {
-        id,
-      },
-      create: {
-        id,
-      },
-      update: {},
-    });
+    await fn(client);
   } catch (e) {
     console.error(e);
     process.exit(1);
@@ -21,5 +40,5 @@ export async function seed(client = createDatabaseClient()) {
 }
 
 if (require.main === module) {
-  seed();
+  withClient(createDatabaseClient(), seed);
 }

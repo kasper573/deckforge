@@ -1,10 +1,24 @@
 import { z } from "zod";
+import type { User } from "@prisma/client";
 import { createPropertyMatchRefiner } from "../../../lib/zod-extensions/zodRefiner";
-import { userType } from "../../../../prisma/zod";
+import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 
 export function roleToAccessLevel(role: UserRole): number {
   return userRoleType._def.values.indexOf(role);
 }
+
+export const usernameType = z.string().min(6).max(12);
+export const passwordType = z.string().min(12).max(36);
+
+export const userType = z.object<ZodShapeFor<User>>({
+  userId: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  name: usernameType,
+  email: z.string().email(),
+  passwordHash: z.string(),
+  accessLevel: z.number().int(),
+});
 
 export type UserRole = z.infer<typeof userRoleType>;
 export const userRoleType = z.enum(["Guest", "User", "Admin"]);
@@ -14,9 +28,6 @@ const passwordMatcher = createPropertyMatchRefiner(
   "passwordConfirm",
   "Passwords do not match"
 );
-
-export const usernameType = z.string().min(6).max(12);
-export const passwordType = z.string().min(12).max(36);
 
 export type UserProfile = z.infer<typeof userProfileType>;
 export const userProfileType = userType.pick({ name: true, email: true });
@@ -42,7 +53,7 @@ export const updateProfilePayloadType = z
 
 export type JWTUser = z.infer<typeof jwtUserType>;
 export const jwtUserType = z.object({
-  id: z.string(),
+  userId: userType.shape.userId,
   access: userType.shape.accessLevel,
   name: usernameType,
 });

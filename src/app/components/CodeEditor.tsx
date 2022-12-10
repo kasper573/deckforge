@@ -1,10 +1,19 @@
-import Paper from "@mui/material/Paper";
-import type { ComponentProps } from "react";
+import Editor from "@monaco-editor/react";
+import { useDebouncedControl } from "../hooks/useDebouncedControl";
 
-export function CodeEditor({ sx, ...props }: ComponentProps<typeof Paper>) {
+export interface CodeEditorProps {
+  value?: string;
+  onChange: (value: string) => void;
+}
+
+export function CodeEditor({ value = "", onChange }: CodeEditorProps) {
+  const control = useDebouncedControl({ value, onChange });
   return (
-    <Paper sx={{ p: 2, ...sx }} {...props}>
-      Code Editor
-    </Paper>
+    <Editor
+      defaultLanguage="typescript"
+      theme="vs-dark"
+      value={control.value}
+      onChange={(newValue = "") => control.setValue(newValue)}
+    />
   );
 }

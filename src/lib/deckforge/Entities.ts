@@ -11,40 +11,40 @@ export class Entity<TId extends Id = Id> {
   id: TId = createId();
 }
 
-export type PlayerId = Id<"PlayerId">;
-export class Player extends Entity<PlayerId> {
-  constructor(public deck: DeckId, public health: number = 0) {
+export type RuntimePlayerId = Id<"PlayerId">;
+export class RuntimePlayer extends Entity<RuntimePlayerId> {
+  constructor(public deck: RuntimeDeckId, public health: number = 0) {
     super();
   }
 }
 
-export type CardId = Id<"CardId">;
-export class Card extends Entity<CardId> {
+export type RuntimeCardId = Id<"CardId">;
+export class RuntimeCard extends Entity<RuntimeCardId> {
   constructor(public effects: Effects) {
     super();
   }
 }
 
-export type DeckId = Id<"DeckId">;
-export class Deck extends Entity<DeckId> {
-  public cards: CardId[];
-  constructor(cards: Iterable<CardId>) {
+export type RuntimeDeckId = Id<"DeckId">;
+export class RuntimeDeck extends Entity<RuntimeDeckId> {
+  public cards: RuntimeCardId[];
+  constructor(cards: Iterable<RuntimeCardId>) {
     super();
     this.cards = Array.from(cards);
   }
 }
 
-export type BattleId = Id<"BattleId">;
-export class Battle extends Entity<BattleId> {
+export type RuntimeBattleId = Id<"BattleId">;
+export class RuntimeBattle extends Entity<RuntimeBattleId> {
   constructor(
-    public member1: BattleMember,
-    public member2: BattleMember,
-    public winner?: PlayerId
+    public member1: RuntimeBattleMember,
+    public member2: RuntimeBattleMember,
+    public winner?: RuntimePlayerId
   ) {
     super();
   }
 
-  selectMember(playerId: PlayerId): BattleMember {
+  selectMember(playerId: RuntimePlayerId): RuntimeBattleMember {
     const member = [this.member1, this.member2].find(
       (member) => member.playerId === playerId
     );
@@ -55,18 +55,18 @@ export class Battle extends Entity<BattleId> {
   }
 }
 
-export class BattleMember {
+export class RuntimeBattleMember {
   constructor(
-    public playerId: PlayerId,
+    public playerId: RuntimePlayerId,
     public cards: {
-      hand: CardId[];
-      draw: CardId[];
-      discard: CardId[];
+      hand: RuntimeCardId[];
+      draw: RuntimeCardId[];
+      discard: RuntimeCardId[];
     }
   ) {}
 
-  static from(playerId: PlayerId, deck: Deck) {
-    return new BattleMember(playerId, {
+  static from(playerId: RuntimePlayerId, deck: RuntimeDeck) {
+    return new RuntimeBattleMember(playerId, {
       hand: [],
       draw: [...deck.cards],
       discard: [],

@@ -1,6 +1,7 @@
 import { findMainMenuOption, resetData } from "../support/actions/common";
 import type { TestUser } from "../support/actions/user";
 import {
+  assertProfile,
   assertSignedIn,
   assertSignedOut,
   nextTestUser,
@@ -10,12 +11,9 @@ import {
   updateProfile,
 } from "../support/actions/user";
 
-beforeEach(() => {
-  resetData();
-  cy.visit("/");
-});
-
 describe("guest", () => {
+  beforeEach(() => cy.visit("/"));
+
   it("can not see link to build page in menu", () => {
     findMainMenuOption("Admin").should("not.exist");
   });
@@ -29,6 +27,7 @@ describe("guest", () => {
 describe("user", () => {
   let user: TestUser;
   beforeEach(() => {
+    resetData();
     cy.visit("/");
     user = nextTestUser();
     register(user.name, user.password, user.email);
@@ -49,7 +48,7 @@ describe("user", () => {
     signOut();
     cy.visit("/"); // Reload to clear any potential form cache
     signIn(user.name, user.password);
-    cy.findByLabelText("Email").should("have.value", "new@email.com");
+    assertProfile({ email: "new@email.com" });
   });
 
   it("can change their password", () => {
@@ -57,5 +56,37 @@ describe("user", () => {
     signOut();
     signIn(user.name, "my very long new password");
     assertSignedIn(user.name);
+  });
+});
+
+describe("two different users", () => {
+  const user1 = nextTestUser();
+  const user2 = nextTestUser();
+
+  before(() => {
+    resetData();
+    cy.visit("/");
+    register(user1.name, user1.password, user1.email);
+    signOut();
+    register(user2.name, user2.password, user2.email);
+    signOut();
+  });
+
+  it("gets signed in to the correct account", () => {
+    cy.visit("/");
+    signIn(user1.name, user1.password);
+    assertSignedIn(user1.name);
+    signOut();
+    signIn(user2.name, user2.password);
+    assertSignedIn(user2.name);
+  });
+
+  it("can only access their own profile data", () => {
+    cy.visit("/");
+    signIn(user1.name, user1.password);
+    assertProfile({ email: user1.email });
+    signOut();
+    signIn(user2.name, user2.password);
+    assertProfile({ email: user2.email });
   });
 });

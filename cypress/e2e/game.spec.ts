@@ -1,8 +1,16 @@
-import { clickMainMenuOption, resetData } from "../support/actions/common";
+import { resetData } from "../support/actions/common";
 import { register } from "../support/actions/user";
+import {
+  clickGameAction,
+  createGame,
+  findGameItem,
+  findGameList,
+  gotoGameList,
+} from "../support/actions/game";
 
 before(() => {
   cy.visit("/");
+  resetData("user");
   register("gameTester", "foobarfoobar", "game@testers.com");
 });
 
@@ -40,29 +48,3 @@ describe("game", () => {
     findGameItem("To be deleted").should("not.exist");
   });
 });
-
-function gotoGameList() {
-  clickMainMenuOption(/build/i);
-}
-
-function findGameList() {
-  return cy.findByRole("list", { name: /games/i });
-}
-
-function findGameItem(name: string) {
-  return findGameList().findByRole("listitem", { name });
-}
-
-function clickGameAction(gameName: string, actionName: RegExp) {
-  findGameItem(gameName).within(() =>
-    cy.findByRole(/button|link/, { name: actionName }).click()
-  );
-}
-
-function createGame(name: string) {
-  cy.findByRole("button", { name: /new game/i }).click();
-  cy.findByRole("dialog").within(() => {
-    cy.findByRole("textbox", { name: /name/i }).type(name);
-    cy.findByRole("form").submit();
-  });
-}

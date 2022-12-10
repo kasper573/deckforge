@@ -4,7 +4,8 @@ import type { UserRole } from "../services/user/types";
 import { roleToAccessLevel } from "../services/user/types";
 
 export function access(leastRequiredRole: UserRole = "User") {
-  return t.middleware(({ ctx, next }) => {
+  return t.middleware((opts) => {
+    const { ctx, next } = opts;
     if (!ctx.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }

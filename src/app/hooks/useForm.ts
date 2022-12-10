@@ -2,32 +2,37 @@ import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { useForm as useRHF } from "react-hook-form";
 import type { z, ZodType } from "zod";
 import { useCallback } from "react";
-import get from "lodash.get";
 import type { UseTRPCMutationResult } from "@trpc/react-query/shared";
 import type { TRPCClientErrorLike } from "@trpc/client";
 import { TRPCClientError } from "@trpc/client";
-import type { FieldPath } from "react-hook-form";
+import type { FieldPath, DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ZodString } from "zod";
+import { get } from "lodash";
 import type { ApiRouter } from "../../api/router";
 import { zodTypeAtPath } from "../../lib/zod-extensions/zodTypeAtPath";
 import { normalizeType } from "../../lib/zod-extensions/zodNormalize";
+import { useOnChange } from "./useOnChange";
 
 /**
  * zod + tRPC + mui specific composition of react-hook-form
  */
 export function useForm<T extends ZodType>(
   schema: T,
-  formOptions: { defaultValues?: z.infer<T> } = {}
+  { defaultValues }: { defaultValues?: DefaultValues<z.infer<T>> } = {}
 ) {
   const form = useRHF<z.infer<T>>({
     resolver: zodResolver(schema),
-    ...formOptions,
+    defaultValues,
   });
+
   const {
     register,
     formState: { errors },
+    reset,
   } = form;
+
+  useOnChange(defaultValues, reset);
 
   const useMutation = <Response>(
     mutation: AnyFormMutation<z.infer<T>, Response>,
@@ -125,8 +130,12 @@ function generalMutationError(mutation: AnyFormMutation) {
     : undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyFormMutation<Payload = any, Response = any> = UseTRPCMutationResult<
+export type AnyFormMutation<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Payload = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Response = any
+> = UseTRPCMutationResult<
   Response,
   TRPCClientErrorLike<ApiRouter>,
   Payload,

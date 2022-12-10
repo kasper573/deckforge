@@ -1,7 +1,6 @@
 import type { TextFieldProps as MuiTextFieldProps } from "@mui/material/TextField";
 import MuiTextField from "@mui/material/TextField";
-import { useEffect, useState } from "react";
-import { useDebouncedCallback } from "use-debounce";
+import { useDebouncedControl } from "../hooks/useDebouncedControl";
 
 export type TextFieldProps = Omit<MuiTextFieldProps, "value"> & {
   value: string;
@@ -9,37 +8,23 @@ export type TextFieldProps = Omit<MuiTextFieldProps, "value"> & {
   debounce?: number | boolean;
 };
 
-const defaultDebounceTime = 250;
-
 export function TextField({
-  value: inputValue,
+  value,
   onValueChange,
-  debounce,
+  debounce = false,
   ...rest
 }: TextFieldProps) {
-  const [text, setText] = useReinitializingState(inputValue);
-
-  const debounceTime = debounce === true ? defaultDebounceTime : debounce || 0;
-  const enqueueChange = useDebouncedCallback(
-    (output: string) => onValueChange?.(output),
-    debounceTime
-  );
-
+  const control = useDebouncedControl({
+    value,
+    debounce,
+    onChange: onValueChange,
+  });
   return (
     <MuiTextField
-      value={text}
-      onBlur={() => enqueueChange.flush()}
-      onChange={(e) => {
-        setText(e.target.value);
-        enqueueChange(e.target.value);
-      }}
+      value={control.value}
+      onBlur={() => control.flush()}
+      onChange={(e) => control.setValue(e.target.value)}
       {...rest}
     />
   );
-}
-
-export function useReinitializingState<State>(initialState: State) {
-  const [state, setState] = useState(initialState);
-  useEffect(() => setState(initialState), [initialState]);
-  return [state, setState] as const;
 }

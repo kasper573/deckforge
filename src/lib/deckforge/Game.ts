@@ -1,22 +1,22 @@
 import { createMachine, createMachineActions } from "../machine/Machine";
 import { pull } from "../ts-extensions/pull";
 import type { MachineContext } from "../machine/MachineContext";
-import { Battle, BattleMember } from "./Entities";
+import { RuntimeBattle, RuntimeBattleMember } from "./Entities";
 import type {
-  BattleId,
-  Card,
-  CardId,
-  Deck,
+  RuntimeBattleId,
+  RuntimeCard,
+  RuntimeCardId,
+  RuntimeDeck,
   EntityCollection,
-  Player,
-  PlayerId,
+  RuntimePlayer,
+  RuntimePlayerId,
 } from "./Entities";
 
 export interface GameState {
-  players: EntityCollection<Player>;
-  cards: EntityCollection<Card>;
-  decks: EntityCollection<Deck>;
-  battles: EntityCollection<Battle>;
+  players: EntityCollection<RuntimePlayer>;
+  cards: EntityCollection<RuntimeCard>;
+  decks: EntityCollection<RuntimeDeck>;
+  battles: EntityCollection<RuntimeBattle>;
 }
 
 export type GameMachine = ReturnType<typeof createGame>;
@@ -26,17 +26,17 @@ export type GameActions = typeof actions;
 export type GameContext = MachineContext<GameState, GameActions>;
 
 const actions = createMachineActions<GameState>()({
-  startBattle(state, [player1, player2]: [PlayerId, PlayerId]) {
+  startBattle(state, [player1, player2]: [RuntimePlayerId, RuntimePlayerId]) {
     const player1Deck = pull(state.decks, pull(state.players, player1).deck);
     const player2Deck = pull(state.decks, pull(state.players, player2).deck);
-    const battle = new Battle(
-      BattleMember.from(player1, player1Deck),
-      BattleMember.from(player2, player2Deck)
+    const battle = new RuntimeBattle(
+      RuntimeBattleMember.from(player1, player1Deck),
+      RuntimeBattleMember.from(player2, player2Deck)
     );
     state.battles.set(battle.id, battle);
     return battle.id;
   },
-  endTurn(state, battleId: BattleId) {
+  endTurn(state, battleId: RuntimeBattleId) {
     const battle = pull(state.battles, battleId);
     const player1 = pull(state.players, battle.member1.playerId);
     const player2 = pull(state.players, battle.member2.playerId);
@@ -48,7 +48,10 @@ const actions = createMachineActions<GameState>()({
   },
   drawCard(
     state,
-    { battleId, playerId }: { battleId: BattleId; playerId: PlayerId }
+    {
+      battleId,
+      playerId,
+    }: { battleId: RuntimeBattleId; playerId: RuntimePlayerId }
   ) {
     const battle = pull(state.battles, battleId);
     const member = battle.selectMember(playerId);
@@ -58,7 +61,7 @@ const actions = createMachineActions<GameState>()({
     }
     member.cards.hand.push(card);
   },
-  playCard(context, payload: CardPayload & { targetId: PlayerId }) {
+  playCard(context, payload: CardPayload & { targetId: RuntimePlayerId }) {
     // The card effect is handled by reactions
     // All we need to do here globally is to discard the card
     actions.discardCard(context, payload);
@@ -81,9 +84,9 @@ const actions = createMachineActions<GameState>()({
 });
 
 export interface CardPayload {
-  battleId: BattleId;
-  playerId: PlayerId;
-  cardId: CardId;
+  battleId: RuntimeBattleId;
+  playerId: RuntimePlayerId;
+  cardId: RuntimeCardId;
 }
 
 export function createGame(initialState: GameState) {

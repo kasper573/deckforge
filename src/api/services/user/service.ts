@@ -62,7 +62,7 @@ export function createUserService({
         }
 
         const jwtUser: JWTUser = {
-          id: user.id,
+          userId: user.userId,
           access: user.accessLevel,
           name: user.name,
         };
@@ -78,7 +78,7 @@ export function createUserService({
       .output(userProfileType)
       .query(({ ctx }) =>
         ctx.db.user.findFirstOrThrow({
-          where: { id: ctx.user.id },
+          where: { userId: ctx.user.userId },
         })
       ),
     updateProfile: t.procedure
@@ -92,7 +92,7 @@ export function createUserService({
             passwordHash: await createPasswordHash(input.password),
           };
         }
-        return db.user.update({ where: { id: user.id }, data });
+        return db.user.update({ where: { userId: user.userId }, data });
       }),
   });
 }

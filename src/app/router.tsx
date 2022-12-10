@@ -1,5 +1,7 @@
 import { OptionsRouter, stringParser, Redirect } from "react-typesafe-routes";
 import { lazy } from "react";
+import { literalParser } from "../lib/literalParser";
+import { entityIdType } from "../api/services/entity/types";
 import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./pages/NotPermittedPage";
 import { NotAuthenticatedPage } from "./pages/NotAuthenticatedPage";
@@ -85,12 +87,12 @@ export const router = OptionsRouter({}, (route) => ({
             (route) => ({
               edit: route(":entityId", {
                 component: lazy(() => import("./pages/EntityEditPage")),
-                params: { entityId: stringParser },
+                params: { entityId: literalParser(entityIdType._def.values) },
               }),
             })
           ),
           events: route("events", {
-            component: lazy(() => import("./pages/EventsPage")),
+            component: lazy(() => import("./pages/EventsPage/EventsPage")),
           }),
         })
       ),

@@ -1,11 +1,11 @@
-import { Card, Deck, Player } from "./Entities";
+import { RuntimeCard, RuntimeDeck, RuntimePlayer } from "./Entities";
 import { createGame } from "./Game";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = new DamageCard(1);
-  const deck = new Deck([card.id]);
-  const player1 = new Player(deck.id, 1);
-  const player2 = new Player(deck.id, 1);
+  const deck = new RuntimeDeck([card.id]);
+  const player1 = new RuntimePlayer(deck.id, 1);
+  const player2 = new RuntimePlayer(deck.id, 1);
 
   const game = createGame({
     decks: new Map([[deck.id, deck]]),
@@ -38,9 +38,9 @@ it("1v1: can play a two card deck and win the game", () => {
   const cards = new Map(
     [new DamageCard(1), new DamageCard(-1)].map((card) => [card.id, card])
   );
-  const deck = new Deck(cards.keys());
-  const player1 = new Player(deck.id, 1);
-  const player2 = new Player(deck.id, 1);
+  const deck = new RuntimeDeck(cards.keys());
+  const player1 = new RuntimePlayer(deck.id, 1);
+  const player2 = new RuntimePlayer(deck.id, 1);
 
   const game = createGame({
     decks: new Map([[deck.id, deck]]),
@@ -70,7 +70,7 @@ it("1v1: can play a two card deck and win the game", () => {
   });
 });
 
-class DamageCard extends Card {
+class DamageCard extends RuntimeCard {
   constructor(public damage: number) {
     super({
       playCard: [

@@ -9,5 +9,14 @@ export function createTheme() {
     palette: {
       mode: "dark",
     },
+    components: {
+      MuiDialogContent: {
+        styleOverrides: {
+          root: {
+            overflowY: "visible",
+          },
+        },
+      },
+    },
   });
 }
