@@ -9,7 +9,7 @@ import { Page } from "../layout/Page";
 import { router } from "../router";
 import { TextField } from "../controls/TextField";
 import { trpc } from "../trpc";
-import { useToastMutation } from "../hooks/useToastMutation";
+import { useToastProcedure } from "../hooks/useToastProcedure";
 
 export default function CardEditPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -24,7 +24,7 @@ export default function CardEditPage() {
     gameId,
   });
   const { data: card } = trpc.card.read.useQuery(cardId);
-  const updateCard = useToastMutation(trpc.card.update);
+  const updateCard = useToastProcedure(trpc.card.update);
 
   return (
     <Page>

@@ -3,7 +3,7 @@ import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import ListItemText from "@mui/material/ListItemText";
 import ListItem from "@mui/material/ListItem";
-import { useToastMutation } from "../../hooks/useToastMutation";
+import { useToastProcedure } from "../../hooks/useToastProcedure";
 import { trpc } from "../../trpc";
 import { useModal } from "../../../lib/useModal";
 import { DeleteDialog } from "../../dialogs/DeleteDialog";
@@ -14,8 +14,8 @@ import { useEventsPageState } from "./eventsPageState";
 
 export function ReactionListItem({ reactionId, name }: Reaction) {
   const { activeObjectId, setActiveObjectId } = useEventsPageState();
-  const deleteReaction = useToastMutation(trpc.event.deleteReaction);
-  const updateReaction = useToastMutation(trpc.event.updateReaction);
+  const deleteReaction = useToastProcedure(trpc.event.deleteReaction);
+  const updateReaction = useToastProcedure(trpc.event.updateReaction);
   const confirmDelete = useModal(DeleteDialog);
   const prompt = useModal(PromptDialog);
 

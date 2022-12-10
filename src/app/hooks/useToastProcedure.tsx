@@ -15,12 +15,12 @@ type ReactMutationProcedureLike<Input, Response> = {
   useMutation: () => AnyFormMutation<Input, Response>;
 };
 
-export function useToastMutation<Input, Response>(
+export function useToastProcedure<Input, Response>(
   procedure: ReactMutationProcedureLike<Input, Response>,
   options?: UseToastMutationOptions<inferProcedureOutput<Response>>
 ) {
   const { mutateAsync, mutate, ...rest } = procedure.useMutation();
-  const mutateAsyncWithToast = useToastMutationImpl<Input, Response>(
+  const mutateAsyncWithToast = useToastMutation<Input, Response>(
     mutateAsync,
     options
   );
@@ -31,7 +31,7 @@ export function useToastMutation<Input, Response>(
   };
 }
 
-function useToastMutationImpl<Input, Response>(
+export function useToastMutation<Input, Response>(
   mutate: (input: Input) => Promise<Response>,
   {
     success = defaultSuccessParser,

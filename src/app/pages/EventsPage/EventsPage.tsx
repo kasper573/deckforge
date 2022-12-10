@@ -10,7 +10,7 @@ import { SideMenu } from "../../components/SideMenu";
 import { Page } from "../../layout/Page";
 import { router } from "../../router";
 import { trpc } from "../../trpc";
-import { useToastMutation } from "../../hooks/useToastMutation";
+import { useToastProcedure } from "../../hooks/useToastProcedure";
 import { useModal } from "../../../lib/useModal";
 import { PromptDialog } from "../../dialogs/PromptDialog";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
@@ -22,7 +22,7 @@ export default function EventsPage() {
   const { gameId } = useRouteParams(router.build().game);
   const { data: actions } = trpc.event.actions.useQuery(gameId);
 
-  const createAction = useToastMutation(trpc.event.createAction);
+  const createAction = useToastProcedure(trpc.event.createAction);
   const prompt = useModal(PromptDialog);
 
   return (

@@ -18,7 +18,7 @@ import { trpc } from "../trpc";
 import { useModal } from "../../lib/useModal";
 import { PromptDialog } from "../dialogs/PromptDialog";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
-import { useToastMutation } from "../hooks/useToastMutation";
+import { useToastProcedure } from "../hooks/useToastProcedure";
 
 export default function DeckEditPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -26,7 +26,7 @@ export default function DeckEditPage() {
     router.build().game({ gameId }).deck().edit
   );
   const { data: deck } = trpc.deck.read.useQuery(deckId);
-  const renameDeck = useToastMutation(trpc.deck.rename);
+  const renameDeck = useToastProcedure(trpc.deck.rename);
 
   const { data: cards } = trpc.card.list.useQuery({
     filter: { deckId },
@@ -34,7 +34,7 @@ export default function DeckEditPage() {
     limit: 10,
   });
 
-  const createCard = useToastMutation(trpc.card.create);
+  const createCard = useToastProcedure(trpc.card.create);
   const prompt = useModal(PromptDialog);
 
   async function enterNameAndCreateCard() {
@@ -84,7 +84,7 @@ export default function DeckEditPage() {
 
 export function CardListItem({ gameId, deckId, cardId, name }: Card) {
   const confirm = useModal(ConfirmDialog);
-  const deleteCard = useToastMutation(trpc.card.delete);
+  const deleteCard = useToastProcedure(trpc.card.delete);
 
   async function confirmDelete() {
     const shouldDelete = await confirm({

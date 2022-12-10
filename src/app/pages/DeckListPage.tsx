@@ -16,7 +16,7 @@ import { trpc } from "../trpc";
 import { useModal } from "../../lib/useModal";
 import { PromptDialog } from "../dialogs/PromptDialog";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
-import { useToastMutation } from "../hooks/useToastMutation";
+import { useToastProcedure } from "../hooks/useToastProcedure";
 
 export default function DeckListPage() {
   const { gameId } = useRouteParams(router.build().game);
@@ -27,7 +27,7 @@ export default function DeckListPage() {
     limit: 10,
   });
 
-  const createDeck = useToastMutation(trpc.deck.create);
+  const createDeck = useToastProcedure(trpc.deck.create);
   const prompt = useModal(PromptDialog);
 
   return (
@@ -64,7 +64,7 @@ export default function DeckListPage() {
 
 export function DeckListItem({ gameId, deckId, name }: Deck) {
   const confirm = useModal(ConfirmDialog);
-  const deleteDeck = useToastMutation(trpc.deck.delete);
+  const deleteDeck = useToastProcedure(trpc.deck.delete);
 
   async function confirmDelete() {
     const shouldDelete = await confirm({

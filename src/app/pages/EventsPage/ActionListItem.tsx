@@ -6,7 +6,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import { trpc } from "../../trpc";
-import { useToastMutation } from "../../hooks/useToastMutation";
+import { useToastProcedure } from "../../hooks/useToastProcedure";
 import { useModal } from "../../../lib/useModal";
 import { DeleteDialog } from "../../dialogs/DeleteDialog";
 import { PromptDialog } from "../../dialogs/PromptDialog";
@@ -18,9 +18,9 @@ import { useEventsPageState } from "./eventsPageState";
 export function ActionListItem({ actionId, name }: Action) {
   const { activeObjectId, setActiveObjectId } = useEventsPageState();
   const { data: reactions } = trpc.event.reactions.useQuery(actionId);
-  const deleteAction = useToastMutation(trpc.event.deleteAction);
-  const updateAction = useToastMutation(trpc.event.updateAction);
-  const createReaction = useToastMutation(trpc.event.createReaction);
+  const deleteAction = useToastProcedure(trpc.event.deleteAction);
+  const updateAction = useToastProcedure(trpc.event.updateAction);
+  const createReaction = useToastProcedure(trpc.event.createReaction);
   const confirmDelete = useModal(DeleteDialog);
   const prompt = useModal(PromptDialog);
   return (
