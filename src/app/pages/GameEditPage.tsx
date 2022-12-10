@@ -1,19 +1,18 @@
 import Paper from "@mui/material/Paper";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
-import { useRouteParams } from "react-typesafe-routes";
 import { Header } from "../components/Header";
 import { LinkListItem } from "../components/Link";
 import { Page } from "../layout/Page";
 import { router } from "../router";
-import { trpc } from "../trpc";
 import { TextField } from "../controls/TextField";
-import { useToastProcedure } from "../hooks/useToastProcedure";
+import { useSelector } from "../store";
+import { editorActions } from "../features/editor/editorState";
+import { useActions } from "../../lib/useActions";
 
 export default function GameEditPage() {
-  const { gameId } = useRouteParams(router.build().game);
-  const game = trpc.game.read.useQuery(gameId);
-  const renameGame = useToastProcedure(trpc.game.rename);
+  const { renameGame } = useActions(editorActions);
+  const { name, gameId } = useSelector((state) => state.game);
 
   return (
     <Page>
@@ -21,8 +20,8 @@ export default function GameEditPage() {
         <TextField
           debounce
           label="Game name"
-          value={game.data?.name ?? ""}
-          onValueChange={(name) => renameGame.mutate({ gameId, name })}
+          value={name}
+          onValueChange={renameGame}
         />
       </Header>
       <Paper sx={{ mb: 3 }}>

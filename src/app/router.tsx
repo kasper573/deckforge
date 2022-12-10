@@ -1,11 +1,20 @@
-import { OptionsRouter, stringParser, Redirect } from "react-typesafe-routes";
-import { lazy } from "react";
+import type { RouteMiddleware } from "react-typesafe-routes";
+import {
+  OptionsRouter,
+  stringParser,
+  Redirect,
+  useRouteParams,
+} from "react-typesafe-routes";
+import { lazy, useEffect } from "react";
 import { literalParser } from "../lib/literalParser";
 import type { GameId } from "../api/services/game/types";
 import { entityIdType } from "../api/services/game/types";
+import { useActions } from "../lib/useActions";
 import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./pages/NotPermittedPage";
 import { NotAuthenticatedPage } from "./pages/NotAuthenticatedPage";
+import { trpc } from "./trpc";
+import { editorActions } from "./features/editor/editorState";
 
 const access = createAccessFactory({
   NotPermittedPage,
@@ -55,6 +64,7 @@ export const router = OptionsRouter({}, (route) => ({
       game: route(
         ":gameId",
         {
+          middleware: selectedGameMiddleware(),
           component: lazy(() => import("./pages/GameEditPage")),
           params: { gameId: literalParser<GameId>() },
         },
@@ -103,3 +113,24 @@ export const router = OptionsRouter({}, (route) => ({
 
 export const logoutRedirect = router.user().login();
 export const loginRedirect = router.user().profile();
+
+function selectedGameMiddleware(): RouteMiddleware {
+  return (SomeEditorPage) => {
+    function GameLoader() {
+      const { selectGame } = useActions(editorActions);
+      const { gameId } = useRouteParams(router.build().game);
+      const { data: game } = trpc.game.read.useQuery(gameId);
+      useEffect(() => {
+        if (game) {
+          selectGame(game);
+        }
+      }, [game, selectGame]);
+      if (!game) {
+        return <NotPermittedPage />;
+      }
+      return <SomeEditorPage />;
+    }
+
+    return GameLoader;
+  };
+}

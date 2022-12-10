@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { access } from "../../middlewares/access";
@@ -14,9 +15,13 @@ export function createGameService() {
     create: t.procedure
       .use(access())
       .input(gameType.pick({ name: true, definition: true }))
-      .mutation(async ({ input, ctx }) => {
+      .mutation(async ({ input: { definition, ...rest }, ctx }) => {
         await ctx.db.game.create({
-          data: { ownerId: ctx.user.userId, ...input },
+          data: {
+            ...rest,
+            ownerId: ctx.user.userId,
+            definition: definition as Prisma.JsonObject,
+          },
         });
       }),
     read: t.procedure
@@ -37,10 +42,13 @@ export function createGameService() {
           .and(gameType.pick({ name: true, definition: true }).partial())
       )
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
-      .mutation(async ({ input: { gameId, ...data }, ctx }) => {
+      .mutation(async ({ input: { gameId, definition, ...data }, ctx }) => {
         await ctx.db.game.update({
           where: { gameId },
-          data,
+          data: {
+            ...data,
+            definition: definition as Prisma.JsonObject,
+          },
         });
       }),
     delete: t.procedure

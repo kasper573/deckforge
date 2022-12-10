@@ -9,13 +9,6 @@ export const gameIdType = zodNominalString<GameId>();
 export type EntityId = z.infer<typeof entityIdType>;
 export const entityIdType = z.enum(["player", "card"]);
 
-export type Entity = z.infer<typeof entityType>;
-export const entityType = z.object({
-  gameId: gameIdType,
-  entityId: entityIdType,
-  name: z.string().min(1).max(32),
-});
-
 export type PropertyType = z.infer<typeof propertyValueType>;
 export const propertyValueType = z.enum(["string", "number", "boolean"]);
 export const propertyValueTypes = {
@@ -32,7 +25,7 @@ export const propertyType = z.object({
   propertyId: propertyIdType,
   name: z.string().min(1).max(32),
   type: propertyValueType,
-  entityId: entityType.shape.entityId,
+  entityId: entityIdType,
   gameId: z.string(),
 });
 
@@ -86,9 +79,11 @@ export const cardType = z.object({
 
 export type GameDefinition = z.infer<typeof gameDefinitionType>;
 export const gameDefinitionType = z.object({
-  decks: z.array(deckType),
-  entities: z.array(entityType),
-  actions: z.array(actionType),
+  decks: z.array(deckType).default([]),
+  cards: z.array(cardType).default([]),
+  properties: z.array(propertyType).default([]),
+  actions: z.array(actionType).default([]),
+  reactions: z.array(reactionType).default([]),
 });
 
 export type Game = z.infer<typeof gameType>;

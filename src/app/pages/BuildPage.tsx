@@ -5,7 +5,6 @@ import List from "@mui/material/List";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import type { Game } from "@prisma/client";
 import { PromptDialog } from "../dialogs/PromptDialog";
 import { useModal } from "../../lib/useModal";
 import { router } from "../router";
@@ -16,6 +15,7 @@ import { Delete, Edit, Play } from "../components/icons";
 import { trpc } from "../trpc";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
 import { useToastProcedure } from "../hooks/useToastProcedure";
+import type { Game } from "../../api/services/game/types";
 
 export default function BuildPage() {
   const gameList = trpc.game.list.useQuery({ offset: 0, limit: 10 });
@@ -30,7 +30,7 @@ export default function BuildPage() {
     if (!name) {
       return;
     }
-    createGame.mutate({ name });
+    createGame.mutate({ name, definition: {} });
   }
 
   return (
@@ -55,7 +55,7 @@ export default function BuildPage() {
   );
 }
 
-function GameListItem({ gameId, name }: Game) {
+function GameListItem({ gameId, name }: Pick<Game, "gameId" | "name">) {
   const confirm = useModal(ConfirmDialog);
   const deleteGame = useToastProcedure(trpc.game.delete);
 
