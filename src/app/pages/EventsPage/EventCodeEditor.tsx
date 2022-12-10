@@ -1,66 +1,43 @@
-import type { Action, Reaction } from "@prisma/client";
 import Box from "@mui/material/Box";
-import { CANCEL_INVALIDATE, trpc } from "../../trpc";
-import { useToastMutation } from "../../hooks/useToastProcedure";
 import { CodeEditor } from "../../components/CodeEditor";
-import { useQueryData } from "../../../lib/useQueryData";
-import { useEventsPageState } from "./eventsPageState";
+import { useSelector } from "../../store";
+import { editorActions, selectors } from "../../features/editor/editorState";
+import { useActions } from "../../../lib/useActions";
+import type { ActionId, ReactionId } from "../../../api/services/game/types";
 
 export function EventCodeEditor() {
-  const { activeObjectId } = useEventsPageState();
-  if (activeObjectId) {
-    switch (activeObjectId.type) {
+  const selectedObject = useSelector(selectors.selectedObject);
+  if (selectedObject) {
+    switch (selectedObject.type) {
       case "action":
-        return <ActionEditor actionId={activeObjectId.actionId} />;
+        return <ActionEditor actionId={selectedObject.actionId} />;
       case "reaction":
-        return <ReactionEditor reactionId={activeObjectId.reactionId} />;
+        return <ReactionEditor reactionId={selectedObject.reactionId} />;
     }
   }
   return <Box sx={{ p: 2 }}>Select an event to edit</Box>;
 }
 
-function ActionEditor({ actionId }: { actionId: Action["actionId"] }) {
-  const action = trpc.event.action.useQuery(actionId);
-  const mutation = useCacheMutation(action, trpc.event.updateAction);
-  const updateAction = useToastMutation(mutation.mutateAsync);
+function ActionEditor({ actionId }: { actionId: ActionId }) {
+  const action = useSelector(selectors.action(actionId));
+  const { updateAction } = useActions(editorActions);
 
   return (
     <CodeEditor
-      value={action.data?.code}
+      value={action?.code}
       onChange={(code) => updateAction({ actionId, code })}
     />
   );
 }
 
-function ReactionEditor({
-  reactionId,
-}: {
-  reactionId: Reaction["reactionId"];
-}) {
-  const reaction = trpc.event.reaction.useQuery(reactionId);
-  const mutation = useCacheMutation(reaction, trpc.event.updateReaction);
-  const updateReaction = useToastMutation(mutation.mutateAsync);
+function ReactionEditor({ reactionId }: { reactionId: ReactionId }) {
+  const reaction = useSelector(selectors.reaction(reactionId));
+  const { updateReaction } = useActions(editorActions);
 
   return (
     <CodeEditor
-      value={reaction.data?.code}
+      value={reaction?.code}
       onChange={(code) => updateReaction({ reactionId, code })}
     />
   );
-}
-
-function useCacheMutation(queryResult: any, mutationProcedure: any) {
-  const queryData = useQueryData(queryResult);
-  return mutationProcedure.useMutation({
-    onSuccess: (data: any) => {
-      queryData.set(data);
-      return CANCEL_INVALIDATE;
-    },
-    onMutate: (changes: any) => {
-      const existing = queryData.get();
-      if (existing) {
-        queryData.set({ ...existing, ...changes });
-      }
-    },
-  });
 }
