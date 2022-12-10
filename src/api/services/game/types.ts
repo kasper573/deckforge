@@ -39,7 +39,6 @@ export type Action = z.infer<typeof actionType>;
 export const actionType = z.object({
   actionId: actionIdType,
   name: z.string().min(1).max(32),
-  gameId: gameIdType,
   code: codeType,
 });
 

@@ -1,56 +1,39 @@
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
-import { useRouteParams } from "react-typesafe-routes";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
-import { Suspense } from "react";
-import type { Game } from "@prisma/client";
 import { Header } from "../../components/Header";
 import { SideMenu } from "../../components/SideMenu";
 import { Page } from "../../layout/Page";
-import { router } from "../../router";
-import { trpc } from "../../trpc";
-import { useToastProcedure } from "../../hooks/useToastProcedure";
 import { useModal } from "../../../lib/useModal";
 import { PromptDialog } from "../../dialogs/PromptDialog";
-import { LoadingIndicator } from "../../components/LoadingIndicator";
-import { Center } from "../../components/Center";
-import { ActionListItem } from "./ActionListItem";
+import { useSelector } from "../../store";
+import { useActions } from "../../../lib/useActions";
+import { editorActions } from "../../features/editor/editorState";
 import { EventCodeEditor } from "./EventCodeEditor";
+import { ActionListItem } from "./ActionListItem";
 
 export default function EventsPage() {
-  const { gameId } = useRouteParams(router.build().game);
-
-  const loadingIndicator = (
-    <Center>
-      <LoadingIndicator />
-    </Center>
-  );
-
   return (
     <Page>
-      <Header>Game: {gameId}</Header>
+      <Header>Events</Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>
         <SideMenu sx={{ position: "relative" }}>
-          <Suspense fallback={loadingIndicator}>
-            <EventList gameId={gameId} />
-          </Suspense>
+          <EventList />
         </SideMenu>
         <Paper sx={{ flex: 1, position: "relative" }}>
-          <Suspense fallback={loadingIndicator}>
-            <EventCodeEditor />
-          </Suspense>
+          <EventCodeEditor />
         </Paper>
       </Stack>
     </Page>
   );
 }
 
-function EventList({ gameId }: { gameId: Game["gameId"] }) {
-  const { data: actions } = trpc.event.actions.useQuery(gameId);
+function EventList() {
+  const actions = useSelector((state) => state.game.definition.actions);
+  const { createAction } = useActions(editorActions);
 
-  const createAction = useToastProcedure(trpc.event.createAction);
   const prompt = useModal(PromptDialog);
   return (
     <>
@@ -60,18 +43,16 @@ function EventList({ gameId }: { gameId: Game["gameId"] }) {
           prompt({
             title: `Add action`,
             fieldProps: { label: "Action name" },
-          }).then(
-            (name) => name && createAction.mutate({ gameId, name, code: "" })
-          )
+          }).then((name) => name && createAction({ name, code: "" }))
         }
       >
         Create action
       </Button>
       <List dense>
-        {actions?.map((action) => (
+        {actions.map((action) => (
           <ActionListItem key={action.actionId} {...action} />
         ))}
-        {actions?.length === 0 && (
+        {actions.length === 0 && (
           <Typography>This game contains no actions yet!</Typography>
         )}
       </List>
