@@ -9,11 +9,11 @@ import type {
   DeckId,
   EntityId,
   Game,
+  GameId,
   Property,
   Reaction,
   ReactionId,
 } from "../../../api/services/game/types";
-import { unusableObjectProxy } from "../../../lib/unusableObjectProxy";
 import { createEntityReducerFactory } from "../../../lib/createEntityReducers";
 
 export type SelectedObject =
@@ -26,7 +26,7 @@ export interface EditorState {
 }
 
 const initialState: EditorState = {
-  game: unusableObjectProxy("A game has to be selected before using editor"),
+  game: emptyGame(),
 };
 
 const entityReducers = createEntityReducerFactory<EditorState>();
@@ -104,3 +104,18 @@ export const noUndoActionList: Array<keyof typeof editorActions> = [];
 export const noUndoActions = noUndoActionList.map(
   (name) => `${editorSlice.name}/${name}`
 );
+
+function emptyGame(): Game {
+  return {
+    ownerId: "invalid-user-id",
+    gameId: "invalid-game-id" as GameId,
+    name: "Empty Game",
+    definition: {
+      properties: [],
+      decks: [],
+      cards: [],
+      actions: [],
+      reactions: [],
+    },
+  };
+}

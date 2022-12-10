@@ -9,7 +9,9 @@ import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./pages/NotPermittedPage";
 import { NotAuthenticatedPage } from "./pages/NotAuthenticatedPage";
 import { trpc } from "./trpc";
-import { editorActions } from "./features/editor/editorState";
+import { editorActions, selectors } from "./features/editor/editorState";
+import { useSelector } from "./store";
+import { LoadingPage } from "./pages/LoadingPage";
 
 const access = createAccessFactory({
   NotPermittedPage,
@@ -114,14 +116,15 @@ function selectedGameMiddleware(): RouteMiddleware {
     function GameLoader() {
       const { selectGame } = useActions(editorActions);
       const { gameId } = useRouteParams(router.build().game);
-      const { data: game } = trpc.game.read.useQuery(gameId);
+      const { data: remoteGame } = trpc.game.read.useQuery(gameId);
+      const localGame = useSelector(selectors.game);
       useEffect(() => {
-        if (game) {
-          selectGame(game);
+        if (remoteGame) {
+          selectGame(remoteGame);
         }
-      }, [game, selectGame]);
-      if (!game) {
-        return <NotPermittedPage />;
+      }, [remoteGame, selectGame]);
+      if (localGame.gameId !== remoteGame?.gameId) {
+        return <LoadingPage />;
       }
       return <SomeEditorPage />;
     }
