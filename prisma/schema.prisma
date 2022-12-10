@@ -48,7 +48,7 @@ model Card {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   name             String
-  code             String
+  code             String   @db.VarChar(1000)
   gameId           String
   game             Game     @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
   deckId           String
@@ -80,7 +80,7 @@ model Action {
   actionId  String     @id @default(cuid())
   name      String
   gameId    String
-  code      String
+  code      String     @db.VarChar(1000)
   game      Game       @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
   reactions Reaction[]
 }
@@ -88,7 +88,7 @@ model Action {
 model Reaction {
   reactionId String @id @default(cuid())
   name       String
-  code       String
+  code       String @db.VarChar(1000)
   actionId   String
   action     Action @relation(fields: [actionId], references: [actionId], onDelete: Cascade)
 }
