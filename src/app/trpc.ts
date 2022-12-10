@@ -1,5 +1,10 @@
 import { createTRPCReact } from "@trpc/react-query";
-import { httpBatchLink, loggerLink, TRPCClientError } from "@trpc/client";
+import {
+  createTRPCProxyClient,
+  httpBatchLink,
+  loggerLink,
+  TRPCClientError,
+} from "@trpc/client";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
 import { QueryClient } from "@tanstack/react-query";
@@ -48,8 +53,8 @@ export function createQueryClient(onBadToken?: () => void) {
   }
 }
 
-export function createTRPCClient(getAuthToken: () => string | undefined) {
-  return trpc.createClient({
+export function createTRPCClients(getAuthToken: () => string | undefined) {
+  const options = {
     transformer: superjson,
     links: [
       loggerLink({
@@ -67,7 +72,10 @@ export function createTRPCClient(getAuthToken: () => string | undefined) {
         },
       }),
     ],
-  });
+  };
+  const trpcClient = trpc.createClient(options);
+  const trpcClientProxy = createTRPCProxyClient<ApiRouter>(options);
+  return { trpcClient, trpcClientProxy };
 }
 
 function getApiBaseUrl() {

@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserHistory } from "history";
 import { App } from "./App";
-import { createQueryClient, createTRPCClient } from "./trpc";
+import { createQueryClient, createTRPCClients } from "./trpc";
 import { createTheme } from "./theme";
 import {
   getAuthToken,
@@ -25,10 +25,14 @@ if (env.analyticsId) {
 
 const store = createStore(getInitialEditorState());
 const queryClient = createQueryClient(resetAuthToken);
-const trpcClient = createTRPCClient(getAuthToken);
+const { trpcClient, trpcClientProxy } = createTRPCClients(getAuthToken);
 const history = createBrowserHistory();
 const theme = createTheme();
 setupAuthBehavior({ history });
+
+store.subscribe(() => {
+  trpcClientProxy.game.update.mutate(store.getState().editor.present.game);
+});
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <App
