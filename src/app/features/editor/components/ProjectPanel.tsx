@@ -5,10 +5,11 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { styled } from "@mui/material/styles";
 import { DeckAndCardTree } from "./DeckAndCardTree";
+import { EventTree } from "./EventTree";
 
 const tabs = [
   { label: "Decks", content: <DeckAndCardTree /> },
-  { label: "Events", content: <Events /> },
+  { label: "Events", content: <EventTree /> },
   { label: "Properties", content: <Properties /> },
 ];
 
@@ -37,10 +38,6 @@ const Root = styled(Paper)`
   display: flex;
   flex-direction: column;
 `;
-
-function Events() {
-  return <>Events</>;
-}
 
 function Properties() {
   return <>Properties</>;

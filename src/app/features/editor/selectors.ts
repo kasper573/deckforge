@@ -24,6 +24,22 @@ export const selectors = {
         })),
     }));
   },
+  events: (state: EditorState) => {
+    const { actions, reactions } = state.game.definition;
+    return actions.map((action) => ({
+      objectId: { type: "action", actionId: action.actionId } as EditorObjectId,
+      ...action,
+      reactions: reactions
+        .filter((reaction) => reaction.actionId === action.actionId)
+        .map((reaction) => ({
+          objectId: {
+            type: "reaction",
+            reactionId: reaction.reactionId,
+          } as EditorObjectId,
+          ...reaction,
+        })),
+    }));
+  },
   deck: (deckId: DeckId) => (state: EditorState) =>
     state.game.definition.decks.find((d) => d.deckId === deckId),
   card: (cardId: CardId) => (state: EditorState) =>

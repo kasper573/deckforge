@@ -34,6 +34,7 @@ export const editorSlice = createSlice({
     selectObject(state, { payload: newId }: PayloadAction<EditorObjectId>) {
       state.selectedObjectId = newId;
     },
+
     ...entityReducers<Property>()(
       "Property",
       "propertyId",
@@ -44,6 +45,17 @@ export const editorSlice = createSlice({
       "deckId",
       (state) => state.game.definition.decks
     ),
+    ...entityReducers<Action>()(
+      "Action",
+      "actionId",
+      (state) => state.game.definition.actions
+    ),
+    ...entityReducers<Reaction>()(
+      "Reaction",
+      "reactionId",
+      (state) => state.game.definition.reactions
+    ),
+
     createDeck(
       state,
       { payload }: PayloadAction<MakePartial<Omit<Deck, "deckId">, "name">>
@@ -75,16 +87,34 @@ export const editorSlice = createSlice({
         ...payload,
       });
     },
-    ...entityReducers<Action>()(
-      "Action",
-      "actionId",
-      (state) => state.game.definition.actions
-    ),
-    ...entityReducers<Reaction>()(
-      "Reaction",
-      "reactionId",
-      (state) => state.game.definition.reactions
-    ),
+    createAction(
+      state,
+      {
+        payload,
+      }: PayloadAction<MakePartial<Omit<Action, "actionId">, "name" | "code">>
+    ) {
+      state.game.definition.actions.push({
+        actionId: createId(),
+        name: "New Action",
+        code: "",
+        ...payload,
+      });
+    },
+    createReaction(
+      state,
+      {
+        payload,
+      }: PayloadAction<
+        MakePartial<Omit<Reaction, "reactionId">, "name" | "code">
+      >
+    ) {
+      state.game.definition.reactions.push({
+        reactionId: createId(),
+        name: "New Reaction",
+        code: "",
+        ...payload,
+      });
+    },
   },
 });
 
