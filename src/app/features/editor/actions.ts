@@ -1,5 +1,5 @@
-import type { EditorObjectId } from "./editorState";
-import { editorSlice } from "./editorState";
+import { editorSlice } from "./slice";
+import type { EditorObjectId } from "./types";
 
 function deleteObject(objectId: EditorObjectId) {
   switch (objectId.type) {

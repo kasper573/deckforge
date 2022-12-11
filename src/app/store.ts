@@ -9,8 +9,8 @@ import {
 import type { StateWithHistory } from "redux-undo";
 import undoable, { excludeAction } from "redux-undo";
 import { configureStore } from "@reduxjs/toolkit";
-import type { EditorState } from "./features/editor/editorState";
-import { editorSlice, noUndoActions } from "./features/editor/editorState";
+import { editorSlice, noUndoActions } from "./features/editor/slice";
+import type { EditorState } from "./features/editor/types";
 
 export function createRootReducer(): Reducer<RootState> {
   return combineReducers({

@@ -2,16 +2,12 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
 import type {
   Action,
-  ActionId,
   Card,
-  CardId,
   Deck,
-  DeckId,
   Game,
   GameId,
   Property,
   Reaction,
-  ReactionId,
 } from "../../../api/services/game/types";
 import {
   createEntityReducerFactory,
@@ -19,21 +15,9 @@ import {
 } from "../../../lib/createEntityReducers";
 import type { MakePartial } from "../../../lib/MakePartial";
 import type { editorActions } from "./actions";
+import type { EditorObjectId, EditorState } from "./types";
 
-export type EditorObjectId =
-  | { type: "action"; actionId: ActionId }
-  | { type: "reaction"; reactionId: ReactionId }
-  | { type: "deck"; deckId: DeckId }
-  | { type: "card"; cardId: CardId };
-
-export interface EditorState {
-  game: Game;
-  selectedObjectId?: EditorObjectId;
-}
-
-const initialState: EditorState = {
-  game: emptyGame(),
-};
+const initialState: EditorState = { game: emptyGame() };
 
 const entityReducers = createEntityReducerFactory<EditorState>();
 

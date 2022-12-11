@@ -5,7 +5,7 @@ import type {
   EntityId,
   ReactionId,
 } from "../../../api/services/game/types";
-import type { EditorObjectId, EditorState } from "./editorState";
+import type { EditorObjectId, EditorState } from "./types";
 
 export const selectors = {
   selectedObject: (state: EditorState) => state.selectedObjectId,
