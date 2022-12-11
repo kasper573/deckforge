@@ -2,10 +2,16 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
-import type { CardId } from "../../../../api/services/game/types";
+import type {
+  CardId,
+  PropertyId,
+  PropertyType,
+} from "../../../../api/services/game/types";
 import type { EditorObjectId } from "../types";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
+import { propertyValueType } from "../../../../api/services/game/types";
+import { Select } from "../../../controls/Select";
 import { PropertiesEditor } from "./PropertyEditor";
 
 export function InspectorPanel() {
@@ -21,6 +27,8 @@ function ObjectInspector({ id }: { id: EditorObjectId }) {
   switch (id.type) {
     case "card":
       return <CardInspector cardId={id.cardId} />;
+    case "property":
+      return <PropertyInspector propertyId={id.propertyId} />;
   }
   return (
     <Typography color="grey">
@@ -38,6 +46,25 @@ function CardInspector({ cardId }: { cardId: CardId }) {
       properties={properties}
       values={card?.propertyDefaults ?? {}}
       onChange={(propertyDefaults) => updateCard({ cardId, propertyDefaults })}
+    />
+  );
+}
+
+function PropertyInspector({ propertyId }: { propertyId: PropertyId }) {
+  const property = useSelector(selectors.property(propertyId));
+  const { updateProperty } = useActions(editorActions);
+
+  if (!property) {
+    return null;
+  }
+  return (
+    <Select
+      value={property.type}
+      label="Type"
+      options={propertyValueType._def.values}
+      onChange={(e) =>
+        updateProperty({ propertyId, type: e.target.value as PropertyType })
+      }
     />
   );
 }

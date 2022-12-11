@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { InputHTMLAttributes } from "react";
 import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import InputLabel from "@mui/material/InputLabel";
@@ -6,7 +6,7 @@ import { forwardRef } from "react";
 import { styled } from "@mui/material/styles";
 
 export interface SelectProps
-  extends Omit<HTMLAttributes<HTMLSelectElement>, "error" | "children"> {
+  extends Omit<InputHTMLAttributes<HTMLSelectElement>, "error" | "children"> {
   label?: string;
   error?: boolean;
   helperText?: string;

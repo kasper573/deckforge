@@ -5,6 +5,7 @@ import type {
   DeckId,
   EntityId,
   Property,
+  PropertyId,
   ReactionId,
 } from "../../../api/services/game/types";
 import type { EditorObjectId, EditorState } from "./types";
@@ -71,6 +72,8 @@ export const selectors = {
     state.game.definition.reactions.find((r) => r.reactionId === reactionId),
   reactionsFor: (actionId: ActionId) => (state: EditorState) =>
     state.game.definition.reactions.filter((r) => r.actionId === actionId),
+  property: (propertyId: PropertyId) => (state: EditorState) =>
+    state.game.definition.properties.find((p) => p.propertyId === propertyId),
   propertiesFor: (entityId: EntityId) => (state: EditorState) =>
     state.game.definition.properties.filter((p) => p.entityId === entityId),
   cardsFor: (deckId: DeckId) => (state: EditorState) =>
