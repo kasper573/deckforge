@@ -1,13 +1,13 @@
 import Stack from "@mui/material/Stack";
 import { useRouteParams } from "react-typesafe-routes";
 import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
 import { Header } from "../components/Header";
 import { CodeEditor } from "../components/CodeEditor";
 import { PropertiesEditor } from "../components/PropertyEditor";
 import { SideMenu } from "../components/SideMenu";
 import { Page } from "../layout/Page";
 import { router } from "../router";
-import { TextField } from "../controls/TextField";
 import { useSelector } from "../store";
 import { editorActions, selectors } from "../features/editor/editorState";
 import { useActions } from "../../lib/useActions";
@@ -28,10 +28,9 @@ export default function CardEditPage() {
     <Page>
       <Header>
         <TextField
-          debounce
           label="Card name"
           value={card?.name ?? ""}
-          onValueChange={(name) => updateCard({ cardId, name })}
+          onChange={(e) => updateCard({ cardId, name: e.target.value })}
         />
       </Header>
       <Stack direction="row" spacing={2} sx={{ flex: 1 }}>

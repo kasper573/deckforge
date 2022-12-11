@@ -7,12 +7,12 @@ import ListItemText from "@mui/material/ListItemText";
 import { useRouteParams } from "react-typesafe-routes";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
 import { LinkIconButton } from "../components/Link";
 import { Delete, Edit } from "../components/icons";
 import { Header } from "../components/Header";
 import { Page } from "../layout/Page";
 import { router } from "../router";
-import { TextField } from "../controls/TextField";
 import { useModal } from "../../lib/useModal";
 import { PromptDialog } from "../dialogs/PromptDialog";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
@@ -49,10 +49,9 @@ export default function DeckEditPage() {
           <span>Game: {gameId}.</span>
           <span>
             <TextField
-              debounce
               label="Deck name"
               value={deck?.name ?? ""}
-              onValueChange={(name) => updateDeck({ deckId, name })}
+              onChange={(e) => updateDeck({ deckId, name: e.target.value })}
             />
           </span>
         </Stack>
