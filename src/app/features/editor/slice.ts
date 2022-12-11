@@ -115,6 +115,21 @@ export const editorSlice = createSlice({
         ...payload,
       });
     },
+    createProperty(
+      state,
+      {
+        payload,
+      }: PayloadAction<
+        MakePartial<Omit<Property, "propertyId">, "name" | "type">
+      >
+    ) {
+      state.game.definition.properties.push({
+        propertyId: createId(),
+        name: "New Property",
+        type: "number",
+        ...payload,
+      });
+    },
   },
 });
 

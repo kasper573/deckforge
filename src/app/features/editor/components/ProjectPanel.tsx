@@ -6,11 +6,12 @@ import Tab from "@mui/material/Tab";
 import { styled } from "@mui/material/styles";
 import { DeckAndCardTree } from "./DeckAndCardTree";
 import { EventTree } from "./EventTree";
+import { PropertyTree } from "./PropertyTree";
 
 const tabs = [
   { label: "Decks", content: <DeckAndCardTree /> },
   { label: "Events", content: <EventTree /> },
-  { label: "Properties", content: <Properties /> },
+  { label: "Properties", content: <PropertyTree /> },
 ];
 
 export function ProjectPanel() {
@@ -38,7 +39,3 @@ const Root = styled(Paper)`
   display: flex;
   flex-direction: column;
 `;
-
-function Properties() {
-  return <>Properties</>;
-}

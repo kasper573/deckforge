@@ -1,7 +1,8 @@
+import type { Action } from "redux";
 import { editorSlice } from "./slice";
 import type { EditorObjectId } from "./types";
 
-function deleteObject(objectId: EditorObjectId) {
+function deleteObject(objectId: EditorObjectId): Action {
   switch (objectId.type) {
     case "action":
       return editorActions.deleteAction(objectId.actionId);
@@ -11,11 +12,12 @@ function deleteObject(objectId: EditorObjectId) {
       return editorActions.deleteDeck(objectId.deckId);
     case "card":
       return editorActions.deleteCard(objectId.cardId);
+    case "property":
+      return editorActions.deleteProperty(objectId.propertyId);
   }
-  throw new Error(`Unknown object type: ${objectId}`);
 }
 
-function renameObject(objectId: EditorObjectId, name: string) {
+function renameObject(objectId: EditorObjectId, name: string): Action {
   switch (objectId.type) {
     case "action":
       return editorActions.updateAction({ ...objectId, name });
@@ -25,8 +27,12 @@ function renameObject(objectId: EditorObjectId, name: string) {
       return editorActions.updateDeck({ ...objectId, name });
     case "card":
       return editorActions.updateCard({ ...objectId, name });
+    case "property":
+      return editorActions.updateProperty({
+        propertyId: objectId.propertyId,
+        name,
+      });
   }
-  throw new Error(`Unknown object type: ${objectId}`);
 }
 
 export const editorActions = {

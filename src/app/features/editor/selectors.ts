@@ -1,8 +1,10 @@
+import { groupBy } from "lodash";
 import type {
   ActionId,
   CardId,
   DeckId,
   EntityId,
+  Property,
   ReactionId,
 } from "../../../api/services/game/types";
 import type { EditorObjectId, EditorState } from "./types";
@@ -40,6 +42,24 @@ export const selectors = {
         })),
     }));
   },
+  entities: (state: EditorState) => {
+    const propertiesByEntity = groupBy(
+      state.game.definition.properties,
+      (property) => property.entityId
+    );
+    return [
+      {
+        entityId: "card" as EntityId,
+        name: "Card",
+        properties: giveObjectIdsToProperties(propertiesByEntity.card),
+      },
+      {
+        entityId: "player" as EntityId,
+        name: "Player",
+        properties: giveObjectIdsToProperties(propertiesByEntity.player),
+      },
+    ];
+  },
   deck: (deckId: DeckId) => (state: EditorState) =>
     state.game.definition.decks.find((d) => d.deckId === deckId),
   card: (cardId: CardId) => (state: EditorState) =>
@@ -56,3 +76,13 @@ export const selectors = {
   cardsFor: (deckId: DeckId) => (state: EditorState) =>
     state.game.definition.cards.filter((p) => p.deckId === deckId),
 };
+
+function giveObjectIdsToProperties(properties: Property[] = []) {
+  return properties.map((property) => ({
+    ...property,
+    objectId: {
+      type: "property",
+      propertyId: property.propertyId,
+    } as EditorObjectId,
+  }));
+}
