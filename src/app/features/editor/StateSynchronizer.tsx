@@ -24,7 +24,6 @@ export function LocalAndRemoteStateSynchronizer() {
     remoteGame,
     () => {
       if (remoteGame) {
-        console.log("Remote game changed, updating local game");
         setLocalGame(remoteGame);
       }
     },
@@ -33,7 +32,6 @@ export function LocalAndRemoteStateSynchronizer() {
 
   useOnChange(localGame, () => {
     if (!isEqual(localGame, remoteGame)) {
-      console.log("Local game changed, updating remote game");
       setRemoteGame(localGame);
     }
   });
