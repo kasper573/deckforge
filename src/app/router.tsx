@@ -2,8 +2,7 @@ import type { RouteMiddleware } from "react-typesafe-routes";
 import { OptionsRouter, Redirect, useRouteParams } from "react-typesafe-routes";
 import { lazy, useEffect } from "react";
 import { literalParser } from "../lib/literalParser";
-import type { CardId, DeckId, GameId } from "../api/services/game/types";
-import { entityIdType } from "../api/services/game/types";
+import type { GameId } from "../api/services/game/types";
 import { useActions } from "../lib/useActions";
 import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./pages/NotPermittedPage";
@@ -58,52 +57,10 @@ export const router = OptionsRouter({}, (route) => ({
       component: lazy(() => import("./pages/BuildPage")),
     },
     (route) => ({
-      game: route(
-        ":gameId",
-        {
-          middleware: selectedGameMiddleware(),
-          component: lazy(() => import("./pages/GameEditPage")),
-          params: { gameId: literalParser<GameId>() },
-        },
-        (route) => ({
-          deck: route(
-            "deck",
-            {
-              component: lazy(() => import("./pages/DeckListPage")),
-            },
-            (route) => ({
-              edit: route(
-                ":deckId",
-                {
-                  component: lazy(() => import("./pages/DeckEditPage")),
-                  params: { deckId: literalParser<DeckId>() },
-                },
-                (route) => ({
-                  card: route(":cardId", {
-                    component: lazy(() => import("./pages/CardEditPage")),
-                    params: { cardId: literalParser<CardId>() },
-                  }),
-                })
-              ),
-            })
-          ),
-          entity: route(
-            "entity",
-            {
-              component: lazy(() => import("./pages/EntityListPage")),
-            },
-            (route) => ({
-              edit: route(":entityId", {
-                component: lazy(() => import("./pages/EntityEditPage")),
-                params: { entityId: literalParser(entityIdType._def.values) },
-              }),
-            })
-          ),
-          events: route("events", {
-            component: lazy(() => import("./pages/EventsPage/EventsPage")),
-          }),
-        })
-      ),
+      game: route(":gameId", {
+        component: lazy(() => import("./pages/EditorPage/EditorPage")),
+        params: { gameId: literalParser<GameId>() },
+      }),
     })
   ),
 }));
