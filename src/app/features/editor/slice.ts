@@ -143,7 +143,7 @@ function emptyGame(): Game {
   return {
     ownerId: "invalid-user-id",
     gameId: "invalid-game-id" as GameId,
-    name: "Empty Game",
+    name: "",
     definition: {
       properties: [],
       decks: [],

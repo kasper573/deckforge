@@ -1,18 +1,14 @@
 import type { MouseEvent } from "react";
 import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import { useSynchronizeGame } from "../hooks";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
-import { ProjectPanel } from "./ProjectPanel";
-import { CodePanel } from "./CodePanel";
+import { LocalAndRemoteStateSynchronizer } from "../StateSynchronizer";
 import { InspectorPanel } from "./InspectorPanel";
+import { CodePanel } from "./CodePanel";
+import { ProjectPanel } from "./ProjectPanel";
 
 export default function EditorPage() {
-  const isSynchronized = useSynchronizeGame();
-  if (!isSynchronized) {
-    return null;
-  }
   return (
     <>
       <EditorHeader />
@@ -21,6 +17,7 @@ export default function EditorPage() {
         <ProjectPanel />
         <InspectorPanel />
       </EditorPanels>
+      <LocalAndRemoteStateSynchronizer />
     </>
   );
 }
