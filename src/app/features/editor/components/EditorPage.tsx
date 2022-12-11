@@ -1,17 +1,15 @@
 import type { MouseEvent } from "react";
 import { styled } from "@mui/material/styles";
-import Typography from "@mui/material/Typography";
-import { useSelector } from "../../../store";
-import { selectors } from "../selectors";
 import { LocalAndRemoteStateSynchronizer } from "../StateSynchronizer";
 import { InspectorPanel } from "./InspectorPanel";
 import { CodePanel } from "./CodePanel";
 import { ProjectPanel } from "./ProjectPanel";
+import { EditorToolbar } from "./EditorToolbar";
 
 export default function EditorPage() {
   return (
     <>
-      <EditorHeader />
+      <EditorToolbar />
       <EditorPanels onContextMenu={disableContextMenu}>
         <CodePanel />
         <ProjectPanel />
@@ -20,11 +18,6 @@ export default function EditorPage() {
       <LocalAndRemoteStateSynchronizer />
     </>
   );
-}
-
-function EditorHeader() {
-  const game = useSelector(selectors.game);
-  return <Typography sx={{ m: 2, mb: 0 }}>{game.name}</Typography>;
 }
 
 // Disable any unhandled context menus
