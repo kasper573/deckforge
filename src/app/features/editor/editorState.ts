@@ -118,6 +118,20 @@ export function deleteObject(objectId: EditorObjectId) {
   throw new Error(`Unknown object type: ${objectId}`);
 }
 
+export function renameObject(objectId: EditorObjectId, name: string) {
+  switch (objectId.type) {
+    case "action":
+      return editorActions.updateAction({ ...objectId, name });
+    case "reaction":
+      return editorActions.updateReaction({ ...objectId, name });
+    case "deck":
+      return editorActions.updateDeck({ ...objectId, name });
+    case "card":
+      return editorActions.updateCard({ ...objectId, name });
+  }
+  throw new Error(`Unknown object type: ${objectId}`);
+}
+
 export const {
   reducer: editorReducer,
   getInitialState: getInitialEditorState,
@@ -126,6 +140,7 @@ export const {
 export const editorActions = {
   ...editorSlice.actions,
   deleteObject,
+  renameObject,
 };
 
 export const selectors = {
