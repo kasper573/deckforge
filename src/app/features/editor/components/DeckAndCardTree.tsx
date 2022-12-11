@@ -6,7 +6,7 @@ import { useMenu } from "../../../hooks/useMenu";
 import { Tree, TreeItem } from "../../../components/Tree";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
-import { useConfirmDelete, usePromptRename } from "./hooks";
+import { useConfirmDelete, usePromptRename } from "../hooks";
 
 export function DeckAndCardTree() {
   const decks = useSelector(selectors.decksAndCards);
