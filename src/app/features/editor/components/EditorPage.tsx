@@ -1,36 +1,33 @@
 import type { MouseEvent } from "react";
-import { useEffect } from "react";
 import { styled } from "@mui/material/styles";
-import { useRouteParams } from "react-typesafe-routes";
-import { router } from "../../../router";
-import { trpc } from "../../../trpc";
-import { useActions } from "../../../../lib/useActions";
-import { editorActions } from "../actions";
+import Typography from "@mui/material/Typography";
+import { useSynchronizeGame } from "../hooks";
+import { useSelector } from "../../../store";
+import { selectors } from "../selectors";
 import { ProjectPanel } from "./ProjectPanel";
 import { CodePanel } from "./CodePanel";
 import { InspectorPanel } from "./InspectorPanel";
 
 export default function EditorPage() {
-  useSynchronizeGame();
+  const isSynchronized = useSynchronizeGame();
+  if (!isSynchronized) {
+    return null;
+  }
   return (
-    <EditorContainer onContextMenu={disableContextMenu}>
-      <CodePanel />
-      <ProjectPanel />
-      <InspectorPanel />
-    </EditorContainer>
+    <>
+      <EditorHeader />
+      <EditorPanels onContextMenu={disableContextMenu}>
+        <CodePanel />
+        <ProjectPanel />
+        <InspectorPanel />
+      </EditorPanels>
+    </>
   );
 }
 
-function useSynchronizeGame() {
-  const { gameId } = useRouteParams(router.build().game);
-  const { data: game } = trpc.game.read.useQuery(gameId);
-  const { selectGame } = useActions(editorActions);
-
-  useEffect(() => {
-    if (game) {
-      selectGame(game);
-    }
-  }, [game, selectGame]);
+function EditorHeader() {
+  const game = useSelector(selectors.game);
+  return <Typography sx={{ m: 2, mb: 0 }}>{game.name}</Typography>;
 }
 
 // Disable any unhandled context menus
@@ -38,7 +35,7 @@ function disableContextMenu(e: MouseEvent<HTMLDivElement>) {
   e.preventDefault();
 }
 
-const EditorContainer = styled("div")`
+const EditorPanels = styled("div")`
   display: grid;
   flex: 1;
   grid-gap: 16px;
