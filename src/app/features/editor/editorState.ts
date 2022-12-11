@@ -82,6 +82,16 @@ export const selectors = {
   selectedObject: (state: EditorState) => state.selectedObject,
   game: (state: EditorState) => state.game,
   decks: (state: EditorState) => state.game.definition.decks,
+  decksAndCards: (state: EditorState) => {
+    const { decks, cards } = state.game.definition;
+    return decks.map((deck) => ({
+      objectId: `deck-${deck.deckId}`,
+      ...deck,
+      cards: cards
+        .filter((card) => card.deckId === deck.deckId)
+        .map((card) => ({ objectId: `card-${card.cardId}`, ...card })),
+    }));
+  },
   deck: (deckId: DeckId) => (state: EditorState) =>
     state.game.definition.decks.find((d) => d.deckId === deckId),
   card: (cardId: CardId) => (state: EditorState) =>
