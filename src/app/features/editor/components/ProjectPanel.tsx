@@ -4,12 +4,12 @@ import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { styled } from "@mui/material/styles";
-import { DeckAndCardTree } from "./DeckAndCardTree";
+import { DeckTree } from "./DeckTree";
 import { EventTree } from "./EventTree";
 import { PropertyTree } from "./PropertyTree";
 
 const tabs = [
-  { label: "Decks", content: <DeckAndCardTree /> },
+  { label: "Decks", content: <DeckTree /> },
   { label: "Events", content: <EventTree /> },
   { label: "Properties", content: <PropertyTree /> },
 ];

@@ -8,7 +8,7 @@ import { editorActions } from "../actions";
 import { selectors } from "../selectors";
 import { useConfirmDelete, usePromptRename } from "../hooks";
 
-export function DeckAndCardTree() {
+export function DeckTree() {
   const decks = useSelector(selectors.decksAndCards);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
