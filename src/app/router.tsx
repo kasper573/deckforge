@@ -55,13 +55,11 @@ export const router = OptionsRouter({}, (route) => ({
     "build",
     {
       middleware: access(),
-      component: lazy(() => import("./pages/BuildPage")),
+      component: lazy(() => import("./features/editor/pages/BuildPage")),
     },
     (route) => ({
       game: route(":gameId", {
-        component: lazy(
-          () => import("./features/editor/components/EditorPage")
-        ),
+        component: lazy(() => import("./features/editor/pages/EditorPage")),
         params: { gameId: literalParser<GameId>() },
       }),
     })

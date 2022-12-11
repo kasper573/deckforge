@@ -5,17 +5,17 @@ import List from "@mui/material/List";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { PromptDialog } from "../dialogs/PromptDialog";
-import { useModal } from "../../lib/useModal";
-import { router } from "../router";
-import { LinkIconButton } from "../components/Link";
-import { Page } from "../layout/Page";
-import { Header } from "../components/Header";
-import { Delete, Edit, Play } from "../components/icons";
-import { trpc } from "../trpc";
-import { ConfirmDialog } from "../dialogs/ConfirmDialog";
-import { useToastProcedure } from "../hooks/useToastProcedure";
-import type { Game } from "../../api/services/game/types";
+import { PromptDialog } from "../../../dialogs/PromptDialog";
+import { useModal } from "../../../../lib/useModal";
+import { router } from "../../../router";
+import { LinkIconButton } from "../../../components/Link";
+import { Page } from "../../../layout/Page";
+import { Header } from "../../../components/Header";
+import { Delete, Edit, Play } from "../../../components/icons";
+import { trpc } from "../../../trpc";
+import { ConfirmDialog } from "../../../dialogs/ConfirmDialog";
+import { useToastProcedure } from "../../../hooks/useToastProcedure";
+import type { Game } from "../../../../api/services/game/types";
 
 export default function BuildPage() {
   const gameList = trpc.game.list.useQuery({ offset: 0, limit: 10 });
