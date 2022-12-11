@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { ComponentType, ErrorInfo, PropsWithChildren } from "react";
 import { useHistory } from "react-router";
 import { useEffect } from "react";
-import { Page } from "./layout/Page";
+import { Page } from "./features/layout/Page";
 import { env } from "./env";
 import { Center } from "./components/Center";
 

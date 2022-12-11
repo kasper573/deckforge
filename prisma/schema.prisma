@@ -21,74 +21,11 @@ model User {
 }
 
 model Game {
-  gameId     String     @id @default(cuid())
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  gameId     String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   name       String
   ownerId    String
-  owner      User       @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
-  decks      Deck[]
-  cards      Card[]
-  properties Property[]
-  actions    Action[]
-}
-
-model Deck {
-  deckId    String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String
-  gameId    String
-  game      Game     @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
-  cards     Card[]
-}
-
-model Card {
-  cardId           String   @id @default(cuid())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  name             String
-  code             String   @db.VarChar(1000)
-  gameId           String
-  game             Game     @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
-  deckId           String
-  deck             Deck     @relation(fields: [deckId], references: [deckId], onDelete: Cascade)
-  propertyDefaults Json
-}
-
-model Property {
-  propertyId String       @id @default(cuid())
-  name       String
-  type       PropertyType
-  entityId   EntityId
-  gameId     String
-  game       Game         @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
-}
-
-enum PropertyType {
-  string
-  number
-  boolean
-}
-
-enum EntityId {
-  card
-  player
-}
-
-model Action {
-  actionId  String     @id @default(cuid())
-  name      String
-  gameId    String
-  code      String     @db.VarChar(1000)
-  game      Game       @relation(fields: [gameId], references: [gameId], onDelete: Cascade)
-  reactions Reaction[]
-}
-
-model Reaction {
-  reactionId String @id @default(cuid())
-  name       String
-  code       String @db.VarChar(1000)
-  actionId   String
-  action     Action @relation(fields: [actionId], references: [actionId], onDelete: Cascade)
+  owner      User     @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
+  definition Json // Type marshalled in service
 }
