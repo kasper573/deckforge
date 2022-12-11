@@ -1,20 +1,15 @@
-import type { ComponentProps } from "react";
 import { useState } from "react";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import TreeView from "@mui/lab/TreeView";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import MuiTreeItem from "@mui/lab/TreeItem";
 import MenuItem from "@mui/material/MenuItem";
 import { styled } from "@mui/material/styles";
 import { useSelector } from "../../store";
 import { editorActions, selectors } from "../../features/editor/editorState";
-import type { UseMenuItemsConfig } from "../../hooks/useMenu";
 import { useMenu } from "../../hooks/useMenu";
 import { useActions } from "../../../lib/useActions";
+import { Tree, TreeItem } from "../../components/Tree";
 
 const tabs = [
   { label: "Decks", content: <Decks /> },
@@ -106,29 +101,4 @@ function Events() {
 
 function Properties() {
   return <>Properties</>;
-}
-
-function Tree(props: ComponentProps<typeof TreeView>) {
-  return (
-    <TreeView
-      defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpandIcon={<ChevronRightIcon />}
-      {...props}
-    />
-  );
-}
-
-function TreeItem({
-  contextMenu = [],
-  ...props
-}: Omit<ComponentProps<typeof MuiTreeItem>, "contextMenu"> & {
-  contextMenu?: UseMenuItemsConfig;
-}) {
-  const [openContextMenu, menuElement] = useMenu(contextMenu);
-  return (
-    <>
-      <MuiTreeItem {...props} onContextMenu={openContextMenu} />
-      {menuElement}
-    </>
-  );
 }
