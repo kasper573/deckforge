@@ -6,10 +6,17 @@ import Tab from "@mui/material/Tab";
 import MenuItem from "@mui/material/MenuItem";
 import { styled } from "@mui/material/styles";
 import { useSelector } from "../../store";
-import { editorActions, selectors } from "../../features/editor/editorState";
+import type { EditorObjectId } from "../../features/editor/editorState";
+import {
+  editorActions,
+  selectors,
+  serializeObjectId,
+} from "../../features/editor/editorState";
 import { useMenu } from "../../hooks/useMenu";
 import { useActions } from "../../../lib/useActions";
 import { Tree, TreeItem } from "../../components/Tree";
+import { useModal } from "../../../lib/useModal";
+import { ConfirmDialog } from "../../dialogs/ConfirmDialog";
 
 const tabs = [
   { label: "Decks", content: <Decks /> },
@@ -45,34 +52,55 @@ const Root = styled(Paper)`
 
 function Decks() {
   const decks = useSelector(selectors.decksAndCards);
+  const confirmDelete = useConfirmDelete();
   const { createDeck, createCard } = useActions(editorActions);
+  const selectedObjectId = useSelector(selectors.selectedObject);
   const [openContextMenu, contextMenu] = useMenu([
     <MenuItem onClick={() => createDeck({})}>New deck</MenuItem>,
   ]);
 
   return (
     <Box onContextMenu={openContextMenu} sx={{ flex: 1 }}>
-      <Tree>
+      <Tree
+        selected={
+          selectedObjectId ? serializeObjectId(selectedObjectId) : undefined
+        }
+      >
         {decks.map((deck) => (
           <TreeItem
-            key={deck.objectId}
-            nodeId={deck.objectId}
+            key={serializeObjectId(deck.objectId)}
+            nodeId={serializeObjectId(deck.objectId)}
             label={deck.name}
             contextMenu={[
               <MenuItem onClick={() => createCard({ deckId: deck.deckId })}>
                 New card
               </MenuItem>,
-              <MenuItem>Delete</MenuItem>,
+              <MenuItem
+                onClick={() =>
+                  confirmDelete({ objectId: deck.objectId, name: deck.name })
+                }
+              >
+                Delete
+              </MenuItem>,
             ]}
           >
             {deck.cards.map((card) => (
               <TreeItem
-                key={card.objectId}
-                nodeId={card.objectId}
+                key={serializeObjectId(card.objectId)}
+                nodeId={serializeObjectId(card.objectId)}
                 label={card.name}
                 contextMenu={[
                   <MenuItem>Rename</MenuItem>,
-                  <MenuItem>Delete</MenuItem>,
+                  <MenuItem
+                    onClick={() =>
+                      confirmDelete({
+                        objectId: card.objectId,
+                        name: card.name,
+                      })
+                    }
+                  >
+                    Delete
+                  </MenuItem>,
                 ]}
               />
             ))}
@@ -90,4 +118,24 @@ function Events() {
 
 function Properties() {
   return <>Properties</>;
+}
+
+function useConfirmDelete() {
+  const confirm = useModal(ConfirmDialog);
+  const { deleteObject } = useActions(editorActions);
+  return async function confirmDelete({
+    objectId,
+    name,
+  }: {
+    objectId: EditorObjectId;
+    name: string;
+  }) {
+    const shouldDelete = await confirm({
+      title: `Delete ${objectId.type}`,
+      content: `Are you sure you want to delete "${name}". This action cannot be reversed.`,
+    });
+    if (shouldDelete) {
+      deleteObject(objectId);
+    }
+  };
 }
