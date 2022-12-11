@@ -5,12 +5,12 @@ import ListItem from "@mui/material/ListItem";
 import { useModal } from "../../../lib/useModal";
 import { DeleteDialog } from "../../dialogs/DeleteDialog";
 import { PromptDialog } from "../../dialogs/PromptDialog";
-import { MenuOn } from "../../components/MenuOn";
 import { More } from "../../components/icons";
 import type { Reaction } from "../../../api/services/game/types";
 import { editorActions, selectors } from "../../features/editor/editorState";
 import { useActions } from "../../../lib/useActions";
 import { useSelector } from "../../store";
+import { MenuFor } from "../../components/MenuFor";
 
 export function ReactionListItem({ reactionId, name }: Reaction) {
   const { deleteReaction, updateReaction, selectObject } =
@@ -28,13 +28,13 @@ export function ReactionListItem({ reactionId, name }: Reaction) {
         selectedObject.reactionId === reactionId
       }
       secondaryAction={
-        <MenuOn
+        <MenuFor
           MenuListProps={{ "aria-label": `Options for ${name}` }}
-          trigger={({ toggle }) => (
+          trigger={({ open }) => (
             <IconButton
               size="small"
               aria-label={`Show options for ${name}`}
-              onClick={toggle}
+              onClick={open}
             >
               <More />
             </IconButton>
@@ -59,7 +59,7 @@ export function ReactionListItem({ reactionId, name }: Reaction) {
           >
             Delete
           </MenuItem>
-        </MenuOn>
+        </MenuFor>
       }
     >
       <ListItemText primary={name} />

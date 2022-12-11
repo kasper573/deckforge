@@ -7,12 +7,12 @@ import List from "@mui/material/List";
 import { useModal } from "../../../lib/useModal";
 import { DeleteDialog } from "../../dialogs/DeleteDialog";
 import { PromptDialog } from "../../dialogs/PromptDialog";
-import { MenuOn } from "../../components/MenuOn";
 import { More } from "../../components/icons";
 import { useSelector } from "../../store";
 import { editorActions, selectors } from "../../features/editor/editorState";
 import { useActions } from "../../../lib/useActions";
 import type { Action } from "../../../api/services/game/types";
+import { MenuFor } from "../../components/MenuFor";
 import { ReactionListItem } from "./ReactionListItem";
 
 export function ActionListItem({ actionId, name }: Action) {
@@ -32,13 +32,13 @@ export function ActionListItem({ actionId, name }: Action) {
           selectedObject.actionId === actionId
         }
         secondaryAction={
-          <MenuOn
+          <MenuFor
             MenuListProps={{ "aria-label": `Options for ${name}` }}
-            trigger={({ toggle }) => (
+            trigger={({ open }) => (
               <IconButton
                 size="small"
                 aria-label={`Show options for ${name}`}
-                onClick={toggle}
+                onClick={open}
               >
                 <More />
               </IconButton>
@@ -75,7 +75,7 @@ export function ActionListItem({ actionId, name }: Action) {
             >
               Add reaction
             </MenuItem>
-          </MenuOn>
+          </MenuFor>
         }
       >
         <ListItemText primary={name} />
