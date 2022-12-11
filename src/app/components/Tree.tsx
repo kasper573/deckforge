@@ -33,6 +33,7 @@ export function Tree<Id>({
       onNodeSelect={(e, id) => onSelectedChanged(deserializeTreeNodeId(id))}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
+      sx={{ userSelect: "none" }}
       {...props}
     />
   );
