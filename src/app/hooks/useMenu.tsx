@@ -4,11 +4,12 @@ import type {
   ReactElement,
   ComponentProps,
 } from "react";
-import { useState, cloneElement } from "react";
+import { useState } from "react";
 import type MenuItem from "@mui/material/MenuItem";
 import type { MenuProps } from "@mui/material/Menu";
 import Menu from "@mui/material/Menu";
 import { defined } from "../../lib/ts-extensions/defined";
+import { concatFunctions } from "../../lib/ts-extensions/concatFunctions";
 
 export type UseMenuItemsConfig = MenuItemRenderer | MaybeMenuItemElements;
 
@@ -17,7 +18,6 @@ export const useMenu = (
   menuProps?: Partial<MenuProps>
 ) => {
   const [position, setPosition] = useState<{ left: number; top: number }>();
-  let menuItems;
 
   const handleTrigger: MouseEventHandler = (e) => {
     e.preventDefault();
@@ -37,33 +37,29 @@ export const useMenu = (
     setPosition(undefined);
   };
 
+  const menuItems = Array.isArray(menuItemsConfig)
+    ? defined(menuItemsConfig)
+    : defined(menuItemsConfig({ close: handleClose }));
   const shouldShowMenu = () => menuItems.length > 0;
-
-  if (Array.isArray(menuItemsConfig)) {
-    // Item array style configuration automates close callback calls.
-    menuItems = defined(menuItemsConfig).map((element) =>
-      cloneElement(element, {
-        onClick: (e: MouseEvent<HTMLLIElement>) => {
-          handleClose(e);
-          if (element.props.onClick) {
-            element.props.onClick(e);
-          }
-        },
-      })
-    );
-  } else {
-    // Functional configuration style does not automate close callback calls.
-    menuItems = defined(menuItemsConfig({ close: handleClose }));
-  }
 
   const menu = shouldShowMenu() && (
     <Menu
+      {...menuProps}
       open={!!position}
-      onClose={handleClose as MenuProps["onClose"]} // Need to override since MenuProps["onClose"] is poorly defined
-      onContextMenu={handleClose}
+      onClose={concatFunctions(
+        menuProps?.onClose,
+        handleClose as MenuProps["onClose"]
+      )}
+      onContextMenu={concatFunctions(menuProps?.onContextMenu, handleClose)}
       anchorReference="anchorPosition"
       anchorPosition={position}
-      {...menuProps}
+      MenuListProps={{
+        ...menuProps?.MenuListProps,
+        onClick: concatFunctions(
+          menuProps?.MenuListProps?.onClick,
+          handleClose
+        ),
+      }}
     >
       {menuItems.map((item, index) => (
         // Wrapping each item in a span allows for nested menus.
