@@ -1,15 +1,21 @@
+import type { MouseEvent } from "react";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import { ProjectPanel } from "./ProjectPanel";
 
 export default function EditorPage() {
   return (
-    <EditorContainer>
+    <EditorContainer onContextMenu={disableContextMenu}>
       <CodePanel>Code</CodePanel>
       <ProjectPanel />
       <InspectorPanel>Inspector</InspectorPanel>
     </EditorContainer>
   );
+}
+
+// Disable any unhandled context menus
+function disableContextMenu(e: MouseEvent<HTMLDivElement>) {
+  e.preventDefault();
 }
 
 const EditorContainer = styled("div")`
