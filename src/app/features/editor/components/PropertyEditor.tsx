@@ -5,12 +5,12 @@ import type { ComponentType, HTMLAttributes } from "react";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import List from "@mui/material/List";
 import produce from "immer";
-import { useDebouncedControl } from "../hooks/useDebouncedControl";
+import { useDebouncedControl } from "../../../hooks/useDebouncedControl";
 import type {
   Property,
   PropertyType,
   PropertyValues,
-} from "../../api/services/game/types";
+} from "../../../../api/services/game/types";
 
 export function PropertiesEditor({
   properties,

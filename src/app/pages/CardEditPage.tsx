@@ -4,7 +4,7 @@ import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import { Header } from "../components/Header";
 import { CodeEditor } from "../components/CodeEditor";
-import { PropertiesEditor } from "../components/PropertyEditor";
+import { PropertiesEditor } from "../features/editor/components/PropertyEditor";
 import { SideMenu } from "../components/SideMenu";
 import { Page } from "../layout/Page";
 import { router } from "../router";
