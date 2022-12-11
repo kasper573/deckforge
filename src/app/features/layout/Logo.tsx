@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
-import { Link } from "../components/Link";
-import { router } from "../router";
+import { Link } from "../../components/Link";
+import { router } from "../../router";
 
 export function Logo({
   to = router.home(),

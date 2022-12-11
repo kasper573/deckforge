@@ -1,12 +1,12 @@
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { Page } from "../../../layout/Page";
+import { Page } from "../../layout/Page";
 import { useForm } from "../../../hooks/useForm";
 import { updateProfilePayloadType } from "../../../../api/services/user/types";
 import { trpc } from "../../../trpc";
 import { Center } from "../../../components/Center";
-import { Header } from "../../../layout/Header";
+import { Header } from "../../layout/Header";
 import { ProgressButton } from "../../../components/ProgressButton";
 import { useModal } from "../../../../lib/useModal";
 import { Toast } from "../../../components/Toast";

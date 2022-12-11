@@ -1,5 +1,5 @@
 import Typography from "@mui/material/Typography";
-import { Page } from "../../../layout/Page";
+import { Page } from "../../layout/Page";
 import { Center } from "../../../components/Center";
 import { LinkButton } from "../../../components/Link";
 import { router } from "../../../router";

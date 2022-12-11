@@ -1,5 +1,5 @@
 import { useRouteParams } from "react-typesafe-routes";
-import { Page } from "../../layout/Page";
+import { Page } from "../layout/Page";
 import { router } from "../../router";
 
 export default function GamePlayPage() {

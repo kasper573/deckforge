@@ -7,12 +7,12 @@ import ListItemText from "@mui/material/ListItemText";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import type { ReactNode } from "react";
-import { Auth } from "../features/auth/Auth";
-import { OnlineBadge } from "../components/OnlineBadge";
-import { useAuth } from "../features/auth/store";
-import { LinkMenuItem } from "../components/Link";
-import { router } from "../router";
-import { MenuFor } from "../components/MenuFor";
+import { Auth } from "../auth/Auth";
+import { OnlineBadge } from "../../components/OnlineBadge";
+import { useAuth } from "../auth/store";
+import { LinkMenuItem } from "../../components/Link";
+import { router } from "../../router";
+import { MenuFor } from "../../components/MenuFor";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
   const { user, logout } = useAuth();

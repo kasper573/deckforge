@@ -12,7 +12,7 @@ import type { History } from "history";
 import { Provider as ReduxProvider } from "react-redux";
 import type { ApiRouter } from "../api/router";
 import { ModalOutlet } from "../lib/useModal";
-import { Layout } from "./layout/Layout";
+import { Layout } from "./features/layout/Layout";
 import { trpc } from "./trpc";
 import { router } from "./router";
 import {

@@ -3,12 +3,12 @@ import List from "@mui/material/List";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Construction from "@mui/icons-material/Construction";
-import { Play } from "../components/icons";
-import type { LinkTo } from "../components/Link";
-import { defined } from "../../lib/ts-extensions/defined";
-import { router } from "../router";
-import { LinkListItem } from "../components/Link";
-import { useAuth } from "../features/auth/store";
+import { Play } from "../../components/icons";
+import type { LinkTo } from "../../components/Link";
+import { defined } from "../../../lib/ts-extensions/defined";
+import { router } from "../../router";
+import { LinkListItem } from "../../components/Link";
+import { useAuth } from "../auth/store";
 
 export function Navigation({
   onItemSelected,

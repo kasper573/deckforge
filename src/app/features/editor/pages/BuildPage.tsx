@@ -9,7 +9,7 @@ import { PromptDialog } from "../../../dialogs/PromptDialog";
 import { useModal } from "../../../../lib/useModal";
 import { router } from "../../../router";
 import { LinkIconButton } from "../../../components/Link";
-import { Page } from "../../../layout/Page";
+import { Page } from "../../layout/Page";
 import { Header } from "../../../components/Header";
 import { Delete, Edit, Play } from "../../../components/icons";
 import { trpc } from "../../../trpc";

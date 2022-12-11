@@ -4,7 +4,7 @@ import { useRef } from "react";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
-import { Page } from "../../../layout/Page";
+import { Page } from "../../layout/Page";
 import { Center } from "../../../components/Center";
 import { useAuth } from "../store";
 import { Link } from "../../../components/Link";

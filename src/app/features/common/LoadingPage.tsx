@@ -1,4 +1,4 @@
-import { Page } from "../../layout/Page";
+import { Page } from "../layout/Page";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { Center } from "../../components/Center";
 

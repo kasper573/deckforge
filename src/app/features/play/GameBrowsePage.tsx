@@ -1,6 +1,6 @@
 import List from "@mui/material/List";
 import Paper from "@mui/material/Paper";
-import { Page } from "../../layout/Page";
+import { Page } from "../layout/Page";
 import { LinkListItem } from "../../components/Link";
 import { router } from "../../router";
 import type { GameId } from "../../../api/services/game/types";
