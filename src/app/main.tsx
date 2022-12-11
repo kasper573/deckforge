@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserHistory } from "history";
+import { debounce } from "lodash";
 import { App } from "./App";
 import { createQueryClient, createTRPCClients } from "./trpc";
 import { createTheme } from "./theme";
@@ -30,9 +31,13 @@ const history = createBrowserHistory();
 const theme = createTheme();
 setupAuthBehavior({ history });
 
-store.subscribe(() => {
-  trpcClientProxy.game.update.mutate(store.getState().editor.present.game);
-});
+store.subscribe(
+  debounce(
+    () =>
+      trpcClientProxy.game.update.mutate(store.getState().editor.present.game),
+    250
+  )
+);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <App
