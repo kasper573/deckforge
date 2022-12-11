@@ -14,7 +14,11 @@ import type {
   Reaction,
   ReactionId,
 } from "../../../api/services/game/types";
-import { createEntityReducerFactory } from "../../../lib/createEntityReducers";
+import {
+  createEntityReducerFactory,
+  createId,
+} from "../../../lib/createEntityReducers";
+import type { MakePartial } from "../../../lib/MakePartial";
 
 export type SelectedObject =
   | { type: "action"; actionId: ActionId }
@@ -54,11 +58,37 @@ const editorSlice = createSlice({
       "deckId",
       (state) => state.game.definition.decks
     ),
+    createDeck(
+      state,
+      { payload }: PayloadAction<MakePartial<Omit<Deck, "deckId">, "name">>
+    ) {
+      state.game.definition.decks.push({
+        deckId: createId(),
+        name: "New Deck",
+        ...payload,
+      });
+    },
     ...entityReducers<Card>()(
       "Card",
       "cardId",
       (state) => state.game.definition.cards
     ),
+    createCard(
+      state,
+      {
+        payload,
+      }: PayloadAction<
+        MakePartial<Omit<Card, "cardId">, "name" | "code" | "propertyDefaults">
+      >
+    ) {
+      state.game.definition.cards.push({
+        cardId: createId(),
+        name: "New Card",
+        code: "",
+        propertyDefaults: {},
+        ...payload,
+      });
+    },
     ...entityReducers<Action>()(
       "Action",
       "actionId",

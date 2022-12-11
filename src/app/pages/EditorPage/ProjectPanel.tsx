@@ -47,9 +47,7 @@ function Decks() {
   const decks = useSelector(selectors.decksAndCards);
   const { createDeck, createCard } = useActions(editorActions);
   const [openContextMenu, contextMenu] = useMenu([
-    <MenuItem onClick={() => createDeck({ name: "New deck" })}>
-      New deck
-    </MenuItem>,
+    <MenuItem onClick={() => createDeck({})}>New deck</MenuItem>,
   ]);
 
   return (
@@ -61,16 +59,7 @@ function Decks() {
             nodeId={deck.objectId}
             label={deck.name}
             contextMenu={[
-              <MenuItem
-                onClick={() =>
-                  createCard({
-                    deckId: deck.deckId,
-                    name: "New card",
-                    code: "",
-                    propertyDefaults: {},
-                  })
-                }
-              >
+              <MenuItem onClick={() => createCard({ deckId: deck.deckId })}>
                 New card
               </MenuItem>,
               <MenuItem>Delete</MenuItem>,
