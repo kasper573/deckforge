@@ -1,10 +1,11 @@
 import MenuItem from "@mui/material/MenuItem";
 import Box from "@mui/material/Box";
 import { useSelector } from "../../../store";
-import { editorActions, selectors } from "../editorState";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
 import { Tree, TreeItem } from "../../../components/Tree";
+import { editorActions } from "../actions";
+import { selectors } from "../selectors";
 import { useConfirmDelete, usePromptRename } from "./hooks";
 
 export function DeckAndCardTree() {

@@ -7,10 +7,11 @@ import { DeleteDialog } from "../../dialogs/DeleteDialog";
 import { PromptDialog } from "../../dialogs/PromptDialog";
 import { More } from "../../components/icons";
 import type { Reaction } from "../../../api/services/game/types";
-import { editorActions, selectors } from "../../features/editor/editorState";
 import { useActions } from "../../../lib/useActions";
 import { useSelector } from "../../store";
 import { MenuFor } from "../../components/MenuFor";
+import { editorActions } from "../../features/editor/actions";
+import { selectors } from "../../features/editor/selectors";
 
 export function ReactionListItem({ reactionId, name }: Reaction) {
   const { deleteReaction, updateReaction, selectObject } =

@@ -10,7 +10,8 @@ import { useModal } from "../../../lib/useModal";
 import { PromptDialog } from "../../dialogs/PromptDialog";
 import { useSelector } from "../../store";
 import { useActions } from "../../../lib/useActions";
-import { editorActions, selectors } from "../../features/editor/editorState";
+import { editorActions } from "../../features/editor/actions";
+import { selectors } from "../../features/editor/selectors";
 import { EventCodeEditor } from "./EventCodeEditor";
 import { ActionListItem } from "./ActionListItem";
 

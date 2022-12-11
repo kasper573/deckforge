@@ -2,8 +2,8 @@ import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
 import { useActions } from "../../../../lib/useActions";
 import type { EditorObjectId } from "../editorState";
-import { editorActions } from "../editorState";
 import { ConfirmDialog } from "../../../dialogs/ConfirmDialog";
+import { editorActions } from "../actions";
 
 export function useConfirmDelete() {
   const confirm = useModal(ConfirmDialog);

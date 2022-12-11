@@ -16,9 +16,10 @@ import { useModal } from "../../lib/useModal";
 import { PromptDialog } from "../dialogs/PromptDialog";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
 import { useSelector } from "../store";
-import { editorActions, selectors } from "../features/editor/editorState";
 import { useActions } from "../../lib/useActions";
 import type { Deck } from "../../api/services/game/types";
+import { editorActions } from "../features/editor/actions";
+import { selectors } from "../features/editor/selectors";
 
 export default function DeckListPage() {
   const { gameId } = useRouteParams(router.build().game);

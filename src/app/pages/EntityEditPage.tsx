@@ -20,9 +20,10 @@ import { useForm } from "../hooks/useForm";
 import { Select } from "../controls/Select";
 import { DeleteDialog } from "../dialogs/DeleteDialog";
 import { useSelector } from "../store";
-import { editorActions, selectors } from "../features/editor/editorState";
 import { useActions } from "../../lib/useActions";
 import { propertyType, propertyValueType } from "../../api/services/game/types";
+import { editorActions } from "../features/editor/actions";
+import { selectors } from "../features/editor/selectors";
 
 export default function EntityEditPage() {
   const { gameId } = useRouteParams(router.build().game);

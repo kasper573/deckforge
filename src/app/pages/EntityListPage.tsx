@@ -7,7 +7,7 @@ import { LinkListItem } from "../components/Link";
 import { router } from "../router";
 import { useSelector } from "../store";
 import type { EntityId } from "../../api/services/game/types";
-import { selectors } from "../features/editor/editorState";
+import { selectors } from "../features/editor/selectors";
 
 export default function EntityListPage() {
   const { gameId } = useSelector(selectors.game);

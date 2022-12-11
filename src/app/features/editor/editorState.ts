@@ -7,7 +7,6 @@ import type {
   CardId,
   Deck,
   DeckId,
-  EntityId,
   Game,
   GameId,
   Property,
@@ -19,6 +18,7 @@ import {
   createId,
 } from "../../../lib/createEntityReducers";
 import type { MakePartial } from "../../../lib/MakePartial";
+import type { editorActions } from "./actions";
 
 export type EditorObjectId =
   | { type: "action"; actionId: ActionId }
@@ -37,7 +37,7 @@ const initialState: EditorState = {
 
 const entityReducers = createEntityReducerFactory<EditorState>();
 
-const editorSlice = createSlice({
+export const editorSlice = createSlice({
   name: "editor",
   initialState,
   reducers: {
@@ -103,79 +103,6 @@ const editorSlice = createSlice({
     ),
   },
 });
-
-export function deleteObject(objectId: EditorObjectId) {
-  switch (objectId.type) {
-    case "action":
-      return editorActions.deleteAction(objectId.actionId);
-    case "reaction":
-      return editorActions.deleteReaction(objectId.reactionId);
-    case "deck":
-      return editorActions.deleteDeck(objectId.deckId);
-    case "card":
-      return editorActions.deleteCard(objectId.cardId);
-  }
-  throw new Error(`Unknown object type: ${objectId}`);
-}
-
-export function renameObject(objectId: EditorObjectId, name: string) {
-  switch (objectId.type) {
-    case "action":
-      return editorActions.updateAction({ ...objectId, name });
-    case "reaction":
-      return editorActions.updateReaction({ ...objectId, name });
-    case "deck":
-      return editorActions.updateDeck({ ...objectId, name });
-    case "card":
-      return editorActions.updateCard({ ...objectId, name });
-  }
-  throw new Error(`Unknown object type: ${objectId}`);
-}
-
-export const {
-  reducer: editorReducer,
-  getInitialState: getInitialEditorState,
-} = editorSlice;
-
-export const editorActions = {
-  ...editorSlice.actions,
-  deleteObject,
-  renameObject,
-};
-
-export const selectors = {
-  selectedObject: (state: EditorState) => state.selectedObjectId,
-  game: (state: EditorState) => state.game,
-  decks: (state: EditorState) => state.game.definition.decks,
-  decksAndCards: (state: EditorState) => {
-    const { decks, cards } = state.game.definition;
-    return decks.map((deck) => ({
-      objectId: { type: "deck", deckId: deck.deckId } as EditorObjectId,
-      ...deck,
-      cards: cards
-        .filter((card) => card.deckId === deck.deckId)
-        .map((card) => ({
-          objectId: { type: "card", cardId: card.cardId } as EditorObjectId,
-          ...card,
-        })),
-    }));
-  },
-  deck: (deckId: DeckId) => (state: EditorState) =>
-    state.game.definition.decks.find((d) => d.deckId === deckId),
-  card: (cardId: CardId) => (state: EditorState) =>
-    state.game.definition.cards.find((c) => c.cardId === cardId),
-  actions: (state: EditorState) => state.game.definition.actions,
-  action: (actionId: ActionId) => (state: EditorState) =>
-    state.game.definition.actions.find((a) => a.actionId === actionId),
-  reaction: (reactionId: ReactionId) => (state: EditorState) =>
-    state.game.definition.reactions.find((r) => r.reactionId === reactionId),
-  reactionsFor: (actionId: ActionId) => (state: EditorState) =>
-    state.game.definition.reactions.filter((r) => r.actionId === actionId),
-  propertiesFor: (entityId: EntityId) => (state: EditorState) =>
-    state.game.definition.properties.filter((p) => p.entityId === entityId),
-  cardsFor: (deckId: DeckId) => (state: EditorState) =>
-    state.game.definition.cards.filter((p) => p.deckId === deckId),
-};
 
 export const noUndoActionList: Array<keyof typeof editorActions> = [];
 

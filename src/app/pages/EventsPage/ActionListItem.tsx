@@ -9,10 +9,11 @@ import { DeleteDialog } from "../../dialogs/DeleteDialog";
 import { PromptDialog } from "../../dialogs/PromptDialog";
 import { More } from "../../components/icons";
 import { useSelector } from "../../store";
-import { editorActions, selectors } from "../../features/editor/editorState";
 import { useActions } from "../../../lib/useActions";
 import type { Action } from "../../../api/services/game/types";
 import { MenuFor } from "../../components/MenuFor";
+import { editorActions } from "../../features/editor/actions";
+import { selectors } from "../../features/editor/selectors";
 import { ReactionListItem } from "./ReactionListItem";
 
 export function ActionListItem({ actionId, name }: Action) {

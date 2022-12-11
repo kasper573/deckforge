@@ -6,7 +6,7 @@ import { useRouteParams } from "react-typesafe-routes";
 import { router } from "../../../router";
 import { trpc } from "../../../trpc";
 import { useActions } from "../../../../lib/useActions";
-import { editorActions } from "../editorState";
+import { editorActions } from "../actions";
 import { ProjectPanel } from "./ProjectPanel";
 import { CodePanel } from "./CodePanel";
 

@@ -12,7 +12,6 @@ import {
 } from "./features/auth/store";
 import { env } from "./env";
 import { createStore } from "./store";
-import { getInitialEditorState } from "./features/editor/editorState";
 
 if (env.analyticsId) {
   import("@vercel/analytics").then(({ inject }) => inject());
@@ -24,7 +23,7 @@ if (env.analyticsId) {
   }
 }
 
-const store = createStore(getInitialEditorState());
+const store = createStore();
 const queryClient = createQueryClient(resetAuthToken);
 const { trpcClient, trpcClientProxy } = createTRPCClients(getAuthToken);
 const history = createBrowserHistory();

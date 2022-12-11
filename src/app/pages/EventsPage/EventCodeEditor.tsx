@@ -1,9 +1,10 @@
 import Box from "@mui/material/Box";
 import { CodeEditor } from "../../components/CodeEditor";
 import { useSelector } from "../../store";
-import { editorActions, selectors } from "../../features/editor/editorState";
 import { useActions } from "../../../lib/useActions";
 import type { ActionId, ReactionId } from "../../../api/services/game/types";
+import { editorActions } from "../../features/editor/actions";
+import { selectors } from "../../features/editor/selectors";
 
 export function EventCodeEditor() {
   const selectedObject = useSelector(selectors.selectedObject);

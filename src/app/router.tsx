@@ -8,9 +8,10 @@ import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./features/auth/pages/NotPermittedPage";
 import { NotAuthenticatedPage } from "./features/auth/pages/NotAuthenticatedPage";
 import { trpc } from "./trpc";
-import { editorActions, selectors } from "./features/editor/editorState";
 import { useSelector } from "./store";
 import { LoadingPage } from "./features/common/LoadingPage";
+import { editorActions } from "./features/editor/actions";
+import { selectors } from "./features/editor/selectors";
 
 const access = createAccessFactory({
   NotPermittedPage,

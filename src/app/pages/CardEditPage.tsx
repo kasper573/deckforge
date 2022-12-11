@@ -9,8 +9,9 @@ import { SideMenu } from "../components/SideMenu";
 import { Page } from "../layout/Page";
 import { router } from "../router";
 import { useSelector } from "../store";
-import { editorActions, selectors } from "../features/editor/editorState";
 import { useActions } from "../../lib/useActions";
+import { editorActions } from "../features/editor/actions";
+import { selectors } from "../features/editor/selectors";
 
 export default function CardEditPage() {
   const { gameId } = useSelector(selectors.game);
