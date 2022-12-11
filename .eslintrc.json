@@ -12,6 +12,7 @@
     "prettier"
   ],
   "rules": {
+    "react/jsx-key": "off",
     "@typescript-eslint/consistent-type-imports": "warn",
     "import/order": ["error"],
     "@typescript-eslint/no-empty-function": "off",
