@@ -27,7 +27,7 @@ export const router = OptionsRouter({}, (route) => ({
     { component: lazy(() => import("./pages/GameBrowsePage")) },
     (route) => ({
       game: route(":gameId", {
-        component: lazy(() => import("./pages/GamePlayPage")),
+        component: lazy(() => import("./features/play/GamePlayPage")),
         params: {
           gameId: literalParser<GameId>(),
         },
