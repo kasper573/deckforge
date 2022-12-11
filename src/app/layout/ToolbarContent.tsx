@@ -7,12 +7,12 @@ import ListItemText from "@mui/material/ListItemText";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import type { ReactNode } from "react";
-import { MenuOn } from "../components/MenuOn";
 import { Auth } from "../features/auth/Auth";
 import { OnlineBadge } from "../components/OnlineBadge";
 import { useAuth } from "../features/auth/store";
 import { LinkMenuItem } from "../components/Link";
 import { router } from "../router";
+import { MenuFor } from "../components/MenuFor";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
   const { user, logout } = useAuth();
@@ -21,13 +21,13 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
     <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
       <Box>{children}</Box>
       <Box sx={{ ml: "auto" }}>
-        <MenuOn
+        <MenuFor
           MenuListProps={{ "aria-label": "User menu" }}
-          trigger={({ toggle }) => (
+          trigger={({ open }) => (
             <IconButton
               aria-label="show user menu"
               sx={{ ml: 1 }}
-              onClick={toggle}
+              onClick={open}
             >
               {user ? (
                 <OnlineBadge data-testid="online-indicator">
@@ -58,7 +58,7 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
             <LinkMenuItem to={router.user().profile()}>Settings</LinkMenuItem>
             <MenuItem onClick={() => logout()}>Sign out</MenuItem>
           </Auth>
-        </MenuOn>
+        </MenuFor>
       </Box>
     </Stack>
   );
