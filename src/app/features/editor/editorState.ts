@@ -20,12 +20,6 @@ import {
 } from "../../../lib/createEntityReducers";
 import type { MakePartial } from "../../../lib/MakePartial";
 
-export const serializeObjectId = (objectId: EditorObjectId) =>
-  JSON.stringify(objectId);
-
-export const deserializeObjectId = (objectIdAsJson: string) =>
-  JSON.parse(objectIdAsJson) as EditorObjectId;
-
 export type EditorObjectId =
   | { type: "action"; actionId: ActionId }
   | { type: "reaction"; reactionId: ReactionId }

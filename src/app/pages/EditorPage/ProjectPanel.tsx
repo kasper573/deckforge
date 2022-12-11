@@ -7,11 +7,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { styled } from "@mui/material/styles";
 import { useSelector } from "../../store";
 import type { EditorObjectId } from "../../features/editor/editorState";
-import {
-  editorActions,
-  selectors,
-  serializeObjectId,
-} from "../../features/editor/editorState";
+import { editorActions, selectors } from "../../features/editor/editorState";
 import { useMenu } from "../../hooks/useMenu";
 import { useActions } from "../../../lib/useActions";
 import { Tree, TreeItem } from "../../components/Tree";
@@ -53,7 +49,7 @@ const Root = styled(Paper)`
 function Decks() {
   const decks = useSelector(selectors.decksAndCards);
   const confirmDelete = useConfirmDelete();
-  const { createDeck, createCard } = useActions(editorActions);
+  const { createDeck, createCard, selectObject } = useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObject);
   const [openContextMenu, contextMenu] = useMenu([
     <MenuItem onClick={() => createDeck({})}>New deck</MenuItem>,
@@ -61,44 +57,27 @@ function Decks() {
 
   return (
     <Box onContextMenu={openContextMenu} sx={{ flex: 1 }}>
-      <Tree
-        selected={
-          selectedObjectId ? serializeObjectId(selectedObjectId) : undefined
-        }
-      >
-        {decks.map((deck) => (
+      <Tree selected={selectedObjectId} onSelectedChanged={selectObject}>
+        {decks.map((deck, index) => (
           <TreeItem
-            key={serializeObjectId(deck.objectId)}
-            nodeId={serializeObjectId(deck.objectId)}
+            key={index}
+            nodeId={deck.objectId}
             label={deck.name}
             contextMenu={[
               <MenuItem onClick={() => createCard({ deckId: deck.deckId })}>
                 New card
               </MenuItem>,
-              <MenuItem
-                onClick={() =>
-                  confirmDelete({ objectId: deck.objectId, name: deck.name })
-                }
-              >
-                Delete
-              </MenuItem>,
+              <MenuItem onClick={() => confirmDelete(deck)}>Delete</MenuItem>,
             ]}
           >
-            {deck.cards.map((card) => (
+            {deck.cards.map((card, index) => (
               <TreeItem
-                key={serializeObjectId(card.objectId)}
-                nodeId={serializeObjectId(card.objectId)}
+                key={index}
+                nodeId={card.objectId}
                 label={card.name}
                 contextMenu={[
                   <MenuItem>Rename</MenuItem>,
-                  <MenuItem
-                    onClick={() =>
-                      confirmDelete({
-                        objectId: card.objectId,
-                        name: card.name,
-                      })
-                    }
-                  >
+                  <MenuItem onClick={() => confirmDelete(card)}>
                     Delete
                   </MenuItem>,
                 ]}

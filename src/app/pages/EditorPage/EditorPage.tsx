@@ -1,19 +1,20 @@
 import type { MouseEvent } from "react";
+import { useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import { useRouteParams } from "react-typesafe-routes";
-import { useEffect } from "react";
 import { router } from "../../router";
 import { trpc } from "../../trpc";
 import { useActions } from "../../../lib/useActions";
 import { editorActions } from "../../features/editor/editorState";
 import { ProjectPanel } from "./ProjectPanel";
+import { CodePanel } from "./CodePanel";
 
 export default function EditorPage() {
   useSynchronizeGame();
   return (
     <EditorContainer onContextMenu={disableContextMenu}>
-      <CodePanel>Code</CodePanel>
+      <CodePanel />
       <ProjectPanel />
       <InspectorPanel>Inspector</InspectorPanel>
     </EditorContainer>
@@ -45,10 +46,6 @@ const EditorContainer = styled("div")`
   grid-template-areas:
     "code code code project"
     "code code code inspector"; ;
-`;
-
-const CodePanel = styled(Paper)`
-  grid-area: code;
 `;
 
 const InspectorPanel = styled(Paper)`
