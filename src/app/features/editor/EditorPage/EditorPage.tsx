@@ -3,10 +3,10 @@ import { useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import { useRouteParams } from "react-typesafe-routes";
-import { router } from "../../router";
-import { trpc } from "../../trpc";
-import { useActions } from "../../../lib/useActions";
-import { editorActions } from "../../features/editor/editorState";
+import { router } from "../../../router";
+import { trpc } from "../../../trpc";
+import { useActions } from "../../../../lib/useActions";
+import { editorActions } from "../editorState";
 import { ProjectPanel } from "./ProjectPanel";
 import { CodePanel } from "./CodePanel";
 

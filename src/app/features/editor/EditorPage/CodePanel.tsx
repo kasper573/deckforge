@@ -1,6 +1,6 @@
 import Paper from "@mui/material/Paper";
-import { useSelector } from "../../store";
-import { selectors } from "../../features/editor/editorState";
+import { useSelector } from "../../../store";
+import { selectors } from "../editorState";
 
 export function CodePanel() {
   const selectedObject = useSelector(selectors.selectedObject);

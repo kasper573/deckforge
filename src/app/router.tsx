@@ -58,7 +58,9 @@ export const router = OptionsRouter({}, (route) => ({
     },
     (route) => ({
       game: route(":gameId", {
-        component: lazy(() => import("./pages/EditorPage/EditorPage")),
+        component: lazy(
+          () => import("./features/editor/EditorPage/EditorPage")
+        ),
         params: { gameId: literalParser<GameId>() },
       }),
     })
