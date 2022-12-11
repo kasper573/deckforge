@@ -1,5 +1,5 @@
-import { Page } from "../layout/Page";
-import { Header } from "../layout/Header";
+import { Page } from "../../layout/Page";
+import { Header } from "../../layout/Header";
 
 export default function NotFoundPage() {
   return (

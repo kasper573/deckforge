@@ -1,6 +1,6 @@
-import { Page } from "../layout/Page";
-import { LoadingIndicator } from "../components/LoadingIndicator";
-import { Center } from "../components/Center";
+import { Page } from "../../layout/Page";
+import { LoadingIndicator } from "../../components/LoadingIndicator";
+import { Center } from "../../components/Center";
 
 export function LoadingPage() {
   return (

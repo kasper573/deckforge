@@ -12,7 +12,7 @@ import { styled } from "@mui/material/styles";
 import useTheme from "@mui/material/styles/useTheme";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { Menu as MenuIcon } from "../components/icons";
-import { LoadingPage } from "../pages/LoadingPage";
+import { LoadingPage } from "../features/common/LoadingPage";
 import { ToolbarContent } from "./ToolbarContent";
 import { Navigation } from "./Navigation";
 import { Logo } from "./Logo";

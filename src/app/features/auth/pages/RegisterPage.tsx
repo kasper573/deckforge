@@ -1,14 +1,14 @@
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
-import { Page } from "../layout/Page";
-import { Center } from "../components/Center";
-import { trpc } from "../trpc";
-import { registerUserPayloadType } from "../../api/services/user/types";
-import { useForm } from "../hooks/useForm";
-import { Header } from "../layout/Header";
-import { useAuth } from "../features/auth/store";
-import { ProgressButton } from "../components/ProgressButton";
+import { Page } from "../../../layout/Page";
+import { Center } from "../../../components/Center";
+import { trpc } from "../../../trpc";
+import { registerUserPayloadType } from "../../../../api/services/user/types";
+import { useForm } from "../../../hooks/useForm";
+import { Header } from "../../../layout/Header";
+import { useAuth } from "../store";
+import { ProgressButton } from "../../../components/ProgressButton";
 
 export default function RegisterPage() {
   const { login } = useAuth();

@@ -4,12 +4,12 @@ import { useRef } from "react";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
-import { Page } from "../layout/Page";
-import { Center } from "../components/Center";
-import { useAuth } from "../features/auth/store";
-import { Link } from "../components/Link";
-import { router } from "../router";
-import { ProgressButton } from "../components/ProgressButton";
+import { Page } from "../../../layout/Page";
+import { Center } from "../../../components/Center";
+import { useAuth } from "../store";
+import { Link } from "../../../components/Link";
+import { router } from "../../../router";
+import { ProgressButton } from "../../../components/ProgressButton";
 
 export default function LoginPage() {
   const { login } = useAuth();

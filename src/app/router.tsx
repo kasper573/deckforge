@@ -6,11 +6,11 @@ import type { GameId } from "../api/services/game/types";
 import { useActions } from "../lib/useActions";
 import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./pages/NotPermittedPage";
-import { NotAuthenticatedPage } from "./pages/NotAuthenticatedPage";
+import { NotAuthenticatedPage } from "./features/common/NotAuthenticatedPage";
 import { trpc } from "./trpc";
 import { editorActions, selectors } from "./features/editor/editorState";
 import { useSelector } from "./store";
-import { LoadingPage } from "./pages/LoadingPage";
+import { LoadingPage } from "./features/common/LoadingPage";
 
 const access = createAccessFactory({
   NotPermittedPage,
@@ -20,7 +20,7 @@ const access = createAccessFactory({
 export const router = OptionsRouter({}, (route) => ({
   home: route("", {
     exact: true,
-    component: lazy(() => import("./pages/HomePage")),
+    component: lazy(() => import("./features/common/HomePage")),
   }),
   play: route(
     "play",
@@ -39,14 +39,14 @@ export const router = OptionsRouter({}, (route) => ({
     { component: () => <Redirect to={router.user().profile()} /> },
     (route) => ({
       register: route("register", {
-        component: lazy(() => import("./pages/RegisterPage")),
+        component: lazy(() => import("./features/auth/pages/RegisterPage")),
       }),
       login: route("login", {
-        component: lazy(() => import("./pages/LoginPage")),
+        component: lazy(() => import("./features/auth/pages/LoginPage")),
       }),
       profile: route("profile", {
         middleware: access(),
-        component: lazy(() => import("./pages/ProfilePage")),
+        component: lazy(() => import("./features/auth/pages/ProfilePage")),
       }),
     })
   ),
