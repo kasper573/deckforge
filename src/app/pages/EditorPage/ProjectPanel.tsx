@@ -7,9 +7,14 @@ import Tab from "@mui/material/Tab";
 import TreeView from "@mui/lab/TreeView";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import TreeItem from "@mui/lab/TreeItem";
+import MuiTreeItem from "@mui/lab/TreeItem";
+import MenuItem from "@mui/material/MenuItem";
+import { styled } from "@mui/material/styles";
 import { useSelector } from "../../store";
-import { selectors } from "../../features/editor/editorState";
+import { editorActions, selectors } from "../../features/editor/editorState";
+import type { UseMenuItemsConfig } from "../../hooks/useMenu";
+import { useMenu } from "../../hooks/useMenu";
+import { useActions } from "../../../lib/useActions";
 
 const tabs = [
   { label: "Decks", content: <Decks /> },
@@ -20,7 +25,7 @@ const tabs = [
 export function ProjectPanel() {
   const [tabIndex, setTabIndex] = useState(0);
   return (
-    <Paper sx={{ gridArea: "project" }}>
+    <Root>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
           value={tabIndex}
@@ -33,26 +38,65 @@ export function ProjectPanel() {
         </Tabs>
       </Box>
       {tabs[tabIndex].content}
-    </Paper>
+    </Root>
   );
 }
 
+const Root = styled(Paper)`
+  grid-area: project;
+  display: flex;
+  flex-direction: column;
+`;
+
 function Decks() {
   const decks = useSelector(selectors.decksAndCards);
+  const { createDeck, createCard } = useActions(editorActions);
+  const [openContextMenu, contextMenu] = useMenu([
+    <MenuItem onClick={() => createDeck({ name: "New deck" })}>
+      New deck
+    </MenuItem>,
+  ]);
+
   return (
-    <Tree>
-      {decks.map((deck) => (
-        <TreeItem key={deck.objectId} nodeId={deck.objectId} label={deck.name}>
-          {deck.cards.map((card) => (
-            <TreeItem
-              key={card.objectId}
-              nodeId={card.objectId}
-              label={card.name}
-            />
-          ))}
-        </TreeItem>
-      ))}
-    </Tree>
+    <Box onContextMenu={openContextMenu} sx={{ flex: 1 }}>
+      <Tree>
+        {decks.map((deck) => (
+          <TreeItem
+            key={deck.objectId}
+            nodeId={deck.objectId}
+            label={deck.name}
+            contextMenu={[
+              <MenuItem
+                onClick={() =>
+                  createCard({
+                    deckId: deck.deckId,
+                    name: "New card",
+                    code: "",
+                    propertyDefaults: {},
+                  })
+                }
+              >
+                New card
+              </MenuItem>,
+              <MenuItem>Delete</MenuItem>,
+            ]}
+          >
+            {deck.cards.map((card) => (
+              <TreeItem
+                key={card.objectId}
+                nodeId={card.objectId}
+                label={card.name}
+                contextMenu={[
+                  <MenuItem>Rename</MenuItem>,
+                  <MenuItem>Delete</MenuItem>,
+                ]}
+              />
+            ))}
+          </TreeItem>
+        ))}
+      </Tree>
+      {contextMenu}
+    </Box>
   );
 }
 
@@ -71,5 +115,20 @@ function Tree(props: ComponentProps<typeof TreeView>) {
       defaultExpandIcon={<ChevronRightIcon />}
       {...props}
     />
+  );
+}
+
+function TreeItem({
+  contextMenu = [],
+  ...props
+}: Omit<ComponentProps<typeof MuiTreeItem>, "contextMenu"> & {
+  contextMenu?: UseMenuItemsConfig;
+}) {
+  const [openContextMenu, menuElement] = useMenu(contextMenu);
+  return (
+    <>
+      <MuiTreeItem {...props} onContextMenu={openContextMenu} />
+      {menuElement}
+    </>
   );
 }
