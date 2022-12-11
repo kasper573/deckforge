@@ -1,10 +1,10 @@
 import { useRouteParams } from "react-typesafe-routes";
 import { isEqual } from "lodash";
 import { router } from "../../router";
-import { trpc } from "../../trpc";
+import { CANCEL_INVALIDATE, trpc } from "../../trpc";
 import { useSelector } from "../../store";
 import { useActions } from "../../../lib/useActions";
-import { useToastProcedure } from "../../hooks/useToastProcedure";
+import { useToastMutation } from "../../hooks/useToastProcedure";
 import { useOnChange } from "../../hooks/useOnChange";
 import { refEquals } from "../../../lib/refEquals";
 import { editorActions } from "./actions";
@@ -15,12 +15,16 @@ export function LocalAndRemoteStateSynchronizer() {
   const { data: remoteGame } = trpc.game.read.useQuery(gameId);
   const localGame = useSelector(selectors.game);
   const { selectGame: setLocalGame } = useActions(editorActions);
-  const setRemoteGame = useToastProcedure(trpc.game.update);
+  const remoteGameMutation = trpc.game.update.useMutation({
+    onSuccess: () => CANCEL_INVALIDATE,
+  });
+  const setRemoteGame = useToastMutation(remoteGameMutation.mutateAsync);
 
   useOnChange(
     remoteGame,
     () => {
       if (remoteGame) {
+        console.log("Remote game changed, updating local game");
         setLocalGame(remoteGame);
       }
     },
@@ -29,7 +33,8 @@ export function LocalAndRemoteStateSynchronizer() {
 
   useOnChange(localGame, () => {
     if (!isEqual(localGame, remoteGame)) {
-      setRemoteGame.mutate(localGame);
+      console.log("Local game changed, updating remote game");
+      setRemoteGame(localGame);
     }
   });
 
