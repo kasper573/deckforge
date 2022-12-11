@@ -2,7 +2,6 @@ import { groupBy } from "lodash";
 import type {
   ActionId,
   CardId,
-  DeckId,
   EntityId,
   Property,
   PropertyId,
@@ -61,23 +60,16 @@ export const selectors = {
       },
     ];
   },
-  deck: (deckId: DeckId) => (state: EditorState) =>
-    state.game.definition.decks.find((d) => d.deckId === deckId),
   card: (cardId: CardId) => (state: EditorState) =>
     state.game.definition.cards.find((c) => c.cardId === cardId),
-  actions: (state: EditorState) => state.game.definition.actions,
   action: (actionId: ActionId) => (state: EditorState) =>
     state.game.definition.actions.find((a) => a.actionId === actionId),
   reaction: (reactionId: ReactionId) => (state: EditorState) =>
     state.game.definition.reactions.find((r) => r.reactionId === reactionId),
-  reactionsFor: (actionId: ActionId) => (state: EditorState) =>
-    state.game.definition.reactions.filter((r) => r.actionId === actionId),
   property: (propertyId: PropertyId) => (state: EditorState) =>
     state.game.definition.properties.find((p) => p.propertyId === propertyId),
   propertiesFor: (entityId: EntityId) => (state: EditorState) =>
     state.game.definition.properties.filter((p) => p.entityId === entityId),
-  cardsFor: (deckId: DeckId) => (state: EditorState) =>
-    state.game.definition.cards.filter((p) => p.deckId === deckId),
 };
 
 function giveObjectIdsToProperties(properties: Property[] = []) {
