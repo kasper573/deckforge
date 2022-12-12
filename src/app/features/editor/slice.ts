@@ -143,6 +143,7 @@ function emptyGame(): Game {
   return {
     ownerId: "invalid-user-id",
     gameId: "invalid-game-id" as GameId,
+    updatedAt: new Date(),
     name: "",
     definition: {
       properties: [],
