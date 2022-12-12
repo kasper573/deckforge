@@ -1,3 +1,4 @@
+import type { IconButtonProps } from "@mui/material/IconButton";
 import IconButton from "@mui/material/IconButton";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import ListItem from "@mui/material/ListItem";
@@ -11,13 +12,18 @@ import { Auth } from "../auth/Auth";
 import { LinkMenuItem } from "../../components/Link";
 import { router } from "../../router";
 
-export function UserMenu() {
+export function UserMenu(props?: IconButtonProps) {
   const { user, logout } = useAuth();
   return (
     <MenuFor
       MenuListProps={{ "aria-label": "User menu" }}
       trigger={({ open }) => (
-        <IconButton aria-label="show user menu" sx={{ ml: 1 }} onClick={open}>
+        <IconButton
+          {...props}
+          aria-label="show user menu"
+          sx={{ ml: 1 }}
+          onClick={open}
+        >
           {user ? (
             <OnlineBadge data-testid="online-indicator">
               <AccountCircle />

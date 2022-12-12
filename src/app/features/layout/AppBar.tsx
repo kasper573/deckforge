@@ -6,21 +6,30 @@ import MuiAppBar from "@mui/material/AppBar";
 import type { ReactNode } from "react";
 import { pageMaxWidth } from "./Page";
 import { UserMenu } from "./UserMenu";
+import { Logo } from "./Logo";
 
-export function AppBar({ children }: { children?: ReactNode }) {
+export function AppBar({
+  children = <Logo />,
+  container = true,
+}: {
+  children?: ReactNode;
+  container?: boolean;
+}) {
+  let content = (
+    <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
+      <Box sx={{ flex: 1 }}>{children}</Box>
+      <div>
+        <UserMenu edge="end" />
+      </div>
+    </Stack>
+  );
+  if (container) {
+    content = <Container maxWidth={pageMaxWidth}>{content}</Container>;
+  }
   return (
     <>
       <MuiAppBar aria-label="header" position="fixed">
-        <Toolbar disableGutters>
-          <Container maxWidth={pageMaxWidth} sx={{ display: "flex" }}>
-            <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
-              <Box>{children}</Box>
-              <Box sx={{ ml: "auto" }}>
-                <UserMenu />
-              </Box>
-            </Stack>
-          </Container>
-        </Toolbar>
+        <Toolbar disableGutters={container}>{content}</Toolbar>
       </MuiAppBar>
       <Toolbar />
     </>
