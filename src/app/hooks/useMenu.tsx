@@ -1,89 +1,105 @@
-import type {
-  MouseEventHandler,
-  MouseEvent,
-  ReactElement,
-  ComponentProps,
-} from "react";
-import { useState } from "react";
-import type MenuItem from "@mui/material/MenuItem";
+import type { MouseEvent, ReactElement } from "react";
+import { cloneElement, useCallback, useEffect, useMemo } from "react";
 import type { MenuProps } from "@mui/material/Menu";
 import Menu from "@mui/material/Menu";
-import { defined } from "../../lib/ts-extensions/defined";
+import { createStore, useStore } from "zustand";
+import { v4 } from "uuid";
+import { immer } from "zustand/middleware/immer";
 import { concatFunctions } from "../../lib/ts-extensions/concatFunctions";
+import type { NominalString } from "../../lib/NominalString";
 
-export type UseMenuItemsConfig = MenuItemRenderer | MaybeMenuItemElements;
+export type UseMenuItems = ReactElement[];
 
 export const useMenu = (
-  menuItemsConfig: UseMenuItemsConfig,
-  menuProps?: Partial<MenuProps>
+  items: UseMenuItems,
+  props: Partial<MenuProps> = {}
 ) => {
-  const [position, setPosition] = useState<{ left: number; top: number }>();
+  const id = useMemo(() => v4() as MenuId, []);
 
-  const handleTrigger: MouseEventHandler = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!shouldShowMenu()) {
-      return;
-    }
-    setPosition({
-      left: e.clientX,
-      top: e.clientY,
-    });
-  };
+  useEffect(
+    () => menuStore.getState().upsert({ id, items, props }),
+    [id, items, props]
+  );
 
-  const handleClose: CloseHandler = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setPosition(undefined);
-  };
+  useEffect(() => () => menuStore.getState().remove(id), [id]);
 
-  const menuItems = Array.isArray(menuItemsConfig)
-    ? defined(menuItemsConfig)
-    : defined(menuItemsConfig({ close: handleClose }));
-  const shouldShowMenu = () => menuItems.length > 0;
+  return useCallback((e: MouseEvent) => menuStore.getState().open(e, id), [id]);
+};
 
-  const menu = shouldShowMenu() && (
+type MenuId = NominalString<"MenuId">;
+interface MenuEntry {
+  id: MenuId;
+  props: Partial<MenuProps>;
+  items: UseMenuItems;
+}
+
+interface MenuState {
+  openId?: MenuId;
+  position?: { left: number; top: number };
+  menus: Map<MenuId, MenuEntry>;
+  upsert(menu: MenuEntry): void;
+  remove(id: MenuId): void;
+  open: (e: MouseEvent, id: MenuId) => void;
+  close: (e: MouseEvent) => void;
+}
+
+const menuStore = createStore<MenuState>()(
+  immer((set) => ({
+    menus: new Map(),
+    upsert(menu) {
+      set((state) => {
+        (state as MenuState).menus.set(menu.id, menu);
+      });
+    },
+    remove(id) {
+      set((state) => {
+        state.menus.delete(id);
+      });
+    },
+    open(e, openId) {
+      e.preventDefault();
+      e.stopPropagation();
+      set((state) => {
+        state.openId = openId;
+        state.position = { left: e.clientX, top: e.clientY };
+      });
+    },
+    close(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      set((state) => {
+        state.openId = undefined;
+      });
+    },
+  }))
+);
+
+export function MenuOutlet() {
+  const { position, openId, menus, close } = useStore(menuStore);
+  if (!position || !openId) {
+    return null;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const menu = menus.get(openId)!;
+  return (
     <Menu
-      {...menuProps}
+      {...menu.props}
       open={!!position}
       onClose={concatFunctions(
-        menuProps?.onClose,
-        handleClose as MenuProps["onClose"]
+        menu.props?.onClose,
+        close as MenuProps["onClose"]
       )}
-      onContextMenu={concatFunctions(menuProps?.onContextMenu, handleClose)}
+      onContextMenu={concatFunctions(menu.props?.onContextMenu, close)}
       anchorReference="anchorPosition"
       anchorPosition={position}
       MenuListProps={{
-        ...menuProps?.MenuListProps,
-        onClick: concatFunctions(
-          menuProps?.MenuListProps?.onClick,
-          handleClose
-        ),
+        ...menu.props?.MenuListProps,
+        onClick: concatFunctions(menu.props?.MenuListProps?.onClick, close),
       }}
     >
-      {menuItems.map((item, index) => (
-        // Wrapping each item in a span allows for nested menus.
-        // It also allows us to automate keys without using cloneElement.
-        <span key={index}>{item}</span>
-      ))}
+      {menu.items?.map((item, index) => cloneElement(item, { key: index }))}
     </Menu>
   );
-
-  return [handleTrigger, menu] as const;
-};
+}
 
 export type CloseHandler = (e: MouseEvent) => void;
-
-export type MenuItemElement = ReactElement<ComponentProps<typeof MenuItem>>;
-
-export type MaybeMenuItemElements = Array<
-  MenuItemElement | undefined | boolean
->;
-
-export type MenuItemRendererProps = {
-  close: CloseHandler;
-};
-
-export type MenuItemRenderer = (
-  props: MenuItemRendererProps
-) => MaybeMenuItemElements;

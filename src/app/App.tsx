@@ -21,6 +21,7 @@ import {
   PrettyErrorFallback,
 } from "./ErrorBoundary";
 import type { AppStore } from "./store";
+import { MenuOutlet } from "./hooks/useMenu";
 
 export function App({
   trpcClient,
@@ -52,6 +53,7 @@ export function App({
                     >
                       <RouterSwitch router={router} />
                       <ModalOutlet />
+                      <MenuOutlet />
                     </ErrorBoundary>
                   </Layout>
                 </ThemeProvider>

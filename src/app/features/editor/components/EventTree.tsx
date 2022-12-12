@@ -15,7 +15,7 @@ export function EventTree() {
   const { createAction, createReaction, selectObject } =
     useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObject);
-  const [openContextMenu, contextMenu] = useMenu([
+  const openContextMenu = useMenu([
     <MenuItem onClick={() => createAction({})}>New action</MenuItem>,
   ]);
 
@@ -55,7 +55,6 @@ export function EventTree() {
           </TreeItem>
         ))}
       </Tree>
-      {contextMenu}
     </Box>
   );
 }

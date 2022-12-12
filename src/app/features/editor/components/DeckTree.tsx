@@ -14,7 +14,7 @@ export function DeckTree() {
   const promptRename = usePromptRename();
   const { createDeck, createCard, selectObject } = useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObject);
-  const [openContextMenu, contextMenu] = useMenu([
+  const openContextMenu = useMenu([
     <MenuItem onClick={() => createDeck({})}>New deck</MenuItem>,
   ]);
 
@@ -52,7 +52,6 @@ export function DeckTree() {
           </TreeItem>
         ))}
       </Tree>
-      {contextMenu}
     </Box>
   );
 }

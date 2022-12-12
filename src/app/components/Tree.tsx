@@ -5,7 +5,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MuiTreeItem from "@mui/lab/TreeItem";
 import { useMemo } from "react";
 import type { SingleSelectTreeViewProps } from "@mui/lab/TreeView/TreeView";
-import type { UseMenuItemsConfig } from "../hooks/useMenu";
+import type { UseMenuItems } from "../hooks/useMenu";
 import { useMenu } from "../hooks/useMenu";
 
 export interface TreeProps<Id>
@@ -42,7 +42,7 @@ export function Tree<Id>({
 export interface TreeItemProps<Id>
   extends Omit<ComponentProps<typeof MuiTreeItem>, "contextMenu" | "nodeId"> {
   nodeId: Id;
-  contextMenu?: UseMenuItemsConfig;
+  contextMenu?: UseMenuItems;
 }
 
 export function TreeItem<Id>({
@@ -50,17 +50,14 @@ export function TreeItem<Id>({
   nodeId,
   ...props
 }: TreeItemProps<Id>) {
-  const [openContextMenu, menuElement] = useMenu(contextMenu);
+  const openContextMenu = useMenu(contextMenu);
   const serializedNodeId = useMemo(() => serializeTreeNodeId(nodeId), [nodeId]);
   return (
-    <>
-      <MuiTreeItem
-        {...props}
-        nodeId={serializedNodeId}
-        onContextMenu={openContextMenu}
-      />
-      {menuElement}
-    </>
+    <MuiTreeItem
+      {...props}
+      nodeId={serializedNodeId}
+      onContextMenu={openContextMenu}
+    />
   );
 }
 
