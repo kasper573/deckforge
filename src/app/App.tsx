@@ -53,8 +53,8 @@ export function App({
                     >
                       <RouterSwitch router={router} />
                       <ModalOutlet />
-                      <MenuOutlet />
                     </ErrorBoundary>
+                    <MenuOutlet />
                   </Layout>
                 </ThemeProvider>
               </Router>
