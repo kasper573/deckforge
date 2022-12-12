@@ -1,9 +1,9 @@
 import type { MouseEvent } from "react";
 import { styled } from "@mui/material/styles";
-import { LocalAndRemoteStateSynchronizer } from "../StateSynchronizer";
 import { InspectorPanel } from "../components/InspectorPanel";
 import { CodePanel } from "../components/CodePanel";
 import { ProjectPanel } from "../components/ProjectPanel";
+import { StateSynchronizer } from "../StateSynchronizer";
 
 export default function EditorPage() {
   return (
@@ -13,7 +13,7 @@ export default function EditorPage() {
         <ProjectPanel />
         <InspectorPanel />
       </EditorPanels>
-      <LocalAndRemoteStateSynchronizer />
+      <StateSynchronizer />
     </>
   );
 }

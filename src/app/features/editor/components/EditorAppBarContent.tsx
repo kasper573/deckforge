@@ -21,7 +21,7 @@ export default function EditorAppBarContent() {
   async function promptRename() {
     const newName = await prompt({
       title: "Rename game",
-      fieldProps: { label: "New name", defaultValue: game.name },
+      fieldProps: { label: "New name", defaultValue: game?.name },
     });
     if (newName) {
       renameGame(newName);
@@ -38,21 +38,23 @@ export default function EditorAppBarContent() {
         </div>
       </Tooltip>
       <Box sx={{ flex: 1, display: "flex", alignItems: "space-around" }}>
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="center"
-          sx={{ margin: "auto" }}
-        >
-          <Typography>{game.name}</Typography>
-          <Tooltip title="Rename">
-            <div>
-              <IconButton onClick={promptRename}>
-                <Edit />
-              </IconButton>
-            </div>
-          </Tooltip>
-        </Stack>
+        {game && (
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            sx={{ margin: "auto" }}
+          >
+            <Typography>{game.name}</Typography>
+            <Tooltip title="Rename">
+              <div>
+                <IconButton onClick={promptRename}>
+                  <Edit />
+                </IconButton>
+              </div>
+            </Tooltip>
+          </Stack>
+        )}
       </Box>
     </Stack>
   );

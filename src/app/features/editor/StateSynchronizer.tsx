@@ -1,40 +1,30 @@
 import { useRouteParams } from "react-typesafe-routes";
-import { isEqual } from "lodash";
+import { useEffect, useRef } from "react";
 import { router } from "../../router";
-import { CANCEL_INVALIDATE, trpc } from "../../trpc";
+import { trpc } from "../../trpc";
 import { useSelector } from "../../store";
+import { useToastProcedure } from "../../hooks/useToastProcedure";
 import { useActions } from "../../../lib/useActions";
-import { useToastMutation } from "../../hooks/useToastProcedure";
-import { useOnChange } from "../../hooks/useOnChange";
-import { refEquals } from "../../../lib/refEquals";
-import { editorActions } from "./actions";
 import { selectors } from "./selectors";
+import { editorActions } from "./actions";
 
-export function LocalAndRemoteStateSynchronizer() {
+export function StateSynchronizer() {
+  const { downloadGame } = useActions(editorActions);
   const { gameId } = useRouteParams(router.build().game);
-  const { data: remoteGame } = trpc.game.read.useQuery(gameId);
   const localGame = useSelector(selectors.game);
-  const { selectGame: setLocalGame } = useActions(editorActions);
-  const remoteGameMutation = trpc.game.update.useMutation({
-    onSuccess: () => CANCEL_INVALIDATE,
-  });
-  const setRemoteGame = useToastMutation(remoteGameMutation.mutateAsync);
+  const { mutate: uploadGame } = useToastProcedure(trpc.game.update);
+  const latestUploader = useRef(uploadGame);
+  latestUploader.current = uploadGame;
 
-  useOnChange(
-    remoteGame,
-    () => {
-      if (remoteGame) {
-        setLocalGame(remoteGame);
-      }
-    },
-    { isEqual: refEquals, handleInitial: true }
-  );
+  useEffect(() => {
+    downloadGame(gameId);
+  }, [downloadGame, gameId]);
 
-  useOnChange(localGame, () => {
-    if (!isEqual(localGame, remoteGame)) {
-      setRemoteGame(localGame);
+  useEffect(() => {
+    if (localGame) {
+      latestUploader.current(localGame);
     }
-  });
+  }, [localGame]);
 
   return null;
 }

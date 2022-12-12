@@ -15,6 +15,6 @@ export type EditorObjectId =
   | { type: "property"; propertyId: PropertyId };
 
 export interface EditorState {
-  game: Game;
+  game?: Game;
   selectedObjectId?: EditorObjectId;
 }
