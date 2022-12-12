@@ -48,7 +48,7 @@ export const router = OptionsRouter({}, (route) => ({
     "build",
     {
       middleware: access(),
-      component: lazy(() => import("./features/editor/pages/BuildPage")),
+      component: lazy(() => import("./features/editor/pages/GameListPage")),
     },
     (route) => ({
       game: route(":gameId", {

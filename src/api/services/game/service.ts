@@ -15,14 +15,16 @@ export function createGameService() {
     create: t.procedure
       .use(access())
       .input(gameType.pick({ name: true, definition: true }))
+      .output(gameType)
       .mutation(async ({ input: { definition, ...rest }, ctx }) => {
-        await ctx.db.game.create({
+        const game = await ctx.db.game.create({
           data: {
             ...rest,
             ownerId: ctx.user.userId,
             definition: definition as Prisma.JsonObject,
           },
         });
+        return game as unknown as Game;
       }),
     read: t.procedure
       .input(gameType.shape.gameId)

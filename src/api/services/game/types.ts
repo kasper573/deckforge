@@ -85,6 +85,7 @@ export const gameDefinitionType = z.object({
 export type Game = z.infer<typeof gameType>;
 export const gameType = z.object({
   gameId: gameIdType,
+  updatedAt: z.date(),
   name: z.string().min(1).max(32),
   definition: gameDefinitionType,
   ownerId: z.string(),

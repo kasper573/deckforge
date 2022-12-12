@@ -38,6 +38,10 @@ export function createStore(
   return configureStore({
     reducer: createRootReducer(),
     preloadedState: createRootState(history, editorState),
+    middleware: (defaults) =>
+      defaults({
+        serializableCheck: false, // To allow superjson
+      }),
   });
 }
 

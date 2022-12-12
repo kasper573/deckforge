@@ -72,6 +72,11 @@ const globalStyles = (
         display: "flex",
         flexDirection: "column",
       },
+      a: {
+        [`&:hover, &:link, &:visited, &:active`]: {
+          textDecoration: "none",
+        },
+      },
     }}
   />
 );

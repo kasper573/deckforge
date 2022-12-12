@@ -7,6 +7,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import MenuItem from "@mui/material/MenuItem";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import * as React from "react";
+import Card from "@mui/material/Card";
 
 export interface LinkTo {
   $: string;
@@ -76,6 +77,19 @@ export function LinkMenuItem(
 ) {
   return (
     <MenuItem
+      component={TypesafeRouterLink}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {...(props as any)}
+      role="link"
+    />
+  );
+}
+
+export function CardLink(
+  props: ComponentProps<typeof Card> & AdditionalLinkProps
+) {
+  return (
+    <Card
       component={TypesafeRouterLink}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       {...(props as any)}
