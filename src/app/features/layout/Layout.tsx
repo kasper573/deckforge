@@ -24,10 +24,14 @@ const Content = styled("main")`
 `;
 
 function AppBarSlot() {
-  const { appBar: Component } = useRouteOptions(router);
+  const {
+    appBar: { content: Content, container },
+  } = useRouteOptions(router);
   return (
-    <Suspense fallback={<AppBar />}>
-      <Component />
-    </Suspense>
+    <AppBar container={container}>
+      <Suspense>
+        <Content />
+      </Suspense>
+    </AppBar>
   );
 }

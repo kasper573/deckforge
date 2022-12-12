@@ -6,7 +6,7 @@ import type { GameId } from "../api/services/game/types";
 import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./features/auth/pages/NotPermittedPage";
 import { NotAuthenticatedPage } from "./features/auth/pages/NotAuthenticatedPage";
-import { AppBar } from "./features/layout/AppBar";
+import { Logo } from "./features/layout/Logo";
 
 const access = createAccessFactory({
   NotPermittedPage,
@@ -14,7 +14,7 @@ const access = createAccessFactory({
 });
 
 export const router = OptionsRouter(
-  { appBar: AppBar as ComponentType },
+  { appBar: { content: Logo as ComponentType, container: true } },
   (route) => ({
     home: route("", {
       exact: true,
@@ -57,9 +57,12 @@ export const router = OptionsRouter(
       (route) => ({
         game: route(":gameId", {
           options: {
-            appBar: lazy(
-              () => import("./features/editor/components/EditorAppBar")
-            ),
+            appBar: {
+              container: false,
+              content: lazy(
+                () => import("./features/editor/components/EditorAppBarContent")
+              ),
+            },
           },
           component: lazy(() => import("./features/editor/pages/EditorPage")),
           params: { gameId: literalParser<GameId>() },

@@ -12,9 +12,8 @@ import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
 import { LinkIconButton } from "../../../components/Link";
 import { router } from "../../../router";
-import { AppBar } from "../../layout/AppBar";
 
-export default function EditorAppBar() {
+export default function EditorAppBarContent() {
   const prompt = useModal(PromptDialog);
   const game = useSelector(selectors.game);
   const { renameGame } = useActions(editorActions);
@@ -30,33 +29,31 @@ export default function EditorAppBar() {
   }
 
   return (
-    <AppBar container={false}>
-      <Stack direction="row" sx={{ display: "flex" }}>
-        <Tooltip title="Leave editor">
-          <div>
-            <LinkIconButton edge="start" to={router.build()}>
-              <ExitToApp />
-            </LinkIconButton>
-          </div>
-        </Tooltip>
-        <Box sx={{ flex: 1, display: "flex", alignItems: "space-around" }}>
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            sx={{ margin: "auto" }}
-          >
-            <Typography>{game.name}</Typography>
-            <Tooltip title="Rename">
-              <div>
-                <IconButton onClick={promptRename}>
-                  <Edit />
-                </IconButton>
-              </div>
-            </Tooltip>
-          </Stack>
-        </Box>
-      </Stack>
-    </AppBar>
+    <Stack direction="row" sx={{ display: "flex" }}>
+      <Tooltip title="Leave editor">
+        <div>
+          <LinkIconButton edge="start" to={router.build()}>
+            <ExitToApp />
+          </LinkIconButton>
+        </div>
+      </Tooltip>
+      <Box sx={{ flex: 1, display: "flex", alignItems: "space-around" }}>
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          sx={{ margin: "auto" }}
+        >
+          <Typography>{game.name}</Typography>
+          <Tooltip title="Rename">
+            <div>
+              <IconButton onClick={promptRename}>
+                <Edit />
+              </IconButton>
+            </div>
+          </Tooltip>
+        </Stack>
+      </Box>
+    </Stack>
   );
 }
