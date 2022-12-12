@@ -1,11 +1,13 @@
-import { findMainMenuOption, resetData } from "../support/actions/common";
+import { resetData } from "../support/actions/common";
 import type { TestUser } from "../support/actions/user";
 import {
   assertProfile,
   assertSignedIn,
   assertSignedOut,
+  gotoProfile,
   nextTestUser,
   register,
+  showUserMenu,
   signIn,
   signOut,
   updateProfile,
@@ -15,7 +17,7 @@ describe("guest", () => {
   beforeEach(() => cy.visit("/"));
 
   it("can not see link to build page in menu", () => {
-    findMainMenuOption("Admin").should("not.exist");
+    showUserMenu().should("not.contain", "Your games");
   });
 
   it("is not given access when attempting to sign in with bogus credentials", () => {
@@ -33,6 +35,10 @@ describe("user", () => {
     register(user.name, user.password, user.email);
   });
 
+  it("can see link to build page in menu", () => {
+    showUserMenu().should("contain", "Your games");
+  });
+
   it("is signed in after registering", () => {
     assertSignedIn(user.name);
   });
@@ -44,14 +50,17 @@ describe("user", () => {
   });
 
   it("can change their email", () => {
+    gotoProfile();
     updateProfile({ email: "new@email.com" });
     signOut();
     cy.visit("/"); // Reload to clear any potential form cache
     signIn(user.name, user.password);
+    gotoProfile();
     assertProfile({ email: "new@email.com" });
   });
 
   it("can change their password", () => {
+    gotoProfile();
     updateProfile({ password: "my very long new password" });
     signOut();
     signIn(user.name, "my very long new password");
@@ -84,9 +93,11 @@ describe("two different users", () => {
   it("can only access their own profile data", () => {
     cy.visit("/");
     signIn(user1.name, user1.password);
+    gotoProfile();
     assertProfile({ email: user1.email });
     signOut();
     signIn(user2.name, user2.password);
+    gotoProfile();
     assertProfile({ email: user2.email });
   });
 });

@@ -45,6 +45,12 @@ export function signIn(
   });
 }
 
+export function gotoProfile() {
+  showUserMenu().within(() => {
+    cy.findByRole(/link/, { name: /settings/i }).click();
+  });
+}
+
 export function updateProfile({
   password,
   email,
@@ -52,10 +58,6 @@ export function updateProfile({
   password?: string;
   email?: string;
 }) {
-  showUserMenu().within(() => {
-    cy.findByRole(/link/, { name: /settings/i }).click();
-  });
-
   cy.findByRole("form")
     .within(() => {
       if (email !== undefined) {

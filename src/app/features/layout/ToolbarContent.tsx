@@ -13,13 +13,16 @@ import { useAuth } from "../auth/store";
 import { LinkMenuItem } from "../../components/Link";
 import { router } from "../../router";
 import { MenuFor } from "../../components/MenuFor";
+import { Logo } from "./Logo";
 
 export function ToolbarContent({ children }: { children?: ReactNode }) {
   const { user, logout } = useAuth();
 
   return (
     <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
-      <Box>{children}</Box>
+      <Box>
+        <Logo />
+      </Box>
       <Box sx={{ ml: "auto" }}>
         <MenuFor
           MenuListProps={{ "aria-label": "User menu" }}
@@ -55,7 +58,10 @@ export function ToolbarContent({ children }: { children?: ReactNode }) {
               />
             </ListItem>
             <Divider sx={{ mb: 1 }} />
-            <LinkMenuItem to={router.user().profile()}>Settings</LinkMenuItem>
+            <LinkMenuItem to={router.build()}>Your games</LinkMenuItem>
+            <LinkMenuItem to={router.user().profile()}>
+              Account settings
+            </LinkMenuItem>
             <MenuItem onClick={() => logout()}>Sign out</MenuItem>
           </Auth>
         </MenuFor>
