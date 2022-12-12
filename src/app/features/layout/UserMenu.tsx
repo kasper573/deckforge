@@ -13,7 +13,7 @@ import { LinkMenuItem } from "../../components/Link";
 import { router } from "../../router";
 
 export function UserMenu(props?: IconButtonProps) {
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   return (
     <MenuFor
       MenuListProps={{ "aria-label": "User menu" }}
@@ -24,13 +24,12 @@ export function UserMenu(props?: IconButtonProps) {
           sx={{ ml: 1 }}
           onClick={open}
         >
-          {user ? (
-            <OnlineBadge data-testid="online-indicator">
-              <AccountCircle />
-            </OnlineBadge>
-          ) : (
+          <OnlineBadge
+            invisible={!isAuthenticated}
+            data-testid="online-indicator"
+          >
             <AccountCircle />
-          )}
+          </OnlineBadge>
         </IconButton>
       )}
     >

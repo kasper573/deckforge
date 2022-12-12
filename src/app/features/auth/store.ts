@@ -20,7 +20,7 @@ const store = createStore<{
       update: (changes) =>
         set((state) => {
           const newState = { ...state, ...changes };
-          newState.isAuthenticated = !!newState.token;
+          newState.isAuthenticated = !!newState.token && !!newState.user;
           return newState;
         }),
     }),
