@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserHistory } from "history";
 import { App } from "./App";
-import { createQueryClient, createTRPCClients } from "./trpc";
+import { createQueryClient, createTRPCClient } from "./trpc";
 import { createTheme } from "./theme";
 import {
   getAuthToken,
@@ -23,8 +23,8 @@ if (env.analyticsId) {
 }
 
 const queryClient = createQueryClient(resetAuthToken);
-const { trpcClientReact, trpcClient } = createTRPCClients(getAuthToken);
-const store = createStore(trpcClient);
+const trpcClient = createTRPCClient(getAuthToken);
+const store = createStore();
 const history = createBrowserHistory();
 const theme = createTheme();
 setupAuthBehavior({ history });
@@ -34,7 +34,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     store={store}
     theme={theme}
     history={history}
-    trpcClient={trpcClientReact}
+    trpcClient={trpcClient}
     queryClient={queryClient}
   />
 );

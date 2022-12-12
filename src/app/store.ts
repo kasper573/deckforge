@@ -9,8 +9,6 @@ import {
 import type { StateWithHistory } from "redux-undo";
 import undoable, { excludeAction } from "redux-undo";
 import { configureStore } from "@reduxjs/toolkit";
-import type { inferRouterProxyClient } from "@trpc/client/src/createTRPCClientProxy";
-import type { ApiRouter } from "../api/router";
 import { editorSlice, noUndoActions } from "./features/editor/slice";
 import type { EditorState } from "./features/editor/types";
 
@@ -34,21 +32,16 @@ export const createRootState = (
   },
 });
 
-export function createStore(trpc: ThunkExtra["trpc"]) {
+export function createStore() {
   return configureStore({
     reducer: createRootReducer(),
     preloadedState: createRootState(history, editorSlice.getInitialState()),
     middleware: (defaults) =>
       defaults({
-        thunk: { extraArgument: { trpc } },
         serializableCheck: false, // To allow superjson
       }),
   });
 }
-
-export type ThunkExtra = {
-  trpc: inferRouterProxyClient<ApiRouter>;
-};
 
 export type AppStore = ReturnType<typeof createStore>;
 export type AppDispatch = AppStore["dispatch"];

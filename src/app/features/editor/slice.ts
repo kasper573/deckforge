@@ -1,11 +1,10 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import type {
   Action,
   Card,
   Deck,
   Game,
-  GameId,
   Property,
   Reaction,
 } from "../../../api/services/game/types";
@@ -14,7 +13,6 @@ import {
   createId,
 } from "../../../lib/createEntityReducers";
 import type { MakePartial } from "../../../lib/MakePartial";
-import type { ThunkExtra } from "../../store";
 import type { editorActions } from "./actions";
 import type { EditorObjectId, EditorState } from "./types";
 
@@ -22,19 +20,14 @@ const initialState: EditorState = {};
 
 const entityReducers = createEntityReducerFactory<EditorState>();
 
-export const downloadGame = createAsyncThunk<
-  Game,
-  GameId,
-  { extra: ThunkExtra }
->("editor/downloadGame", async (gameId, { extra: { trpc } }) =>
-  trpc.game.read.query(gameId)
-);
-
 export const editorSlice = createSlice({
   name: "editor",
   initialState,
   reducers: {
-    selectGame: (state, { payload: newGame }: PayloadAction<Game>) => {
+    selectGame: (
+      state,
+      { payload: newGame }: PayloadAction<Game | undefined>
+    ) => {
       state.game = newGame;
     },
     renameGame({ game }, { payload: newName }: PayloadAction<string>) {
@@ -155,14 +148,6 @@ export const editorSlice = createSlice({
         ...payload,
       });
     },
-  },
-  extraReducers: (builder) => {
-    builder.addCase(downloadGame.pending, (state) => {
-      state.game = undefined;
-    });
-    builder.addCase(downloadGame.fulfilled, (state, { payload: game }) => {
-      state.game = game;
-    });
   },
 });
 
