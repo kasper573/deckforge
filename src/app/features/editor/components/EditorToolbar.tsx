@@ -1,4 +1,3 @@
-import Typography from "@mui/material/Typography";
 import Toolbar from "@mui/material/Toolbar";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
@@ -10,6 +9,7 @@ import { editorActions } from "../actions";
 import { Edit } from "../../../components/icons";
 import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
+import { Header } from "../../layout/Header";
 
 export function EditorToolbar() {
   const prompt = useModal(PromptDialog);
@@ -29,7 +29,7 @@ export function EditorToolbar() {
   return (
     <Toolbar>
       <Stack direction="row" spacing={2} alignItems="center">
-        <Typography>{game.name}</Typography>
+        <Header sx={{ m: 0 }}>{game.name}</Header>
         <div>
           <Tooltip title="Rename">
             <IconButton onClick={promptRename}>
