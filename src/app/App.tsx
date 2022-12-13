@@ -54,8 +54,8 @@ export function App({
                       <RouterSwitch router={router} />
                       <ModalOutlet />
                     </ErrorBoundary>
-                    <MenuOutlet />
                   </Layout>
+                  <MenuOutlet />
                 </ThemeProvider>
               </Router>
             </QueryClientProvider>
