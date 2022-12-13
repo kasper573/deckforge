@@ -28,7 +28,7 @@ export function useConfirmDelete() {
 export function usePromptRename() {
   const prompt = useModal(PromptDialog);
   const { renameObject } = useActions(editorActions);
-  return async function confirmDelete({
+  return async function promptRename({
     objectId,
     name,
   }: {
