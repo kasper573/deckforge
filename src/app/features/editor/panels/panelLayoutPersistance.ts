@@ -2,8 +2,8 @@ import type { MosaicNode } from "react-mosaic-component/src/types";
 import type { ZodType } from "zod";
 import { z } from "zod";
 import type { MosaicParent } from "react-mosaic-component";
-import type { PanelId } from "./index";
-import { panelIdType } from "./index";
+import type { PanelId } from "./definition";
+import { panelIdType } from "./definition";
 
 const mosaicParentType: ZodType<MosaicParent<PanelId>> = z.object({
   direction: z.enum(["row", "column"]),

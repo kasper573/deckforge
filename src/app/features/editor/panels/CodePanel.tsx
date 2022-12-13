@@ -11,7 +11,7 @@ import type {
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { CodeEditor } from "../../../components/CodeEditor";
-import { Panel } from "./index";
+import { Panel } from "../components/Panel";
 
 export function CodePanel({ path }: { path: MosaicBranch[] }) {
   return (

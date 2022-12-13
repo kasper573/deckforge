@@ -7,7 +7,7 @@ import Stack from "@mui/material/Stack";
 import { DeckTree } from "../components/DeckTree";
 import { EventTree } from "../components/EventTree";
 import { PropertyTree } from "../components/PropertyTree";
-import { Panel } from "./index";
+import { Panel } from "../components/Panel";
 
 const tabs = [
   { label: "Decks", content: <DeckTree /> },

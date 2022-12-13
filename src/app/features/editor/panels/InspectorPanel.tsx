@@ -13,7 +13,7 @@ import { editorActions } from "../actions";
 import { propertyValueType } from "../../../../api/services/game/types";
 import { Select } from "../../../controls/Select";
 import { PropertiesEditor } from "../components/PropertyEditor";
-import { Panel } from "./index";
+import { Panel } from "../components/Panel";
 
 export function InspectorPanel({ path }: { path: MosaicBranch[] }) {
   const selectedObjectId = useSelector(selectors.selectedObject);

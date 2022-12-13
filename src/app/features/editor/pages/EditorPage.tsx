@@ -3,11 +3,12 @@ import type { MouseEvent } from "react";
 import { styled } from "@mui/material/styles";
 import { useMemo } from "react";
 import { StateSynchronizer } from "../StateSynchronizer";
-import { PanelContainer, panels } from "../panels";
 import {
   loadUserDefaultPanelLayout,
   saveUserDefaultPanelLayout,
-} from "../panels/store";
+} from "../panels/panelLayoutPersistance";
+import { panelsDefinition } from "../panels/definition";
+import { PanelContainer } from "../components/PanelContainer";
 
 export default function EditorPage() {
   const initialValue = useMemo(loadUserDefaultPanelLayout, []);
@@ -17,7 +18,7 @@ export default function EditorPage() {
         initialValue={initialValue}
         onChange={saveUserDefaultPanelLayout}
         renderTile={(panelId, path) => {
-          const Panel = panels[panelId];
+          const Panel = panelsDefinition[panelId];
           return <Panel path={path} />;
         }}
       />
