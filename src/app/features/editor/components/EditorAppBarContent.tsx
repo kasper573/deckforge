@@ -3,8 +3,6 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import MenuItem from "@mui/material/MenuItem";
 import { selectors } from "../selectors";
 import { useSelector } from "../../../store";
 import { useActions } from "../../../../lib/useActions";
@@ -14,7 +12,7 @@ import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
 import { LinkIconButton } from "../../../components/Link";
 import { router } from "../../../router";
-import { MenuFor } from "../../../components/MenuFor";
+import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
 
 export default function EditorAppBarContent() {
   const prompt = useModal(PromptDialog);
@@ -42,12 +40,7 @@ export default function EditorAppBarContent() {
           </div>
         </Tooltip>
         <div>
-          <MenuFor
-            trigger={({ open }) => <Button onClick={open}>Panels</Button>}
-          >
-            <MenuItem>Panel 1</MenuItem>
-            <MenuItem>Panel 2</MenuItem>
-          </MenuFor>
+          <PanelVisibilityMenu />
         </div>
       </Stack>
       <Box sx={{ flex: 1, display: "flex", alignItems: "space-around" }}>
