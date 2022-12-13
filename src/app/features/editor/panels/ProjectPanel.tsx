@@ -41,4 +41,7 @@ export function ProjectPanel({ path }: { path: MosaicBranch[] }) {
 const ProjectPanelContent = styled("div")`
   padding-top: ${({ theme }) => theme.spacing(2)};
   padding-bottom: ${({ theme }) => theme.spacing(2)};
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
