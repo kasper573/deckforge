@@ -10,15 +10,22 @@ import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
+import { PanelEmptyState } from "../components/PanelEmptyState";
 
 export default function EditorPage() {
   const panelLayout = useSelector(selectors.panelLayout);
   const { setPanelLayout } = useActions(editorActions);
   return (
-    <Root onContextMenu={disableContextMenu}>
+    <Root onContextMenu={disableUnhandledContextMenu}>
       <PanelContainer
-        value={panelLayout}
+        value={panelLayout ?? null}
         onChange={setPanelLayout}
+        zeroStateView={
+          <PanelEmptyState>
+            All panels are closed. You can select which panels to have open by
+            selecting the panels menu in the app bar.
+          </PanelEmptyState>
+        }
         renderTile={(panelId, path) => {
           const { component: Panel, title } = panelsDefinition[panelId];
           return <Panel path={path} title={title} />;
@@ -29,8 +36,7 @@ export default function EditorPage() {
   );
 }
 
-// Disable any unhandled context menus
-function disableContextMenu<T>(e: MouseEvent<T>) {
+function disableUnhandledContextMenu<T>(e: MouseEvent<T>) {
   e.preventDefault();
 }
 

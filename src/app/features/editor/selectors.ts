@@ -5,10 +5,13 @@ import type {
   PropertyId,
   ReactionId,
 } from "../../../api/services/game/types";
+import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
 import type { EditorObjectId, EditorState } from "./types";
 
 export const selectors = {
   panelLayout: (state: EditorState) => state.panelLayout,
+  panelVisibilities: (state: EditorState) =>
+    getKeyVisibilities(state.panelLayout),
   selectedObject: (state: EditorState) => state.selectedObjectId,
   game: (state: EditorState) => state.game,
   decks: (state: EditorState) => state.game?.definition.decks ?? [],

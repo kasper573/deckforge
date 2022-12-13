@@ -14,11 +14,24 @@ import {
 } from "../../../lib/createEntityReducers";
 import type { MakePartial } from "../../../lib/MakePartial";
 import { createZodStorage } from "../../../lib/zod-extensions/zodStorage";
-import type { EditorObjectId, EditorState, PanelLayout } from "./types";
-import { defaultPanelLayout } from "./panels/defaultPanelLayout";
+import {
+  addNodeBySplitting,
+  removeNodeByKey,
+} from "../../../lib/reactMosaicExtensions";
+import type {
+  EditorObjectId,
+  EditorState,
+  PanelId,
+  PanelLayout,
+} from "./types";
 import { panelLayoutType } from "./types";
+import { defaultPanelLayout } from "./panels/defaultPanelLayout";
+import { selectors } from "./selectors";
 
-const panelStorage = createZodStorage(panelLayoutType, "panel-layout");
+const panelStorage = createZodStorage(
+  panelLayoutType.optional(),
+  "panel-layout"
+);
 
 const initialState: EditorState = {
   panelLayout: panelStorage.load() ?? defaultPanelLayout,
@@ -49,6 +62,17 @@ const editorSlice = createSlice({
       { payload: newLayout }: PayloadAction<PanelLayout | null>
     ) {
       state.panelLayout = newLayout ?? defaultPanelLayout;
+    },
+    setPanelVisibility(
+      state,
+      { payload }: PayloadAction<{ id: PanelId; visible: boolean }>
+    ) {
+      const isVisible = selectors.panelVisibilities(state)[payload.id];
+      if (isVisible !== payload.visible) {
+        state.panelLayout = payload.visible
+          ? addNodeBySplitting(state.panelLayout, payload.id)
+          : removeNodeByKey(state.panelLayout, payload.id);
+      }
     },
     ...entityReducers<Property>()(
       "Property",

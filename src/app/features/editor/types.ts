@@ -20,7 +20,7 @@ export type EditorObjectId =
 export interface EditorState {
   game?: Game;
   selectedObjectId?: EditorObjectId;
-  panelLayout: MosaicNode<PanelId>;
+  panelLayout?: PanelLayout;
 }
 
 export type PanelId = z.infer<typeof panelIdType>;
