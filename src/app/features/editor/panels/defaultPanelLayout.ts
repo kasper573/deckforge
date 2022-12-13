@@ -1,5 +1,5 @@
 import type { MosaicNode } from "react-mosaic-component";
-import type { PanelId } from "./definition";
+import type { PanelId } from "../types";
 
 export const defaultPanelLayout: MosaicNode<PanelId> = {
   direction: "row",

@@ -1,6 +1,6 @@
 import { styled } from "@mui/material/styles";
 import { Mosaic } from "react-mosaic-component";
-import type { PanelId } from "../panels/definition";
+import type { PanelId } from "../types";
 
 export const PanelContainer = styled(Mosaic<PanelId>)`
   flex: 1; // Fill the entire page

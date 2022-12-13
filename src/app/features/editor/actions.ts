@@ -1,5 +1,5 @@
 import type { Action } from "redux";
-import { editorSlice } from "./slice";
+import { actions } from "./slice";
 import type { EditorObjectId } from "./types";
 
 function deleteObject(objectId: EditorObjectId): Action {
@@ -36,7 +36,7 @@ function renameObject(objectId: EditorObjectId, name: string): Action {
 }
 
 export const editorActions = {
-  ...editorSlice.actions,
+  ...actions,
   deleteObject,
   renameObject,
 };

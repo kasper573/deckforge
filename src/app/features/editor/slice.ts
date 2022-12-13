@@ -13,18 +13,20 @@ import {
   createId,
 } from "../../../lib/createEntityReducers";
 import type { MakePartial } from "../../../lib/MakePartial";
-import type { editorActions } from "./actions";
-import type { EditorObjectId, EditorState } from "./types";
+import { createZodStorage } from "../../../lib/zod-extensions/zodStorage";
+import type { EditorObjectId, EditorState, PanelLayout } from "./types";
 import { defaultPanelLayout } from "./panels/defaultPanelLayout";
-import type { PanelLayout } from "./panels/definition";
+import { panelLayoutType } from "./types";
+
+const panelStorage = createZodStorage(panelLayoutType, "panel-layout");
 
 const initialState: EditorState = {
-  panelLayout: defaultPanelLayout,
+  panelLayout: panelStorage.load() ?? defaultPanelLayout,
 };
 
 const entityReducers = createEntityReducerFactory<EditorState>();
 
-export const editorSlice = createSlice({
+const editorSlice = createSlice({
   name: "editor",
   initialState,
   reducers: {
@@ -160,8 +162,23 @@ export const editorSlice = createSlice({
   },
 });
 
-export const noUndoActionList: Array<keyof typeof editorActions> = [];
+export const { actions, getInitialState } = editorSlice;
+
+export const reducer: typeof editorSlice.reducer = (
+  state = editorSlice.getInitialState(),
+  action
+) => {
+  const layoutBefore = state.panelLayout;
+  state = editorSlice.reducer(state, action);
+  const layoutAfter = state.panelLayout;
+  if (layoutBefore !== layoutAfter) {
+    panelStorage.save(layoutAfter);
+  }
+  return state;
+};
+
+export const noUndoActionList: Array<keyof typeof actions> = [];
 
 export const noUndoActions = noUndoActionList.map(
-  (name) => `${editorSlice.name}/${name}`
+  (name) => `${editorSlice.name}/${String(name)}`
 );

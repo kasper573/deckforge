@@ -1,29 +1,18 @@
-import { z } from "zod";
 import type { ComponentType } from "react";
-import type { MosaicBranch, MosaicNode } from "react-mosaic-component";
+import type { MosaicBranch } from "react-mosaic-component";
+import type { PanelId } from "../types";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel";
 import { InspectorPanel } from "./InspectorPanel";
 import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
 
-export type PanelId = z.infer<typeof panelIdType>;
 export type PanelProps = { path: MosaicBranch[]; title: string };
-export type PanelLayout = MosaicNode<PanelId>;
 
 export interface PanelDefinition {
   component: ComponentType<PanelProps>;
   title: string;
 }
-
-export const panelIdType = z.enum([
-  "code",
-  "decks",
-  "events",
-  "cardProperties",
-  "playerProperties",
-  "inspector",
-]);
 
 export const panelsDefinition: Record<PanelId, PanelDefinition> = {
   code: { component: CodePanel, title: "Code" },
