@@ -42,6 +42,8 @@ interface MenuState {
   close: (e: MouseEvent) => void;
 }
 
+export type CloseHandler = (e: MouseEvent) => void;
+
 const menuStore = createStore<MenuState>()(
   immer((set) => ({
     menus: new Map(),
@@ -80,30 +82,27 @@ function nextId() {
 
 export function MenuOutlet() {
   const { position, openId, menus, close } = useStore(menuStore);
-  if (!position || !openId) {
-    return null;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const menu = menus.get(openId)!;
   return (
-    <Menu
-      {...menu.props}
-      open={!!position}
-      onClose={concatFunctions(
-        menu.props?.onClose,
-        close as MenuProps["onClose"]
-      )}
-      onContextMenu={concatFunctions(menu.props?.onContextMenu, close)}
-      anchorReference="anchorPosition"
-      anchorPosition={position}
-      MenuListProps={{
-        ...menu.props?.MenuListProps,
-        onClick: concatFunctions(menu.props?.MenuListProps?.onClick, close),
-      }}
-    >
-      {menu.items?.map((item, index) => cloneElement(item, { key: index }))}
-    </Menu>
+    <>
+      {Array.from(menus.values()).map((menu) => (
+        <Menu
+          key={menu.id}
+          {...menu.props}
+          open={!!position && menu.id === openId}
+          onClose={concatFunctions(
+            menu.props?.onClose,
+            close as MenuProps["onClose"]
+          )}
+          anchorReference="anchorPosition"
+          anchorPosition={position}
+          MenuListProps={{
+            ...menu.props?.MenuListProps,
+            onClick: concatFunctions(menu.props?.MenuListProps?.onClick, close),
+          }}
+        >
+          {menu.items?.map((item, index) => cloneElement(item, { key: index }))}
+        </Menu>
+      ))}
+    </>
   );
 }
-
-export type CloseHandler = (e: MouseEvent) => void;
