@@ -6,14 +6,15 @@ import type { PanelId } from "../panels/definition";
 
 export function Panel({
   children,
-  paperProps,
+  sx,
+  style,
+  className,
   ...props
-}: ComponentProps<typeof MosaicWindow<PanelId>> & {
-  paperProps?: ComponentProps<typeof PanelPaper>;
-}) {
+}: ComponentProps<typeof MosaicWindow<PanelId>> &
+  Pick<ComponentProps<typeof PanelPaper>, "sx" | "style" | "className">) {
   return (
     <MosaicWindow<PanelId> toolbarControls={[]} {...props}>
-      <PanelPaper {...paperProps}>{children}</PanelPaper>
+      <PanelPaper {...{ sx, style, className }}>{children}</PanelPaper>
     </MosaicWindow>
   );
 }

@@ -18,7 +18,7 @@ const tabs = [
 export function ProjectPanel({ path }: { path: MosaicBranch[] }) {
   const [tabIndex, setTabIndex] = useState(0);
   return (
-    <Panel title="Project" path={path}>
+    <Panel sx={{ py: 2 }} title="Project" path={path}>
       <Stack direction="column" sx={{ flex: 1 }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
