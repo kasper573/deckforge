@@ -85,11 +85,16 @@ export function signOut() {
 
 export function showUserMenu() {
   cy.findByRole("button", { name: /show user menu/i }).click();
+  return findUserMenu();
+}
+
+export function findUserMenu() {
   return cy.findByRole("menu", { name: /user menu/i });
 }
 
 export function closeUserMenu() {
   cy.get("body").click("bottomRight");
+  findUserMenu().should("not.exist");
 }
 
 export function assertSignedIn(username?: string) {
