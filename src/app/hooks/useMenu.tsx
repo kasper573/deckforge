@@ -73,9 +73,9 @@ const menuStore = createStore<MenuState>()(
   }))
 );
 
-const idCounter = 0;
+let idCounter = 0;
 function nextId() {
-  return idCounter.toString() as MenuId;
+  return (idCounter++).toString() as MenuId;
 }
 
 export function MenuOutlet() {
