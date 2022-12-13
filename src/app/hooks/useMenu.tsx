@@ -3,7 +3,6 @@ import { cloneElement, useCallback, useEffect, useMemo } from "react";
 import type { MenuProps } from "@mui/material/Menu";
 import Menu from "@mui/material/Menu";
 import { createStore, useStore } from "zustand";
-import { v4 } from "uuid";
 import { immer } from "zustand/middleware/immer";
 import { concatFunctions } from "../../lib/ts-extensions/concatFunctions";
 import type { NominalString } from "../../lib/NominalString";
@@ -14,7 +13,7 @@ export const useMenu = (
   items: UseMenuItems,
   props: Partial<MenuProps> = {}
 ) => {
-  const id = useMemo(() => v4() as MenuId, []);
+  const id = useMemo(nextId, []);
 
   useEffect(
     () => menuStore.getState().upsert({ id, items, props }),
@@ -73,6 +72,11 @@ const menuStore = createStore<MenuState>()(
     },
   }))
 );
+
+const idCounter = 0;
+function nextId() {
+  return idCounter.toString() as MenuId;
+}
 
 export function MenuOutlet() {
   const { position, openId, menus, close } = useStore(menuStore);
