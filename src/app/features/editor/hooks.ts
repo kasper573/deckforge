@@ -44,3 +44,19 @@ export function usePromptRename() {
     }
   };
 }
+
+export function usePromptCreate() {
+  const prompt = useModal(PromptDialog);
+  return async function promptCreate(
+    typeName: string,
+    create: (name: string) => void
+  ) {
+    const newName = await prompt({
+      title: `Create ${typeName}`,
+      fieldProps: { label: "Name" },
+    });
+    if (newName) {
+      create(newName);
+    }
+  };
+}
