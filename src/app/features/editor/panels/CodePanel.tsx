@@ -24,11 +24,7 @@ export function CodePanel({ path }: { path: MosaicBranch[] }) {
 export function ObjectCodeEditor() {
   const id = useSelector(selectors.selectedObject);
   if (!id) {
-    return (
-      <EmptyMessage>
-        Select an object in the project panel to edit its code
-      </EmptyMessage>
-    );
+    return <EmptyMessage>Select an object to edit its code</EmptyMessage>;
   }
   switch (id.type) {
     case "card":

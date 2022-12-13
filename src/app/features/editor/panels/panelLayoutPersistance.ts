@@ -34,15 +34,25 @@ export function loadUserDefaultPanelLayout(): MosaicNode<PanelId> {
   }
 }
 
-const localStorageKey = "panelLayout" as const;
+const localStorageKey = "panel-layout" as const;
 const builtinDefaultPanelLayout = {
   direction: "row",
-  first: "code",
+  first: {
+    first: {
+      first: "events",
+      second: "properties",
+      direction: "column",
+      splitPercentage: 55,
+    },
+    second: "code",
+    direction: "row",
+    splitPercentage: 25,
+  },
   second: {
-    direction: "column",
     first: "inspector",
-    second: "project",
+    second: "decks",
+    direction: "column",
     splitPercentage: 20,
   },
-  splitPercentage: 70,
+  splitPercentage: 80,
 } as const;

@@ -1,4 +1,5 @@
 import MenuItem from "@mui/material/MenuItem";
+import type { ComponentProps } from "react";
 import { Fragment } from "react";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -8,9 +9,13 @@ import { Tree, TreeItem } from "../../../components/Tree";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
 import { useConfirmDelete, usePromptRename } from "../hooks";
-import { PanelEmptyState } from "./PanelEmptyState";
+import { PanelEmptyState } from "../components/PanelEmptyState";
+import { Panel } from "../components/Panel";
 
-export function PropertyTree() {
+export function PropertiesPanel({
+  title = "Properties",
+  ...props
+}: ComponentProps<typeof Panel>) {
   const entities = useSelector(selectors.entities);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
@@ -18,7 +23,7 @@ export function PropertyTree() {
   const selectedObjectId = useSelector(selectors.selectedObject);
 
   return (
-    <>
+    <Panel title={title} {...props}>
       {entities.map((entity, index) => (
         <Fragment key={index}>
           <Typography>{entity.name}</Typography>
@@ -47,6 +52,6 @@ export function PropertyTree() {
       {entities.length === 0 && (
         <PanelEmptyState>This game has no entities</PanelEmptyState>
       )}
-    </>
+    </Panel>
   );
 }
