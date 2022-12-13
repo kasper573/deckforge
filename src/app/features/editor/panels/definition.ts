@@ -5,7 +5,7 @@ import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel";
 import { InspectorPanel } from "./InspectorPanel";
-import { PropertiesPanel } from "./PropertiesPanel";
+import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
 
 export type PanelId = z.infer<typeof panelIdType>;
 export type PanelProps = { path: MosaicBranch[] };
@@ -14,7 +14,8 @@ export const panelIdType = z.enum([
   "code",
   "decks",
   "events",
-  "properties",
+  "cardProperties",
+  "playerProperties",
   "inspector",
 ]);
 
@@ -22,6 +23,7 @@ export const panelsDefinition: Record<PanelId, ComponentType<PanelProps>> = {
   code: CodePanel,
   decks: DecksPanel,
   events: EventsPanel,
-  properties: PropertiesPanel,
+  cardProperties: CardPropertiesPanel,
+  playerProperties: PlayerPropertiesPanel,
   inspector: InspectorPanel,
 };

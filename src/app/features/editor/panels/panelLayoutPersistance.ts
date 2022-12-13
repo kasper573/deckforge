@@ -40,9 +40,14 @@ const builtinDefaultPanelLayout = {
   first: {
     first: {
       first: "events",
-      second: "properties",
+      second: {
+        direction: "column",
+        first: "cardProperties",
+        second: "playerProperties",
+        splitPercentage: 50,
+      },
       direction: "column",
-      splitPercentage: 55,
+      splitPercentage: 33,
     },
     second: "code",
     direction: "row",

@@ -1,9 +1,7 @@
-import { groupBy } from "lodash";
 import type {
   ActionId,
   CardId,
   EntityId,
-  Property,
   PropertyId,
   ReactionId,
 } from "../../../api/services/game/types";
@@ -48,27 +46,6 @@ export const selectors = {
         })),
     }));
   },
-  entities: (state: EditorState) => {
-    if (!state.game) {
-      return [];
-    }
-    const propertiesByEntity = groupBy(
-      state.game.definition.properties,
-      (property) => property.entityId
-    );
-    return [
-      {
-        entityId: "card" as EntityId,
-        name: "Card",
-        properties: giveObjectIdsToProperties(propertiesByEntity.card),
-      },
-      {
-        entityId: "player" as EntityId,
-        name: "Player",
-        properties: giveObjectIdsToProperties(propertiesByEntity.player),
-      },
-    ];
-  },
   card: (cardId: CardId) => (state: EditorState) =>
     state.game?.definition.cards.find((c) => c.cardId === cardId),
   action: (actionId: ActionId) => (state: EditorState) =>
@@ -78,16 +55,13 @@ export const selectors = {
   property: (propertyId: PropertyId) => (state: EditorState) =>
     state.game?.definition.properties.find((p) => p.propertyId === propertyId),
   propertiesFor: (entityId: EntityId) => (state: EditorState) =>
-    state.game?.definition.properties.filter((p) => p.entityId === entityId) ??
-    [],
+    state.game?.definition.properties
+      .filter((p) => p.entityId === entityId)
+      .map((property) => ({
+        objectId: {
+          type: "property",
+          propertyId: property.propertyId,
+        } as EditorObjectId,
+        ...property,
+      })) ?? [],
 };
-
-function giveObjectIdsToProperties(properties: Property[] = []) {
-  return properties.map((property) => ({
-    ...property,
-    objectId: {
-      type: "property",
-      propertyId: property.propertyId,
-    } as EditorObjectId,
-  }));
-}
