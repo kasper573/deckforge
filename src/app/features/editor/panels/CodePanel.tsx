@@ -14,7 +14,7 @@ import type { PanelProps } from "./definition";
 
 export function CodePanel(props: PanelProps) {
   return (
-    <Panel title="Code" {...props}>
+    <Panel {...props}>
       <ObjectCodeEditor />
     </Panel>
   );

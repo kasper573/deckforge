@@ -18,8 +18,8 @@ export default function EditorPage() {
         initialValue={initialPanelLayout}
         onChange={saveUserDefaultPanelLayout}
         renderTile={(panelId, path) => {
-          const Panel = panelsDefinition[panelId];
-          return <Panel path={path} />;
+          const { component: Panel, title } = panelsDefinition[panelId];
+          return <Panel path={path} title={title} />;
         }}
       />
       <StateSynchronizer />

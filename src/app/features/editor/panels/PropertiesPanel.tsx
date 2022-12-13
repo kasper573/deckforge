@@ -17,7 +17,6 @@ export function CardPropertiesPanel(props: PanelProps) {
   return (
     <PropertiesPanel
       entityId="card"
-      title="Card properties"
       emptyMessage="This game has no card properties"
       properties={properties}
       {...props}
@@ -30,7 +29,6 @@ export function PlayerPropertiesPanel(props: PanelProps) {
   return (
     <PropertiesPanel
       entityId="player"
-      title="Player properties"
       emptyMessage="This game has no player properties"
       properties={properties}
       {...props}

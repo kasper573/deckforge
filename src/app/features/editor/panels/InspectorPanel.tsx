@@ -18,7 +18,7 @@ import type { PanelProps } from "./definition";
 export function InspectorPanel(props: PanelProps) {
   const selectedObjectId = useSelector(selectors.selectedObject);
   return (
-    <Panel title="Inspector" {...props}>
+    <Panel {...props}>
       {selectedObjectId && <ObjectInspector id={selectedObjectId} />}
     </Panel>
   );

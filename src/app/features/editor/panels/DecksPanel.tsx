@@ -30,7 +30,7 @@ export function DecksPanel(props: PanelProps) {
   ]);
 
   return (
-    <Panel title="Decks" {...props}>
+    <Panel {...props}>
       <Box onContextMenu={openContextMenu} sx={{ flex: 1 }}>
         <Tree selected={selectedObjectId} onSelectedChanged={selectObject}>
           {decks.map((deck, index) => (

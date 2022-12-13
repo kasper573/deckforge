@@ -31,7 +31,7 @@ export function EventsPanel(props: PanelProps) {
   ]);
 
   return (
-    <Panel title="Events" {...props}>
+    <Panel {...props}>
       <Box onContextMenu={openContextMenu} sx={{ flex: 1 }}>
         <Tree selected={selectedObjectId} onSelectedChanged={selectObject}>
           {events.map((action, index) => (
