@@ -1,6 +1,6 @@
-import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
+import type { MosaicBranch } from "react-mosaic-component";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
 import type {
@@ -11,12 +11,13 @@ import type {
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { CodeEditor } from "../../../components/CodeEditor";
+import { Panel } from "./index";
 
-export function CodePanel() {
+export function CodePanel({ path }: { path: MosaicBranch[] }) {
   return (
-    <Paper sx={{ gridArea: "code" }}>
+    <Panel title="Code" path={path}>
       <ObjectCodeEditor />
-    </Paper>
+    </Panel>
   );
 }
 
@@ -25,7 +26,7 @@ export function ObjectCodeEditor() {
   if (!id) {
     return (
       <EmptyMessage>
-        Select an object in the project tab to edit its code
+        Select an object in the project panel to edit its code
       </EmptyMessage>
     );
   }
@@ -39,7 +40,7 @@ export function ObjectCodeEditor() {
   }
   return (
     <EmptyMessage>
-      The selected {id.type} has no code that can be edited
+      Objects of type {`"${id.type}"`} has no code that can be edited
     </EmptyMessage>
   );
 }

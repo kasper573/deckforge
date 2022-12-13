@@ -1,5 +1,5 @@
-import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import type { MosaicBranch } from "react-mosaic-component";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
 import type {
@@ -12,14 +12,15 @@ import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { propertyValueType } from "../../../../api/services/game/types";
 import { Select } from "../../../controls/Select";
-import { PropertiesEditor } from "./PropertyEditor";
+import { PropertiesEditor } from "../components/PropertyEditor";
+import { Panel } from "./index";
 
-export function InspectorPanel() {
+export function InspectorPanel({ path }: { path: MosaicBranch[] }) {
   const selectedObjectId = useSelector(selectors.selectedObject);
   return (
-    <Paper sx={{ gridArea: "inspector" }}>
+    <Panel title="Inspector" path={path}>
       {selectedObjectId && <ObjectInspector id={selectedObjectId} />}
-    </Paper>
+    </Panel>
   );
 }
 
