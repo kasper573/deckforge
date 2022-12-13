@@ -1,6 +1,5 @@
 import MenuItem from "@mui/material/MenuItem";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import { useSelector } from "../../../store";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
@@ -9,6 +8,7 @@ import { editorActions } from "../actions";
 import { selectors } from "../selectors";
 import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import type { DeckId } from "../../../../api/services/game/types";
+import { PanelEmptyState } from "./PanelEmptyState";
 
 export function DeckTree() {
   const decks = useSelector(selectors.decksAndCards);
@@ -62,13 +62,7 @@ export function DeckTree() {
         ))}
       </Tree>
       {decks.length === 0 && (
-        <Box sx={{ textAlign: "center", color: "text.secondary" }}>
-          This game has no decks
-          <br />
-          <Button variant="contained" sx={{ mt: 2 }} onClick={promptCreateDeck}>
-            Create a deck
-          </Button>
-        </Box>
+        <PanelEmptyState>This game has no decks</PanelEmptyState>
       )}
     </Box>
   );
