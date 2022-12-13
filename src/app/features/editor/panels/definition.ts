@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ComponentType } from "react";
-import type { MosaicBranch } from "react-mosaic-component";
+import type { MosaicBranch, MosaicNode } from "react-mosaic-component";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel";
@@ -9,6 +9,8 @@ import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
 
 export type PanelId = z.infer<typeof panelIdType>;
 export type PanelProps = { path: MosaicBranch[]; title: string };
+export type PanelLayout = MosaicNode<PanelId>;
+
 export interface PanelDefinition {
   component: ComponentType<PanelProps>;
   title: string;

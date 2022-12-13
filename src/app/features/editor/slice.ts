@@ -15,8 +15,12 @@ import {
 import type { MakePartial } from "../../../lib/MakePartial";
 import type { editorActions } from "./actions";
 import type { EditorObjectId, EditorState } from "./types";
+import { defaultPanelLayout } from "./panels/defaultPanelLayout";
+import type { PanelLayout } from "./panels/definition";
 
-const initialState: EditorState = {};
+const initialState: EditorState = {
+  panelLayout: defaultPanelLayout,
+};
 
 const entityReducers = createEntityReducerFactory<EditorState>();
 
@@ -38,7 +42,12 @@ export const editorSlice = createSlice({
     selectObject(state, { payload: newId }: PayloadAction<EditorObjectId>) {
       state.selectedObjectId = newId;
     },
-
+    setPanelLayout(
+      state,
+      { payload: newLayout }: PayloadAction<PanelLayout | null>
+    ) {
+      state.panelLayout = newLayout ?? defaultPanelLayout;
+    },
     ...entityReducers<Property>()(
       "Property",
       "propertyId",

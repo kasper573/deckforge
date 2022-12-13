@@ -1,3 +1,4 @@
+import type { MosaicNode } from "react-mosaic-component";
 import type {
   ActionId,
   CardId,
@@ -6,6 +7,7 @@ import type {
   PropertyId,
   ReactionId,
 } from "../../../api/services/game/types";
+import type { PanelId } from "./panels/definition";
 
 export type EditorObjectId =
   | { type: "action"; actionId: ActionId }
@@ -17,4 +19,5 @@ export type EditorObjectId =
 export interface EditorState {
   game?: Game;
   selectedObjectId?: EditorObjectId;
+  panelLayout: MosaicNode<PanelId>;
 }
