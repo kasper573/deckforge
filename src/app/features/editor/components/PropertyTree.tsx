@@ -8,6 +8,7 @@ import { Tree, TreeItem } from "../../../components/Tree";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
 import { useConfirmDelete, usePromptRename } from "../hooks";
+import { PanelEmptyState } from "./PanelEmptyState";
 
 export function PropertyTree() {
   const entities = useSelector(selectors.entities);
@@ -43,6 +44,9 @@ export function PropertyTree() {
           </Button>
         </Fragment>
       ))}
+      {entities.length === 0 && (
+        <PanelEmptyState>This game has no entities</PanelEmptyState>
+      )}
     </>
   );
 }
