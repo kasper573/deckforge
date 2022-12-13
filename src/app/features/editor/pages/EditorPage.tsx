@@ -11,11 +11,11 @@ import { panelsDefinition } from "../panels/definition";
 import { PanelContainer } from "../components/PanelContainer";
 
 export default function EditorPage() {
-  const initialValue = useMemo(loadUserDefaultPanelLayout, []);
+  const initialPanelLayout = useMemo(loadUserDefaultPanelLayout, []);
   return (
     <Root onContextMenu={disableContextMenu}>
       <PanelContainer
-        initialValue={initialValue}
+        initialValue={initialPanelLayout}
         onChange={saveUserDefaultPanelLayout}
         renderTile={(panelId, path) => {
           const Panel = panelsDefinition[panelId];
