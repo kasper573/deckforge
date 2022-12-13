@@ -1,5 +1,4 @@
 import MenuItem from "@mui/material/MenuItem";
-import type { ComponentProps } from "react";
 import { Fragment } from "react";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -11,11 +10,9 @@ import { selectors } from "../selectors";
 import { useConfirmDelete, usePromptRename } from "../hooks";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
+import type { PanelProps } from "./definition";
 
-export function PropertiesPanel({
-  title = "Properties",
-  ...props
-}: ComponentProps<typeof Panel>) {
+export function PropertiesPanel(props: PanelProps) {
   const entities = useSelector(selectors.entities);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
@@ -23,7 +20,7 @@ export function PropertiesPanel({
   const selectedObjectId = useSelector(selectors.selectedObject);
 
   return (
-    <Panel title={title} {...props}>
+    <Panel title="Properties" {...props}>
       {entities.map((entity, index) => (
         <Fragment key={index}>
           <Typography>{entity.name}</Typography>

@@ -1,6 +1,5 @@
 import MenuItem from "@mui/material/MenuItem";
 import Box from "@mui/material/Box";
-import type { ComponentProps } from "react";
 import { useSelector } from "../../../store";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
@@ -11,11 +10,9 @@ import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import type { ActionId } from "../../../../api/services/game/types";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
+import type { PanelProps } from "./definition";
 
-export function EventsPanel({
-  title = "Events",
-  ...props
-}: ComponentProps<typeof Panel>) {
+export function EventsPanel(props: PanelProps) {
   const events = useSelector(selectors.events);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
@@ -34,7 +31,7 @@ export function EventsPanel({
   ]);
 
   return (
-    <Panel title={title} {...props}>
+    <Panel title="Events" {...props}>
       <Box onContextMenu={openContextMenu} sx={{ flex: 1 }}>
         <Tree selected={selectedObjectId} onSelectedChanged={selectObject}>
           {events.map((action, index) => (

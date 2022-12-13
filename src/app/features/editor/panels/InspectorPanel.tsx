@@ -1,4 +1,3 @@
-import type { MosaicBranch } from "react-mosaic-component";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
 import type {
@@ -14,11 +13,12 @@ import { Select } from "../../../controls/Select";
 import { PropertiesEditor } from "../components/PropertyEditor";
 import { Panel } from "../components/Panel";
 import { PanelEmptyState } from "../components/PanelEmptyState";
+import type { PanelProps } from "./definition";
 
-export function InspectorPanel({ path }: { path: MosaicBranch[] }) {
+export function InspectorPanel(props: PanelProps) {
   const selectedObjectId = useSelector(selectors.selectedObject);
   return (
-    <Panel title="Inspector" path={path}>
+    <Panel title="Inspector" {...props}>
       {selectedObjectId && <ObjectInspector id={selectedObjectId} />}
     </Panel>
   );

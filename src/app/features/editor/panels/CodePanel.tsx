@@ -1,4 +1,3 @@
-import type { MosaicBranch } from "react-mosaic-component";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
 import type {
@@ -11,10 +10,11 @@ import { editorActions } from "../actions";
 import { CodeEditor } from "../../../components/CodeEditor";
 import { Panel } from "../components/Panel";
 import { PanelEmptyState } from "../components/PanelEmptyState";
+import type { PanelProps } from "./definition";
 
-export function CodePanel({ path }: { path: MosaicBranch[] }) {
+export function CodePanel(props: PanelProps) {
   return (
-    <Panel title="Code" path={path}>
+    <Panel title="Code" {...props}>
       <ObjectCodeEditor />
     </Panel>
   );

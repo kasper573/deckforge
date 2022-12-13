@@ -8,6 +8,7 @@ import { InspectorPanel } from "./InspectorPanel";
 import { PropertiesPanel } from "./PropertiesPanel";
 
 export type PanelId = z.infer<typeof panelIdType>;
+export type PanelProps = { path: MosaicBranch[] };
 
 export const panelIdType = z.enum([
   "code",
@@ -17,10 +18,7 @@ export const panelIdType = z.enum([
   "inspector",
 ]);
 
-export const panelsDefinition: Record<
-  PanelId,
-  ComponentType<{ path: MosaicBranch[] }>
-> = {
+export const panelsDefinition: Record<PanelId, ComponentType<PanelProps>> = {
   code: CodePanel,
   decks: DecksPanel,
   events: EventsPanel,
