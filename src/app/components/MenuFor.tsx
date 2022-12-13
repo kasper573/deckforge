@@ -14,9 +14,9 @@ export interface MenuForProps
  */
 export const MenuFor = ({
   children: items,
-  trigger: Trigger,
+  trigger,
   ...menuProps
 }: MenuForProps) => {
-  const openMenu = useMenu(items, menuProps);
-  return <Trigger open={openMenu} />;
+  const open = useMenu(items, menuProps);
+  return trigger({ open });
 };
