@@ -1,5 +1,3 @@
-import { styled } from "@mui/material/styles";
-import Typography from "@mui/material/Typography";
 import type { MosaicBranch } from "react-mosaic-component";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
@@ -12,6 +10,7 @@ import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { CodeEditor } from "../../../components/CodeEditor";
 import { Panel } from "../components/Panel";
+import { PanelEmptyState } from "../components/PanelEmptyState";
 
 export function CodePanel({ path }: { path: MosaicBranch[] }) {
   return (
@@ -24,7 +23,7 @@ export function CodePanel({ path }: { path: MosaicBranch[] }) {
 export function ObjectCodeEditor() {
   const id = useSelector(selectors.selectedObject);
   if (!id) {
-    return <EmptyMessage>Select an object to edit its code</EmptyMessage>;
+    return <PanelEmptyState>Select an object to edit its code</PanelEmptyState>;
   }
   switch (id.type) {
     case "card":
@@ -35,9 +34,9 @@ export function ObjectCodeEditor() {
       return <ReactionCodeEditor reactionId={id.reactionId} />;
   }
   return (
-    <EmptyMessage>
+    <PanelEmptyState>
       Objects of type {`"${id.type}"`} has no code that can be edited
-    </EmptyMessage>
+    </PanelEmptyState>
   );
 }
 
@@ -76,7 +75,3 @@ function CardCodeEditor({ cardId }: { cardId: CardId }) {
     />
   );
 }
-
-const EmptyMessage = styled(Typography)`
-  padding: 16px;
-`;
