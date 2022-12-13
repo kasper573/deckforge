@@ -9,15 +9,20 @@ import type { NominalString } from "../../lib/NominalString";
 
 export type UseMenuItems = ReactElement[];
 
+export interface UseMenuOptions {
+  autoCloseOnSelect?: boolean;
+}
+
 export const useMenu = (
   items: UseMenuItems,
-  props: Partial<MenuProps> = {}
+  props: Partial<MenuProps> = {},
+  options: UseMenuOptions = {}
 ) => {
   const id = useMemo(nextId, []);
 
   useEffect(
-    () => menuStore.getState().upsert({ id, items, props }),
-    [id, items, props]
+    () => menuStore.getState().upsert({ id, items, props, options }),
+    [id, items, props, options]
   );
 
   useEffect(() => () => menuStore.getState().remove(id), [id]);
@@ -29,6 +34,7 @@ type MenuId = NominalString<"MenuId">;
 interface MenuEntry {
   id: MenuId;
   props: Partial<MenuProps>;
+  options: UseMenuOptions;
   items: UseMenuItems;
 }
 
@@ -84,25 +90,33 @@ export function MenuOutlet() {
   const { position, openId, menus, close } = useStore(menuStore);
   return (
     <>
-      {Array.from(menus.values()).map((menu) => (
-        <Menu
-          key={menu.id}
-          {...menu.props}
-          open={!!position && menu.id === openId}
-          onClose={concatFunctions(
-            menu.props?.onClose,
-            close as MenuProps["onClose"]
-          )}
-          anchorReference="anchorPosition"
-          anchorPosition={position}
-          MenuListProps={{
-            ...menu.props?.MenuListProps,
-            onClick: concatFunctions(menu.props?.MenuListProps?.onClick, close),
-          }}
-        >
-          {menu.items?.map((item, index) => cloneElement(item, { key: index }))}
-        </Menu>
-      ))}
+      {Array.from(menus.values()).map((menu) => {
+        let menuListProps = menu.props?.MenuListProps;
+        if (menu.options.autoCloseOnSelect) {
+          menuListProps = {
+            ...menuListProps,
+            onClick: concatFunctions(menuListProps?.onClick, close),
+          };
+        }
+        return (
+          <Menu
+            key={menu.id}
+            {...menu.props}
+            open={!!position && menu.id === openId}
+            onClose={concatFunctions(
+              menu.props?.onClose,
+              close as MenuProps["onClose"]
+            )}
+            anchorReference="anchorPosition"
+            anchorPosition={position}
+            MenuListProps={menuListProps}
+          >
+            {menu.items?.map((item, index) =>
+              cloneElement(item, { key: index })
+            )}
+          </Menu>
+        );
+      })}
     </>
   );
 }
