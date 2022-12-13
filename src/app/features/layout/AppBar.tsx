@@ -15,21 +15,19 @@ export function AppBar({
   children?: ReactNode;
   container?: boolean;
 }) {
-  let content = (
-    <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
-      <Box sx={{ flex: 1 }}>{children}</Box>
-      <div>
-        <UserMenu edge="end" />
-      </div>
-    </Stack>
-  );
-  if (container) {
-    content = <Container maxWidth={pageMaxWidth}>{content}</Container>;
-  }
   return (
     <>
       <MuiAppBar aria-label="header" position="fixed">
-        <Toolbar disableGutters={container}>{content}</Toolbar>
+        <Toolbar disableGutters>
+          <Container maxWidth={container ? pageMaxWidth : false}>
+            <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
+              <Box sx={{ flex: 1 }}>{children}</Box>
+              <div>
+                <UserMenu edge="end" />
+              </div>
+            </Stack>
+          </Container>
+        </Toolbar>
       </MuiAppBar>
       <Toolbar />
     </>
