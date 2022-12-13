@@ -13,7 +13,6 @@ const schema = z.object({
 export const env = schema.parse({
   apiPort: import.meta.env.VITE_API_PORT,
   enableLoggerLink: import.meta.env.VITE_ENABLE_LOGGER_LINK,
-  authImplementation: import.meta.env.VITE_AUTH_IMPLEMENTATION,
   showErrorDetails: import.meta.env.VITE_SHOW_ERROR_DETAILS,
   webVitalsUrl: import.meta.env.VITE_WEBVITALS_URL,
   analyticsId: import.meta.env.VITE_ANALYTICS_ID,
