@@ -1,14 +1,21 @@
 import "react-mosaic-component/react-mosaic-component.css";
 import type { MouseEvent } from "react";
 import { styled } from "@mui/material/styles";
+import { useMemo } from "react";
 import { StateSynchronizer } from "../StateSynchronizer";
-import { defaultPanelLayout, PanelContainer, panels } from "../panels";
+import { PanelContainer, panels } from "../panels";
+import {
+  loadUserDefaultPanelLayout,
+  saveUserDefaultPanelLayout,
+} from "../panels/store";
 
 export default function EditorPage() {
+  const initialValue = useMemo(loadUserDefaultPanelLayout, []);
   return (
     <Root onContextMenu={disableContextMenu}>
       <PanelContainer
-        initialValue={defaultPanelLayout}
+        initialValue={initialValue}
+        onChange={saveUserDefaultPanelLayout}
         renderTile={(panelId, path) => {
           const Panel = panels[panelId];
           return <Panel path={path} />;

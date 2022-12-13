@@ -1,30 +1,24 @@
 import { styled } from "@mui/material/styles";
+import type { MosaicBranch } from "react-mosaic-component";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ComponentType } from "react";
 import Paper from "@mui/material/Paper";
+import { z } from "zod";
 import { CodePanel } from "./CodePanel";
 import { ProjectPanel } from "./ProjectPanel";
 import { InspectorPanel } from "./InspectorPanel";
 
-export type PanelId = keyof typeof panels;
+export type PanelId = z.infer<typeof panelIdType>;
+export const panelIdType = z.enum(["code", "project", "inspector"]);
 
-export const panels = {
+export const panels: Record<
+  PanelId,
+  ComponentType<{ path: MosaicBranch[] }>
+> = {
   code: CodePanel,
   project: ProjectPanel,
   inspector: InspectorPanel,
 };
-
-export const defaultPanelLayout = {
-  direction: "row",
-  first: "code",
-  second: {
-    direction: "column",
-    first: "inspector",
-    second: "project",
-    splitPercentage: 20,
-  },
-  splitPercentage: 70,
-} as const;
 
 export const PanelContainer = styled(Mosaic<PanelId>)`
   flex: 1;
