@@ -1,4 +1,3 @@
-import Typography from "@mui/material/Typography";
 import type { MosaicBranch } from "react-mosaic-component";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
@@ -14,6 +13,7 @@ import { propertyValueType } from "../../../../api/services/game/types";
 import { Select } from "../../../controls/Select";
 import { PropertiesEditor } from "../components/PropertyEditor";
 import { Panel } from "../components/Panel";
+import { PanelEmptyState } from "../components/PanelEmptyState";
 
 export function InspectorPanel({ path }: { path: MosaicBranch[] }) {
   const selectedObjectId = useSelector(selectors.selectedObject);
@@ -32,9 +32,9 @@ function ObjectInspector({ id }: { id: EditorObjectId }) {
       return <PropertyInspector propertyId={id.propertyId} />;
   }
   return (
-    <Typography color="grey">
+    <PanelEmptyState>
       The selected object has nothing to inspect
-    </Typography>
+    </PanelEmptyState>
   );
 }
 
