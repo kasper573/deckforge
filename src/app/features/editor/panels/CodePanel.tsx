@@ -7,7 +7,7 @@ import { CodeEditor } from "../../../components/CodeEditor";
 import { Panel } from "../components/Panel";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import type { EditorState } from "../types";
-import { PanelTitle } from "../createPanelTitle";
+import { PanelTitle } from "../components/PanelTitle";
 import type { PanelProps } from "./definition";
 
 export function CodePanel({ title, ...props }: PanelProps) {

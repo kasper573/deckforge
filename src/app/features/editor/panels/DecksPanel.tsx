@@ -9,7 +9,7 @@ import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import type { DeckId } from "../../../../api/services/game/types";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
-import { Card, Deck } from "../../../components/icons";
+import { ObjectIcon } from "../components/ObjectIcon";
 import type { PanelProps } from "./definition";
 
 export function DecksPanel(props: PanelProps) {
@@ -37,7 +37,7 @@ export function DecksPanel(props: PanelProps) {
         items={decks.map((deck) => ({
           nodeId: deck.objectId,
           label: deck.name,
-          icon: <Deck />,
+          icon: <ObjectIcon type="deck" />,
           onDoubleClick: () => promptRename(deck),
           contextMenu: [
             <MenuItem onClick={() => promptRename(deck)}>Rename</MenuItem>,
@@ -49,7 +49,7 @@ export function DecksPanel(props: PanelProps) {
           children: deck.cards.map((card) => ({
             nodeId: card.objectId,
             label: card.name,
-            icon: <Card />,
+            icon: <ObjectIcon type="card" />,
             onDoubleClick: () => promptRename(card),
             contextMenu: [
               <MenuItem onClick={() => promptRename(card)}>Rename</MenuItem>,

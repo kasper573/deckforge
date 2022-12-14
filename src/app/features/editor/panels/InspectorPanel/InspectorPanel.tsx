@@ -8,7 +8,7 @@ import { Panel } from "../../components/Panel";
 import { PanelEmptyState } from "../../components/PanelEmptyState";
 import type { PanelProps } from "../definition";
 import { panelsDefinition } from "../definition";
-import { PanelTitle } from "../../createPanelTitle";
+import { PanelTitle } from "../../components/PanelTitle";
 import { PropertyValuesEditor } from "./PropertyValueEditor";
 
 export function InspectorPanel({ title, ...props }: PanelProps) {
