@@ -18,6 +18,7 @@ import {
   addNodeBySplitting,
   removeNodeByKey,
 } from "../../../lib/reactMosaicExtensions";
+import { gameType } from "../../../api/services/game/types";
 import type {
   EditorObjectId,
   EditorState,
@@ -192,13 +193,21 @@ export const reducer: typeof editorSlice.reducer = (
   state = editorSlice.getInitialState(),
   action
 ) => {
-  const layoutBefore = state.panelLayout;
-  state = editorSlice.reducer(state, action);
-  const layoutAfter = state.panelLayout;
-  if (layoutBefore !== layoutAfter) {
-    panelStorage.save(layoutAfter);
+  const currentState = state;
+  const updatedState = editorSlice.reducer(state, action);
+
+  if (updatedState.panelLayout !== currentState.panelLayout) {
+    panelStorage.save(updatedState.panelLayout);
   }
-  return state;
+
+  if (updatedState.game !== currentState.game) {
+    const res = gameType.safeParse(updatedState.game);
+    if (!res.success) {
+      throw new Error("Invalid game state: " + res.error);
+    }
+  }
+
+  return updatedState;
 };
 
 export const noUndoActionList: Array<keyof typeof actions> = [];
