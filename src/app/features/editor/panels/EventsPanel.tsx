@@ -44,6 +44,7 @@ export function EventsPanel(props: PanelProps) {
               <Action />
             </Tooltip>
           ),
+          onDoubleClick: () => promptRename(action),
           contextMenu: [
             <MenuItem onClick={() => promptRename(action)}>Rename</MenuItem>,
             <MenuItem onClick={() => promptCreateReaction(action.actionId)}>
@@ -59,6 +60,7 @@ export function EventsPanel(props: PanelProps) {
                 <Reaction />
               </Tooltip>
             ),
+            onDoubleClick: () => promptRename(reaction),
             contextMenu: [
               <MenuItem onClick={() => promptRename(reaction)}>
                 Rename

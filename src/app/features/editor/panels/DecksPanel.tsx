@@ -38,6 +38,7 @@ export function DecksPanel(props: PanelProps) {
           nodeId: deck.objectId,
           label: deck.name,
           icon: <Deck />,
+          onDoubleClick: () => promptRename(deck),
           contextMenu: [
             <MenuItem onClick={() => promptRename(deck)}>Rename</MenuItem>,
             <MenuItem onClick={() => promptCreateCard(deck.deckId)}>
@@ -49,6 +50,7 @@ export function DecksPanel(props: PanelProps) {
             nodeId: card.objectId,
             label: card.name,
             icon: <Card />,
+            onDoubleClick: () => promptRename(card),
             contextMenu: [
               <MenuItem onClick={() => promptRename(card)}>Rename</MenuItem>,
               <MenuItem onClick={() => confirmDelete(card)}>Delete</MenuItem>,

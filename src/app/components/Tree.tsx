@@ -2,7 +2,7 @@ import TreeView from "@mui/lab/TreeView";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MuiTreeItem from "@mui/lab/TreeItem";
-import type { ReactNode } from "react";
+import type { ComponentProps } from "react";
 import { useMemo } from "react";
 import { isEqual } from "lodash";
 import type { UseMenuItems } from "../hooks/useMenu";
@@ -39,29 +39,29 @@ export function Tree<Id>({
   );
 }
 
-export interface TreeItemProps<Id> {
+export interface TreeItemProps<Id>
+  extends Pick<
+    ComponentProps<typeof MuiTreeItem>,
+    "onClick" | "onDoubleClick" | "icon" | "label"
+  > {
   nodeId: Id;
-  label?: ReactNode;
   contextMenu?: UseMenuItems;
   children?: TreeItemProps<Id>[];
-  icon?: ReactNode;
 }
 
 export function TreeItem<Id>({
   contextMenu = [],
   nodeId,
   children,
-  label,
-  icon,
+  ...props
 }: TreeItemProps<Id>) {
   const openContextMenu = useMenu(contextMenu);
   const serializedNodeId = useMemo(() => serializeId(nodeId), [nodeId]);
   return (
     <MuiTreeItem
-      label={label}
       nodeId={serializedNodeId}
       onContextMenu={openContextMenu}
-      icon={icon}
+      {...props}
     >
       {renderItems(children)}
     </MuiTreeItem>
