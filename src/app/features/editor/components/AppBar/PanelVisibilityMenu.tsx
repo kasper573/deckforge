@@ -3,13 +3,13 @@ import Checkbox from "@mui/material/Checkbox";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 import ListItemButton from "@mui/material/ListItemButton";
-import { MenuFor } from "../../../components/MenuFor";
-import { panelDefinitionList } from "../panels/definition";
-import { useSelector } from "../../../store";
-import { selectors } from "../selectors";
-import { editorActions } from "../actions";
-import { useActions } from "../../../../lib/useActions";
-import { defaultPanelLayout } from "../panels/defaultPanelLayout";
+import { MenuFor } from "../../../../components/MenuFor";
+import { panelDefinitionList } from "../../panels/definition";
+import { useSelector } from "../../../../store";
+import { selectors } from "../../selectors";
+import { editorActions } from "../../actions";
+import { useActions } from "../../../../../lib/useActions";
+import { defaultPanelLayout } from "../../panels/defaultPanelLayout";
 
 export function PanelVisibilityMenu() {
   const visibilities = useSelector(selectors.panelVisibilities);

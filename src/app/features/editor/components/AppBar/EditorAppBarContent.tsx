@@ -3,15 +3,15 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { selectors } from "../selectors";
-import { useSelector } from "../../../store";
-import { useActions } from "../../../../lib/useActions";
-import { editorActions } from "../actions";
-import { Edit, ExitToApp } from "../../../components/icons";
-import { useModal } from "../../../../lib/useModal";
-import { PromptDialog } from "../../../dialogs/PromptDialog";
-import { LinkIconButton } from "../../../components/Link";
-import { router } from "../../../router";
+import { selectors } from "../../selectors";
+import { useSelector } from "../../../../store";
+import { useActions } from "../../../../../lib/useActions";
+import { editorActions } from "../../actions";
+import { Edit, ExitToApp } from "../../../../components/icons";
+import { useModal } from "../../../../../lib/useModal";
+import { PromptDialog } from "../../../../dialogs/PromptDialog";
+import { LinkIconButton } from "../../../../components/Link";
+import { router } from "../../../../router";
 import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
 
 export default function EditorAppBarContent() {

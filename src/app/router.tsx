@@ -52,7 +52,9 @@ export const router = OptionsRouter(
       "build",
       {
         middleware: access(),
-        component: lazy(() => import("./features/editor/pages/GameListPage")),
+        component: lazy(
+          () => import("./features/editor/pages/GameListPage/GameListPage")
+        ),
       },
       (route) => ({
         game: route(":gameId", {
@@ -60,7 +62,10 @@ export const router = OptionsRouter(
             appBar: {
               container: false,
               content: lazy(
-                () => import("./features/editor/components/EditorAppBarContent")
+                () =>
+                  import(
+                    "./features/editor/components/AppBar/EditorAppBarContent"
+                  )
               ),
             },
           },

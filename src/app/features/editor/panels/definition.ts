@@ -4,7 +4,7 @@ import type { PanelId } from "../types";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel";
-import { InspectorPanel } from "./InspectorPanel";
+import { InspectorPanel } from "./InspectorPanel/InspectorPanel";
 import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
 
 export type PanelProps = { path: MosaicBranch[]; title: string };

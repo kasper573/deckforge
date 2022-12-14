@@ -1,19 +1,19 @@
-import { useSelector } from "../../../store";
-import { selectors } from "../selectors";
+import { useSelector } from "../../../../store";
+import { selectors } from "../../selectors";
 import type {
   CardId,
   PropertyId,
   PropertyType,
-} from "../../../../api/services/game/types";
-import type { EditorObjectId } from "../types";
-import { useActions } from "../../../../lib/useActions";
-import { editorActions } from "../actions";
-import { propertyValueType } from "../../../../api/services/game/types";
-import { Select } from "../../../controls/Select";
-import { PropertiesEditor } from "../components/PropertyEditor";
-import { Panel } from "../components/Panel";
-import { PanelEmptyState } from "../components/PanelEmptyState";
-import type { PanelProps } from "./definition";
+} from "../../../../../api/services/game/types";
+import type { EditorObjectId } from "../../types";
+import { useActions } from "../../../../../lib/useActions";
+import { editorActions } from "../../actions";
+import { propertyValueType } from "../../../../../api/services/game/types";
+import { Select } from "../../../../controls/Select";
+import { Panel } from "../../components/Panel";
+import { PanelEmptyState } from "../../components/PanelEmptyState";
+import type { PanelProps } from "../definition";
+import { PropertiesEditor } from "./PropertyEditor";
 
 export function InspectorPanel(props: PanelProps) {
   const selectedObjectId = useSelector(selectors.selectedObject);

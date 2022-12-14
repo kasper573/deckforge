@@ -2,16 +2,16 @@ import Button from "@mui/material/Button";
 import { useHistory } from "react-router";
 import Card from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
-import { PromptDialog } from "../../../dialogs/PromptDialog";
-import { useModal } from "../../../../lib/useModal";
-import { router } from "../../../router";
-import { Page } from "../../layout/Page";
-import { trpc } from "../../../trpc";
-import { useToastProcedure } from "../../../hooks/useToastProcedure";
-import { Header } from "../../layout/Header";
-import { Center } from "../../../components/Center";
-import { LoadingPage } from "../../common/LoadingPage";
-import { GameCard } from "../components/GameCard";
+import { PromptDialog } from "../../../../dialogs/PromptDialog";
+import { useModal } from "../../../../../lib/useModal";
+import { router } from "../../../../router";
+import { Page } from "../../../layout/Page";
+import { trpc } from "../../../../trpc";
+import { useToastProcedure } from "../../../../hooks/useToastProcedure";
+import { Header } from "../../../layout/Header";
+import { Center } from "../../../../components/Center";
+import { LoadingPage } from "../../../common/LoadingPage";
+import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
   const history = useHistory();
