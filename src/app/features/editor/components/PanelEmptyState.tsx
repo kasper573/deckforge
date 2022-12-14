@@ -5,7 +5,7 @@ import { Center } from "../../../components/Center";
 export function PanelEmptyState(props: ComponentProps<typeof Box>) {
   return (
     <Center>
-      <Box color="text.secondary" sx={{ whiteSpace: "nowrap" }} {...props} />
+      <Box color="text.secondary" sx={{ textAlign: "center" }} {...props} />
     </Center>
   );
 }

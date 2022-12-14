@@ -22,8 +22,8 @@ export default function EditorPage() {
         onChange={setPanelLayout}
         zeroStateView={
           <PanelEmptyState>
-            All panels are closed. You can select which panels to have open by
-            selecting the panels menu in the app bar.
+            All panels are closed. <br />
+            You can select panels from the menu in the app bar.
           </PanelEmptyState>
         }
         renderTile={(panelId, path) => {
