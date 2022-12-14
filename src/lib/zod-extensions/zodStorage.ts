@@ -8,11 +8,17 @@ export function createZodStorage<T extends ZodType>(
     localStorage.setItem(localStorageKey, JSON.stringify(value));
   }
 
-  function load(): z.infer<T> | undefined {
+  function load(emptyValue?: z.infer<T>): z.infer<T> | undefined {
     try {
-      return schema.parse(
-        JSON.parse(localStorage.getItem(localStorageKey) ?? "")
-      );
+      const jsonString = localStorage.getItem(localStorageKey);
+      if (jsonString === null) {
+        return emptyValue;
+      }
+      const json =
+        jsonString === "undefined" || jsonString === null
+          ? undefined
+          : JSON.parse(jsonString);
+      return schema.parse(json);
     } catch {}
   }
 

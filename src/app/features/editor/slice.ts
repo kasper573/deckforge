@@ -34,7 +34,7 @@ const panelStorage = createZodStorage(
 );
 
 const initialState: EditorState = {
-  panelLayout: panelStorage.load() ?? defaultPanelLayout,
+  panelLayout: panelStorage.load(defaultPanelLayout),
 };
 
 const entityReducers = createEntityReducerFactory<EditorState>();
