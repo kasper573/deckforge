@@ -2,6 +2,7 @@ import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Container from "@mui/material/Container";
 import { styled } from "@mui/material/styles";
+import Box from "@mui/material/Box";
 import { selectors } from "../../selectors";
 import { useSelector } from "../../../../store";
 import { useActions } from "../../../../../lib/useActions";
@@ -43,7 +44,18 @@ export default function EditorAppBarContent() {
           <PanelVisibilityMenu />
         </div>
       </Stack>
-      <GameName maxWidth={pageMaxWidth}>{game?.name}</GameName>
+      <GameName maxWidth={pageMaxWidth}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Tooltip title="Rename game">
+            <Box
+              onClick={promptRename}
+              sx={{ cursor: "pointer", pointerEvents: "all" }}
+            >
+              {game?.name}
+            </Box>
+          </Tooltip>
+        </Stack>
+      </GameName>
     </Stack>
   );
 }
