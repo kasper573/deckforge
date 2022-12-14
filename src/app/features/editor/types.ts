@@ -31,6 +31,7 @@ export const panelIdType = z.enum([
   "cardProperties",
   "playerProperties",
   "inspector",
+  "runtime",
 ]);
 
 export type PanelLayout = MosaicNode<PanelId>;

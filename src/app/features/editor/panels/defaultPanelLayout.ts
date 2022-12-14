@@ -4,7 +4,9 @@ import type { PanelId } from "../types";
 export const defaultPanelLayout: MosaicNode<PanelId> = {
   direction: "row",
   first: {
+    direction: "row",
     first: {
+      direction: "column",
       first: "events",
       second: {
         direction: "column",
@@ -12,18 +14,21 @@ export const defaultPanelLayout: MosaicNode<PanelId> = {
         second: "playerProperties",
         splitPercentage: 50,
       },
-      direction: "column",
-      splitPercentage: 33,
+      splitPercentage: 40,
     },
     second: "code",
-    direction: "row",
-    splitPercentage: 25,
+    splitPercentage: 30,
   },
   second: {
-    first: "inspector",
-    second: "decks",
+    first: "runtime",
+    second: {
+      first: "inspector",
+      second: "decks",
+      direction: "column",
+      splitPercentage: 40,
+    },
     direction: "column",
-    splitPercentage: 20,
+    splitPercentage: 40,
   },
-  splitPercentage: 80,
+  splitPercentage: 70,
 };
