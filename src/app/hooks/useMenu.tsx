@@ -103,6 +103,7 @@ export function MenuOutlet() {
             key={menu.id}
             {...menu.props}
             open={!!position && menu.id === openId}
+            onContextMenu={concatFunctions(menu.props?.onContextMenu, close)}
             onClose={concatFunctions(
               menu.props?.onClose,
               close as MenuProps["onClose"]
