@@ -10,13 +10,19 @@ export function Panel({
   sx,
   style,
   className,
+  onContextMenu,
   toolbarControls = <PanelControls />,
   ...props
 }: ComponentProps<typeof MosaicWindow<PanelId>> &
-  Pick<ComponentProps<typeof PanelPaper>, "sx" | "style" | "className">) {
+  Pick<
+    ComponentProps<typeof PanelPaper>,
+    "sx" | "style" | "className" | "onContextMenu"
+  >) {
   return (
     <MosaicWindow<PanelId> toolbarControls={toolbarControls} {...props}>
-      <PanelPaper {...{ sx, style, className }}>{children}</PanelPaper>
+      <PanelPaper {...{ sx, style, className, onContextMenu }}>
+        {children}
+      </PanelPaper>
     </MosaicWindow>
   );
 }
