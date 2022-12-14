@@ -31,4 +31,5 @@ const PanelPaper = styled(Paper)`
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow-y: auto;
 `;
