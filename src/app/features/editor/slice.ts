@@ -18,7 +18,6 @@ import {
   addNodeBySplitting,
   removeNodeByKey,
 } from "../../../lib/reactMosaicExtensions";
-import { gameType } from "../../../api/services/game/types";
 import type {
   EditorObjectId,
   EditorState,
@@ -198,13 +197,6 @@ export const reducer: typeof editorSlice.reducer = (
 
   if (updatedState.panelLayout !== currentState.panelLayout) {
     panelStorage.save(updatedState.panelLayout);
-  }
-
-  if (updatedState.game !== currentState.game) {
-    const res = gameType.safeParse(updatedState.game);
-    if (!res.success) {
-      throw new Error("Invalid game state: " + res.error);
-    }
   }
 
   return updatedState;
