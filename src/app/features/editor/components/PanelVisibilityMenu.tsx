@@ -1,5 +1,4 @@
 import Button from "@mui/material/Button";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
@@ -17,18 +16,14 @@ export function PanelVisibilityMenu() {
   const { setPanelVisibility, setPanelLayout } = useActions(editorActions);
 
   const checkboxItems = panelDefinitionList.map(({ id, title }) => (
-    <ListItemButton key={id} dense>
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={visibilities[id] ?? false}
-            onChange={(e) =>
-              setPanelVisibility({ id, visible: e.target.checked })
-            }
-          />
-        }
-        label={title}
-      />
+    <ListItemButton
+      key={id}
+      dense
+      sx={{ pl: 1 }}
+      onClick={() => setPanelVisibility({ id, visible: !visibilities[id] })}
+    >
+      <Checkbox checked={visibilities[id] ?? false} />
+      {title}
     </ListItemButton>
   ));
 
