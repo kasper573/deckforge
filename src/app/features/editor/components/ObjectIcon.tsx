@@ -6,6 +6,7 @@ import Link from "@mui/icons-material/Link";
 import Tooltip from "@mui/material/Tooltip";
 import Reply from "@mui/icons-material/Reply";
 import { styled } from "@mui/material/styles";
+import { capitalize } from "lodash";
 import type { EditorObjectId } from "../types";
 
 export function ObjectIcon({
@@ -14,7 +15,7 @@ export function ObjectIcon({
 }: ComponentProps<typeof SvgIcon> & { type: EditorObjectId["type"] }) {
   const Component = iconComponents[type];
   return (
-    <Tooltip title={type}>
+    <Tooltip title={capitalize(type)}>
       <Component {...props} />
     </Tooltip>
   );
