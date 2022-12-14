@@ -1,4 +1,5 @@
 import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
 import { useSelector } from "../../../store";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
@@ -9,6 +10,7 @@ import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import type { ActionId } from "../../../../api/services/game/types";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
+import { Action, Reaction } from "../../../components/icons";
 import type { PanelProps } from "./definition";
 
 export function EventsPanel(props: PanelProps) {
@@ -37,6 +39,11 @@ export function EventsPanel(props: PanelProps) {
         items={events.map((action) => ({
           nodeId: action.objectId,
           label: action.name,
+          icon: (
+            <Tooltip title="Action">
+              <Action />
+            </Tooltip>
+          ),
           contextMenu: [
             <MenuItem onClick={() => promptRename(action)}>Rename</MenuItem>,
             <MenuItem onClick={() => promptCreateReaction(action.actionId)}>
@@ -47,6 +54,11 @@ export function EventsPanel(props: PanelProps) {
           children: action.reactions.map((reaction) => ({
             nodeId: reaction.objectId,
             label: reaction.name,
+            icon: (
+              <Tooltip title="Reaction">
+                <Reaction />
+              </Tooltip>
+            ),
             contextMenu: [
               <MenuItem onClick={() => promptRename(reaction)}>
                 Rename

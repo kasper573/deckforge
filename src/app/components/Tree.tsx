@@ -44,6 +44,7 @@ export interface TreeItemProps<Id> {
   label?: ReactNode;
   contextMenu?: UseMenuItems;
   children?: TreeItemProps<Id>[];
+  icon?: ReactNode;
 }
 
 export function TreeItem<Id>({
@@ -51,6 +52,7 @@ export function TreeItem<Id>({
   nodeId,
   children,
   label,
+  icon,
 }: TreeItemProps<Id>) {
   const openContextMenu = useMenu(contextMenu);
   const serializedNodeId = useMemo(() => serializeId(nodeId), [nodeId]);
@@ -59,6 +61,7 @@ export function TreeItem<Id>({
       label={label}
       nodeId={serializedNodeId}
       onContextMenu={openContextMenu}
+      icon={icon}
     >
       {renderItems(children)}
     </MuiTreeItem>
