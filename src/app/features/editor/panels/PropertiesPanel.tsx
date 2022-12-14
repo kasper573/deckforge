@@ -1,8 +1,12 @@
 import MenuItem from "@mui/material/MenuItem";
 import type { ReactNode } from "react";
+import List from "@mui/material/List";
+import Select from "@mui/material/Select";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import { useSelector } from "../../../store";
 import { useActions } from "../../../../lib/useActions";
-import { Tree, TreeItem } from "../../../components/Tree";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
 import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
@@ -11,6 +15,8 @@ import { Panel } from "../components/Panel";
 import type { EntityId, Property } from "../../../../api/services/game/types";
 import type { EditorObjectId } from "../types";
 import { useMenu } from "../../../hooks/useMenu";
+import { propertyValueType } from "../../../../api/services/game/types";
+import { HoverListItem } from "../../../components/HoverListItem";
 import type { PanelProps } from "./definition";
 
 export function CardPropertiesPanel(props: PanelProps) {
@@ -48,10 +54,7 @@ export function PropertiesPanel({
   title: string;
   properties: Array<Property & { objectId: EditorObjectId }>;
 }) {
-  const confirmDelete = useConfirmDelete();
-  const promptRename = usePromptRename();
-  const { createProperty, selectObject } = useActions(editorActions);
-  const selectedObjectId = useSelector(selectors.selectedObject);
+  const { createProperty } = useActions(editorActions);
   const promptCreate = usePromptCreate();
   const promptCreateProperty = () =>
     promptCreate("property", (name) => createProperty({ name, entityId }));
@@ -62,26 +65,54 @@ export function PropertiesPanel({
 
   return (
     <Panel onContextMenu={openContextMenu} {...props}>
-      <Tree selected={selectedObjectId} onSelectedChanged={selectObject}>
+      <List>
         {properties.map((property, index) => (
-          <TreeItem
-            key={index}
-            nodeId={property.objectId}
-            label={property.name}
-            contextMenu={[
-              <MenuItem onClick={() => promptRename(property)}>
-                Rename
-              </MenuItem>,
-              <MenuItem onClick={() => confirmDelete(property)}>
-                Delete
-              </MenuItem>,
-            ]}
-          />
+          <PropertyEditor key={index} {...property} />
         ))}
-      </Tree>
+      </List>
       {properties.length === 0 && (
         <PanelEmptyState>{emptyMessage}</PanelEmptyState>
       )}
     </Panel>
+  );
+}
+
+function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
+  const { propertyId, name, type } = property;
+  const { updateProperty } = useActions(editorActions);
+  const confirmDelete = useConfirmDelete();
+  const promptRename = usePromptRename();
+
+  const openContextMenu = useMenu([
+    <MenuItem onClick={() => promptRename(property)}>Rename</MenuItem>,
+    <MenuItem onClick={() => confirmDelete(property)}>Delete</MenuItem>,
+  ]);
+
+  return (
+    <HoverListItem onContextMenu={openContextMenu}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1}
+        sx={{ width: "100%" }}
+      >
+        <Box sx={{ flex: 1, overflow: "hidden" }}>
+          <Typography noWrap>{name}</Typography>
+        </Box>
+        <div>
+          <Select size="small" value={type}>
+            {propertyValueType._def.values.map((type) => (
+              <MenuItem
+                key={type}
+                value={type}
+                onClick={() => updateProperty({ propertyId, type })}
+              >
+                {type}
+              </MenuItem>
+            ))}
+          </Select>
+        </div>
+      </Stack>
+    </HoverListItem>
   );
 }

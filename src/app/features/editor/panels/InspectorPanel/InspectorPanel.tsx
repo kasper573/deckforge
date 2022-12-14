@@ -1,20 +1,14 @@
 import { useSelector } from "../../../../store";
 import { selectors } from "../../selectors";
-import type {
-  CardId,
-  PropertyId,
-  PropertyType,
-} from "../../../../../api/services/game/types";
+import type { CardId } from "../../../../../api/services/game/types";
 import type { EditorObjectId } from "../../types";
 import { useActions } from "../../../../../lib/useActions";
 import { editorActions } from "../../actions";
-import { propertyValueType } from "../../../../../api/services/game/types";
-import { Select } from "../../../../controls/Select";
 import { Panel } from "../../components/Panel";
 import { PanelEmptyState } from "../../components/PanelEmptyState";
 import type { PanelProps } from "../definition";
 import { panelsDefinition } from "../definition";
-import { PropertiesEditor } from "./PropertyEditor";
+import { PropertyValuesEditor } from "./PropertyValueEditor";
 
 export function InspectorPanel(props: PanelProps) {
   const selectedObjectId = useSelector(selectors.selectedObject);
@@ -35,8 +29,6 @@ function ObjectInspector({ id }: { id: EditorObjectId }) {
   switch (id.type) {
     case "card":
       return <CardInspector cardId={id.cardId} />;
-    case "property":
-      return <PropertyInspector propertyId={id.propertyId} />;
   }
   return (
     <PanelEmptyState>
@@ -58,29 +50,10 @@ function CardInspector({ cardId }: { cardId: CardId }) {
     );
   }
   return (
-    <PropertiesEditor
+    <PropertyValuesEditor
       properties={properties}
       values={card?.propertyDefaults ?? {}}
       onChange={(propertyDefaults) => updateCard({ cardId, propertyDefaults })}
-    />
-  );
-}
-
-function PropertyInspector({ propertyId }: { propertyId: PropertyId }) {
-  const property = useSelector(selectors.property(propertyId));
-  const { updateProperty } = useActions(editorActions);
-
-  if (!property) {
-    return <PanelEmptyState>Unknown property</PanelEmptyState>;
-  }
-  return (
-    <Select
-      value={property.type}
-      label="Type"
-      options={propertyValueType._def.values}
-      onChange={(e) =>
-        updateProperty({ propertyId, type: e.target.value as PropertyType })
-      }
     />
   );
 }

@@ -12,7 +12,7 @@ import type {
   PropertyValues,
 } from "../../../../../api/services/game/types";
 
-export function PropertiesEditor({
+export function PropertyValuesEditor({
   properties,
   values,
   onChange,
@@ -25,7 +25,7 @@ export function PropertiesEditor({
     <List>
       {properties.map(({ propertyId, name, type }) => {
         return (
-          <PropertyEditor
+          <PropertyValueEditor
             key={propertyId}
             type={type}
             name={name}
@@ -44,7 +44,7 @@ export function PropertiesEditor({
   );
 }
 
-export function PropertyEditor<T extends PropertyType>({
+export function PropertyValueEditor<T extends PropertyType>({
   type,
   name,
   value,
