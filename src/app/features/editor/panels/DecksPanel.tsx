@@ -30,7 +30,7 @@ export function DecksPanel(props: PanelProps) {
   ]);
 
   return (
-    <Panel onContextMenu={openContextMenu} {...props}>
+    <Panel sx={{ py: 1 }} onContextMenu={openContextMenu} {...props}>
       <Tree
         selected={selectedObjectId}
         onSelectedChanged={selectObject}

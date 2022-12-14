@@ -89,7 +89,7 @@ function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
   ]);
 
   return (
-    <HoverListItem onContextMenu={openContextMenu}>
+    <HoverListItem sx={{ py: 0 }} onContextMenu={openContextMenu}>
       <Stack
         direction="row"
         alignItems="center"
