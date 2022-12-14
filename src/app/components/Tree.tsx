@@ -1,70 +1,98 @@
-import type { ComponentProps } from "react";
 import TreeView from "@mui/lab/TreeView";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MuiTreeItem from "@mui/lab/TreeItem";
+import type { ReactNode } from "react";
 import { useMemo } from "react";
-import type { SingleSelectTreeViewProps } from "@mui/lab/TreeView/TreeView";
+import { isEqual } from "lodash";
 import type { UseMenuItems } from "../hooks/useMenu";
 import { useMenu } from "../hooks/useMenu";
 
-export interface TreeProps<Id>
-  extends Omit<
-    SingleSelectTreeViewProps,
-    "selected" | "onNodeSelect" | "defaultSelected"
-  > {
+export interface TreeProps<Id> {
   selected?: Id;
   onSelectedChanged: (id: Id) => void;
+  items: TreeItemProps<Id>[];
 }
 
 export function Tree<Id>({
+  items,
   selected,
   onSelectedChanged,
-  ...props
 }: TreeProps<Id>) {
-  const serializedNodeId = useMemo(
-    () => (selected !== undefined ? serializeTreeNodeId(selected) : undefined),
-    [selected]
+  const serializedSelected = useMemo(() => serializeId(selected), [selected]);
+  const inferredExpanded = useMemo(
+    () => (selected ? pathTo(items, selected) : []).map(serializeId),
+    [items, selected]
   );
   return (
     <TreeView
-      selected={serializedNodeId ?? ""}
+      selected={serializedSelected ?? ""}
+      expanded={inferredExpanded}
       multiSelect={false}
-      onNodeSelect={(e, id) => onSelectedChanged(deserializeTreeNodeId(id))}
+      onNodeSelect={(e, id) => onSelectedChanged(deserializeId(id))}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
       sx={{ userSelect: "none" }}
-      {...props}
-    />
+    >
+      {renderItems(items)}
+    </TreeView>
   );
 }
 
-export interface TreeItemProps<Id>
-  extends Omit<ComponentProps<typeof MuiTreeItem>, "contextMenu" | "nodeId"> {
+export interface TreeItemProps<Id> {
   nodeId: Id;
+  label?: ReactNode;
   contextMenu?: UseMenuItems;
+  children?: TreeItemProps<Id>[];
 }
 
 export function TreeItem<Id>({
   contextMenu = [],
   nodeId,
-  ...props
+  children,
+  label,
 }: TreeItemProps<Id>) {
   const openContextMenu = useMenu(contextMenu);
-  const serializedNodeId = useMemo(() => serializeTreeNodeId(nodeId), [nodeId]);
+  const serializedNodeId = useMemo(() => serializeId(nodeId), [nodeId]);
   return (
     <MuiTreeItem
-      {...props}
+      label={label}
       nodeId={serializedNodeId}
       onContextMenu={openContextMenu}
-    />
+    >
+      {renderItems(children)}
+    </MuiTreeItem>
   );
 }
 
-export function serializeTreeNodeId<Id>(nodeId: Id) {
-  return JSON.stringify(nodeId);
+function pathTo<Id>(
+  graph: TreeItemProps<Id>[],
+  selected: Id,
+  path: Id[] = []
+): Id[] {
+  for (const item of graph) {
+    if (isEqual(item.nodeId, selected)) {
+      return [...path, item.nodeId];
+    }
+    if (!item.children) {
+      continue;
+    }
+    const result = pathTo(item.children, selected, [...path, item.nodeId]);
+    if (result.length > 0) {
+      return result;
+    }
+  }
+  return [];
 }
 
-export function deserializeTreeNodeId<Id>(nodeIdAsJson: string) {
-  return JSON.parse(nodeIdAsJson) as Id;
+function renderItems<Id>(items?: TreeItemProps<Id>[]) {
+  return items?.map((props, index) => <TreeItem key={index} {...props} />);
+}
+
+export function serializeId<Id>(nodeId?: Id) {
+  return nodeId === undefined ? "" : JSON.stringify(nodeId);
+}
+
+export function deserializeId<Id>(nodeIdAsJson: string) {
+  return (nodeIdAsJson === "" ? "" : JSON.parse(nodeIdAsJson)) as Id;
 }

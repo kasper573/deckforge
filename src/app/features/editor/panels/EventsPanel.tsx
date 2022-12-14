@@ -2,7 +2,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { useSelector } from "../../../store";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
-import { Tree, TreeItem } from "../../../components/Tree";
+import { Tree } from "../../../components/Tree";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
 import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
@@ -31,38 +31,33 @@ export function EventsPanel(props: PanelProps) {
 
   return (
     <Panel onContextMenu={openContextMenu} {...props}>
-      <Tree selected={selectedObjectId} onSelectedChanged={selectObject}>
-        {events.map((action, index) => (
-          <TreeItem
-            key={index}
-            nodeId={action.objectId}
-            label={action.name}
-            contextMenu={[
-              <MenuItem onClick={() => promptRename(action)}>Rename</MenuItem>,
-              <MenuItem onClick={() => promptCreateReaction(action.actionId)}>
-                New reaction
+      <Tree
+        selected={selectedObjectId}
+        onSelectedChanged={selectObject}
+        items={events.map((action) => ({
+          nodeId: action.objectId,
+          label: action.name,
+          contextMenu: [
+            <MenuItem onClick={() => promptRename(action)}>Rename</MenuItem>,
+            <MenuItem onClick={() => promptCreateReaction(action.actionId)}>
+              New reaction
+            </MenuItem>,
+            <MenuItem onClick={() => confirmDelete(action)}>Delete</MenuItem>,
+          ],
+          children: action.reactions.map((reaction) => ({
+            nodeId: reaction.objectId,
+            label: reaction.name,
+            contextMenu: [
+              <MenuItem onClick={() => promptRename(reaction)}>
+                Rename
               </MenuItem>,
-              <MenuItem onClick={() => confirmDelete(action)}>Delete</MenuItem>,
-            ]}
-          >
-            {action.reactions.map((reaction, index) => (
-              <TreeItem
-                key={index}
-                nodeId={reaction.objectId}
-                label={reaction.name}
-                contextMenu={[
-                  <MenuItem onClick={() => promptRename(reaction)}>
-                    Rename
-                  </MenuItem>,
-                  <MenuItem onClick={() => confirmDelete(reaction)}>
-                    Delete
-                  </MenuItem>,
-                ]}
-              />
-            ))}
-          </TreeItem>
-        ))}
-      </Tree>
+              <MenuItem onClick={() => confirmDelete(reaction)}>
+                Delete
+              </MenuItem>,
+            ],
+          })),
+        }))}
+      />
       {events.length === 0 && (
         <PanelEmptyState>This game has no events</PanelEmptyState>
       )}
