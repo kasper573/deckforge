@@ -5,11 +5,12 @@ import { useActions } from "../../../../lib/useActions";
 import { Tree, TreeItem } from "../../../components/Tree";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
-import { useConfirmDelete, usePromptRename } from "../hooks";
+import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
 import type { EntityId, Property } from "../../../../api/services/game/types";
 import type { EditorObjectId } from "../types";
+import { useMenu } from "../../../hooks/useMenu";
 import type { PanelProps } from "./definition";
 
 export function CardPropertiesPanel(props: PanelProps) {
@@ -51,9 +52,16 @@ export function PropertiesPanel({
   const promptRename = usePromptRename();
   const { createProperty, selectObject } = useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObject);
+  const promptCreate = usePromptCreate();
+  const promptCreateProperty = () =>
+    promptCreate("property", (name) => createProperty({ name, entityId }));
+
+  const openContextMenu = useMenu([
+    <MenuItem onClick={promptCreateProperty}>New property</MenuItem>,
+  ]);
 
   return (
-    <Panel {...props}>
+    <Panel onContextMenu={openContextMenu} {...props}>
       <Tree selected={selectedObjectId} onSelectedChanged={selectObject}>
         {properties.map((property, index) => (
           <TreeItem
