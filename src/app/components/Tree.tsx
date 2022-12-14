@@ -42,7 +42,7 @@ export function Tree<Id>({
 export interface TreeItemProps<Id>
   extends Pick<
     ComponentProps<typeof MuiTreeItem>,
-    "onClick" | "onDoubleClick" | "icon" | "label"
+    "onDoubleClick" | "icon" | "label"
   > {
   nodeId: Id;
   contextMenu?: UseMenuItems;
@@ -53,6 +53,7 @@ export function TreeItem<Id>({
   contextMenu = [],
   nodeId,
   children,
+  onDoubleClick,
   ...props
 }: TreeItemProps<Id>) {
   const openContextMenu = useMenu(contextMenu);
@@ -61,6 +62,10 @@ export function TreeItem<Id>({
     <MuiTreeItem
       nodeId={serializedNodeId}
       onContextMenu={openContextMenu}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        onDoubleClick?.(e);
+      }}
       {...props}
     >
       {renderItems(children)}
