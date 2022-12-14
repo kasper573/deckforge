@@ -9,12 +9,16 @@ import {
 import type { StateWithHistory } from "redux-undo";
 import undoable, { excludeAction } from "redux-undo";
 import { configureStore } from "@reduxjs/toolkit";
-import { editorSlice, noUndoActions } from "./features/editor/slice";
+import {
+  getInitialState,
+  noUndoActions,
+  reducer,
+} from "./features/editor/slice";
 import type { EditorState } from "./features/editor/types";
 
 export function createRootReducer(): Reducer<RootState> {
   return combineReducers({
-    editor: undoable(editorSlice.reducer, {
+    editor: undoable(reducer, {
       filter: excludeAction(["@@INIT", ...noUndoActions]),
       limit: 30,
     }),
@@ -35,7 +39,7 @@ export const createRootState = (
 export function createStore() {
   return configureStore({
     reducer: createRootReducer(),
-    preloadedState: createRootState(history, editorSlice.getInitialState()),
+    preloadedState: createRootState(history, getInitialState()),
     middleware: (defaults) =>
       defaults({
         serializableCheck: false, // To allow superjson

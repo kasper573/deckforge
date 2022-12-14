@@ -6,17 +6,18 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import CardActions from "@mui/material/CardActions";
-import type { Game } from "../../../../api/services/game/types";
-import { useModal } from "../../../../lib/useModal";
-import { ConfirmDialog } from "../../../dialogs/ConfirmDialog";
-import { PromptDialog } from "../../../dialogs/PromptDialog";
-import { useToastProcedure } from "../../../hooks/useToastProcedure";
-import { trpc } from "../../../trpc";
-import { CardLink, LinkMenuItem } from "../../../components/Link";
-import { router } from "../../../router";
-import { MenuFor } from "../../../components/MenuFor";
-import { More } from "../../../components/icons";
-import { describeTime } from "../../common/describeTime";
+import type { Game } from "../../../../../api/services/game/types";
+import { useModal } from "../../../../../lib/useModal";
+import { ConfirmDialog } from "../../../../dialogs/ConfirmDialog";
+import { PromptDialog } from "../../../../dialogs/PromptDialog";
+import { useToastProcedure } from "../../../../hooks/useToastProcedure";
+import { trpc } from "../../../../trpc";
+import { CardLink, LinkMenuItem } from "../../../../components/Link";
+import { router } from "../../../../router";
+import { MenuFor } from "../../../../components/MenuFor";
+import { More } from "../../../../components/icons";
+import { describeTime } from "../../../common/describeTime";
+import { gameType } from "../../../../../api/services/game/types";
 
 export function GameCard({
   gameId,
@@ -57,7 +58,9 @@ export function GameCard({
                   onClick={() =>
                     prompt({
                       title: "Rename game",
-                      fieldProps: { label: "New name", defaultValue: name },
+                      label: "New name",
+                      defaultValue: name,
+                      schema: gameType.shape.name,
                     }).then(
                       (name) => name && updateGame.mutate({ gameId, name })
                     )

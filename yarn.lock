@@ -6818,7 +6818,7 @@ react-is@^18.0.0, react-is@^18.2.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.2.0.tgz#199431eeaaa2e09f86427efbb4f1473edb47609b"
   integrity sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==
 
-react-mosaic-component@^5.3.0:
+react-mosaic-component@5.3.0:
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/react-mosaic-component/-/react-mosaic-component-5.3.0.tgz#5a0f28c157ab523fd8caa07fcd6cd13498be202b"
   integrity sha512-lw5l86+BHJQUysZ5zOT+ssZh6V7fe+ZGNpYU3tmC2LhjoljbY5WniRRtjZDJf/UyqxdArjxUAB9rAlm4JpBNwA==

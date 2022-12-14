@@ -2,16 +2,17 @@ import Button from "@mui/material/Button";
 import { useHistory } from "react-router";
 import Card from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
-import { PromptDialog } from "../../../dialogs/PromptDialog";
-import { useModal } from "../../../../lib/useModal";
-import { router } from "../../../router";
-import { Page } from "../../layout/Page";
-import { trpc } from "../../../trpc";
-import { useToastProcedure } from "../../../hooks/useToastProcedure";
-import { Header } from "../../layout/Header";
-import { Center } from "../../../components/Center";
-import { LoadingPage } from "../../common/LoadingPage";
-import { GameCard } from "../components/GameCard";
+import { PromptDialog } from "../../../../dialogs/PromptDialog";
+import { useModal } from "../../../../../lib/useModal";
+import { router } from "../../../../router";
+import { Page } from "../../../layout/Page";
+import { trpc } from "../../../../trpc";
+import { useToastProcedure } from "../../../../hooks/useToastProcedure";
+import { Header } from "../../../layout/Header";
+import { Center } from "../../../../components/Center";
+import { LoadingPage } from "../../../common/LoadingPage";
+import { gameType } from "../../../../../api/services/game/types";
+import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
   const history = useHistory();
@@ -22,7 +23,8 @@ export default function GameListPage() {
   async function enterNameAndCreateGame() {
     const name = await prompt({
       title: "Create new game",
-      fieldProps: { label: "Game name" },
+      label: "Game name",
+      schema: gameType.shape.name,
     });
     if (!name) {
       return;

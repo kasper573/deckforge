@@ -5,14 +5,14 @@ import type { ComponentType, HTMLAttributes } from "react";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import List from "@mui/material/List";
 import produce from "immer";
-import { useDebouncedControl } from "../../../hooks/useDebouncedControl";
+import { useDebouncedControl } from "../../../../hooks/useDebouncedControl";
 import type {
   Property,
   PropertyType,
   PropertyValues,
-} from "../../../../api/services/game/types";
+} from "../../../../../api/services/game/types";
 
-export function PropertiesEditor({
+export function PropertyValuesEditor({
   properties,
   values,
   onChange,
@@ -25,7 +25,7 @@ export function PropertiesEditor({
     <List>
       {properties.map(({ propertyId, name, type }) => {
         return (
-          <PropertyEditor
+          <PropertyValueEditor
             key={propertyId}
             type={type}
             name={name}
@@ -44,7 +44,7 @@ export function PropertiesEditor({
   );
 }
 
-export function PropertyEditor<T extends PropertyType>({
+export function PropertyValueEditor<T extends PropertyType>({
   type,
   name,
   value,
@@ -90,6 +90,7 @@ const controls: Record<PropertyType, Control<any>> = {
       label={label}
       control={
         <Checkbox
+          size="small"
           checked={!!value}
           onChange={(e) => onChange(e.target.checked)}
         />
@@ -98,6 +99,7 @@ const controls: Record<PropertyType, Control<any>> = {
   ),
   string: ({ label, value = "", onChange }: ControlProps<string>) => (
     <TextField
+      size="small"
       label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -105,6 +107,7 @@ const controls: Record<PropertyType, Control<any>> = {
   ),
   number: ({ label, value = 0, onChange }: ControlProps<number>) => (
     <TextField
+      size="small"
       label={label}
       type="number"
       value={value}

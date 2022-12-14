@@ -1,3 +1,6 @@
+import type { MosaicNode } from "react-mosaic-component";
+import type { ZodType } from "zod";
+import { z } from "zod";
 import type {
   ActionId,
   CardId,
@@ -17,4 +20,26 @@ export type EditorObjectId =
 export interface EditorState {
   game?: Game;
   selectedObjectId?: EditorObjectId;
+  panelLayout?: PanelLayout;
 }
+
+export type PanelId = z.infer<typeof panelIdType>;
+export const panelIdType = z.enum([
+  "code",
+  "decks",
+  "events",
+  "cardProperties",
+  "playerProperties",
+  "inspector",
+  "runtime",
+]);
+
+export type PanelLayout = MosaicNode<PanelId>;
+export const panelLayoutType: ZodType<PanelLayout> = panelIdType.or(
+  z.object({
+    direction: z.enum(["row", "column"]),
+    first: z.lazy(() => panelLayoutType),
+    second: z.lazy(() => panelLayoutType),
+    splitPercentage: z.number().optional(),
+  })
+);

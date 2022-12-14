@@ -1,25 +1,34 @@
 import "react-mosaic-component/react-mosaic-component.css";
 import type { MouseEvent } from "react";
 import { styled } from "@mui/material/styles";
-import { useMemo } from "react";
+import * as React from "react";
 import { StateSynchronizer } from "../StateSynchronizer";
-import {
-  loadUserDefaultPanelLayout,
-  saveUserDefaultPanelLayout,
-} from "../panels/panelLayoutPersistance";
+
 import { panelsDefinition } from "../panels/definition";
 import { PanelContainer } from "../components/PanelContainer";
+import { useActions } from "../../../../lib/useActions";
+import { editorActions } from "../actions";
+import { useSelector } from "../../../store";
+import { selectors } from "../selectors";
+import { PanelEmptyState } from "../components/PanelEmptyState";
 
 export default function EditorPage() {
-  const initialValue = useMemo(loadUserDefaultPanelLayout, []);
+  const panelLayout = useSelector(selectors.panelLayout);
+  const { setPanelLayout } = useActions(editorActions);
   return (
-    <Root onContextMenu={disableContextMenu}>
+    <Root onContextMenu={disableUnhandledContextMenu}>
       <PanelContainer
-        initialValue={initialValue}
-        onChange={saveUserDefaultPanelLayout}
+        value={panelLayout ?? null}
+        onChange={setPanelLayout}
+        zeroStateView={
+          <PanelEmptyState>
+            All panels are closed. <br />
+            You can select panels from the menu in the app bar.
+          </PanelEmptyState>
+        }
         renderTile={(panelId, path) => {
-          const Panel = panelsDefinition[panelId];
-          return <Panel path={path} />;
+          const { component: Panel, title } = panelsDefinition[panelId];
+          return <Panel path={path} title={title} />;
         }}
       />
       <StateSynchronizer />
@@ -27,8 +36,7 @@ export default function EditorPage() {
   );
 }
 
-// Disable any unhandled context menus
-function disableContextMenu<T>(e: MouseEvent<T>) {
+function disableUnhandledContextMenu<T>(e: MouseEvent<T>) {
   e.preventDefault();
 }
 

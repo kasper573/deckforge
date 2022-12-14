@@ -1,7 +1,15 @@
+import type { ZodString } from "zod";
 import { useModal } from "../../../lib/useModal";
 import { PromptDialog } from "../../dialogs/PromptDialog";
 import { useActions } from "../../../lib/useActions";
 import { ConfirmDialog } from "../../dialogs/ConfirmDialog";
+import {
+  actionType,
+  cardType,
+  deckType,
+  propertyType,
+  reactionType,
+} from "../../../api/services/game/types";
 import type { EditorObjectId } from "./types";
 import { editorActions } from "./actions";
 
@@ -28,7 +36,7 @@ export function useConfirmDelete() {
 export function usePromptRename() {
   const prompt = useModal(PromptDialog);
   const { renameObject } = useActions(editorActions);
-  return async function confirmDelete({
+  return async function promptRename({
     objectId,
     name,
   }: {
@@ -37,10 +45,37 @@ export function usePromptRename() {
   }) {
     const newName = await prompt({
       title: `Rename ${objectId.type}`,
-      fieldProps: { label: "New name", defaultValue: name },
+      label: "New name",
+      defaultValue: name,
+      schema: objectNameSchemas[objectId.type],
     });
     if (newName) {
       renameObject(objectId, newName);
     }
   };
 }
+
+export function usePromptCreate() {
+  const prompt = useModal(PromptDialog);
+  return async function promptCreate(
+    type: EditorObjectId["type"],
+    create: (name: string) => void
+  ) {
+    const newName = await prompt({
+      title: `Create ${type}`,
+      label: "Name",
+      schema: objectNameSchemas[type],
+    });
+    if (newName) {
+      create(newName);
+    }
+  };
+}
+
+const objectNameSchemas: Record<EditorObjectId["type"], ZodString> = {
+  property: propertyType.shape.name,
+  reaction: reactionType.shape.name,
+  action: actionType.shape.name,
+  card: cardType.shape.name,
+  deck: deckType.shape.name,
+};

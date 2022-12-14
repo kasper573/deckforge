@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { NominalString } from "../../../lib/NominalString";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 import { codeType } from "../../utils/codeType";
+import { zodIdentifier } from "../../utils/zodIdentifier";
 
 export type GameId = NominalString<"GameId">;
 export const gameIdType = zodNominalString<GameId>();
@@ -24,7 +25,7 @@ export type Property = z.infer<typeof propertyType>;
 export const propertyType = z.object({
   entityId: entityIdType,
   propertyId: propertyIdType,
-  name: z.string().min(1).max(32),
+  name: zodIdentifier,
   type: propertyValueType,
 });
 
@@ -37,7 +38,7 @@ export const actionIdType = zodNominalString<ActionId>();
 export type Action = z.infer<typeof actionType>;
 export const actionType = z.object({
   actionId: actionIdType,
-  name: z.string().min(1).max(32),
+  name: zodIdentifier,
   code: codeType,
 });
 
@@ -47,7 +48,7 @@ export const reactionIdType = zodNominalString<ReactionId>();
 export type Reaction = z.infer<typeof reactionType>;
 export const reactionType = z.object({
   reactionId: reactionIdType,
-  name: z.string().min(1).max(32),
+  name: zodIdentifier,
   actionId: actionType.shape.actionId,
   code: codeType,
 });

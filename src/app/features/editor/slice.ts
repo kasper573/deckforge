@@ -13,14 +13,33 @@ import {
   createId,
 } from "../../../lib/createEntityReducers";
 import type { MakePartial } from "../../../lib/MakePartial";
-import type { editorActions } from "./actions";
-import type { EditorObjectId, EditorState } from "./types";
+import { createZodStorage } from "../../../lib/zod-extensions/zodStorage";
+import {
+  addNodeBySplitting,
+  removeNodeByKey,
+} from "../../../lib/reactMosaicExtensions";
+import type {
+  EditorObjectId,
+  EditorState,
+  PanelId,
+  PanelLayout,
+} from "./types";
+import { panelLayoutType } from "./types";
+import { defaultPanelLayout } from "./panels/defaultPanelLayout";
+import { selectors } from "./selectors";
 
-const initialState: EditorState = {};
+const panelStorage = createZodStorage(
+  panelLayoutType.optional(),
+  "panel-layout"
+);
+
+const initialState: EditorState = {
+  panelLayout: panelStorage.load(defaultPanelLayout),
+};
 
 const entityReducers = createEntityReducerFactory<EditorState>();
 
-export const editorSlice = createSlice({
+const editorSlice = createSlice({
   name: "editor",
   initialState,
   reducers: {
@@ -38,7 +57,23 @@ export const editorSlice = createSlice({
     selectObject(state, { payload: newId }: PayloadAction<EditorObjectId>) {
       state.selectedObjectId = newId;
     },
-
+    setPanelLayout(
+      state,
+      { payload: newLayout }: PayloadAction<PanelLayout | null>
+    ) {
+      state.panelLayout = newLayout ?? defaultPanelLayout;
+    },
+    setPanelVisibility(
+      state,
+      { payload }: PayloadAction<{ id: PanelId; visible: boolean }>
+    ) {
+      const isVisible = selectors.panelVisibilities(state)[payload.id];
+      if (isVisible !== payload.visible) {
+        state.panelLayout = payload.visible
+          ? addNodeBySplitting(state.panelLayout, payload.id)
+          : removeNodeByKey(state.panelLayout, payload.id);
+      }
+    },
     ...entityReducers<Property>()(
       "Property",
       "propertyId",
@@ -151,8 +186,24 @@ export const editorSlice = createSlice({
   },
 });
 
-export const noUndoActionList: Array<keyof typeof editorActions> = [];
+export const { actions, getInitialState } = editorSlice;
+
+export const reducer: typeof editorSlice.reducer = (
+  state = editorSlice.getInitialState(),
+  action
+) => {
+  const currentState = state;
+  const updatedState = editorSlice.reducer(state, action);
+
+  if (updatedState.panelLayout !== currentState.panelLayout) {
+    panelStorage.save(updatedState.panelLayout);
+  }
+
+  return updatedState;
+};
+
+export const noUndoActionList: Array<keyof typeof actions> = [];
 
 export const noUndoActions = noUndoActionList.map(
-  (name) => `${editorSlice.name}/${name}`
+  (name) => `${editorSlice.name}/${String(name)}`
 );

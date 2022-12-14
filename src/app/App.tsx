@@ -36,33 +36,32 @@ export function App({
   history: History;
   store: AppStore;
 }) {
+  // Note: We cannot use React.StrictMode because react-mosaic-component does not support it
   return (
-    <React.StrictMode>
-      <ErrorBoundary fallback={PlainErrorFallback} onError={console.error}>
-        <ReduxProvider store={store}>
-          <trpc.Provider client={trpcClient} queryClient={queryClient}>
-            <QueryClientProvider client={queryClient}>
-              <Router history={history}>
-                <ThemeProvider theme={theme}>
-                  <CssBaseline />
-                  {globalStyles}
-                  <Layout>
-                    <ErrorBoundary
-                      fallback={PrettyErrorFallback}
-                      onError={console.error}
-                    >
-                      <RouterSwitch router={router} />
-                      <ModalOutlet />
-                    </ErrorBoundary>
-                  </Layout>
-                  <MenuOutlet />
-                </ThemeProvider>
-              </Router>
-            </QueryClientProvider>
-          </trpc.Provider>
-        </ReduxProvider>
-      </ErrorBoundary>
-    </React.StrictMode>
+    <ErrorBoundary fallback={PlainErrorFallback} onError={console.error}>
+      <ReduxProvider store={store}>
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <Router history={history}>
+              <ThemeProvider theme={theme}>
+                <CssBaseline />
+                {globalStyles}
+                <Layout>
+                  <ErrorBoundary
+                    fallback={PrettyErrorFallback}
+                    onError={console.error}
+                  >
+                    <RouterSwitch router={router} />
+                    <ModalOutlet />
+                  </ErrorBoundary>
+                </Layout>
+                <MenuOutlet />
+              </ThemeProvider>
+            </Router>
+          </QueryClientProvider>
+        </trpc.Provider>
+      </ReduxProvider>
+    </ErrorBoundary>
   );
 }
 
