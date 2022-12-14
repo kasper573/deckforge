@@ -13,6 +13,7 @@ import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { LinkIconButton } from "../../../../components/Link";
 import { router } from "../../../../router";
 import { pageMaxWidth } from "../../../layout/Page";
+import { gameType } from "../../../../../api/services/game/types";
 import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
 
 export default function EditorAppBarContent() {
@@ -23,7 +24,9 @@ export default function EditorAppBarContent() {
   async function promptRename() {
     const newName = await prompt({
       title: "Rename game",
-      fieldProps: { label: "New name", defaultValue: game?.name },
+      label: "New name",
+      defaultValue: game?.name,
+      schema: gameType.shape.name,
     });
     if (newName) {
       renameGame(newName);

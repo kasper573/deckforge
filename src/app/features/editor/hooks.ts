@@ -37,7 +37,8 @@ export function usePromptRename() {
   }) {
     const newName = await prompt({
       title: `Rename ${objectId.type}`,
-      fieldProps: { label: "New name", defaultValue: name },
+      label: "New name",
+      defaultValue: name,
     });
     if (newName) {
       renameObject(objectId, newName);
@@ -53,7 +54,7 @@ export function usePromptCreate() {
   ) {
     const newName = await prompt({
       title: `Create ${typeName}`,
-      fieldProps: { label: "Name" },
+      label: "Name",
     });
     if (newName) {
       create(newName);

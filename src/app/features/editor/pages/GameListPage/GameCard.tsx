@@ -17,6 +17,7 @@ import { router } from "../../../../router";
 import { MenuFor } from "../../../../components/MenuFor";
 import { More } from "../../../../components/icons";
 import { describeTime } from "../../../common/describeTime";
+import { gameType } from "../../../../../api/services/game/types";
 
 export function GameCard({
   gameId,
@@ -57,7 +58,9 @@ export function GameCard({
                   onClick={() =>
                     prompt({
                       title: "Rename game",
-                      fieldProps: { label: "New name", defaultValue: name },
+                      label: "New name",
+                      defaultValue: name,
+                      schema: gameType.shape.name,
                     }).then(
                       (name) => name && updateGame.mutate({ gameId, name })
                     )

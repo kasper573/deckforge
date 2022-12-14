@@ -11,6 +11,7 @@ import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { Header } from "../../../layout/Header";
 import { Center } from "../../../../components/Center";
 import { LoadingPage } from "../../../common/LoadingPage";
+import { gameType } from "../../../../../api/services/game/types";
 import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
@@ -22,7 +23,8 @@ export default function GameListPage() {
   async function enterNameAndCreateGame() {
     const name = await prompt({
       title: "Create new game",
-      fieldProps: { label: "Game name" },
+      label: "Game name",
+      schema: gameType.shape.name,
     });
     if (!name) {
       return;
