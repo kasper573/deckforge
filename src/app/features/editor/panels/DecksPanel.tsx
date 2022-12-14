@@ -9,6 +9,7 @@ import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import type { DeckId } from "../../../../api/services/game/types";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
+import { Card, Deck } from "../../../components/icons";
 import type { PanelProps } from "./definition";
 
 export function DecksPanel(props: PanelProps) {
@@ -36,6 +37,7 @@ export function DecksPanel(props: PanelProps) {
         items={decks.map((deck) => ({
           nodeId: deck.objectId,
           label: deck.name,
+          icon: <Deck />,
           contextMenu: [
             <MenuItem onClick={() => promptRename(deck)}>Rename</MenuItem>,
             <MenuItem onClick={() => promptCreateCard(deck.deckId)}>
@@ -46,6 +48,7 @@ export function DecksPanel(props: PanelProps) {
           children: deck.cards.map((card) => ({
             nodeId: card.objectId,
             label: card.name,
+            icon: <Card />,
             contextMenu: [
               <MenuItem onClick={() => promptRename(card)}>Rename</MenuItem>,
               <MenuItem onClick={() => confirmDelete(card)}>Delete</MenuItem>,
