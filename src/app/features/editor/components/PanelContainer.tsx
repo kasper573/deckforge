@@ -16,6 +16,9 @@ export const PanelContainer = styled(Mosaic<PanelId>)`
       background: ${({ theme }) => theme.palette.background.paper};
       border-radius: 0;
       box-shadow: none;
+      height: 34px; // Exact height of a small icon button
+      padding-bottom: 4px;
+      box-sizing: content-box;
     }
 
     .mosaic-window-title {
