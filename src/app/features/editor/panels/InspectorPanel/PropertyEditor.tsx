@@ -90,6 +90,7 @@ const controls: Record<PropertyType, Control<any>> = {
       label={label}
       control={
         <Checkbox
+          size="small"
           checked={!!value}
           onChange={(e) => onChange(e.target.checked)}
         />
@@ -98,6 +99,7 @@ const controls: Record<PropertyType, Control<any>> = {
   ),
   string: ({ label, value = "", onChange }: ControlProps<string>) => (
     <TextField
+      size="small"
       label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -105,6 +107,7 @@ const controls: Record<PropertyType, Control<any>> = {
   ),
   number: ({ label, value = 0, onChange }: ControlProps<number>) => (
     <TextField
+      size="small"
       label={label}
       type="number"
       value={value}
