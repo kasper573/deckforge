@@ -7,11 +7,14 @@ import { CodeEditor } from "../../../components/CodeEditor";
 import { Panel } from "../components/Panel";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import type { EditorState } from "../types";
+import { PanelTitle } from "../createPanelTitle";
 import type { PanelProps } from "./definition";
 
-export function CodePanel(props: PanelProps) {
+export function CodePanel({ title, ...props }: PanelProps) {
   const { selector, update, error } = useEditorProps();
   const object = useSelector(selector);
+  const id = useSelector(selectors.selectedObject);
+  const breadcrumbs = useSelector(selectors.selectedObjectBreadcrumbs);
 
   const content = error ? (
     <PanelEmptyState>{error}</PanelEmptyState>
@@ -19,7 +22,20 @@ export function CodePanel(props: PanelProps) {
     <CodeEditor value={object?.code} onChange={update} />
   );
 
-  return <Panel {...props}>{content}</Panel>;
+  return (
+    <Panel
+      title={
+        <PanelTitle
+          name={title}
+          objectType={id?.type}
+          breadcrumbs={breadcrumbs}
+        />
+      }
+      {...props}
+    >
+      {content}
+    </Panel>
+  );
 }
 
 function useEditorProps(): {

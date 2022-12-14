@@ -8,12 +8,24 @@ import { Panel } from "../../components/Panel";
 import { PanelEmptyState } from "../../components/PanelEmptyState";
 import type { PanelProps } from "../definition";
 import { panelsDefinition } from "../definition";
+import { PanelTitle } from "../../createPanelTitle";
 import { PropertyValuesEditor } from "./PropertyValueEditor";
 
-export function InspectorPanel(props: PanelProps) {
+export function InspectorPanel({ title, ...props }: PanelProps) {
   const selectedObjectId = useSelector(selectors.selectedObject);
+  const id = useSelector(selectors.selectedObject);
+  const breadcrumbs = useSelector(selectors.selectedObjectBreadcrumbs);
   return (
-    <Panel {...props}>
+    <Panel
+      title={
+        <PanelTitle
+          name={title}
+          objectType={id?.type}
+          breadcrumbs={breadcrumbs}
+        />
+      }
+      {...props}
+    >
       {selectedObjectId ? (
         <ObjectInspector id={selectedObjectId} />
       ) : (
