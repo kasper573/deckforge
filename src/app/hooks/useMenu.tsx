@@ -10,7 +10,7 @@ import type { NominalString } from "../../lib/NominalString";
 export type UseMenuItems = ReactElement[];
 
 export interface UseMenuOptions {
-  autoCloseOnSelect?: boolean;
+  dontCloseOnSelect?: boolean;
 }
 
 export const useMenu = (
@@ -92,7 +92,7 @@ export function MenuOutlet() {
     <>
       {Array.from(menus.values()).map((menu) => {
         let menuListProps = menu.props?.MenuListProps;
-        if (menu.options.autoCloseOnSelect) {
+        if (!menu.options.dontCloseOnSelect) {
           menuListProps = {
             ...menuListProps,
             onClick: concatFunctions(menuListProps?.onClick, close),

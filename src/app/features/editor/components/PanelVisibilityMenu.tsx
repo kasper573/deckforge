@@ -34,7 +34,7 @@ export function PanelVisibilityMenu() {
 
   return (
     <MenuFor
-      autoCloseOnSelect={false}
+      dontCloseOnSelect
       trigger={({ open }) => <Button onClick={open}>Panels</Button>}
       MenuListProps={{ sx: { pt: 0 } }}
     >

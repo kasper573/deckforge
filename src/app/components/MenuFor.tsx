@@ -16,9 +16,11 @@ export interface MenuForProps
 export const MenuFor = ({
   children: items,
   trigger,
-  autoCloseOnSelect,
+  dontCloseOnSelect,
   ...menuProps
 }: MenuForProps) => {
-  const open = useMenu(items, menuProps, { autoCloseOnSelect });
+  const open = useMenu(items, menuProps, {
+    dontCloseOnSelect: dontCloseOnSelect,
+  });
   return trigger({ open });
 };
