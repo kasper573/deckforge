@@ -52,7 +52,7 @@ function useEditorProps(): {
     selector: () => undefined,
     update: () => {},
     error: id
-      ? `Objects of type {\`"${id.type}"\`} has no code that can be edited`
+      ? `Objects of type "${id.type}" has no code that can be edited`
       : "Select an object to edit its code",
   };
 }
