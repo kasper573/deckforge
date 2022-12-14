@@ -1,17 +1,17 @@
 import Stack from "@mui/material/Stack";
-import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
+import { styled } from "@mui/material/styles";
 import { selectors } from "../../selectors";
 import { useSelector } from "../../../../store";
 import { useActions } from "../../../../../lib/useActions";
 import { editorActions } from "../../actions";
-import { Edit, ExitToApp } from "../../../../components/icons";
+import { ExitToApp } from "../../../../components/icons";
 import { useModal } from "../../../../../lib/useModal";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { LinkIconButton } from "../../../../components/Link";
 import { router } from "../../../../router";
+import { pageMaxWidth } from "../../../layout/Page";
 import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
 
 export default function EditorAppBarContent() {
@@ -43,25 +43,21 @@ export default function EditorAppBarContent() {
           <PanelVisibilityMenu />
         </div>
       </Stack>
-      <Box sx={{ flex: 1, display: "flex", alignItems: "space-around" }}>
-        {game && (
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            sx={{ margin: "auto" }}
-          >
-            <Typography>{game.name}</Typography>
-            <Tooltip title="Rename">
-              <div>
-                <IconButton onClick={promptRename}>
-                  <Edit />
-                </IconButton>
-              </div>
-            </Tooltip>
-          </Stack>
-        )}
-      </Box>
+      <GameName maxWidth={pageMaxWidth}>{game?.name}</GameName>
     </Stack>
   );
 }
+
+const GameName = styled(Container)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  ${({ theme }) => theme.breakpoints.up("sm")} {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+  }
+`;
