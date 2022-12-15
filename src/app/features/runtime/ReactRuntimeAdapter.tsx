@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo } from "react";
 import { createStore, useStore } from "zustand";
 import { pick } from "lodash";
-import type { Runtime } from "./Runtime";
+import type { GameRuntime } from "./Runtime";
 
 export function useRuntimeState<Selection>(
   selector: (state: ReactRuntimeMembers["state"]) => Selection
@@ -25,9 +25,9 @@ export const RuntimeContext = createContext<ReactRuntimeStore>(
 
 type ReactRuntimeStore = ReturnType<typeof useCreateRuntimeStore>;
 
-type ReactRuntimeMembers = Pick<Runtime, "state" | "actions">;
+type ReactRuntimeMembers = Pick<GameRuntime, "state" | "actions">;
 
-export function useCreateRuntimeStore(runtime: Runtime) {
+export function useCreateRuntimeStore(runtime: GameRuntime) {
   const store = useMemo(
     () =>
       createStore<ReactRuntimeMembers>(() =>

@@ -1,7 +1,7 @@
 import { groupBy } from "lodash";
 import type { Card, Game } from "../../../api/services/game/types";
 import type { GameState } from "../runtime/Runtime";
-import { createRuntime } from "../runtime/Runtime";
+import { createGameRuntime } from "../runtime/Runtime";
 import { RuntimeCard, RuntimeDeck } from "../runtime/Entities";
 
 export type GameCompilerInitialState = Partial<
@@ -14,7 +14,7 @@ export function compileGame(
 ) {
   const cardsByDeck = groupBy(cards, "deckId");
 
-  return createRuntime({
+  return createGameRuntime({
     decks: decks.reduce((map, deck) => {
       const cardIds = cardsByDeck[deck.deckId]?.map((m) => m.cardId) ?? [];
       return map.set(deck.deckId, new RuntimeDeck(cardIds));

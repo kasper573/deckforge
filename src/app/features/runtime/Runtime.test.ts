@@ -1,5 +1,5 @@
 import { RuntimeCard, RuntimeDeck, RuntimePlayer } from "./Entities";
-import { createRuntime } from "./Runtime";
+import { createGameRuntime } from "./Runtime";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = new DamageCard(1);
@@ -7,7 +7,7 @@ it("1v1: can play a one card deck and win the game", () => {
   const player1 = new RuntimePlayer(deck.id, 1);
   const player2 = new RuntimePlayer(deck.id, 1);
 
-  const game = createRuntime({
+  const game = createGameRuntime({
     decks: new Map([[deck.id, deck]]),
     cards: new Map([[card.id, card]]),
     battles: new Map(),
@@ -42,7 +42,7 @@ it("1v1: can play a two card deck and win the game", () => {
   const player1 = new RuntimePlayer(deck.id, 1);
   const player2 = new RuntimePlayer(deck.id, 1);
 
-  const game = createRuntime({
+  const game = createGameRuntime({
     decks: new Map([[deck.id, deck]]),
     cards,
     battles: new Map(),

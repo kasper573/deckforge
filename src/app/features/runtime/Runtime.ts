@@ -22,7 +22,7 @@ export interface GameState {
   battles: EntityCollection<RuntimeBattle>;
 }
 
-export type Runtime = ReturnType<typeof createRuntime>;
+export type GameRuntime = ReturnType<typeof createGameRuntime>;
 
 export type GameActions = typeof actions;
 
@@ -92,7 +92,7 @@ export interface CardPayload {
   cardId: RuntimeCardId;
 }
 
-export function createRuntime(initialState: GameState) {
+export function createGameRuntime(initialState: GameState) {
   return createMachine(initialState)
     .actions(actions)
     .reactions(function* (state, actionName) {
