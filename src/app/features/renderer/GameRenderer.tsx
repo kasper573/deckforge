@@ -6,18 +6,21 @@ import Button from "@mui/material/Button";
 import type { Game } from "../../../api/services/game/types";
 import { Center } from "../../components/Center";
 import { RuntimePlayer } from "../runtime/Entities";
+import {
+  RuntimeContext,
+  useCreateRuntimeStore,
+} from "../runtime/ReactRuntimeAdapter";
 import { PlayerBoard } from "./PlayerBoard";
-import type { RuntimeInitialState } from "./createRuntime";
-import { createRuntime } from "./createRuntime";
-import { RuntimeContext, useCreateRuntimeStore } from "./ReactRuntimeAdapter";
+import type { GameCompilerInitialState } from "./compileGame";
+import { compileGame } from "./compileGame";
 
-export interface GameRuntimeProps extends ComponentProps<typeof Viewport> {
+export interface GameRendererProps extends ComponentProps<typeof Viewport> {
   game: Game;
 }
 
-export function GameRuntime({ game, ...viewportProps }: GameRuntimeProps) {
+export function GameRenderer({ game, ...viewportProps }: GameRendererProps) {
   const runtime = useMemo(
-    () => createRuntime(game, createInitialState(game)),
+    () => compileGame(game, createInitialState(game)),
     [game]
   );
   const store = useCreateRuntimeStore(runtime);
@@ -62,7 +65,7 @@ const Viewport = styled("div")`
   position: relative;
 `;
 
-function createInitialState(game?: Game): RuntimeInitialState | undefined {
+function createInitialState(game?: Game): GameCompilerInitialState | undefined {
   const deck = game ? Array.from(game.definition.decks.values())[0] : undefined;
   if (!deck) {
     throw new Error("No game or deck available, cannot start battle");

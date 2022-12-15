@@ -1,21 +1,20 @@
 import { groupBy } from "lodash";
 import type { Card, Game } from "../../../api/services/game/types";
-import type { GameState } from "../runtime/Game";
-import { createGame } from "../runtime/Game";
+import type { GameState } from "../runtime/Runtime";
+import { createRuntime } from "../runtime/Runtime";
 import { RuntimeCard, RuntimeDeck } from "../runtime/Entities";
 
-export type Runtime = ReturnType<typeof createRuntime>;
-export type RuntimeInitialState = Partial<
+export type GameCompilerInitialState = Partial<
   Pick<GameState, "players" | "battles">
 >;
 
-export function createRuntime(
+export function compileGame(
   { definition: { cards, decks } }: Game,
-  { players = new Map(), battles = new Map() }: RuntimeInitialState = {}
+  { players = new Map(), battles = new Map() }: GameCompilerInitialState = {}
 ) {
   const cardsByDeck = groupBy(cards, "deckId");
 
-  return createGame({
+  return createRuntime({
     decks: decks.reduce((map, deck) => {
       const cardIds = cardsByDeck[deck.deckId]?.map((m) => m.cardId) ?? [];
       return map.set(deck.deckId, new RuntimeDeck(cardIds));
@@ -23,13 +22,13 @@ export function createRuntime(
     players,
     battles,
     cards: cards.reduce((map, card) => {
-      const runtimeCard = createRuntimeCard(card);
+      const runtimeCard = compileCard(card);
       return map.set(runtimeCard.id, runtimeCard);
     }, new Map()),
   });
 }
 
-function createRuntimeCard(card: Card): RuntimeCard {
+function compileCard(card: Card): RuntimeCard {
   class CompiledCard extends RuntimeCard {
     constructor() {
       super(card.name, {});

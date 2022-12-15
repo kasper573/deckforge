@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
 import { Panel } from "../components/Panel";
-import { GameRuntime } from "../../renderer/GameRuntime";
+import { GameRenderer } from "../../renderer/GameRenderer";
 import type { FallbackProps } from "../../../ErrorBoundary";
 import { ErrorBoundary } from "../../../ErrorBoundary";
 import { PanelEmptyState } from "../components/PanelEmptyState";
@@ -14,7 +14,7 @@ export function RuntimePanel(props: PanelProps) {
   return (
     <Panel {...props}>
       <ErrorBoundary fallback={RuntimeErrorFallback}>
-        {game && <GameRuntime game={game} sx={{ flex: 1 }} />}
+        {game && <GameRenderer game={game} sx={{ flex: 1 }} />}
       </ErrorBoundary>
     </Panel>
   );

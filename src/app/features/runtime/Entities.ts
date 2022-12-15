@@ -1,7 +1,7 @@
 import { immerable } from "immer";
 import type { MachineReactionCollection } from "../../../lib/machine/MachineAction";
 import type { Id } from "./createId";
-import type { GameContext } from "./Game";
+import type { GameContext } from "./Runtime";
 import { createId } from "./createId";
 
 export type EntityCollection<T extends Entity> = Map<T["id"], T>;

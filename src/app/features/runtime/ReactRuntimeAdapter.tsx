@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo } from "react";
 import { createStore, useStore } from "zustand";
 import { pick } from "lodash";
-import type { Runtime } from "./createRuntime";
+import type { Runtime } from "./Runtime";
 
 export function useRuntimeState<Selection>(
   selector: (state: ReactRuntimeMembers["state"]) => Selection

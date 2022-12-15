@@ -2,11 +2,11 @@ import type { ComponentProps } from "react";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import type { RuntimeBattleId, RuntimeBattleMember } from "../runtime/Entities";
+import { useRuntimeActions } from "../runtime/ReactRuntimeAdapter";
 import { Status } from "./Status";
 import { EndTurnButton } from "./EndTurnButton";
 import { CardPile } from "./CardPile";
 import { Hand } from "./Hand";
-import { useRuntimeActions } from "./ReactRuntimeAdapter";
 
 export function PlayerBoard({
   sx,
