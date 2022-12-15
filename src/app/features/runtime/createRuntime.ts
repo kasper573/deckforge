@@ -5,13 +5,13 @@ import { createGame } from "../../../lib/deckforge/Game";
 import { RuntimeCard, RuntimeDeck } from "../../../lib/deckforge/Entities";
 
 export type Runtime = ReturnType<typeof createRuntime>;
+export type RuntimeInitialState = Partial<
+  Pick<GameState, "players" | "battles">
+>;
 
 export function createRuntime(
   { definition: { cards, decks } }: Game,
-  {
-    players = new Map(),
-    battles = new Map(),
-  }: Partial<Pick<GameState, "players" | "battles">> = {}
+  { players = new Map(), battles = new Map() }: RuntimeInitialState = {}
 ) {
   const cardsByDeck = groupBy(cards, "deckId");
 

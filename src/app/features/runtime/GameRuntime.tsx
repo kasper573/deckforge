@@ -6,8 +6,8 @@ import Button from "@mui/material/Button";
 import type { Game } from "../../../api/services/game/types";
 import { Center } from "../../components/Center";
 import { RuntimePlayer } from "../../../lib/deckforge/Entities";
-import type { RuntimeDeckId } from "../../../lib/deckforge/Entities";
 import { PlayerBoard } from "./PlayerBoard";
+import type { RuntimeInitialState } from "./createRuntime";
 import { createRuntime } from "./createRuntime";
 import { useCreateRuntimeStore } from "./ReactRuntimeAdapter";
 
@@ -17,10 +17,7 @@ export interface GameRuntimeProps extends ComponentProps<typeof Viewport> {
 
 export function GameRuntime({ game, ...viewportProps }: GameRuntimeProps) {
   const runtime = useMemo(
-    () =>
-      createRuntime(game, {
-        players: generatePlayers(game.definition.decks[0].deckId),
-      }),
+    () => createRuntime(game, createInitialState(game)),
     [game]
   );
   const store = useCreateRuntimeStore(runtime);
@@ -55,14 +52,17 @@ const Viewport = styled("div")`
   position: relative;
 `;
 
-function generatePlayers(deck?: RuntimeDeckId) {
+function createInitialState(game?: Game): RuntimeInitialState | undefined {
+  const deck = game ? Array.from(game.definition.decks.values())[0] : undefined;
   if (!deck) {
-    throw new Error("No deck provided");
+    throw new Error("No game or deck available, cannot start battle");
   }
-  const p1 = new RuntimePlayer(deck, 5);
-  const p2 = new RuntimePlayer(deck, 5);
-  return new Map([
-    [p1.id, p1],
-    [p2.id, p2],
-  ]);
+  const p1 = new RuntimePlayer(deck.deckId, 5);
+  const p2 = new RuntimePlayer(deck.deckId, 5);
+  return {
+    players: new Map([
+      [p1.id, p1],
+      [p2.id, p2],
+    ]),
+  };
 }
