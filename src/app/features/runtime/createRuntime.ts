@@ -1,11 +1,18 @@
 import { groupBy } from "lodash";
 import type { Card, Game } from "../../../api/services/game/types";
+import type { GameState } from "../../../lib/deckforge/Game";
 import { createGame } from "../../../lib/deckforge/Game";
 import { RuntimeCard, RuntimeDeck } from "../../../lib/deckforge/Entities";
 
 export type Runtime = ReturnType<typeof createRuntime>;
 
-export function createRuntime({ definition: { cards, decks } }: Game) {
+export function createRuntime(
+  { definition: { cards, decks } }: Game,
+  {
+    players = new Map(),
+    battles = new Map(),
+  }: Partial<Pick<GameState, "players" | "battles">> = {}
+) {
   const cardsByDeck = groupBy(cards, "deckId");
 
   return createGame({
@@ -13,8 +20,8 @@ export function createRuntime({ definition: { cards, decks } }: Game) {
       const cardIds = cardsByDeck[deck.deckId].map((m) => m.cardId);
       return map.set(deck.deckId, new RuntimeDeck(cardIds));
     }, new Map()),
-    players: new Map(),
-    battles: new Map(),
+    players,
+    battles,
     cards: cards.reduce((map, card) => {
       const runtimeCard = createRuntimeCard(card);
       return map.set(runtimeCard.id, runtimeCard);
