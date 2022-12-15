@@ -4,9 +4,8 @@ import Box from "@mui/material/Box";
 import type { RuntimeBattleMember } from "../../../lib/deckforge/Entities";
 import { Status } from "./Status";
 import { EndTurnButton } from "./EndTurnButton";
-import { DiscardPile } from "./DiscardPile";
+import { CardPile } from "./CardPile";
 import { Hand } from "./Hand";
-import { DrawPile } from "./DrawPile";
 
 export function PlayerBoard({
   sx,
@@ -55,9 +54,9 @@ export function PlayerBoard({
         direction="row"
         spacing={2}
       >
-        <DiscardPile size={player.cards.discard.length} />
+        <CardPile name="Discard" size={player.cards.discard.length} />
         <Hand />
-        <DrawPile />
+        <CardPile name="Draw" size={player.cards.draw.length} />
       </Stack>
     </Box>
   );

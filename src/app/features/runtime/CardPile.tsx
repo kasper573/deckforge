@@ -1,9 +1,9 @@
 import { Card } from "./Card";
 
-export function DiscardPile({ size }: { size: number }) {
+export function CardPile({ name, size }: { name: string; size: number }) {
   return (
     <Card>
-      Discard
+      {name}
       <br />
       {size}
     </Card>

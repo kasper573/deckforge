@@ -24,7 +24,7 @@ export function GameRuntime({ game, ...viewportProps }: GameRuntimeProps) {
   const { state, performAction } = useStore(store);
   const battle = Array.from(state.battles.values())[0];
 
-  function generateAndStartBattle() {
+  function startBattle() {
     const [p1, p2] = Array.from(state.players.keys());
     performAction("startBattle", [p1, p2]);
   }
@@ -38,7 +38,7 @@ export function GameRuntime({ game, ...viewportProps }: GameRuntimeProps) {
         </>
       ) : (
         <Center>
-          <Button variant="contained" onClick={generateAndStartBattle}>
+          <Button variant="contained" onClick={startBattle}>
             Start battle
           </Button>
         </Center>
