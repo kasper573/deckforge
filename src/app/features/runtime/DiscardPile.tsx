@@ -1,3 +1,11 @@
 import { Card } from "./Card";
 
-export const DiscardPile = () => <Card>Discard</Card>;
+export function DiscardPile({ size }: { size: number }) {
+  return (
+    <Card>
+      Discard
+      <br />
+      {size}
+    </Card>
+  );
+}
