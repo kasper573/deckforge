@@ -13,15 +13,18 @@ export function PlayerBoard({
   placement,
   battleId,
   player,
+  opponent,
   ...props
 }: ComponentProps<typeof Stack> & {
   placement: "top" | "bottom";
   player: RuntimeBattleMember;
   battleId: RuntimeBattleId;
+  opponent: RuntimeBattleMember;
 }) {
   const actions = useRuntimeActions();
   const drawCard = () =>
     actions.drawCard({ playerId: player.playerId, battleId });
+  const endTurn = () => actions.endTurn(battleId);
   return (
     <Box
       sx={{
@@ -48,7 +51,7 @@ export function PlayerBoard({
         }}
       >
         <Status />
-        <EndTurnButton />
+        <EndTurnButton onClick={endTurn} />
       </Stack>
       <Stack
         sx={{
@@ -61,7 +64,14 @@ export function PlayerBoard({
         spacing={2}
       >
         <CardPile name="Discard" size={player.cards.discard.length} />
-        <Hand cards={player.cards.hand} />
+        <Hand
+          cards={player.cards.hand}
+          playCardProps={{
+            playerId: player.playerId,
+            battleId,
+            targetId: opponent.playerId,
+          }}
+        />
         <CardPile
           name="Draw"
           size={player.cards.draw.length}

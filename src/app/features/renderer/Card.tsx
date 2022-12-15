@@ -1,6 +1,17 @@
 import { styled } from "@mui/material/styles";
+import type { ComponentProps } from "react";
 
-export const Card = styled("div")`
+export function Card({ sx, onClick, ...props }: ComponentProps<typeof Root>) {
+  return (
+    <Root
+      sx={{ cursor: onClick ? "pointer" : undefined, ...sx }}
+      onClick={onClick}
+      {...props}
+    />
+  );
+}
+
+const Root = styled("div")`
   background: white;
   border-radius: 4px;
   aspect-ratio: 1 / 1.5;

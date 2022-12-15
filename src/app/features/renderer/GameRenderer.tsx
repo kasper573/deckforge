@@ -40,11 +40,13 @@ export function GameRenderer({ game, ...viewportProps }: GameRendererProps) {
             <PlayerBoard
               placement="bottom"
               player={battle.member1}
+              opponent={battle.member2}
               battleId={battle.id}
             />
             <PlayerBoard
               placement="top"
               player={battle.member2}
+              opponent={battle.member1}
               battleId={battle.id}
             />
           </>
