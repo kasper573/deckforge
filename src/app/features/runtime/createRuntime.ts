@@ -17,7 +17,7 @@ export function createRuntime(
 
   return createGame({
     decks: decks.reduce((map, deck) => {
-      const cardIds = cardsByDeck[deck.deckId].map((m) => m.cardId);
+      const cardIds = cardsByDeck[deck.deckId]?.map((m) => m.cardId) ?? [];
       return map.set(deck.deckId, new RuntimeDeck(cardIds));
     }, new Map()),
     players,
