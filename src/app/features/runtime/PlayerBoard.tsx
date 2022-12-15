@@ -6,12 +6,16 @@ import { EndTurnButton } from "./EndTurnButton";
 import { DiscardPile } from "./DiscardPile";
 import { Hand } from "./Hand";
 import { DrawPile } from "./DrawPile";
+import { useRuntime } from "./ReactRuntimeAdapter";
 
 export function PlayerBoard({
   sx,
   placement,
   ...props
 }: ComponentProps<typeof Stack> & { placement: "top" | "bottom" }) {
+  const { state } = useRuntime();
+  const players = Array.from(state.players.values());
+  const player = placement === "top" ? players[1] : players[0];
   return (
     <Box
       sx={{
