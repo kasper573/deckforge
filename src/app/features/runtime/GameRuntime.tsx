@@ -4,10 +4,7 @@ import { useMemo } from "react";
 import type { Game } from "../../../api/services/game/types";
 import { PlayerBoard } from "./PlayerBoard";
 import { createRuntime } from "./createRuntime";
-import {
-  createReactRuntimeAdapter,
-  RuntimeContext,
-} from "./ReactRuntimeAdapter";
+import { createReactRuntimeAdapter } from "./ReactRuntimeAdapter";
 
 export interface GameRuntimeProps extends ComponentProps<typeof Viewport> {
   game: Game;
@@ -18,12 +15,12 @@ export function GameRuntime({ game, ...viewportProps }: GameRuntimeProps) {
   const adapter = useMemo(() => createReactRuntimeAdapter(runtime), [runtime]);
 
   return (
-    <RuntimeContext.Provider value={adapter}>
+    <adapter.Provider>
       <Viewport {...viewportProps}>
         <PlayerBoard placement="bottom" />
         <PlayerBoard placement="top" />
       </Viewport>
-    </RuntimeContext.Provider>
+    </adapter.Provider>
   );
 }
 
