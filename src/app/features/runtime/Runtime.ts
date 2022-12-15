@@ -4,11 +4,11 @@ import {
 } from "../../../lib/machine/Machine";
 import { pull } from "../../../lib/ts-extensions/pull";
 import type { MachineContext } from "../../../lib/machine/MachineContext";
+import type { CardId } from "../../../api/services/game/types";
 import { RuntimeBattle, RuntimeBattleMember } from "./Entities";
 import type {
   RuntimeBattleId,
   RuntimeCard,
-  RuntimeCardId,
   RuntimeDeck,
   EntityCollection,
   RuntimePlayer,
@@ -89,7 +89,7 @@ const actions = createMachineActions<GameState>()({
 export interface CardPayload {
   battleId: RuntimeBattleId;
   playerId: RuntimePlayerId;
-  cardId: RuntimeCardId;
+  cardId: CardId;
 }
 
 export function createGameRuntime(initialState: GameState) {

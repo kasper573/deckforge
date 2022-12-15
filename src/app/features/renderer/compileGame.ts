@@ -17,7 +17,10 @@ export function compileGame(
   return createGameRuntime({
     decks: decks.reduce((map, deck) => {
       const cardIds = cardsByDeck[deck.deckId]?.map((m) => m.cardId) ?? [];
-      return map.set(deck.deckId, new RuntimeDeck(cardIds));
+      return map.set(
+        deck.deckId,
+        new RuntimeDeck({ id: deck.deckId, cards: cardIds })
+      );
     }, new Map()),
     players,
     battles,
@@ -31,7 +34,7 @@ export function compileGame(
 function compileCard(card: Card): RuntimeCard {
   class CompiledCard extends RuntimeCard {
     constructor() {
-      super(card.name, {});
+      super({ id: card.cardId, name: card.name });
     }
   }
 

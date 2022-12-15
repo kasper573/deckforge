@@ -3,7 +3,7 @@ import { createGameRuntime } from "./Runtime";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = new DamageCard(1);
-  const deck = new RuntimeDeck([card.id]);
+  const deck = new RuntimeDeck({ cards: [card.id] });
   const player1 = new RuntimePlayer(deck.id, 1);
   const player2 = new RuntimePlayer(deck.id, 1);
 
@@ -38,7 +38,7 @@ it("1v1: can play a two card deck and win the game", () => {
   const cards = new Map(
     [new DamageCard(1), new DamageCard(-1)].map((card) => [card.id, card])
   );
-  const deck = new RuntimeDeck(cards.keys());
+  const deck = new RuntimeDeck({ cards: cards.keys() });
   const player1 = new RuntimePlayer(deck.id, 1);
   const player2 = new RuntimePlayer(deck.id, 1);
 
@@ -72,18 +72,21 @@ it("1v1: can play a two card deck and win the game", () => {
 
 class DamageCard extends RuntimeCard {
   constructor(public damage: number) {
-    super("Attack", {
-      playCard: [
-        (state, { input: { targetId, cardId } }) => {
-          if (this.id !== cardId) {
-            return;
-          }
-          const target = state.players.get(targetId);
-          if (target) {
-            target.health -= this.damage;
-          }
-        },
-      ],
+    super({
+      name: "Attack",
+      effects: {
+        playCard: [
+          (state, { input: { targetId, cardId } }) => {
+            if (this.id !== cardId) {
+              return;
+            }
+            const target = state.players.get(targetId);
+            if (target) {
+              target.health -= this.damage;
+            }
+          },
+        ],
+      },
     });
   }
 }

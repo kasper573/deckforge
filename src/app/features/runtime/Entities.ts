@@ -1,5 +1,6 @@
 import { immerable } from "immer";
 import type { MachineReactionCollection } from "../../../lib/machine/MachineAction";
+import type { CardId, DeckId } from "../../../api/services/game/types";
 import type { Id } from "./createId";
 import type { GameContext } from "./Runtime";
 import { createId } from "./createId";
@@ -8,28 +9,39 @@ export type EntityCollection<T extends Entity> = Map<T["id"], T>;
 
 export class Entity<TId extends Id = Id> {
   [immerable] = true;
-  id: TId = createId();
+  constructor(public id: TId = createId()) {}
 }
 
 export type RuntimePlayerId = Id<"PlayerId">;
 export class RuntimePlayer extends Entity<RuntimePlayerId> {
-  constructor(public deck: RuntimeDeckId, public health: number = 0) {
+  constructor(public deck: DeckId, public health: number = 0) {
     super();
   }
 }
 
-export type RuntimeCardId = Id<"CardId">;
-export class RuntimeCard extends Entity<RuntimeCardId> {
-  constructor(public name: string, public effects: Effects) {
-    super();
+export class RuntimeCard extends Entity<CardId> {
+  effects: Effects;
+  name: string;
+
+  constructor({
+    id,
+    name,
+    effects = {},
+  }: {
+    id?: CardId;
+    name: string;
+    effects?: Effects;
+  }) {
+    super(id);
+    this.name = name;
+    this.effects = effects;
   }
 }
 
-export type RuntimeDeckId = Id<"DeckId">;
-export class RuntimeDeck extends Entity<RuntimeDeckId> {
-  public cards: RuntimeCardId[];
-  constructor(cards: Iterable<RuntimeCardId>) {
-    super();
+export class RuntimeDeck extends Entity<DeckId> {
+  public cards: CardId[];
+  constructor({ id, cards }: { id?: DeckId; cards: Iterable<CardId> }) {
+    super(id);
     this.cards = Array.from(cards);
   }
 }
@@ -60,9 +72,9 @@ export class RuntimeBattleMember {
   constructor(
     public playerId: RuntimePlayerId,
     public cards: {
-      hand: RuntimeCardId[];
-      draw: RuntimeCardId[];
-      discard: RuntimeCardId[];
+      hand: CardId[];
+      draw: CardId[];
+      discard: CardId[];
     }
   ) {}
 
