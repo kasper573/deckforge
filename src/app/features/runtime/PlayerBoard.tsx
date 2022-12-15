@@ -9,7 +9,7 @@ import { Status } from "./Status";
 import { EndTurnButton } from "./EndTurnButton";
 import { CardPile } from "./CardPile";
 import { Hand } from "./Hand";
-import { useRuntimeAction } from "./ReactRuntimeAdapter";
+import { useRuntimeActions } from "./ReactRuntimeAdapter";
 
 export function PlayerBoard({
   sx,
@@ -22,9 +22,9 @@ export function PlayerBoard({
   player: RuntimeBattleMember;
   battleId: RuntimeBattleId;
 }) {
-  const perform = useRuntimeAction();
+  const actions = useRuntimeActions();
   const drawCard = () =>
-    perform("drawCard", { playerId: player.playerId, battleId });
+    actions.drawCard({ playerId: player.playerId, battleId });
   return (
     <Box
       sx={{

@@ -32,7 +32,7 @@ export class Machine<MC extends MachineContext> {
     );
   }
 
-  performAction<ActionName extends keyof MC["actions"]>(
+  private performAction<ActionName extends keyof MC["actions"]>(
     name: ActionName,
     input: MachineActionInput<MC["actions"][ActionName]>
   ) {

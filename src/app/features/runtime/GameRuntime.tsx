@@ -21,12 +21,12 @@ export function GameRuntime({ game, ...viewportProps }: GameRuntimeProps) {
     [game]
   );
   const store = useCreateRuntimeStore(runtime);
-  const { state, performAction } = useStore(store);
+  const { state, actions } = useStore(store);
   const battle = Array.from(state.battles.values())[0];
 
   function startBattle() {
     const [p1, p2] = Array.from(state.players.keys());
-    performAction("startBattle", [p1, p2]);
+    actions.startBattle([p1, p2]);
   }
 
   return (
