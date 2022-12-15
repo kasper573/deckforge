@@ -9,7 +9,7 @@ import { RuntimePlayer } from "../../../lib/deckforge/Entities";
 import { PlayerBoard } from "./PlayerBoard";
 import type { RuntimeInitialState } from "./createRuntime";
 import { createRuntime } from "./createRuntime";
-import { useCreateRuntimeStore } from "./ReactRuntimeAdapter";
+import { RuntimeContext, useCreateRuntimeStore } from "./ReactRuntimeAdapter";
 
 export interface GameRuntimeProps extends ComponentProps<typeof Viewport> {
   game: Game;
@@ -30,20 +30,30 @@ export function GameRuntime({ game, ...viewportProps }: GameRuntimeProps) {
   }
 
   return (
-    <Viewport {...viewportProps}>
-      {battle ? (
-        <>
-          <PlayerBoard placement="bottom" player={battle.member1} />
-          <PlayerBoard placement="top" player={battle.member2} />
-        </>
-      ) : (
-        <Center>
-          <Button variant="contained" onClick={startBattle}>
-            Start battle
-          </Button>
-        </Center>
-      )}
-    </Viewport>
+    <RuntimeContext.Provider value={store}>
+      <Viewport {...viewportProps}>
+        {battle ? (
+          <>
+            <PlayerBoard
+              placement="bottom"
+              player={battle.member1}
+              battleId={battle.id}
+            />
+            <PlayerBoard
+              placement="top"
+              player={battle.member2}
+              battleId={battle.id}
+            />
+          </>
+        ) : (
+          <Center>
+            <Button variant="contained" onClick={startBattle}>
+              Start battle
+            </Button>
+          </Center>
+        )}
+      </Viewport>
+    </RuntimeContext.Provider>
   );
 }
 

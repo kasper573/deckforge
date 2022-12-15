@@ -1,8 +1,13 @@
+import type { ComponentProps } from "react";
 import { Card } from "./Card";
 
-export function CardPile({ name, size }: { name: string; size: number }) {
+export function CardPile({
+  name,
+  size,
+  ...props
+}: { name: string; size: number } & ComponentProps<typeof Card>) {
   return (
-    <Card>
+    <Card {...props}>
       {name}
       <br />
       {size}

@@ -1,21 +1,30 @@
 import type { ComponentProps } from "react";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
-import type { RuntimeBattleMember } from "../../../lib/deckforge/Entities";
+import type {
+  RuntimeBattleId,
+  RuntimeBattleMember,
+} from "../../../lib/deckforge/Entities";
 import { Status } from "./Status";
 import { EndTurnButton } from "./EndTurnButton";
 import { CardPile } from "./CardPile";
 import { Hand } from "./Hand";
+import { useRuntimeAction } from "./ReactRuntimeAdapter";
 
 export function PlayerBoard({
   sx,
   placement,
+  battleId,
   player,
   ...props
 }: ComponentProps<typeof Stack> & {
   placement: "top" | "bottom";
   player: RuntimeBattleMember;
+  battleId: RuntimeBattleId;
 }) {
+  const perform = useRuntimeAction();
+  const drawCard = () =>
+    perform("drawCard", { playerId: player.playerId, battleId });
   return (
     <Box
       sx={{
@@ -55,8 +64,12 @@ export function PlayerBoard({
         spacing={2}
       >
         <CardPile name="Discard" size={player.cards.discard.length} />
-        <Hand />
-        <CardPile name="Draw" size={player.cards.draw.length} />
+        <Hand cards={player.cards.hand} />
+        <CardPile
+          name="Draw"
+          size={player.cards.draw.length}
+          onClick={drawCard}
+        />
       </Stack>
     </Box>
   );
