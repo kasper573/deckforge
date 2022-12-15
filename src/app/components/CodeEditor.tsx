@@ -2,17 +2,20 @@ import Editor, { useMonaco } from "@monaco-editor/react";
 import { useEffect } from "react";
 import { useDebouncedControl } from "../hooks/useDebouncedControl";
 
-export type CodeEditorTypedef = string;
+export interface CodeEditorExtraLib {
+  name: string;
+  code: string;
+}
 
 export interface CodeEditorProps {
   value?: string;
   onChange: (value: string) => void;
-  api?: CodeEditorTypedef;
+  libs?: CodeEditorExtraLib[];
 }
 
-export function CodeEditor({ value = "", api, onChange }: CodeEditorProps) {
+export function CodeEditor({ value = "", libs, onChange }: CodeEditorProps) {
   const control = useDebouncedControl({ value, onChange });
-  useApi(api);
+  useApi(libs);
 
   return (
     <Editor
@@ -24,20 +27,22 @@ export function CodeEditor({ value = "", api, onChange }: CodeEditorProps) {
   );
 }
 
-function useApi(api?: CodeEditorTypedef) {
+function useApi(libs?: CodeEditorExtraLib[]) {
   const monaco = useMonaco();
 
   useEffect(() => {
-    if (!monaco || !api) {
+    if (!monaco || !libs) {
       return;
     }
 
-    const disposable =
+    console.log("updating libs", libs);
+    const disposables = libs.map((lib) =>
       monaco.languages.typescript.typescriptDefaults.addExtraLib(
-        api,
-        `ts:filename/code-editor-inline-api.d.ts`
-      );
+        lib.code,
+        `ts:filename/${lib.name}.d.ts`
+      )
+    );
 
-    return () => disposable.dispose();
-  }, [monaco, api]);
+    return () => disposables.forEach((d) => d.dispose());
+  }, [monaco, libs]);
 }

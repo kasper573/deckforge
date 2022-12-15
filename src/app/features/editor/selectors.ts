@@ -3,12 +3,10 @@ import type {
   CardId,
   DeckId,
   EntityId,
-  Property,
   PropertyId,
   ReactionId,
 } from "../../../api/services/game/types";
 import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
-import type { CodeEditorTypedef } from "../../components/CodeEditor";
 import { compileEditorApi } from "../compiler/compileEditorApi";
 import type { EditorObjectId, EditorState } from "./types";
 
@@ -95,16 +93,3 @@ export const selectors = {
   editorApi: (state: EditorState) =>
     state.game ? compileEditorApi(state.game) : undefined,
 };
-
-function propertiesToInterface(
-  interfaceName: string,
-  properties: Property[]
-): CodeEditorTypedef {
-  return `interface ${interfaceName} { ${properties
-    .map(propertyTypedef)
-    .join(";")} }`;
-}
-
-function propertyTypedef(property: Property): string {
-  return `${property.name}: ${property.type}`;
-}
