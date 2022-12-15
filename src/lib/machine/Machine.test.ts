@@ -141,6 +141,38 @@ describe("Machine", () => {
       expect(machine.state.count).toBe(3);
     });
   });
+
+  it("can subscribe to state changes", () => {
+    const machine = createMachine({ count: 0 })
+      .actions({
+        increase(state) {
+          state.count++;
+        },
+      })
+      .build();
+
+    const fn = jest.fn();
+    machine.subscribe(fn);
+    machine.actions.increase();
+    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ count: 1 }));
+  });
+
+  it("can unsubscribe from state changes", () => {
+    const machine = createMachine({ count: 0 })
+      .actions({
+        increase(state) {
+          state.count++;
+        },
+      })
+      .build();
+
+    const fn = jest.fn();
+    const unsub = machine.subscribe(fn);
+    machine.actions.increase();
+    unsub();
+    machine.actions.increase();
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
 });
 
 function createActionMachine(fn: AnyMachineAction) {
