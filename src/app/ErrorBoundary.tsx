@@ -49,8 +49,10 @@ export function PrettyErrorFallback(props: FallbackProps) {
   );
 }
 
-type FallbackProps = { error: Error; resetErrorBoundary: () => void };
+export type FallbackProps = { error: Error; resetErrorBoundary: () => void };
+
 type ErrorBoundaryState = { error?: Error };
+
 export class ErrorBoundary extends React.Component<
   PropsWithChildren<{
     fallback: ComponentType<FallbackProps>;
