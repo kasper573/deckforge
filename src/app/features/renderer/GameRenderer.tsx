@@ -10,9 +10,9 @@ import {
   RuntimeContext,
   useCreateRuntimeStore,
 } from "../runtime/ReactRuntimeAdapter";
+import type { GameCompilerInitialState } from "../compiler/compileGame";
+import { compileGame } from "../compiler/compileGame";
 import { PlayerBoard } from "./PlayerBoard";
-import type { GameCompilerInitialState } from "./compileGame";
-import { compileGame } from "./compileGame";
 
 export interface GameRendererProps extends ComponentProps<typeof Viewport> {
   game: Game;

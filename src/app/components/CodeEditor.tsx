@@ -2,12 +2,12 @@ import Editor, { useMonaco } from "@monaco-editor/react";
 import { useEffect } from "react";
 import { useDebouncedControl } from "../hooks/useDebouncedControl";
 
-export type CodeEditorApi = string;
+export type CodeEditorTypedef = string;
 
 export interface CodeEditorProps {
   value?: string;
   onChange: (value: string) => void;
-  api?: CodeEditorApi;
+  api?: CodeEditorTypedef;
 }
 
 export function CodeEditor({ value = "", api, onChange }: CodeEditorProps) {
@@ -24,7 +24,7 @@ export function CodeEditor({ value = "", api, onChange }: CodeEditorProps) {
   );
 }
 
-function useApi(api?: CodeEditorApi) {
+function useApi(api?: CodeEditorTypedef) {
   const monaco = useMonaco();
 
   useEffect(() => {
