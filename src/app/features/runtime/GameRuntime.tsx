@@ -15,18 +15,6 @@ export interface GameRuntimeProps extends ComponentProps<typeof Viewport> {
   game: Game;
 }
 
-function generatePlayers(deck?: RuntimeDeckId) {
-  if (!deck) {
-    throw new Error("No deck provided");
-  }
-  const p1 = new RuntimePlayer(deck, 5);
-  const p2 = new RuntimePlayer(deck, 5);
-  return new Map([
-    [p1.id, p1],
-    [p2.id, p2],
-  ]);
-}
-
 export function GameRuntime({ game, ...viewportProps }: GameRuntimeProps) {
   const runtime = useMemo(
     () =>
@@ -66,3 +54,15 @@ const Viewport = styled("div")`
   background: skyblue;
   position: relative;
 `;
+
+function generatePlayers(deck?: RuntimeDeckId) {
+  if (!deck) {
+    throw new Error("No deck provided");
+  }
+  const p1 = new RuntimePlayer(deck, 5);
+  const p2 = new RuntimePlayer(deck, 5);
+  return new Map([
+    [p1.id, p1],
+    [p2.id, p2],
+  ]);
+}
