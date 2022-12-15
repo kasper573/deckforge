@@ -89,4 +89,9 @@ export const selectors = {
         } as EditorObjectId,
         ...property,
       })) ?? [],
+  codeEditorApis: {
+    card: (state: EditorState) => undefined,
+    action: (state: EditorState) => undefined,
+    reaction: (state: EditorState) => undefined,
+  },
 };

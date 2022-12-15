@@ -3,6 +3,7 @@ import { selectors } from "../selectors";
 
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
+import type { CodeEditorApi } from "../../../components/CodeEditor";
 import { CodeEditor } from "../../../components/CodeEditor";
 import { Panel } from "../components/Panel";
 import { PanelEmptyState } from "../components/PanelEmptyState";
@@ -11,15 +12,16 @@ import { PanelTitle } from "../components/PanelTitle";
 import type { PanelProps } from "./definition";
 
 export function CodePanel({ title, ...props }: PanelProps) {
-  const { selector, update, error } = useEditorProps();
-  const object = useSelector(selector);
+  const { objectSelector, apiSelector, update, error } = useEditorProps();
+  const api = useSelector(apiSelector);
+  const object = useSelector(objectSelector);
   const id = useSelector(selectors.selectedObject);
   const breadcrumbs = useSelector(selectors.selectedObjectBreadcrumbs);
 
   const content = error ? (
     <PanelEmptyState>{error}</PanelEmptyState>
   ) : (
-    <CodeEditor value={object?.code} onChange={update} />
+    <CodeEditor value={object?.code} onChange={update} api={api} />
   );
 
   return (
@@ -39,7 +41,8 @@ export function CodePanel({ title, ...props }: PanelProps) {
 }
 
 function useEditorProps(): {
-  selector: (state: EditorState) => undefined | { code: string };
+  apiSelector: (state: EditorState) => CodeEditorApi | undefined;
+  objectSelector: (state: EditorState) => undefined | { code: string };
   update: (code: string) => void;
   error?: string;
 } {
@@ -49,23 +52,27 @@ function useEditorProps(): {
   switch (id?.type) {
     case "card":
       return {
-        selector: selectors.card(id.cardId),
+        apiSelector: selectors.codeEditorApis.card,
+        objectSelector: selectors.card(id.cardId),
         update: (code) => actions.updateCard({ ...id, code }),
       };
     case "action":
       return {
-        selector: selectors.action(id.actionId),
+        apiSelector: selectors.codeEditorApis.action,
+        objectSelector: selectors.action(id.actionId),
         update: (code) => actions.updateAction({ ...id, code }),
       };
     case "reaction":
       return {
-        selector: selectors.reaction(id.reactionId),
+        apiSelector: selectors.codeEditorApis.reaction,
+        objectSelector: selectors.reaction(id.reactionId),
         update: (code) => actions.updateReaction({ ...id, code }),
       };
   }
 
   return {
-    selector: () => undefined,
+    apiSelector: () => undefined,
+    objectSelector: () => undefined,
     update: () => {},
     error: id
       ? `Objects of type "${id.type}" has no code that can be edited`
