@@ -2,7 +2,10 @@ import type { ComponentProps } from "react";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import type { RuntimeBattleId, RuntimeBattleMember } from "../runtime/Entities";
-import { useRuntimeActions } from "../runtime/ReactRuntimeAdapter";
+import {
+  useRuntimeActions,
+  useRuntimeState,
+} from "../runtime/ReactRuntimeAdapter";
 import { Status } from "./Status";
 import { EndTurnButton } from "./EndTurnButton";
 import { CardPile } from "./CardPile";
@@ -22,6 +25,9 @@ export function PlayerBoard({
   opponent: RuntimeBattleMember;
 }) {
   const actions = useRuntimeActions();
+  const playerInfo = useRuntimeState((state) =>
+    state.players.get(player.playerId)
+  );
   const drawCard = () =>
     actions.drawCard({ playerId: player.playerId, battleId });
   const endTurn = () => actions.endTurn(battleId);
@@ -50,7 +56,7 @@ export function PlayerBoard({
           transform: `translateY(${placement === "top" ? 100 : -100}%)`,
         }}
       >
-        <Status />
+        {playerInfo && <Status player={playerInfo} />}
         <EndTurnButton onClick={endTurn} />
       </Stack>
       <Stack

@@ -1,6 +1,12 @@
-import { ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import Box from "@mui/material/Box";
+import type { RuntimePlayer } from "../runtime/Entities";
 
-export const Status = (props: ComponentProps<typeof Box>) => (
-  <Box {...props}>status</Box>
+export const Status = ({
+  player,
+  ...props
+}: ComponentProps<typeof Box> & { player: RuntimePlayer }) => (
+  <Box sx={{ color: "black" }} {...props}>
+    HP: {player.health}
+  </Box>
 );
