@@ -20,7 +20,7 @@ export class RuntimePlayer extends Entity<RuntimePlayerId> {
 
 export type RuntimeCardId = Id<"CardId">;
 export class RuntimeCard extends Entity<RuntimeCardId> {
-  constructor(public effects: Effects) {
+  constructor(public name: string, public effects: Effects) {
     super();
   }
 }

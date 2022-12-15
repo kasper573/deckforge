@@ -72,7 +72,7 @@ it("1v1: can play a two card deck and win the game", () => {
 
 class DamageCard extends RuntimeCard {
   constructor(public damage: number) {
-    super({
+    super("Attack", {
       playCard: [
         (state, { input: { targetId, cardId } }) => {
           if (this.id !== cardId) {
