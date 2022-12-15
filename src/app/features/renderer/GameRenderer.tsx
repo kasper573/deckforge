@@ -63,6 +63,7 @@ export function GameRenderer({ game, ...viewportProps }: GameRendererProps) {
 const Viewport = styled("div")`
   background: skyblue;
   position: relative;
+  user-select: none;
 `;
 
 function createInitialState(game?: Game): GameCompilerInitialState | undefined {
