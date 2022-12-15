@@ -1,10 +1,11 @@
 import { groupBy } from "lodash";
 import { z } from "zod";
+import type { SafeParseReturnType } from "zod/lib/types";
 import type { Card, Game } from "../../../api/services/game/types";
 import type { GameState } from "../runtime/Runtime";
 import { createGameRuntime } from "../runtime/Runtime";
-import type { Effects } from "../runtime/Entities";
 import { RuntimeCard, RuntimeDeck } from "../runtime/Entities";
+import { cardType } from "../../../api/services/game/types";
 
 export type GameCompilerInitialState = Partial<
   Pick<GameState, "players" | "battles">
@@ -40,11 +41,11 @@ function compileCard(card: Card): RuntimeCard {
         id: card.cardId,
         name: card.name,
       });
-      const result = compileEffects(card.code);
+      const result = compileEffectsFactory(card.code);
       if (!result.success) {
-        throw new Error(result.error);
+        throw result.error;
       }
-      this.effects = result.effects;
+      this.effects = result.data(card);
     }
   }
 
@@ -53,23 +54,15 @@ function compileCard(card: Card): RuntimeCard {
 
 const effectType = z.function().args(z.any()).returns(z.any());
 const effectsType = z.record(z.array(effectType));
+const effectsFactoryType = z.function().args(cardType).returns(effectsType);
+type EffectsFactory = z.infer<typeof effectsFactoryType>;
 
-function compileEffects(
+function compileEffectsFactory(
   code: string
-): { success: true; effects: Effects } | { success: false; error: string } {
-  const stringAssumedToContainObject = code.trim() || "{}";
-  const evalResult = eval(`(${stringAssumedToContainObject})`);
-  const parseResult = effectsType.safeParse(evalResult);
-  if (!parseResult.success) {
-    return { success: false, error: `${parseResult.error}` };
+): SafeParseReturnType<string, EffectsFactory> {
+  code = code.trim();
+  if (!code) {
+    return { success: true, data: () => ({}) };
   }
-  const effectsWithThisArg = Object.entries(parseResult.data).reduce(
-    (effects, [effectName, effectFns]) => ({
-      ...effects,
-      [effectName]: effectFns,
-    }),
-    {} as Effects
-  );
-
-  return { success: true, effects: effectsWithThisArg };
+  return effectsFactoryType.safeParse(eval(`(${code})`));
 }
