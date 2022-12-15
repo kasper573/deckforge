@@ -12,6 +12,7 @@ enableMapSet();
 
 export class Machine<MC extends MachineContext> {
   readonly actions: MachineActionsWithoutContext<MC["actions"]>;
+  private subscriptions = new Set<(state: MC["state"]) => void>();
 
   constructor(
     public state: MC["state"],
@@ -59,11 +60,26 @@ export class Machine<MC extends MachineContext> {
       return;
     }
 
+    const previousState = this.state;
+
     this.state = produce(this.state, (draft: MC["state"]) => {
       this.currentDraft = draft;
       fn(draft);
       this.currentDraft = undefined;
     });
+
+    if (previousState !== this.state) {
+      for (const fn of this.subscriptions) {
+        fn(this.state);
+      }
+    }
+  }
+
+  subscribe(fn: (state: MC["state"]) => void) {
+    this.subscriptions.add(fn);
+    return () => {
+      this.subscriptions.delete(fn);
+    };
   }
 }
 
