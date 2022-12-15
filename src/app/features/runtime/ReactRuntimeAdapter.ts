@@ -15,10 +15,12 @@ export type ReactRuntimeAdapter = ReturnType<typeof createReactRuntimeAdapter>;
 export function createReactRuntimeAdapter(runtime: Runtime) {
   const store = createStore<ReactRuntimeState>((set) => ({
     state: runtime.state,
-    performAction: (...args) => runtime.performAction(...args),
+    performAction: (...args) => {
+      const result = runtime.performAction(...args);
+      set({ state: runtime.state });
+      return result;
+    },
   }));
-
-  runtime.subscribe((state) => store.setState({ state }));
 
   return store;
 }
