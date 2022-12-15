@@ -1,5 +1,5 @@
 import { immerable } from "immer";
-import type { MachineReactionCollection } from "../machine/MachineAction";
+import type { MachineReactionCollection } from "../../../lib/machine/MachineAction";
 import type { Id } from "./createId";
 import type { GameContext } from "./Game";
 import { createId } from "./createId";

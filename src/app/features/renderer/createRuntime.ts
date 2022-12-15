@@ -1,8 +1,8 @@
 import { groupBy } from "lodash";
 import type { Card, Game } from "../../../api/services/game/types";
-import type { GameState } from "../../../lib/deckforge/Game";
-import { createGame } from "../../../lib/deckforge/Game";
-import { RuntimeCard, RuntimeDeck } from "../../../lib/deckforge/Entities";
+import type { GameState } from "../runtime/Game";
+import { createGame } from "../runtime/Game";
+import { RuntimeCard, RuntimeDeck } from "../runtime/Entities";
 
 export type Runtime = ReturnType<typeof createRuntime>;
 export type RuntimeInitialState = Partial<

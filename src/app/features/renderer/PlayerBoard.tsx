@@ -1,10 +1,7 @@
 import type { ComponentProps } from "react";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
-import type {
-  RuntimeBattleId,
-  RuntimeBattleMember,
-} from "../../../lib/deckforge/Entities";
+import type { RuntimeBattleId, RuntimeBattleMember } from "../runtime/Entities";
 import { Status } from "./Status";
 import { EndTurnButton } from "./EndTurnButton";
 import { CardPile } from "./CardPile";

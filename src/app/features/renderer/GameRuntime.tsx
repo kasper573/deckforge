@@ -5,7 +5,7 @@ import { useStore } from "zustand";
 import Button from "@mui/material/Button";
 import type { Game } from "../../../api/services/game/types";
 import { Center } from "../../components/Center";
-import { RuntimePlayer } from "../../../lib/deckforge/Entities";
+import { RuntimePlayer } from "../runtime/Entities";
 import { PlayerBoard } from "./PlayerBoard";
 import type { RuntimeInitialState } from "./createRuntime";
 import { createRuntime } from "./createRuntime";

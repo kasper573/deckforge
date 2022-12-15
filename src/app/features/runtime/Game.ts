@@ -1,6 +1,9 @@
-import { createMachine, createMachineActions } from "../machine/Machine";
-import { pull } from "../ts-extensions/pull";
-import type { MachineContext } from "../machine/MachineContext";
+import {
+  createMachine,
+  createMachineActions,
+} from "../../../lib/machine/Machine";
+import { pull } from "../../../lib/ts-extensions/pull";
+import type { MachineContext } from "../../../lib/machine/MachineContext";
 import { RuntimeBattle, RuntimeBattleMember } from "./Entities";
 import type {
   RuntimeBattleId,

@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-import type { NominalString } from "../NominalString";
+import type { NominalString } from "../../../lib/NominalString";
 
 export type Id<Name extends string = string> = NominalString<Name>;
 
