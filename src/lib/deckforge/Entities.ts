@@ -56,6 +56,7 @@ export class RuntimeBattle extends Entity<RuntimeBattleId> {
 }
 
 export class RuntimeBattleMember {
+  [immerable] = true;
   constructor(
     public playerId: RuntimePlayerId,
     public cards: {
