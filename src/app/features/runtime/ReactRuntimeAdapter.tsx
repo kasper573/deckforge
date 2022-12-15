@@ -1,26 +1,20 @@
-import type { ReactNode } from "react";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import { createStore, useStore } from "zustand";
 import type { Runtime } from "./createRuntime";
 
-export function createReactRuntimeAdapter(runtime: Runtime) {
-  const store = createRuntimeStore(runtime);
-
-  return {
-    Provider: ({ children }: { children?: ReactNode }) => (
-      <RuntimeContext.Provider value={store}>
-        {children}
-      </RuntimeContext.Provider>
-    ),
-  };
-}
-
-export function useRuntime() {
+export function useRuntimeState<Selection>(
+  selector: (state: ReactRuntimeState["state"]) => Selection
+) {
   const store = useContext(RuntimeContext);
-  return useStore(store);
+  return useStore(store, ({ state }) => selector(state));
 }
 
-const RuntimeContext = createContext<ReactRuntimeStore>(
+export function useRuntimeAction() {
+  const store = useContext(RuntimeContext);
+  return useStore(store, ({ performAction }) => performAction);
+}
+
+export const RuntimeContext = createContext<ReactRuntimeStore>(
   new Proxy({} as ReactRuntimeStore, {
     get() {
       throw new Error("RuntimeContext not provided");
@@ -28,17 +22,24 @@ const RuntimeContext = createContext<ReactRuntimeStore>(
   })
 );
 
-type ReactRuntimeStore = ReturnType<typeof createRuntimeStore>;
+type ReactRuntimeStore = ReturnType<typeof useCreateRuntimeStore>;
 
 type ReactRuntimeState = Pick<Runtime, "state" | "performAction">;
 
-function createRuntimeStore(runtime: Runtime) {
-  return createStore<ReactRuntimeState>((set) => ({
-    state: runtime.state,
-    performAction: (...args) => {
-      const result = runtime.performAction(...args);
-      set({ state: runtime.state });
-      return result;
-    },
-  }));
+export function useCreateRuntimeStore(runtime: Runtime) {
+  const store = useMemo(
+    () =>
+      createStore<ReactRuntimeState>(() => ({
+        state: runtime.state,
+        performAction: (...args) => runtime.performAction(...args),
+      })),
+    [runtime]
+  );
+
+  useEffect(
+    () => runtime.subscribe((state) => store.setState({ state })),
+    [runtime, store]
+  );
+
+  return store;
 }
