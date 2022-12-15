@@ -30,11 +30,11 @@ export function createRuntime(
 }
 
 function createRuntimeCard(card: Card): RuntimeCard {
-  class Card extends RuntimeCard {
+  class CompiledCard extends RuntimeCard {
     constructor() {
-      super({});
+      super(card.name, {});
     }
   }
 
-  return new Card();
+  return new CompiledCard();
 }
