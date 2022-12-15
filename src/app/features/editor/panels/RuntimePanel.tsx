@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
 import { Panel } from "../components/Panel";
-import { GameRuntime } from "../../runtime/GameRuntime";
+import { GameRuntime } from "../../renderer/GameRuntime";
 import type { FallbackProps } from "../../../ErrorBoundary";
 import { ErrorBoundary } from "../../../ErrorBoundary";
 import { PanelEmptyState } from "../components/PanelEmptyState";
