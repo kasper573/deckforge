@@ -57,7 +57,7 @@ function useTypeDefs(
     const model = monaco.editor.createModel(
       typeDefs,
       "typescript",
-      monaco.Uri.parse(`file://${v4()}/global/index.d.ts`)
+      monaco.Uri.parse(`file://${v4()}.d.ts`)
     );
 
     forceRefreshRef.current();
