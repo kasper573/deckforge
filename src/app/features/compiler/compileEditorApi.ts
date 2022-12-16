@@ -9,34 +9,68 @@ export interface EditorApi {
 }
 
 export interface EditorObjectApi {
-  outletVariableName: string;
+  factoryVariableName: string;
   typeDefs: CodeEditorTypeDefs;
 }
 
 export function compileEditorApi(game: Game): EditorApi {
-  const { cards, actions, reactions, properties } = game.definition;
+  const { properties } = game.definition;
   const playerProperties = properties.filter((p) => p.entityId === "player");
   const cardProperties = properties.filter((p) => p.entityId === "card");
-  const common: CodeEditorTypeDefs = `
-${defineInterface("Player", playerProperties)}
-${defineInterface("Card", cardProperties)}
-`;
+  const common: CodeEditorTypeDefs = add(
+    defineInterface("Player", playerProperties),
+    defineInterface("Card", cardProperties),
+    defineInterface("Effects", [])
+  );
   return {
-    card: { outletVariableName: "card", typeDefs: common },
-    action: { outletVariableName: "action", typeDefs: common },
-    reaction: { outletVariableName: "reaction", typeDefs: common },
+    card: {
+      factoryVariableName: "card",
+      typeDefs: add(
+        common,
+        defineGlobalVariable({
+          name: "card",
+          type: defineFactoryType({
+            inputType: "Card",
+            outputType: "Events",
+          }),
+        })
+      ),
+    },
+    action: {
+      factoryVariableName: "action",
+      typeDefs: add(
+        common,
+        defineGlobalVariable({ name: "action", type: "Effects" })
+      ),
+    },
+    reaction: {
+      factoryVariableName: "reaction",
+      typeDefs: add(
+        common,
+        defineGlobalVariable({ name: "reaction", type: "Effects" })
+      ),
+    },
   };
 }
 
-function defineInterface(
-  interfaceName: string,
-  properties: Property[]
-): string {
+function defineFactoryType(p: { inputType: string; outputType: string }) {
+  return `(definition: ${p.inputType}) => ${p.outputType}`;
+}
+
+function defineGlobalVariable(p: { name: string; type: string }): string {
+  return `declare let ${p.name}: ${p.type};`;
+}
+
+function defineInterface(interfaceName: string, properties: Property[]) {
   return `interface ${interfaceName} {\n${properties
     .map(defineProperty)
     .join(";\n")}\n}`;
 }
 
-function defineProperty(property: Property): string {
+function defineProperty(property: Property) {
   return `\t${property.name}: ${property.type}`;
+}
+
+function add(...args: CodeEditorTypeDefs[]): CodeEditorTypeDefs {
+  return args.join("\n");
 }
