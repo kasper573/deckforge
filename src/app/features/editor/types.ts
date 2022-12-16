@@ -9,13 +9,39 @@ import type {
   PropertyId,
   ReactionId,
 } from "../../../api/services/game/types";
+import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 
-export type EditorObjectId =
-  | { type: "action"; actionId: ActionId }
-  | { type: "reaction"; reactionId: ReactionId }
-  | { type: "deck"; deckId: DeckId }
-  | { type: "card"; cardId: CardId }
-  | { type: "property"; propertyId: PropertyId };
+export const editorObjectIdType = z
+  .object({
+    type: z.literal("action"),
+    actionId: zodNominalString<ActionId>(),
+  })
+  .or(
+    z.object({
+      type: z.literal("reaction"),
+      reactionId: zodNominalString<ReactionId>(),
+    })
+  )
+  .or(
+    z.object({
+      type: z.literal("deck"),
+      deckId: zodNominalString<DeckId>(),
+    })
+  )
+  .or(
+    z.object({
+      type: z.literal("card"),
+      cardId: zodNominalString<CardId>(),
+    })
+  )
+  .or(
+    z.object({
+      type: z.literal("property"),
+      propertyId: zodNominalString<PropertyId>(),
+    })
+  );
+
+export type EditorObjectId = z.infer<typeof editorObjectIdType>;
 
 export interface EditorState {
   game?: Game;
