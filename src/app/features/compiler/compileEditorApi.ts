@@ -1,21 +1,21 @@
 import type { Game } from "../../../api/services/game/types";
-import type { CodeEditorExtraLib } from "../../components/CodeEditor";
+import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import type { Property } from "../../../api/services/game/types";
 
 export interface EditorApi {
-  card: CodeEditorExtraLib[];
-  action: CodeEditorExtraLib[];
-  reaction: CodeEditorExtraLib[];
+  card: CodeEditorTypeDefs;
+  action: CodeEditorTypeDefs;
+  reaction: CodeEditorTypeDefs;
 }
 
 export function compileEditorApi(game: Game): EditorApi {
   const { cards, actions, reactions, properties } = game.definition;
   const playerProperties = properties.filter((p) => p.entityId === "player");
   const cardProperties = properties.filter((p) => p.entityId === "card");
-  const common: CodeEditorExtraLib[] = [
-    { name: "player", code: defineInterface("Player", playerProperties) },
-    { name: "card", code: defineInterface("Card", cardProperties) },
-  ];
+  const common: CodeEditorTypeDefs = `
+${defineInterface("Player", playerProperties)}
+${defineInterface("Card", cardProperties)}
+`;
   return {
     card: common,
     action: common,
@@ -27,11 +27,11 @@ function defineInterface(
   interfaceName: string,
   properties: Property[]
 ): string {
-  return `interface ${interfaceName} { ${properties
+  return `interface ${interfaceName} {\n${properties
     .map(defineProperty)
-    .join(";")} }`;
+    .join(";\n")}\n}`;
 }
 
 function defineProperty(property: Property): string {
-  return `${property.name}: ${property.type}`;
+  return `\t${property.name}: ${property.type}`;
 }

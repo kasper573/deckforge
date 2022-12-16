@@ -1,25 +1,27 @@
 import Editor, { useMonaco } from "@monaco-editor/react";
 import { useEffect } from "react";
+import { v4 } from "uuid";
 import { useDebouncedControl } from "../hooks/useDebouncedControl";
 
-export interface CodeEditorExtraLib {
-  name: string;
-  code: string;
-}
+export type CodeEditorTypeDefs = string;
 
 export interface CodeEditorProps {
   value?: string;
   onChange: (value: string) => void;
-  libs?: CodeEditorExtraLib[];
+  typeDefs?: CodeEditorTypeDefs;
 }
 
-export function CodeEditor({ value = "", libs, onChange }: CodeEditorProps) {
+export function CodeEditor({
+  value = "",
+  typeDefs,
+  onChange,
+}: CodeEditorProps) {
   const control = useDebouncedControl({ value, onChange });
-  useApi(libs);
+  useTypeDefs(typeDefs);
 
   return (
     <Editor
-      defaultLanguage="typescript"
+      language="typescript"
       theme="vs-dark"
       value={control.value}
       onChange={(newValue = "") => control.setValue(newValue)}
@@ -27,22 +29,21 @@ export function CodeEditor({ value = "", libs, onChange }: CodeEditorProps) {
   );
 }
 
-function useApi(libs?: CodeEditorExtraLib[]) {
+function useTypeDefs(typeDefs?: CodeEditorTypeDefs) {
   const monaco = useMonaco();
-
   useEffect(() => {
-    if (!monaco || !libs) {
+    if (!monaco || !typeDefs) {
       return;
     }
 
-    console.log("updating libs", libs);
-    const disposables = libs.map((lib) =>
-      monaco.languages.typescript.typescriptDefaults.addExtraLib(
-        lib.code,
-        `ts:filename/${lib.name}.d.ts`
-      )
+    const model = monaco.editor.createModel(
+      typeDefs,
+      "typescript",
+      monaco.Uri.parse(`file://${v4()}/global/index.d.ts`)
     );
 
-    return () => disposables.forEach((d) => d.dispose());
-  }, [monaco, libs]);
+    return () => {
+      model.dispose();
+    };
+  }, [monaco, typeDefs]);
 }
