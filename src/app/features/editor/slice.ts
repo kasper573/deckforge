@@ -24,7 +24,7 @@ import type {
   PanelId,
   PanelLayout,
 } from "./types";
-import { panelLayoutType } from "./types";
+import { editorObjectIdType, panelLayoutType } from "./types";
 import { defaultPanelLayout } from "./panels/defaultPanelLayout";
 import { selectors } from "./selectors";
 
@@ -33,7 +33,13 @@ const panelStorage = createZodStorage(
   "panel-layout"
 );
 
+const selectedObjectStorage = createZodStorage(
+  editorObjectIdType.optional(),
+  "selected-object"
+);
+
 const initialState: EditorState = {
+  selectedObjectId: selectedObjectStorage.load(),
   panelLayout: panelStorage.load(defaultPanelLayout),
 };
 
@@ -195,6 +201,9 @@ export const reducer: typeof editorSlice.reducer = (
   const currentState = state;
   const updatedState = editorSlice.reducer(state, action);
 
+  if (updatedState.selectedObjectId !== currentState.selectedObjectId) {
+    selectedObjectStorage.save(updatedState.selectedObjectId);
+  }
   if (updatedState.panelLayout !== currentState.panelLayout) {
     panelStorage.save(updatedState.panelLayout);
   }
