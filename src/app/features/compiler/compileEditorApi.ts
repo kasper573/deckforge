@@ -3,9 +3,14 @@ import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import type { Property } from "../../../api/services/game/types";
 
 export interface EditorApi {
-  card: CodeEditorTypeDefs;
-  action: CodeEditorTypeDefs;
-  reaction: CodeEditorTypeDefs;
+  card: EditorObjectApi;
+  action: EditorObjectApi;
+  reaction: EditorObjectApi;
+}
+
+export interface EditorObjectApi {
+  outletVariableName: string;
+  typeDefs: CodeEditorTypeDefs;
 }
 
 export function compileEditorApi(game: Game): EditorApi {
@@ -17,9 +22,9 @@ ${defineInterface("Player", playerProperties)}
 ${defineInterface("Card", cardProperties)}
 `;
   return {
-    card: common,
-    action: common,
-    reaction: common,
+    card: { outletVariableName: "card", typeDefs: common },
+    action: { outletVariableName: "action", typeDefs: common },
+    reaction: { outletVariableName: "reaction", typeDefs: common },
   };
 }
 

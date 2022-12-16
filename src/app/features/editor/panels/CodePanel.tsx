@@ -52,19 +52,19 @@ function useEditorProps(): {
   switch (id?.type) {
     case "card":
       return {
-        typeDefs: editorApi?.card,
+        typeDefs: editorApi?.card.typeDefs,
         objectSelector: selectors.card(id.cardId),
         update: (code) => actions.updateCard({ ...id, code }),
       };
     case "action":
       return {
-        typeDefs: editorApi?.action,
+        typeDefs: editorApi?.action.typeDefs,
         objectSelector: selectors.action(id.actionId),
         update: (code) => actions.updateAction({ ...id, code }),
       };
     case "reaction":
       return {
-        typeDefs: editorApi?.reaction,
+        typeDefs: editorApi?.reaction.typeDefs,
         objectSelector: selectors.reaction(id.reactionId),
         update: (code) => actions.updateReaction({ ...id, code }),
       };
