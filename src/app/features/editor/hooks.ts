@@ -8,7 +8,6 @@ import {
   cardType,
   deckType,
   propertyType,
-  reactionType,
 } from "../../../api/services/game/types";
 import type { EditorObjectId } from "./types";
 import { editorActions } from "./actions";
@@ -74,7 +73,6 @@ export function usePromptCreate() {
 
 const objectNameSchemas: Record<EditorObjectId["type"], ZodString> = {
   property: propertyType.shape.name,
-  reaction: reactionType.shape.name,
   action: actionType.shape.name,
   card: cardType.shape.name,
   deck: deckType.shape.name,

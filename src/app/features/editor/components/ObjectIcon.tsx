@@ -27,7 +27,6 @@ const ActionIcon = styled(Reply)`
 
 const iconComponents: Record<EditorObjectId["type"], ComponentType> = {
   action: ActionIcon,
-  reaction: Reply,
   deck: Collections,
   card: CropPortrait,
   property: Link,

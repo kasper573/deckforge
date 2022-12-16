@@ -62,12 +62,6 @@ function useEditorProps(): {
         objectSelector: selectors.action(id.actionId),
         update: (code) => actions.updateAction({ ...id, code }),
       };
-    case "reaction":
-      return {
-        typeDefs: editorApi?.reaction.typeDefs,
-        objectSelector: selectors.reaction(id.reactionId),
-        update: (code) => actions.updateReaction({ ...id, code }),
-      };
   }
 
   return {

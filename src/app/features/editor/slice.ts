@@ -6,7 +6,6 @@ import type {
   Deck,
   Game,
   Property,
-  Reaction,
 } from "../../../api/services/game/types";
 import {
   createEntityReducerFactory,
@@ -95,11 +94,6 @@ const editorSlice = createSlice({
       "actionId",
       (state) => state.game?.definition.actions ?? []
     ),
-    ...entityReducers<Reaction>()(
-      "Reaction",
-      "reactionId",
-      (state) => state.game?.definition.reactions ?? []
-    ),
     ...entityReducers<Card>()(
       "Card",
       "cardId",
@@ -149,24 +143,6 @@ const editorSlice = createSlice({
       state.game.definition.actions.push({
         actionId: createId(),
         name: "New Action",
-        code: "",
-        ...payload,
-      });
-    },
-    createReaction(
-      state,
-      {
-        payload,
-      }: PayloadAction<
-        MakePartial<Omit<Reaction, "reactionId">, "name" | "code">
-      >
-    ) {
-      if (!state.game) {
-        return;
-      }
-      state.game.definition.reactions.push({
-        reactionId: createId(),
-        name: "New Reaction",
         code: "",
         ...payload,
       });

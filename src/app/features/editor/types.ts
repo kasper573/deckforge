@@ -7,7 +7,6 @@ import type {
   DeckId,
   Game,
   PropertyId,
-  ReactionId,
 } from "../../../api/services/game/types";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 
@@ -16,12 +15,6 @@ export const editorObjectIdType = z
     type: z.literal("action"),
     actionId: zodNominalString<ActionId>(),
   })
-  .or(
-    z.object({
-      type: z.literal("reaction"),
-      reactionId: zodNominalString<ReactionId>(),
-    })
-  )
   .or(
     z.object({
       type: z.literal("deck"),

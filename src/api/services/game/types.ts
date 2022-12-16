@@ -42,17 +42,6 @@ export const actionType = z.object({
   code: codeType,
 });
 
-export type ReactionId = NominalString<"ReactionId">;
-export const reactionIdType = zodNominalString<ReactionId>();
-
-export type Reaction = z.infer<typeof reactionType>;
-export const reactionType = z.object({
-  reactionId: reactionIdType,
-  name: zodIdentifier,
-  actionId: actionType.shape.actionId,
-  code: codeType,
-});
-
 export type DeckId = NominalString<"DeckId">;
 export const deckIdType = zodNominalString<DeckId>();
 
@@ -80,7 +69,6 @@ export const gameDefinitionType = z.object({
   cards: z.array(cardType).default([]),
   properties: z.array(propertyType).default([]),
   actions: z.array(actionType).default([]),
-  reactions: z.array(reactionType).default([]),
 });
 
 export type Game = z.infer<typeof gameType>;
