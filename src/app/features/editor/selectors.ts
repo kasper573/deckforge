@@ -1,5 +1,5 @@
 import type {
-  ActionId,
+  EventId,
   CardId,
   DeckId,
   EntityId,
@@ -20,8 +20,8 @@ export const selectors = {
       return;
     }
     switch (id.type) {
-      case "action":
-        return [selectors.action(id.actionId)(state)?.name ?? ""];
+      case "event":
+        return [selectors.event(id.eventId)(state)?.name ?? ""];
       case "card":
         const card = selectors.card(id.cardId)(state);
         const deck = card && selectors.deck(card.deckId)(state);
@@ -50,18 +50,18 @@ export const selectors = {
     if (!state.game) {
       return [];
     }
-    const { actions } = state.game.definition;
-    return actions.map((action) => ({
-      objectId: { type: "action", actionId: action.actionId } as EditorObjectId,
-      ...action,
+    const { events } = state.game.definition;
+    return events.map((event) => ({
+      objectId: { type: "event", eventId: event.eventId } as EditorObjectId,
+      ...event,
     }));
   },
   deck: (deckId: DeckId) => (state: EditorState) =>
     state.game?.definition.decks.find((d) => d.deckId === deckId),
   card: (cardId: CardId) => (state: EditorState) =>
     state.game?.definition.cards.find((c) => c.cardId === cardId),
-  action: (actionId: ActionId) => (state: EditorState) =>
-    state.game?.definition.actions.find((a) => a.actionId === actionId),
+  event: (eventId: EventId) => (state: EditorState) =>
+    state.game?.definition.events.find((a) => a.eventId === eventId),
   property: (propertyId: PropertyId) => (state: EditorState) =>
     state.game?.definition.properties.find((p) => p.propertyId === propertyId),
   propertiesFor: (entityId: EntityId) => (state: EditorState) =>

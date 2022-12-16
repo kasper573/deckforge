@@ -2,7 +2,7 @@ import type { MosaicNode } from "react-mosaic-component";
 import type { ZodType } from "zod";
 import { z } from "zod";
 import type {
-  ActionId,
+  EventId,
   CardId,
   DeckId,
   Game,
@@ -12,8 +12,8 @@ import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 
 export const editorObjectIdType = z
   .object({
-    type: z.literal("action"),
-    actionId: zodNominalString<ActionId>(),
+    type: z.literal("event"),
+    eventId: zodNominalString<EventId>(),
   })
   .or(
     z.object({

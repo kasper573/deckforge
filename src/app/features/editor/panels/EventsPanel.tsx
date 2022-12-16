@@ -16,14 +16,14 @@ export function EventsPanel(props: PanelProps) {
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
-  const { createAction, selectObject } = useActions(editorActions);
+  const { createEvent, selectObject } = useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObject);
 
-  const promptCreateAction = () =>
-    promptCreate("action", (name) => createAction({ name }));
+  const promptCreateEvent = () =>
+    promptCreate("event", (name) => createEvent({ name }));
 
   const openContextMenu = useMenu([
-    <MenuItem onClick={promptCreateAction}>New action</MenuItem>,
+    <MenuItem onClick={promptCreateEvent}>New action</MenuItem>,
   ]);
 
   return (
@@ -34,7 +34,7 @@ export function EventsPanel(props: PanelProps) {
         items={events.map((action) => ({
           nodeId: action.objectId,
           label: action.name,
-          icon: <ObjectIcon type="action" />,
+          icon: <ObjectIcon type="event" />,
           onDoubleClick: () => promptRename(action),
           contextMenu: [
             <MenuItem onClick={() => promptRename(action)}>Rename</MenuItem>,

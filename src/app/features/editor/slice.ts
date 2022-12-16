@@ -1,7 +1,7 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
 import type {
-  Action,
+  Event,
   Card,
   Deck,
   Game,
@@ -89,10 +89,10 @@ const editorSlice = createSlice({
       "deckId",
       (state) => state.game?.definition.decks ?? []
     ),
-    ...entityReducers<Action>()(
-      "Action",
-      "actionId",
-      (state) => state.game?.definition.actions ?? []
+    ...entityReducers<Event>()(
+      "Event",
+      "eventId",
+      (state) => state.game?.definition.events ?? []
     ),
     ...entityReducers<Card>()(
       "Card",
@@ -131,18 +131,18 @@ const editorSlice = createSlice({
         ...payload,
       });
     },
-    createAction(
+    createEvent(
       state,
       {
         payload,
-      }: PayloadAction<MakePartial<Omit<Action, "actionId">, "name" | "code">>
+      }: PayloadAction<MakePartial<Omit<Event, "eventId">, "name" | "code">>
     ) {
       if (!state.game) {
         return;
       }
-      state.game.definition.actions.push({
-        actionId: createId(),
-        name: "New Action",
+      state.game.definition.events.push({
+        eventId: createId(),
+        name: "New Event",
         code: "",
         ...payload,
       });

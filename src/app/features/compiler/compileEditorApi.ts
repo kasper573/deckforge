@@ -4,7 +4,7 @@ import type { Property } from "../../../api/services/game/types";
 
 export interface EditorApi {
   card: EditorObjectApi;
-  action: EditorObjectApi;
+  event: EditorObjectApi;
   reaction: EditorObjectApi;
 }
 
@@ -36,11 +36,11 @@ export function compileEditorApi(game: Game): EditorApi {
         })
       ),
     },
-    action: {
-      factoryVariableName: "action",
+    event: {
+      factoryVariableName: "event",
       typeDefs: add(
         common,
-        defineGlobalVariable({ name: "action", type: "Effects" })
+        defineGlobalVariable({ name: "event", type: "Effects" })
       ),
     },
     reaction: {

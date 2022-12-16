@@ -56,11 +56,11 @@ function useEditorProps(): {
         objectSelector: selectors.card(id.cardId),
         update: (code) => actions.updateCard({ ...id, code }),
       };
-    case "action":
+    case "event":
       return {
-        typeDefs: editorApi?.action.typeDefs,
-        objectSelector: selectors.action(id.actionId),
-        update: (code) => actions.updateAction({ ...id, code }),
+        typeDefs: editorApi?.event.typeDefs,
+        objectSelector: selectors.event(id.eventId),
+        update: (code) => actions.updateEvent({ ...id, code }),
       };
   }
 

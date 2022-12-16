@@ -4,7 +4,7 @@ import { PromptDialog } from "../../dialogs/PromptDialog";
 import { useActions } from "../../../lib/useActions";
 import { ConfirmDialog } from "../../dialogs/ConfirmDialog";
 import {
-  actionType,
+  eventType,
   cardType,
   deckType,
   propertyType,
@@ -73,7 +73,7 @@ export function usePromptCreate() {
 
 const objectNameSchemas: Record<EditorObjectId["type"], ZodString> = {
   property: propertyType.shape.name,
-  action: actionType.shape.name,
+  event: eventType.shape.name,
   card: cardType.shape.name,
   deck: deckType.shape.name,
 };

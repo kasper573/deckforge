@@ -32,12 +32,12 @@ export const propertyType = z.object({
 export type PropertyValues = z.infer<typeof propertyValuesType>;
 export const propertyValuesType = z.record(propertyIdType, z.unknown());
 
-export type ActionId = NominalString<"ActionId">;
-export const actionIdType = zodNominalString<ActionId>();
+export type EventId = NominalString<"EventId">;
+export const eventIdType = zodNominalString<EventId>();
 
-export type Action = z.infer<typeof actionType>;
-export const actionType = z.object({
-  actionId: actionIdType,
+export type Event = z.infer<typeof eventType>;
+export const eventType = z.object({
+  eventId: eventIdType,
   name: zodIdentifier,
   code: codeType,
 });
@@ -68,7 +68,7 @@ export const gameDefinitionType = z.object({
   decks: z.array(deckType).default([]),
   cards: z.array(cardType).default([]),
   properties: z.array(propertyType).default([]),
-  actions: z.array(actionType).default([]),
+  events: z.array(eventType).default([]),
 });
 
 export type Game = z.infer<typeof gameType>;
