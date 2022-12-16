@@ -25,13 +25,18 @@ export function CodeEditor({
   );
 
   return (
-    <Editor
-      language="typescript"
-      theme="vs-dark"
-      onMount={(editor) => (editorRef.current = editor)}
-      value={control.value}
-      onChange={(newValue = "") => control.setValue(newValue)}
-    />
+    <>
+      <pre>
+        <code>{typeDefs?.trim()}</code>
+      </pre>
+      <Editor
+        language="typescript"
+        theme="vs-dark"
+        onMount={(editor) => (editorRef.current = editor)}
+        value={control.value}
+        onChange={(newValue = "") => control.setValue(newValue)}
+      />
+    </>
   );
 }
 
