@@ -23,7 +23,7 @@ export function EventsPanel(props: PanelProps) {
     promptCreate("event", (name) => createEvent({ name }));
 
   const openContextMenu = useMenu([
-    <MenuItem onClick={promptCreateEvent}>New action</MenuItem>,
+    <MenuItem onClick={promptCreateEvent}>New event</MenuItem>,
   ]);
 
   return (
