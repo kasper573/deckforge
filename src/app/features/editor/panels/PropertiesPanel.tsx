@@ -101,7 +101,7 @@ function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
         </Box>
         <div>
           <ZodControl
-            schema={propertyValue.serializable}
+            schema={propertyValue.serializedType}
             value={type}
             onChange={(type) => updateProperty({ propertyId, type })}
           />

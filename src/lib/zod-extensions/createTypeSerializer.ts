@@ -89,9 +89,9 @@ export function createSerializableType<TypeSchemas extends ZodRawShape>(
     return typeof serialized === "string" && serialized in primitiveTypes;
   }
 
-  function assert(value: unknown, serialized: ST) {
-    return valueTypeOf(serialized).parse(value);
+  function defaultOf<T extends ST>(serialized: T): TypeOf<T, Types> {
+    return valueTypeOf(serialized).parse(undefined);
   }
 
-  return { serializedType, valueTypeOf, isObject, assert, isTypeName };
+  return { serializedType, valueTypeOf, isObject, defaultOf, isTypeName };
 }

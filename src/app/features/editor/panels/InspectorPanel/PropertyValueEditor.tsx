@@ -5,6 +5,7 @@ import type { ComponentType, HTMLAttributes } from "react";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import List from "@mui/material/List";
 import produce from "immer";
+import { useMemo } from "react";
 import type {
   Property,
   PropertyDefaults,
@@ -37,7 +38,9 @@ export function PropertyDefaultsEditor({
             key={propertyId}
             type={type}
             name={name}
-            value={propertyValue.assert(defaults[propertyId], type)}
+            value={
+              defaults[propertyId] as TypeOfPropertyValue<ValueType> | undefined
+            }
             onChange={(newValue) =>
               onChange(
                 produce(defaults, (draft) => {
@@ -58,14 +61,19 @@ export function PropertyValueEditor<
 >({
   type,
   name,
-  value,
+  value: valueOrUndefined,
   onChange,
 }: {
   type: ValueType;
   name: string;
-  value: TypeOfPropertyValue<ValueType>;
+  value?: TypeOfPropertyValue<ValueType>;
   onChange: (newValue: TypeOfPropertyValue<ValueType>) => void;
 }) {
+  const value = useMemo(
+    () => valueOrUndefined ?? propertyValue.defaultOf(type),
+    [valueOrUndefined, type]
+  );
+
   const control = useDebouncedControl({ value, onChange });
 
   let content: JSX.Element = <></>;
