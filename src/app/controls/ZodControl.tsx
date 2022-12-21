@@ -4,7 +4,7 @@ import type { TextFieldProps } from "@mui/material/TextField";
 import { useEffect, useRef, useState } from "react";
 import TextField from "@mui/material/TextField";
 
-export interface ZodFieldProps<T extends ZodType>
+export interface ZodControlProps<T extends ZodType>
   extends Omit<
     TextFieldProps,
     "value" | "onChange" | "multiline" | "type" | "optional" | "error"
@@ -20,7 +20,7 @@ export function ZodControl<T extends ZodType>({
   schema,
   helperText,
   ...props
-}: ZodFieldProps<T>) {
+}: ZodControlProps<T>) {
   const [error, setError] = useState<string>();
   const [json, setJson] = useState(() => readableJson(value));
 

@@ -6,6 +6,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import List from "@mui/material/List";
 import produce from "immer";
 import { useMemo } from "react";
+import Tooltip from "@mui/material/Tooltip";
 import type {
   Property,
   PropertyDefaults,
@@ -87,16 +88,30 @@ export function PropertyValueEditor<
       />
     );
   } else if (propertyValue.isTypeName(type)) {
-    const PrimitiveControl = primitiveControls[type] as ComponentType<
+    type ExactPrimitiveControl = ComponentType<
       ControlProps<TypeOfPropertyValue<ValueType>>
     >;
-    content = (
-      <PrimitiveControl
-        label={name}
-        value={control.value}
-        onChange={control.setValue}
-      />
-    );
+    const PrimitiveControl = primitiveControls[type] as
+      | ExactPrimitiveControl
+      | undefined;
+    if (!PrimitiveControl) {
+      content = (
+        <>
+          {name}{" "}
+          <Tooltip title={`Cannot edit. No control exists for type "${type}"`}>
+            <span>({String(type)})</span>
+          </Tooltip>
+        </>
+      );
+    } else {
+      content = (
+        <PrimitiveControl
+          label={name}
+          value={control.value}
+          onChange={control.setValue}
+        />
+      );
+    }
   }
 
   return <ListItem>{content}</ListItem>;
@@ -109,7 +124,7 @@ type ControlProps<Value> = {
 } & Omit<HTMLAttributes<unknown>, "onChange">;
 
 const primitiveControls: {
-  [K in keyof PrimitiveTypes]: ComponentType<ControlProps<PrimitiveTypes[K]>>;
+  [K in keyof PrimitiveTypes]?: ComponentType<ControlProps<PrimitiveTypes[K]>>;
 } = {
   boolean: ({ label, value, onChange }) => (
     <FormControlLabel
