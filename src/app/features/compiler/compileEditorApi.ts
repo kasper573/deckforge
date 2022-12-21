@@ -1,4 +1,5 @@
-import type { Game } from "../../../api/services/game/types";
+import { memoize } from "lodash";
+import type { Game, PropertyValueType } from "../../../api/services/game/types";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import type { Property } from "../../../api/services/game/types";
 
@@ -54,14 +55,33 @@ function defineGlobalVariable(p: { name: string; type: string }): string {
 }
 
 function defineInterface(interfaceName: string, properties: Property[]) {
-  return `interface ${interfaceName} {\n${properties
-    .map(defineProperty)
-    .join(";\n")}\n}`;
+  return `interface ${interfaceName} ${defineObjectType(properties)}`;
 }
 
-function defineProperty(property: Property) {
-  return `\t${property.name}: ${property.type}`;
+function defineType(type: PropertyValueType, indentation?: number): string {
+  if (typeof type === "string") {
+    return type;
+  }
+  const properties = Object.keys(type).map((name) => ({
+    name,
+    type: type[name],
+  }));
+  return defineObjectType(properties, indentation);
 }
+
+function defineObjectType(
+  properties: Pick<Property, "name" | "type">[],
+  indentation = 1
+) {
+  const propertyStrings = properties.map(
+    ({ name, type }) =>
+      `${indent(indentation)}${name}: ${defineType(type, indentation + 1)}`,
+    "{\n"
+  );
+  return `{\n${propertyStrings.join(";\n")}\n${indent(indentation - 1)}}`;
+}
+
+const indent = memoize((indentation: number) => "\t".repeat(indentation));
 
 function add(...args: CodeEditorTypeDefs[]): CodeEditorTypeDefs {
   return args.join("\n");
