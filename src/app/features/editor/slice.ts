@@ -135,15 +135,18 @@ const editorSlice = createSlice({
       state,
       {
         payload,
-      }: PayloadAction<MakePartial<Omit<Event, "eventId">, "name" | "code">>
+      }: PayloadAction<
+        MakePartial<Omit<Event, "eventId">, "name" | "code" | "inputType">
+      >
     ) {
       if (!state.game) {
         return;
       }
       state.game.definition.events.push({
         eventId: createId(),
-        name: "New Event",
+        name: "newEvent",
         code: "",
+        inputType: "void",
         ...payload,
       });
     },
@@ -160,7 +163,7 @@ const editorSlice = createSlice({
       }
       state.game.definition.properties.push({
         propertyId: createId(),
-        name: "New Property",
+        name: "newProperty",
         type: "number",
         ...payload,
       });

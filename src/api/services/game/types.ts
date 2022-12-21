@@ -20,6 +20,7 @@ export const primitiveTypes = {
   string: z.string(),
   number: z.number(),
   boolean: z.boolean(),
+  void: z.void(),
 };
 
 export type PropertyValueType = z.infer<typeof propertyValue.serializedType>;
@@ -33,6 +34,7 @@ export const propertyValue = createSerializableType(primitiveTypes, {
   string: "",
   number: 0,
   boolean: false,
+  void: void 0,
 });
 
 export type PropertyId = NominalString<"PropertyId">;
@@ -57,6 +59,7 @@ export const eventType = z.object({
   eventId: eventIdType,
   name: zodIdentifier,
   code: codeType,
+  inputType: propertyValue.serializedType,
 });
 
 export type DeckId = NominalString<"DeckId">;
