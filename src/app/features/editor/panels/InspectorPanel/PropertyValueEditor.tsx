@@ -5,99 +5,119 @@ import type { ComponentType, HTMLAttributes } from "react";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import List from "@mui/material/List";
 import produce from "immer";
-import { useDebouncedControl } from "../../../../hooks/useDebouncedControl";
 import type {
   Property,
-  PropertyType,
-  PropertyValues,
+  PropertyDefaults,
+  PropertyValue,
+  PropertyValueTypes,
+  TypeOfPropertyValue,
 } from "../../../../../api/services/game/types";
+import { ZodControl } from "../../../../controls/ZodControl";
+import { propertyValue } from "../../../../../api/services/game/types";
+import { useDebouncedControl } from "../../../../hooks/useDebouncedControl";
 
-export function PropertyValuesEditor({
+export function PropertyDefaultsEditor({
   properties,
-  values,
+  defaults,
   onChange,
 }: {
   properties: Property[];
-  values: PropertyValues;
-  onChange: (updated: PropertyValues) => void;
+  defaults: PropertyDefaults;
+  onChange: (updated: PropertyDefaults) => void;
 }) {
   return (
     <List>
-      {properties.map(({ propertyId, name, type }) => {
-        return (
+      {properties.map(
+        <ValueType extends PropertyValue>({
+          propertyId,
+          name,
+          type,
+        }: Property) => (
           <PropertyValueEditor
             key={propertyId}
             type={type}
             name={name}
-            value={values[propertyId]}
+            value={propertyValue.assert(defaults[propertyId], type)}
             onChange={(newValue) =>
               onChange(
-                produce(values, (draft) => {
+                produce(defaults, (draft) => {
                   draft[propertyId] = newValue;
                 })
               )
             }
           />
-        );
-      })}
+        )
+      )}
     </List>
   );
 }
 
-export function PropertyValueEditor<T extends PropertyType>({
+export function PropertyValueEditor<
+  ValueType extends PropertyValue,
+  Foo extends keyof PropertyValueTypes
+>({
   type,
   name,
   value,
   onChange,
 }: {
-  type: T;
+  type: ValueType;
   name: string;
-  value: ControlValue<T>;
-  onChange: (newValue: ControlValue<T>) => void;
+  value: TypeOfPropertyValue<ValueType>;
+  onChange: (newValue: TypeOfPropertyValue<ValueType>) => void;
 }) {
   const control = useDebouncedControl({ value, onChange });
-  const ValueControl = controls[type] as Control<ControlValue<T>>;
 
-  return (
-    <ListItem>
-      <ValueControl
+  let content: JSX.Element = <></>;
+  if (propertyValue.isObject(type)) {
+    content = (
+      <ZodControl
+        schema={propertyValue.resolverOf(type)}
+        value={control.value}
+        onChange={control.setValue}
+        label={name}
+      />
+    );
+  } else if (propertyValue.isTypeName(type)) {
+    const PrimitiveControl = primitiveControls[type] as ComponentType<
+      ControlProps<TypeOfPropertyValue<ValueType>>
+    >;
+    content = (
+      <PrimitiveControl
         label={name}
         value={control.value}
         onChange={control.setValue}
       />
-    </ListItem>
-  );
+    );
+  }
+
+  return <ListItem>{content}</ListItem>;
 }
 
-type ControlValue<T extends PropertyType> = typeof controls[T] extends Control<
-  infer V
->
-  ? V
-  : never;
-
-type Control<T> = ComponentType<ControlProps<T>>;
-
-type ControlProps<T> = {
+type ControlProps<Value> = {
   label?: string;
-  value?: T;
-  onChange: (value: T) => void;
+  value: Value;
+  onChange: (value: Value) => void;
 } & Omit<HTMLAttributes<unknown>, "onChange">;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const controls: Record<PropertyType, Control<any>> = {
-  boolean: ({ label, value = false, onChange }: ControlProps<boolean>) => (
+const primitiveControls: {
+  [K in keyof PropertyValueTypes]: ComponentType<
+    ControlProps<PropertyValueTypes[K]>
+  >;
+} = {
+  boolean: ({ label, value, onChange }) => (
     <FormControlLabel
       label={label}
       control={
         <Checkbox
           size="small"
-          checked={!!value}
+          checked={value}
           onChange={(e) => onChange(e.target.checked)}
         />
       }
     />
   ),
-  string: ({ label, value = "", onChange }: ControlProps<string>) => (
+  string: ({ label, value, onChange }) => (
     <TextField
       size="small"
       label={label}
@@ -105,7 +125,7 @@ const controls: Record<PropertyType, Control<any>> = {
       onChange={(e) => onChange(e.target.value)}
     />
   ),
-  number: ({ label, value = 0, onChange }: ControlProps<number>) => (
+  number: ({ label, value, onChange }) => (
     <TextField
       size="small"
       label={label}

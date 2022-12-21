@@ -3,6 +3,11 @@ import type { NominalString } from "../../../lib/NominalString";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 import { codeType } from "../../utils/codeType";
 import { zodIdentifier } from "../../utils/zodIdentifier";
+import type {
+  TypeOf,
+  TypeOfShape,
+} from "../../../lib/zod-extensions/createTypeSerializer";
+import { createSerializableType } from "../../../lib/zod-extensions/createTypeSerializer";
 
 export type GameId = NominalString<"GameId">;
 export const gameIdType = zodNominalString<GameId>();
@@ -10,13 +15,26 @@ export const gameIdType = zodNominalString<GameId>();
 export type EntityId = z.infer<typeof entityIdType>;
 export const entityIdType = z.enum(["player", "card"]);
 
-export type PropertyType = z.infer<typeof propertyValueType>;
-export const propertyValueType = z.enum(["string", "number", "boolean"]);
-export const propertyValueTypes = {
-  string: z.string().default(""),
-  number: z.number().default(0),
-  boolean: z.boolean().default(false),
+export type PropertyValue = z.infer<typeof propertyValue.serializable>;
+
+export type PropertyValueTypes = TypeOfShape<typeof propertyValueTypes>;
+
+export type TypeOfPropertyValue<T extends PropertyValue> = TypeOf<
+  T,
+  PropertyValueTypes
+>;
+
+const propertyValueTypes = {
+  string: z.string(),
+  number: z.number(),
+  boolean: z.boolean(),
 };
+
+export const propertyValue = createSerializableType(propertyValueTypes, {
+  string: "",
+  number: 0,
+  boolean: false,
+});
 
 export type PropertyId = NominalString<"PropertyId">;
 export const propertyIdType = zodNominalString<PropertyId>();
@@ -26,11 +44,11 @@ export const propertyType = z.object({
   entityId: entityIdType,
   propertyId: propertyIdType,
   name: zodIdentifier,
-  type: propertyValueType,
+  type: propertyValue.serializable,
 });
 
-export type PropertyValues = z.infer<typeof propertyValuesType>;
-export const propertyValuesType = z.record(propertyIdType, z.unknown());
+export type PropertyDefaults = z.infer<typeof propertyDefaultsType>;
+export const propertyDefaultsType = z.record(propertyIdType, z.unknown());
 
 export type EventId = NominalString<"EventId">;
 export const eventIdType = zodNominalString<EventId>();
@@ -60,7 +78,7 @@ export const cardType = z.object({
   code: codeType,
   name: z.string().min(1).max(32),
   deckId: deckIdType,
-  propertyDefaults: propertyValuesType,
+  propertyDefaults: propertyDefaultsType,
 });
 
 export type GameDefinition = z.infer<typeof gameDefinitionType>;

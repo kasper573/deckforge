@@ -9,7 +9,7 @@ import { PanelEmptyState } from "../../components/PanelEmptyState";
 import type { PanelProps } from "../definition";
 import { panelsDefinition } from "../definition";
 import { PanelTitle } from "../../components/PanelTitle";
-import { PropertyValuesEditor } from "./PropertyValueEditor";
+import { PropertyDefaultsEditor } from "./PropertyValueEditor";
 
 export function InspectorPanel({ title, ...props }: PanelProps) {
   const selectedObjectId = useSelector(selectors.selectedObject);
@@ -62,9 +62,9 @@ function CardInspector({ cardId }: { cardId: CardId }) {
     );
   }
   return (
-    <PropertyValuesEditor
+    <PropertyDefaultsEditor
       properties={properties}
-      values={card?.propertyDefaults ?? {}}
+      defaults={card?.propertyDefaults ?? {}}
       onChange={(propertyDefaults) => updateCard({ cardId, propertyDefaults })}
     />
   );

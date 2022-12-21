@@ -1,7 +1,6 @@
 import MenuItem from "@mui/material/MenuItem";
 import type { ReactNode } from "react";
 import List from "@mui/material/List";
-import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -15,8 +14,9 @@ import { Panel } from "../components/Panel";
 import type { EntityId, Property } from "../../../../api/services/game/types";
 import type { EditorObjectId } from "../types";
 import { useMenu } from "../../../hooks/useMenu";
-import { propertyValueType } from "../../../../api/services/game/types";
+import { propertyValue } from "../../../../api/services/game/types";
 import { HoverListItem } from "../../../components/HoverListItem";
+import { ZodControl } from "../../../controls/ZodControl";
 import type { PanelProps } from "./definition";
 
 export function CardPropertiesPanel(props: PanelProps) {
@@ -100,17 +100,11 @@ function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
           <Typography noWrap>{name}</Typography>
         </Box>
         <div>
-          <Select size="small" value={type}>
-            {propertyValueType._def.values.map((type) => (
-              <MenuItem
-                key={type}
-                value={type}
-                onClick={() => updateProperty({ propertyId, type })}
-              >
-                {type}
-              </MenuItem>
-            ))}
-          </Select>
+          <ZodControl
+            schema={propertyValue.serializable}
+            value={type}
+            onChange={(type) => updateProperty({ propertyId, type })}
+          />
         </div>
       </Stack>
     </HoverListItem>
