@@ -9,6 +9,8 @@ import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
 import { ObjectIcon } from "../components/ObjectIcon";
+import { propertyValue } from "../../../../api/services/game/types";
+import { ZodPicker } from "../../../controls/ZodPicker";
 import type { PanelProps } from "./definition";
 
 export function EventsPanel(props: PanelProps) {
@@ -16,7 +18,7 @@ export function EventsPanel(props: PanelProps) {
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
-  const { createEvent, selectObject } = useActions(editorActions);
+  const { createEvent, updateEvent, selectObject } = useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObject);
 
   const promptCreateEvent = () =>
@@ -31,14 +33,21 @@ export function EventsPanel(props: PanelProps) {
       <Tree
         selected={selectedObjectId}
         onSelectedChanged={selectObject}
-        items={events.map((action) => ({
-          nodeId: action.objectId,
-          label: action.name,
+        items={events.map((event) => ({
+          nodeId: event.objectId,
+          label: event.name,
+          action: (
+            <ZodPicker
+              schema={propertyValue.serializedType}
+              value={event.inputType}
+              onChange={(inputType) => updateEvent({ ...event, inputType })}
+            />
+          ),
           icon: <ObjectIcon type="event" />,
-          onDoubleClick: () => promptRename(action),
+          onDoubleClick: () => promptRename(event),
           contextMenu: [
-            <MenuItem onClick={() => promptRename(action)}>Rename</MenuItem>,
-            <MenuItem onClick={() => confirmDelete(action)}>Delete</MenuItem>,
+            <MenuItem onClick={() => promptRename(event)}>Rename</MenuItem>,
+            <MenuItem onClick={() => confirmDelete(event)}>Delete</MenuItem>,
           ],
         }))}
       />
