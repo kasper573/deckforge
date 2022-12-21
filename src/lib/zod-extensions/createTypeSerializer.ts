@@ -85,7 +85,7 @@ export function createSerializableType<TypeSchemas extends ZodRawShape>(
     return typeof serialized === "object";
   }
 
-  function isTypeName(serialized: ST): serialized is TN {
+  function isTypeName<TN extends TypeName>(serialized: SerializedType<TN>) {
     return typeof serialized === "string" && serialized in primitiveTypes;
   }
 
