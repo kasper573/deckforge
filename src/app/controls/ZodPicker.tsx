@@ -4,6 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import { useModal } from "../../lib/useModal";
 import { ZodDialog } from "../dialogs/ZodDialog";
 import { Edit } from "../components/icons";
+import type { PropertyValueType } from "../../api/services/game/types";
 import type { ZodControlProps } from "./ZodControl";
 
 export function ZodPicker<T extends ZodType>({
@@ -19,7 +20,7 @@ export function ZodPicker<T extends ZodType>({
   }
   return (
     <Stack direction="row" spacing={1} alignItems="center">
-      <div>{controlProps.value}</div>
+      <div>{describePropertyValueType(controlProps.value)}</div>
       <div>
         <IconButton edge="end" size="small" onClick={tryUpdateValue}>
           <Edit />
@@ -27,4 +28,13 @@ export function ZodPicker<T extends ZodType>({
       </div>
     </Stack>
   );
+}
+
+function describePropertyValueType<T extends PropertyValueType>(
+  type: T
+): string {
+  if (typeof type === "string") {
+    return type;
+  }
+  return "Object";
 }
