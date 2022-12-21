@@ -15,22 +15,21 @@ export const gameIdType = zodNominalString<GameId>();
 export type EntityId = z.infer<typeof entityIdType>;
 export const entityIdType = z.enum(["player", "card"]);
 
-export type PropertyValue = z.infer<typeof propertyValue.serializable>;
-
-export type PropertyValueTypes = TypeOfShape<typeof propertyValueTypes>;
-
-export type TypeOfPropertyValue<T extends PropertyValue> = TypeOf<
-  T,
-  PropertyValueTypes
->;
-
-const propertyValueTypes = {
+export type PrimitiveTypes = TypeOfShape<typeof primitiveTypes>;
+export const primitiveTypes = {
   string: z.string(),
   number: z.number(),
   boolean: z.boolean(),
 };
 
-export const propertyValue = createSerializableType(propertyValueTypes, {
+export type PropertyValueType = z.infer<typeof propertyValue.serializedType>;
+
+export type TypeOfPropertyValue<T extends PropertyValueType> = TypeOf<
+  T,
+  PrimitiveTypes
+>;
+
+export const propertyValue = createSerializableType(primitiveTypes, {
   string: "",
   number: 0,
   boolean: false,
@@ -44,7 +43,7 @@ export const propertyType = z.object({
   entityId: entityIdType,
   propertyId: propertyIdType,
   name: zodIdentifier,
-  type: propertyValue.serializable,
+  type: propertyValue.serializedType,
 });
 
 export type PropertyDefaults = z.infer<typeof propertyDefaultsType>;

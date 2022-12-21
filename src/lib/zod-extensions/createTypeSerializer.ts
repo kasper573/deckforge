@@ -21,7 +21,7 @@ export type TypeOf<
   ? Types[ST]
   : never;
 
-export type ResolverOf<
+export type ValueTypeOf<
   ST extends SerializedType<keyof Types>,
   Types extends TypeMap
 > = ZodType<TypeOf<ST, Types>>;
@@ -41,7 +41,7 @@ export type TypeOfShape<T extends ZodRawShape> = {
 type TypeMap<TN extends TypeName = TypeName> = Record<TN, any>;
 
 export function createSerializableType<TypeSchemas extends ZodRawShape>(
-  types: TypeSchemas,
+  primitiveTypes: TypeSchemas,
   defaults: TypeOfShape<TypeSchemas>
 ) {
   type Types = TypeOfShape<TypeSchemas>;
@@ -49,21 +49,20 @@ export function createSerializableType<TypeSchemas extends ZodRawShape>(
   type ST = SerializedType<TN>;
   type SO = SerializedObject<TN>;
 
-  const typeNames = Object.keys(types) as TN[];
+  const typeNames = Object.keys(primitiveTypes) as TN[];
   if (typeNames.length === 0) {
     throw new Error("No types provided");
   }
 
   const typeName: ZodType<TN> = z.enum(typeNames as never);
-  const obj: ZodType<SO> = z.record(z.lazy(() => serializable));
-  const serializable: ZodType<ST> = typeName.or(obj);
+  const obj: ZodType<SO> = z.record(z.lazy(() => serializedType));
+  const serializedType: ZodType<ST> = typeName.or(obj);
 
-  function resolverOf<T extends ST>(serialized: T): ResolverOf<T, Types> {
+  function valueTypeOf<T extends ST>(serialized: T): ValueTypeOf<T, Types> {
     if (typeof serialized === "string") {
-      return types[serialized].default(defaults[serialized]) as ResolverOf<
-        T,
-        Types
-      >;
+      return primitiveTypes[serialized].default(
+        defaults[serialized]
+      ) as ValueTypeOf<T, Types>;
     }
 
     const object = z
@@ -71,7 +70,7 @@ export function createSerializableType<TypeSchemas extends ZodRawShape>(
         Object.entries(serialized).reduce(
           (shape, [propertyName, value]) => ({
             ...shape,
-            [propertyName]: resolverOf(value),
+            [propertyName]: valueTypeOf(value),
           }),
           {} as { [K in keyof T]: ZodType }
         )
@@ -87,12 +86,12 @@ export function createSerializableType<TypeSchemas extends ZodRawShape>(
   }
 
   function isTypeName(serialized: ST): serialized is TN {
-    return typeof serialized === "string" && serialized in types;
+    return typeof serialized === "string" && serialized in primitiveTypes;
   }
 
   function assert(value: unknown, serialized: ST) {
-    return resolverOf(serialized).parse(value);
+    return valueTypeOf(serialized).parse(value);
   }
 
-  return { serializable, resolverOf, isObject, assert, isTypeName };
+  return { serializedType, valueTypeOf, isObject, assert, isTypeName };
 }

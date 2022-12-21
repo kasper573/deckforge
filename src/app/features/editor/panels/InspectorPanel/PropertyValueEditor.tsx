@@ -8,8 +8,8 @@ import produce from "immer";
 import type {
   Property,
   PropertyDefaults,
-  PropertyValue,
-  PropertyValueTypes,
+  PropertyValueType,
+  PrimitiveTypes,
   TypeOfPropertyValue,
 } from "../../../../../api/services/game/types";
 import { ZodControl } from "../../../../controls/ZodControl";
@@ -28,7 +28,7 @@ export function PropertyDefaultsEditor({
   return (
     <List>
       {properties.map(
-        <ValueType extends PropertyValue>({
+        <ValueType extends PropertyValueType>({
           propertyId,
           name,
           type,
@@ -53,8 +53,8 @@ export function PropertyDefaultsEditor({
 }
 
 export function PropertyValueEditor<
-  ValueType extends PropertyValue,
-  Foo extends keyof PropertyValueTypes
+  ValueType extends PropertyValueType,
+  Foo extends keyof PrimitiveTypes
 >({
   type,
   name,
@@ -72,7 +72,7 @@ export function PropertyValueEditor<
   if (propertyValue.isObject(type)) {
     content = (
       <ZodControl
-        schema={propertyValue.resolverOf(type)}
+        schema={propertyValue.valueTypeOf(type)}
         value={control.value}
         onChange={control.setValue}
         label={name}
@@ -101,9 +101,7 @@ type ControlProps<Value> = {
 } & Omit<HTMLAttributes<unknown>, "onChange">;
 
 const primitiveControls: {
-  [K in keyof PropertyValueTypes]: ComponentType<
-    ControlProps<PropertyValueTypes[K]>
-  >;
+  [K in keyof PrimitiveTypes]: ComponentType<ControlProps<PrimitiveTypes[K]>>;
 } = {
   boolean: ({ label, value, onChange }) => (
     <FormControlLabel
