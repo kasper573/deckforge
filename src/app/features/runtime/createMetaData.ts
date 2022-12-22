@@ -63,10 +63,7 @@ export function createRuntimeMetaData<
 
   const player = z.object({
     id: playerId,
-    properties: z.object({
-      health: z.number(),
-      ...playerProperties,
-    }),
+    properties: z.object(playerProperties),
     cards: z.object({
       deck: cardPile,
       draw: cardPile,

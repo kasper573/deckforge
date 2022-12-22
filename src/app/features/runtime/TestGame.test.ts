@@ -88,7 +88,9 @@ function createDamageCard(damage: number): RuntimeCard {
 }
 
 const { typeDefs, selectReactions } = createRuntimeMetaData({
-  playerProperties: {},
+  playerProperties: {
+    health: z.number(),
+  },
   cardProperties: {},
   events: ({ playerId }) => {
     const cardPayload = z.object({
