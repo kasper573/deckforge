@@ -157,8 +157,4 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
   );
 }
 
-export function zodToTSDeclaration(type: ZodType, typeName: string): string {
-  return `type ${typeName} = ${zodToTS(type)};`;
-}
-
 const indent = memoize((indentation: number) => "\t".repeat(indentation));

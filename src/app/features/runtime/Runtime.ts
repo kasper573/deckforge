@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   createMachine,
   createMachineActions,
@@ -14,6 +15,13 @@ import type {
   RuntimePlayer,
   RuntimePlayerId,
 } from "./Entities";
+
+export const gameStateType = z.object({
+  players: z.map(z.number(), z.object({})),
+  battles: z.map(z.number(), z.object({})),
+  decks: z.map(z.number(), z.object({})),
+  cards: z.map(z.number(), z.object({})),
+});
 
 export interface GameState {
   players: EntityCollection<RuntimePlayer>;

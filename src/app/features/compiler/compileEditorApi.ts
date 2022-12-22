@@ -2,6 +2,8 @@ import { memoize } from "lodash";
 import type { Game } from "../../../api/services/game/types";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import type { Event } from "../../../api/services/game/types";
+import { zodToTS } from "../../../lib/zod-extensions/zodToTS";
+import { gameStateType } from "../runtime/Runtime";
 
 export interface EditorApi {
   card: EditorObjectApi;
@@ -18,28 +20,19 @@ export function compileEditorApi(game: Game): EditorApi {
   const playerProperties = properties.filter((p) => p.entityId === "player");
   const cardProperties = properties.filter((p) => p.entityId === "card");
 
-  enum TypeName {
-    Player = "Player",
-    Card = "Card",
-    Effects = "Effects",
-    State = "State",
-  }
-
   const common: CodeEditorTypeDefs = add(
-    defineInterface(TypeName.Player, playerProperties),
-    defineInterface(TypeName.Card, cardProperties),
-    defineInterface(
-      TypeName.Effects,
-      eventsToEffectMembers({ stateTypeName: TypeName.State, events })
-    ),
-    defineInterface(TypeName.State, [])
+    declareInterface(TypeName.Player, playerProperties),
+    declareInterface(TypeName.Card, cardProperties),
+    declareInterface(TypeName.Effects, eventsToEffectMembers(events)),
+    declareInterface(TypeName.Actions, eventsToActionMembers(events)),
+    declareType(TypeName.State, zodToTS(gameStateType))
   );
   return {
     card: {
       factoryVariableName: "card",
       typeDefs: add(
         common,
-        defineGlobalVariable({
+        declareGlobalVariable({
           name: "card",
           type: defineFactoryType({
             inputType: TypeName.Card,
@@ -52,42 +45,51 @@ export function compileEditorApi(game: Game): EditorApi {
       factoryVariableName: "event",
       typeDefs: add(
         common,
-        defineGlobalVariable({ name: "event", type: TypeName.Effects })
+        declareGlobalVariable({ name: "event", type: TypeName.Effects })
       ),
     },
   };
 }
 
-function eventsToEffectMembers({
-  stateTypeName,
-  events,
-}: {
-  stateTypeName: string;
-  events: Event[];
-}): Member[] {
+enum TypeName {
+  Player = "Player",
+  Card = "Card",
+  Effects = "Effects",
+  Actions = "Actions",
+  State = "State",
+}
+
+function eventsToEffectMembers(events: Event[]): Member[] {
   return events.map(({ name, inputType }) => ({
     name,
-    type: defineEffectFunction({ stateTypeName, inputType }),
+    type: `(state: ${TypeName.State}, input: ${defineType(
+      inputType,
+      2
+    )}) => void`,
   }));
 }
 
-function defineEffectFunction(p: { stateTypeName: string; inputType: Type }) {
-  return `(state: ${p.stateTypeName}, input: ${defineType(
-    p.inputType,
-    2
-  )}) => void`;
+function eventsToActionMembers(events: Event[]): Member[] {
+  return events.map(({ name, inputType }) => ({
+    name,
+    type: `(input: ${defineType(inputType, 2)}) => void`,
+  }));
 }
 
 function defineFactoryType(p: { inputType: string; outputType: string }) {
   return `(definition: ${p.inputType}) => ${p.outputType}`;
 }
 
-function defineGlobalVariable(p: { name: string; type: string }): string {
+function declareGlobalVariable(p: { name: string; type: string }): string {
   return `declare let ${p.name}: ${p.type};`;
 }
 
-function defineInterface(interfaceName: string, members: Member[]) {
+function declareInterface(interfaceName: string, members: Member[]) {
   return `interface ${interfaceName} ${defineObjectType(members)}`;
+}
+
+function declareType(typeName: string, type: Type): string {
+  return `type ${typeName} = ${defineType(type)};`;
 }
 
 function defineType(type: Type, indentation?: number): string {

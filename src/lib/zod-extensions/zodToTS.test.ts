@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zodToTS, zodToTSDeclaration } from "./zodToTS";
+import { zodToTS } from "./zodToTS";
 
 const expectations = [
   { name: "string", type: z.string(), expected: "string" },
@@ -62,15 +62,6 @@ describe("zodToTS", () => {
   for (const { name, type, expected } of expectations) {
     it(`Can convert ${name} to TS`, () => {
       expect(zodToTS(type)).toEqual(expected);
-    });
-  }
-});
-
-describe("zodToTSDeclaration", () => {
-  for (const { name, type, expected } of expectations) {
-    it(`can declare a type of ${name}`, () => {
-      const result = zodToTSDeclaration(type, "MyType");
-      expect(result).toEqual(`type MyType = ${expected};`);
     });
   }
 });
