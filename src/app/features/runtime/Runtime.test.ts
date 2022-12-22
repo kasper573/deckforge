@@ -6,7 +6,10 @@ import {
   createMachine,
   createMachineActions,
 } from "../../../lib/machine/Machine";
-import { createRuntimeMetaData, runtimeEvent } from "./createMetaData";
+import {
+  createRuntimeDefinition,
+  runtimeEvent,
+} from "./createRuntimeDefinition";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = createDamageCard(1);
@@ -87,7 +90,7 @@ function createDamageCard(damage: number): RuntimeCard {
   };
 }
 
-const { typeDefs, selectReactions } = createRuntimeMetaData({
+const { typeDefs, selectReactions } = createRuntimeDefinition({
   playerProperties: {
     health: z.number(),
   },

@@ -16,7 +16,7 @@ import type {
   MachineReaction,
 } from "../../../lib/machine/MachineAction";
 
-export function createRuntimeMetaData<
+export function createRuntimeDefinition<
   PlayerProperties extends ZodRawShape,
   CardProperties extends ZodRawShape,
   Events extends RuntimeEventShape
