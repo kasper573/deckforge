@@ -66,8 +66,9 @@ function createDamageCard(damage: number): RuntimeCard {
   return {
     id,
     name: "Attack",
+    properties: {},
     effects: {
-      playCard(state, { input: { targetId, cardId } }) {
+      playCard(state, { targetId, cardId }) {
         if (id !== cardId) {
           return;
         }

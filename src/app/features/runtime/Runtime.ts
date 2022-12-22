@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 import { without } from "lodash";
 import {
   createMachine,
@@ -6,11 +6,25 @@ import {
 } from "../../../lib/machine/Machine";
 import type { MachineContext } from "../../../lib/machine/MachineContext";
 import type { CardId } from "../../../api/services/game/types";
-import { createRuntimeTypeDefs } from "./createTypeDefs";
+import { cardIdType } from "../../../api/services/game/types";
+import { createRuntimeMetaData, runtimeEvent } from "./createMetaData";
 
-const typeDefs = createRuntimeTypeDefs({
+const { typeDefs, selectReactions } = createRuntimeMetaData({
   playerProperties: {},
   cardProperties: {},
+  events: ({ playerId }) => {
+    const cardPayload = z.object({
+      playerId,
+      cardId: cardIdType,
+    });
+    return {
+      startBattle: runtimeEvent(),
+      endTurn: runtimeEvent(),
+      drawCard: runtimeEvent(playerId),
+      playCard: runtimeEvent(cardPayload.and(z.object({ targetId: playerId }))),
+      discardCard: runtimeEvent(cardPayload),
+    };
+  },
 });
 
 export type RuntimePlayerId = z.infer<typeof typeDefs.playerId>;
@@ -23,11 +37,11 @@ export type GameState = z.infer<typeof gameStateType>;
 
 export type GameRuntime = ReturnType<typeof createGameRuntime>;
 
-export type GameActions = typeof actions;
+export type GameActions = z.infer<typeof typeDefs.effects>;
 
 export type GameContext = MachineContext<GameState, GameActions>;
 
-const actions = createMachineActions<GameState>()({
+const actions = createMachineActions<GameState>()<GameActions>({
   startBattle(state) {
     state.winner = undefined;
     state.players.forEach(resetPlayerCards);
@@ -41,7 +55,7 @@ const actions = createMachineActions<GameState>()({
       }
     }
   },
-  drawCard(state, playerId: RuntimePlayerId) {
+  drawCard(state, playerId) {
     const player = selectPlayer(state, playerId);
     const card = player.cards.draw.shift();
     if (!card) {
@@ -49,12 +63,12 @@ const actions = createMachineActions<GameState>()({
     }
     player.cards.hand.push(card);
   },
-  playCard(context, payload: CardPayload & { targetId: RuntimePlayerId }) {
+  playCard(context, payload) {
     // The card effect is handled by reactions
     // All we need to do here globally is to discard the card
     actions.discardCard(context, payload);
   },
-  discardCard(state, { playerId, cardId }: CardPayload) {
+  discardCard(state, { playerId, cardId }) {
     const player = selectPlayer(state, playerId);
     const index = player.cards.hand.findIndex((c) => c.id === cardId);
     if (index === -1) {
@@ -88,15 +102,6 @@ export interface CardPayload {
 export function createGameRuntime(initialState: GameState) {
   return createMachine(initialState)
     .actions(actions)
-    .reactions(function* (state, actionName) {
-      for (const player of state.players) {
-        const cards = Object.values(player.cards).flat();
-        for (const card of cards) {
-          if (card.effects[actionName]) {
-            yield card.effects[actionName];
-          }
-        }
-      }
-    })
+    .reactions(selectReactions)
     .build();
 }
