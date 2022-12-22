@@ -1,21 +1,26 @@
-import { useSelector } from "../../../store";
-import { selectors } from "../selectors";
+import Button from "@mui/material/Button";
+import { useSelector } from "../../../../store";
+import { selectors } from "../../selectors";
 
-import { useActions } from "../../../../lib/useActions";
-import { editorActions } from "../actions";
-import type { CodeEditorTypeDefs } from "../../../components/CodeEditor";
-import { CodeEditor } from "../../../components/CodeEditor";
-import { Panel } from "../components/Panel";
-import { PanelEmptyState } from "../components/PanelEmptyState";
-import type { EditorState } from "../types";
-import { PanelTitle } from "../components/PanelTitle";
-import type { PanelProps } from "./definition";
+import { useActions } from "../../../../../lib/useActions";
+import { editorActions } from "../../actions";
+import type { CodeEditorTypeDefs } from "../../../../components/CodeEditor";
+import { CodeEditor } from "../../../../components/CodeEditor";
+import { Panel } from "../../components/Panel";
+import { PanelEmptyState } from "../../components/PanelEmptyState";
+import type { EditorState } from "../../types";
+import { PanelTitle } from "../../components/PanelTitle";
+import { PanelControls } from "../../components/PanelControls";
+import { useModal } from "../../../../../lib/useModal";
+import type { PanelProps } from "../definition";
+import { ApiReferenceDialog } from "./ApiReferenceDialog";
 
 export function CodePanel({ title, ...props }: PanelProps) {
   const { objectSelector, typeDefs, update, error } = useEditorProps();
   const object = useSelector(objectSelector);
   const id = useSelector(selectors.selectedObject);
   const breadcrumbs = useSelector(selectors.selectedObjectBreadcrumbs);
+  const showApiReference = useModal(ApiReferenceDialog);
 
   const content = error ? (
     <PanelEmptyState>{error}</PanelEmptyState>
@@ -31,6 +36,13 @@ export function CodePanel({ title, ...props }: PanelProps) {
           objectType={id?.type}
           breadcrumbs={breadcrumbs}
         />
+      }
+      toolbarControls={
+        <PanelControls>
+          <Button size="small" onClick={() => showApiReference(typeDefs)}>
+            API Reference
+          </Button>
+        </PanelControls>
       }
       {...props}
     >

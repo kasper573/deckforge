@@ -1,4 +1,5 @@
 import Editor, { useMonaco } from "@monaco-editor/react";
+import type { ComponentProps } from "react";
 import { useEffect, useRef } from "react";
 import { v4 } from "uuid";
 import type { editor } from "monaco-editor";
@@ -25,19 +26,18 @@ export function CodeEditor({
   );
 
   return (
-    <>
-      <pre>
-        <code>{typeDefs?.trim()}</code>
-      </pre>
-      <Editor
-        language="typescript"
-        theme="vs-dark"
-        onMount={(editor) => (editorRef.current = editor)}
-        value={control.value}
-        onChange={(newValue = "") => control.setValue(newValue)}
-      />
-    </>
+    <CodeEditorWithoutTypedefs
+      onMount={(editor) => (editorRef.current = editor)}
+      value={control.value}
+      onChange={(newValue = "") => control.setValue(newValue)}
+    />
   );
+}
+
+export function CodeEditorWithoutTypedefs(
+  props: ComponentProps<typeof Editor>
+) {
+  return <Editor language="typescript" theme="vs-dark" {...props} />;
 }
 
 function refreshEditor(editor: editor.IStandaloneCodeEditor) {

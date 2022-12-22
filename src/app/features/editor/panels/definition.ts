@@ -3,7 +3,7 @@ import type { MosaicBranch } from "react-mosaic-component";
 import type { PanelId } from "../types";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
-import { CodePanel } from "./CodePanel";
+import { CodePanel } from "./CodePanel/CodePanel";
 import { InspectorPanel } from "./InspectorPanel/InspectorPanel";
 import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
 import { RuntimePanel } from "./RuntimePanel";
