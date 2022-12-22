@@ -56,6 +56,11 @@ const expectations = [
     type: z.object({ foo: z.string().optional().default("bar") }),
     expected: "{ foo: string | undefined }",
   },
+  {
+    name: "lazy",
+    type: z.lazy(() => z.string()),
+    expected: "string",
+  },
 ];
 
 describe("zodToTS", () => {

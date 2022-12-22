@@ -10,6 +10,7 @@ import {
   ZodEnum,
   ZodFunction,
   ZodIntersection,
+  ZodLazy,
   ZodLiteral,
   ZodMap,
   ZodNever,
@@ -150,6 +151,9 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
   }
   if (type instanceof ZodIntersection) {
     return `${zodToTS(type._def.left)} & ${zodToTS(type._def.right)}`;
+  }
+  if (type instanceof ZodLazy) {
+    return zodToTS(type._def.getter());
   }
 
   throw new Error(
