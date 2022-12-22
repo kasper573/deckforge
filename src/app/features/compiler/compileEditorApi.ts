@@ -17,14 +17,22 @@ export function compileEditorApi(game: Game): EditorApi {
   const { events, properties } = game.definition;
   const playerProperties = properties.filter((p) => p.entityId === "player");
   const cardProperties = properties.filter((p) => p.entityId === "card");
+
+  enum TypeName {
+    Player = "Player",
+    Card = "Card",
+    Effects = "Effects",
+    State = "State",
+  }
+
   const common: CodeEditorTypeDefs = add(
-    defineInterface("Player", playerProperties),
-    defineInterface("Card", cardProperties),
+    defineInterface(TypeName.Player, playerProperties),
+    defineInterface(TypeName.Card, cardProperties),
     defineInterface(
-      "Effects",
-      eventsToEffectMembers({ stateTypeName: "State", events })
+      TypeName.Effects,
+      eventsToEffectMembers({ stateTypeName: TypeName.State, events })
     ),
-    defineInterface("State", [])
+    defineInterface(TypeName.State, [])
   );
   return {
     card: {
@@ -34,8 +42,8 @@ export function compileEditorApi(game: Game): EditorApi {
         defineGlobalVariable({
           name: "card",
           type: defineFactoryType({
-            inputType: "Card",
-            outputType: "Events",
+            inputType: TypeName.Card,
+            outputType: TypeName.Effects,
           }),
         })
       ),
@@ -44,7 +52,7 @@ export function compileEditorApi(game: Game): EditorApi {
       factoryVariableName: "event",
       typeDefs: add(
         common,
-        defineGlobalVariable({ name: "event", type: "Effects" })
+        defineGlobalVariable({ name: "event", type: TypeName.Effects })
       ),
     },
   };
