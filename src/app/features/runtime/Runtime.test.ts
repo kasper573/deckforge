@@ -1,92 +1,81 @@
-import { RuntimeCard, RuntimeDeck, RuntimePlayer } from "./Entities";
+import { v4 } from "uuid";
+import type { RuntimeCard, RuntimePlayer } from "./Runtime";
 import { createGameRuntime } from "./Runtime";
 
 it("1v1: can play a one card deck and win the game", () => {
-  const card = new DamageCard(1);
-  const deck = new RuntimeDeck({ cards: [card.id] });
-  const player1 = new RuntimePlayer(deck.id, 1);
-  const player2 = new RuntimePlayer(deck.id, 1);
+  const card = createDamageCard(1);
 
   const game = createGameRuntime({
-    decks: new Map([[deck.id, deck]]),
-    cards: new Map([[card.id, card]]),
-    battles: new Map(),
-    players: new Map([
-      [player1.id, player1],
-      [player2.id, player2],
-    ]),
+    players: [createPlayer(1, [card]), createPlayer(1, [card])],
   });
 
   game.execute((state) => {
-    const battleId = game.actions.startBattle([player1.id, player2.id]);
-    game.actions.drawCard({ battleId, playerId: player1.id });
+    const [player1, player2] = state.players;
+    game.actions.startBattle();
+    game.actions.drawCard(player1.id);
 
-    const battle = state.battles.get(battleId)!;
     game.actions.playCard({
-      battleId,
       playerId: player1.id,
       targetId: player2.id,
-      cardId: battle.member1.cards.hand[0]!,
+      cardId: player1.cards.hand[0].id,
     });
 
-    game.actions.endTurn(battleId);
-    expect(battle.winner).toBe(player1.id);
+    game.actions.endTurn();
+    expect(state.winner).toBe(player1.id);
   });
 });
 
 it("1v1: can play a two card deck and win the game", () => {
-  const cards = new Map(
-    [new DamageCard(1), new DamageCard(-1)].map((card) => [card.id, card])
-  );
-  const deck = new RuntimeDeck({ cards: cards.keys() });
-  const player1 = new RuntimePlayer(deck.id, 1);
-  const player2 = new RuntimePlayer(deck.id, 1);
+  const cards = [createDamageCard(1), createDamageCard(-1)];
 
   const game = createGameRuntime({
-    decks: new Map([[deck.id, deck]]),
-    cards,
-    battles: new Map(),
-    players: new Map([
-      [player1.id, player1],
-      [player2.id, player2],
-    ]),
+    players: [createPlayer(1, cards), createPlayer(1, cards)],
   });
 
   game.execute((state) => {
-    const battleId = game.actions.startBattle([player1.id, player2.id]);
-    const battle = state.battles.get(battleId)!;
-    const hand = battle.member1.cards.hand;
+    const [player1, player2] = state.players;
+    game.actions.startBattle();
 
-    game.actions.drawCard({ battleId, playerId: player1.id });
+    game.actions.drawCard(player1.id);
     game.actions.playCard({
-      battleId,
       playerId: player1.id,
       targetId: player2.id,
-      cardId: hand[0]!,
+      cardId: player1.cards.hand[0].id,
     });
 
-    game.actions.endTurn(battleId);
-    expect(battle.winner).toBe(player1.id);
+    game.actions.endTurn();
+    expect(state.winner).toBe(player1.id);
   });
 });
 
-class DamageCard extends RuntimeCard {
-  constructor(public damage: number) {
-    super({
-      name: "Attack",
-      effects: {
-        playCard: [
-          (state, { input: { targetId, cardId } }) => {
-            if (this.id !== cardId) {
-              return;
-            }
-            const target = state.players.get(targetId);
-            if (target) {
-              target.health -= this.damage;
-            }
-          },
-        ],
+function createPlayer(health: number, cards: RuntimeCard[]): RuntimePlayer {
+  return {
+    id: v4() as RuntimePlayer["id"],
+    properties: { health },
+    cards: {
+      deck: cards,
+      hand: [],
+      draw: [],
+      discard: [],
+    },
+  };
+}
+
+function createDamageCard(damage: number): RuntimeCard {
+  const id = v4() as RuntimeCard["id"];
+  return {
+    id,
+    name: "Attack",
+    effects: {
+      playCard(state, { input: { targetId, cardId } }) {
+        if (id !== cardId) {
+          return;
+        }
+        const target = state.players.find((p) => p.id === targetId);
+        if (target) {
+          target.properties.health -= damage;
+        }
       },
-    });
-  }
+    },
+  };
 }

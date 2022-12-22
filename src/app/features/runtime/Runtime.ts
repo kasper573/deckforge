@@ -1,34 +1,25 @@
-import { z } from "zod";
+import type { z } from "zod";
+import { without } from "lodash";
 import {
   createMachine,
   createMachineActions,
 } from "../../../lib/machine/Machine";
-import { pull } from "../../../lib/ts-extensions/pull";
 import type { MachineContext } from "../../../lib/machine/MachineContext";
 import type { CardId } from "../../../api/services/game/types";
-import { RuntimeBattle, RuntimeBattleMember } from "./Entities";
-import type {
-  RuntimeBattleId,
-  RuntimeCard,
-  RuntimeDeck,
-  EntityCollection,
-  RuntimePlayer,
-  RuntimePlayerId,
-} from "./Entities";
+import { createRuntimeTypeDefs } from "./createTypeDefs";
 
-export const gameStateType = z.object({
-  players: z.map(z.number(), z.object({})),
-  battles: z.map(z.number(), z.object({})),
-  decks: z.map(z.number(), z.object({})),
-  cards: z.map(z.number(), z.object({})),
+const typeDefs = createRuntimeTypeDefs({
+  playerProperties: {},
+  cardProperties: {},
 });
 
-export interface GameState {
-  players: EntityCollection<RuntimePlayer>;
-  cards: EntityCollection<RuntimeCard>;
-  decks: EntityCollection<RuntimeDeck>;
-  battles: EntityCollection<RuntimeBattle>;
-}
+export type RuntimePlayerId = z.infer<typeof typeDefs.playerId>;
+export type RuntimePlayer = z.infer<typeof typeDefs.player>;
+export type RuntimeCard = z.infer<typeof typeDefs.card>;
+
+export const gameStateType = typeDefs.state;
+
+export type GameState = z.infer<typeof gameStateType>;
 
 export type GameRuntime = ReturnType<typeof createGameRuntime>;
 
@@ -37,65 +28,59 @@ export type GameActions = typeof actions;
 export type GameContext = MachineContext<GameState, GameActions>;
 
 const actions = createMachineActions<GameState>()({
-  startBattle(state, [player1, player2]: [RuntimePlayerId, RuntimePlayerId]) {
-    const player1Deck = pull(state.decks, pull(state.players, player1).deck);
-    const player2Deck = pull(state.decks, pull(state.players, player2).deck);
-    const battle = new RuntimeBattle(
-      RuntimeBattleMember.from(player1, player1Deck),
-      RuntimeBattleMember.from(player2, player2Deck)
-    );
-    state.battles.set(battle.id, battle);
-    return battle.id;
+  startBattle(state) {
+    state.winner = undefined;
+    state.players.forEach(resetPlayerCards);
   },
-  endTurn(state, battleId: RuntimeBattleId) {
-    const battle = pull(state.battles, battleId);
-    const player1 = pull(state.players, battle.member1.playerId);
-    const player2 = pull(state.players, battle.member2.playerId);
-    if (player1.health <= 0) {
-      battle.winner = player2.id;
-    } else if (player2.health <= 0) {
-      battle.winner = player1.id;
+  endTurn(state) {
+    for (const player of state.players) {
+      if (player.properties.health <= 0) {
+        const anyOtherPlayer = without(state.players, player)[0];
+        state.winner = anyOtherPlayer?.id;
+        break;
+      }
     }
   },
-  drawCard(
-    state,
-    {
-      battleId,
-      playerId,
-    }: { battleId: RuntimeBattleId; playerId: RuntimePlayerId }
-  ) {
-    const battle = pull(state.battles, battleId);
-    const member = battle.selectMember(playerId);
-    const card = member.cards.draw.shift();
+  drawCard(state, playerId: RuntimePlayerId) {
+    const player = selectPlayer(state, playerId);
+    const card = player.cards.draw.shift();
     if (!card) {
       throw new Error(`No cards to draw`);
     }
-    member.cards.hand.push(card);
+    player.cards.hand.push(card);
   },
   playCard(context, payload: CardPayload & { targetId: RuntimePlayerId }) {
     // The card effect is handled by reactions
     // All we need to do here globally is to discard the card
     actions.discardCard(context, payload);
   },
-  discardCard(state, { battleId, playerId, cardId }: CardPayload) {
-    const battle = pull(state.battles, battleId);
-    const member = [battle.member1, battle.member2].find(
-      (member) => member.playerId === playerId
-    );
-    if (!member) {
-      throw new Error(`Player ${playerId} not in battle ${battleId}`);
-    }
-    const index = member.cards.hand.indexOf(cardId);
+  discardCard(state, { playerId, cardId }: CardPayload) {
+    const player = selectPlayer(state, playerId);
+    const index = player.cards.hand.findIndex((c) => c.id === cardId);
     if (index === -1) {
       throw new Error(`Card ${cardId} not in hand`);
     }
-    member.cards.hand.splice(index, 1);
-    member.cards.discard.push(cardId);
+    const [discardedCard] = player.cards.hand.splice(index, 1);
+    player.cards.discard.push(discardedCard);
   },
 });
 
+function selectPlayer(state: GameState, playerId: RuntimePlayerId) {
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player) {
+    throw new Error(`Player ${playerId} not found`);
+  }
+  return player;
+}
+
+function resetPlayerCards(player: RuntimePlayer) {
+  const { cards } = player;
+  cards.discard = [];
+  cards.hand = [];
+  cards.draw = cards.deck;
+}
+
 export interface CardPayload {
-  battleId: RuntimeBattleId;
   playerId: RuntimePlayerId;
   cardId: CardId;
 }
@@ -104,8 +89,13 @@ export function createGameRuntime(initialState: GameState) {
   return createMachine(initialState)
     .actions(actions)
     .reactions(function* (state, actionName) {
-      for (const card of state.cards.values()) {
-        yield* card.effects[actionName] ?? [];
+      for (const player of state.players) {
+        const cards = Object.values(player.cards).flat();
+        for (const card of cards) {
+          if (card.effects[actionName]) {
+            yield card.effects[actionName];
+          }
+        }
       }
     })
     .build();
