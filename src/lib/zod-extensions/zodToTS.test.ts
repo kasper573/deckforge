@@ -33,9 +33,26 @@ const expectations = [
     expected: "{\n\tfoo: string;\n\tbar: number\n}",
   },
   {
-    name: "nested objects (single properties)",
+    name: "nested objects (single property)",
     type: z.object({ foo: z.object({ bar: z.string() }) }),
     expected: "{ foo: { bar: string } }",
+  },
+  {
+    name: "nested objects (multiple properties)",
+    type: z.object({
+      foo: z.object({ hello: z.string(), world: z.number() }),
+      bar: z.object({ one: z.boolean(), two: z.any() }),
+    }),
+    expected: `{
+\tfoo: {
+\t\thello: string;
+\t\tworld: number
+\t};
+\tbar: {
+\t\tone: boolean;
+\t\ttwo: any
+\t}
+}`,
   },
   {
     name: "union",
