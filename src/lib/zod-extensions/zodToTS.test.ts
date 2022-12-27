@@ -33,6 +33,11 @@ const expectations = [
     expected: "{\n\tfoo: string;\n\tbar: number\n}",
   },
   {
+    name: "nested objects (single properties)",
+    type: z.object({ foo: z.object({ bar: z.string() }) }),
+    expected: "{ foo: { bar: string } }",
+  },
+  {
     name: "union",
     type: z.union([z.string(), z.number()]),
     expected: "string | number",
