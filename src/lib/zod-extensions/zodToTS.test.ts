@@ -23,9 +23,14 @@ const expectations = [
     expected: "[string, number]",
   },
   {
-    name: "object",
+    name: "object (single property)",
     type: z.object({ foo: z.string() }),
     expected: "{ foo: string }",
+  },
+  {
+    name: "object (multiple properties)",
+    type: z.object({ foo: z.string(), bar: z.number() }),
+    expected: "{\n\tfoo: string;\n\tbar: number\n}",
   },
   {
     name: "union",
