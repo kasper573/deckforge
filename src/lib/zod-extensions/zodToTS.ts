@@ -99,10 +99,12 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
   // Compositions
   if (type instanceof ZodObject) {
     const properties = Object.entries(type.shape as ZodRawShape);
-    const propertyStrings = properties.map(
-      ([propName, propType]) =>
-        `${indent(options.indentation)}${propName}: ${zodToTS(propType)}`
-    );
+    const propertyStrings = properties.map(([propName, propType]) => {
+      const [isOptional, typeWithoutOptional] = extractOptional(propType);
+      return `${indent(options.indentation)}${propName}${
+        isOptional ? "?" : ""
+      }: ${zodToTS(typeWithoutOptional)}`;
+    });
     switch (propertyStrings.length) {
       case 0:
         return "{}";
@@ -157,6 +159,19 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
   throw new Error(
     `Unsupported type: ${"typeName" in type._def ? type._def.typeName : type}`
   );
+}
+
+function extractOptional(type: ZodType): [boolean, ZodType] {
+  if (type instanceof ZodOptional) {
+    return [true, type._def.innerType];
+  }
+  if (type instanceof ZodEffects) {
+    return extractOptional(type.innerType());
+  }
+  if (type instanceof ZodNullable || type instanceof ZodDefault) {
+    return extractOptional(type._def.innerType);
+  }
+  return [false, type];
 }
 
 const indent = memoize((indentation: number) => "\t".repeat(indentation));

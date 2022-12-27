@@ -40,7 +40,7 @@ const expectations = [
   {
     name: "partial",
     type: z.object({ foo: z.string() }).partial(),
-    expected: "{ foo: string | undefined }",
+    expected: "{ foo?: string }",
   },
   {
     name: "optional object",
@@ -50,12 +50,12 @@ const expectations = [
   {
     name: "optional property",
     type: z.object({ foo: z.string().optional() }),
-    expected: "{ foo: string | undefined }",
+    expected: "{ foo?: string }",
   },
   {
     name: "optional property with default",
     type: z.object({ foo: z.string().optional().default("bar") }),
-    expected: "{ foo: string | undefined }",
+    expected: "{ foo?: string }",
   },
 ];
 
