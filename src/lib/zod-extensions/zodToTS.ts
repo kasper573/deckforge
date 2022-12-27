@@ -31,27 +31,21 @@ import {
 import { memoize } from "lodash";
 
 export interface ZodToTSOptions {
-  customLiterals: Map<ZodType, string>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  lazyResolvers?: Map<ZodLazy<any>, string>;
   indentation: number;
 }
 
 export function zodToTS(
   type: ZodType,
-  { indentation = 1, customLiterals = noLiterals }: Partial<ZodToTSOptions> = {}
+  { indentation = 1, ...rest }: Partial<ZodToTSOptions> = {}
 ): string {
-  return zodToTSImpl(type, { indentation, customLiterals });
+  return zodToTSImpl(type, { indentation, ...rest });
 }
-
-const noLiterals = new Map<ZodType, string>();
 
 function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
   const zodToTS = (type: ZodType) =>
     zodToTSImpl(type, { ...options, indentation: options.indentation + 1 });
-
-  const customLiteral = options.customLiterals.get(type);
-  if (customLiteral !== undefined) {
-    return customLiteral;
-  }
 
   // Direct types
   if (type instanceof ZodString) {
@@ -153,7 +147,11 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
     return `${zodToTS(type._def.left)} & ${zodToTS(type._def.right)}`;
   }
   if (type instanceof ZodLazy) {
-    return zodToTS(type._def.getter());
+    const resolved = options.lazyResolvers?.get(type);
+    if (resolved === undefined) {
+      throw new Error("No resolver provided for lazy type");
+    }
+    return resolved;
   }
 
   throw new Error(

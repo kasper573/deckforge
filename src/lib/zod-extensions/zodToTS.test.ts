@@ -1,3 +1,4 @@
+import type { ZodType } from "zod";
 import { z } from "zod";
 import { zodToTS } from "./zodToTS";
 
@@ -56,11 +57,6 @@ const expectations = [
     type: z.object({ foo: z.string().optional().default("bar") }),
     expected: "{ foo: string | undefined }",
   },
-  {
-    name: "lazy",
-    type: z.lazy(() => z.string()),
-    expected: "string",
-  },
 ];
 
 describe("zodToTS", () => {
@@ -69,4 +65,17 @@ describe("zodToTS", () => {
       expect(zodToTS(type)).toEqual(expected);
     });
   }
+
+  it("Can convert recursive types", () => {
+    type Node = { id: string; children: Node[] };
+    const circularNode = z.lazy(() => node);
+    const node: ZodType<Node> = z.object({
+      id: z.string(),
+      children: z.array(circularNode),
+    });
+
+    expect(
+      zodToTS(node, { lazyResolvers: new Map([[circularNode, "Node"]]) })
+    ).toBe(`{\n\tid: string;\n\tchildren: Node[]\n}`);
+  });
 });
