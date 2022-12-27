@@ -37,7 +37,14 @@ export function CodeEditor({
 export function CodeEditorWithoutTypedefs(
   props: ComponentProps<typeof Editor>
 ) {
-  return <Editor language="typescript" theme="vs-dark" {...props} />;
+  return (
+    <Editor
+      language="typescript"
+      theme="vs-dark"
+      options={{ tabSize: 2, ...props.options }}
+      {...props}
+    />
+  );
 }
 
 function refreshEditor(editor: editor.IStandaloneCodeEditor) {
