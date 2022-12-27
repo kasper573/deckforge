@@ -38,7 +38,7 @@ export interface ZodToTSOptions {
 
 export function zodToTS(
   type: ZodType,
-  { indentation = 1, ...rest }: Partial<ZodToTSOptions> = {}
+  { indentation = 0, ...rest }: Partial<ZodToTSOptions> = {}
 ): string {
   return zodToTSImpl(type, { indentation, ...rest });
 }
@@ -101,7 +101,7 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
     const properties = Object.entries(type.shape as ZodRawShape);
     const propertyStrings = properties.map(([propName, propType]) => {
       const [isOptional, typeWithoutOptional] = extractOptional(propType);
-      return `${indent(options.indentation)}${propName}${
+      return `${indent(options.indentation + 1)}${propName}${
         isOptional ? "?" : ""
       }: ${zodToTS(typeWithoutOptional)}`;
     });
@@ -111,7 +111,9 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
       case 1:
         return `{ ${propertyStrings[0].trim()} }`;
       default:
-        return `{\n${propertyStrings.join(";\n")}\n}`;
+        return `{\n${propertyStrings.join(";\n")}\n${indent(
+          options.indentation
+        )}}`;
     }
   }
   if (type instanceof ZodFunction) {
