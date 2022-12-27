@@ -33,6 +33,7 @@ import { memoize } from "lodash";
 export interface ZodToTSOptions {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lazyResolvers?: Map<ZodLazy<any>, string>;
+  resolvers?: Map<ZodType, string>;
   indentation: number;
 }
 
@@ -46,6 +47,11 @@ export function zodToTS(
 function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
   const zodToTS = (type: ZodType) =>
     zodToTSImpl(type, { ...options, indentation: options.indentation + 1 });
+
+  const resolved = options.resolvers?.get(type);
+  if (resolved !== undefined) {
+    return resolved;
+  }
 
   // Direct types
   if (type instanceof ZodString) {

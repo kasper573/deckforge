@@ -93,6 +93,16 @@ describe("zodToTS", () => {
     });
   }
 
+  it("Can resolve nested types", () => {
+    type Node = { id: string; children: Node[] };
+    const nested = z.any();
+    const root = z.object({ nested });
+
+    expect(zodToTS(root, { resolvers: new Map([[nested, "Nested"]]) })).toBe(
+      `{ nested: Nested }`
+    );
+  });
+
   it("Can convert recursive types", () => {
     type Node = { id: string; children: Node[] };
     const circularNode = z.lazy(() => node);
