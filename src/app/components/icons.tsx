@@ -6,9 +6,10 @@ import More from "@mui/icons-material/MoreHoriz";
 import Menu from "@mui/icons-material/Menu";
 import MuiExitToApp from "@mui/icons-material/ExitToApp";
 import Close from "@mui/icons-material/Close";
+import Reload from "@mui/icons-material/Replay";
 import { styled } from "@mui/material/styles";
 
-export { Delete, Edit, Play, Add, More, Menu, Close };
+export { Delete, Edit, Play, Add, More, Menu, Close, Reload };
 
 export const ExitToApp = styled(MuiExitToApp)`
   transform: rotate(180deg);
