@@ -1,6 +1,7 @@
 import { useRouteParams } from "react-typesafe-routes";
 import { useEffect } from "react";
 import { isEqual } from "lodash";
+import { useDebounce } from "use-debounce";
 import { router } from "../../router";
 import { trpc } from "../../trpc";
 import { useSelector } from "../../store";
@@ -13,7 +14,7 @@ export function StateSynchronizer() {
   const { selectGame } = useActions(editorActions);
   const { gameId } = useRouteParams(router.build().game);
   const { data: remoteGame } = trpc.game.read.useQuery(gameId);
-  const localGame = useSelector(selectors.game);
+  const [localGame] = useDebounce(useSelector(selectors.game), 1500);
   const { mutate: uploadGame } = useToastProcedure(trpc.game.update);
 
   useEffect(() => {
