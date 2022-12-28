@@ -7,7 +7,7 @@ import { v4 } from "uuid";
 import { useSelector } from "../../../store";
 import { selectors } from "../selectors";
 import { Panel } from "../components/Panel";
-import { GameRenderer } from "../../games/1v1/GameRenderer";
+import { GameRenderer } from "../../runtimes/react-1v1/GameRenderer";
 import type { FallbackProps } from "../../../ErrorBoundary";
 import { ErrorBoundary } from "../../../ErrorBoundary";
 import { PanelEmptyState } from "../components/PanelEmptyState";
@@ -15,7 +15,7 @@ import { PanelControls } from "../components/PanelControls";
 import { compileGame } from "../../compiler/compileGame";
 import type { DeckId } from "../../../../api/services/game/types";
 import type { RuntimeCard } from "../../compiler/defineRuntime";
-import type { Builtins } from "../../games/1v1/definition";
+import type { Builtins } from "../../runtimes/react-1v1/definition";
 import { Reload } from "../../../components/icons";
 import type { PanelProps } from "./definition";
 

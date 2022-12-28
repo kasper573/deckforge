@@ -1,13 +1,13 @@
 import { v4 } from "uuid";
 import { z } from "zod";
 import { without } from "lodash";
-import { cardIdType } from "../../../../api/services/game/types";
-import { createMachineActions } from "../../../../lib/machine/Machine";
+import { cardIdType } from "../../../api/services/game/types";
+import { createMachineActions } from "../../../lib/machine/Machine";
 import {
   defineRuntime,
   deriveMachine,
   runtimeEvent,
-} from "../../compiler/defineRuntime";
+} from "../compiler/defineRuntime";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = createDamageCard(1);
