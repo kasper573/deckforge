@@ -2,12 +2,10 @@ import { v4 } from "uuid";
 import { z } from "zod";
 import { without } from "lodash";
 import { cardIdType } from "../../../api/services/game/types";
-import {
-  createMachine,
-  createMachineActions,
-} from "../../../lib/machine/Machine";
+import { createMachineActions } from "../../../lib/machine/Machine";
 import {
   createRuntimeDefinition,
+  deriveMachine,
   runtimeEvent,
 } from "./createRuntimeDefinition";
 
@@ -90,7 +88,7 @@ function createDamageCard(damage: number): RuntimeCard {
   };
 }
 
-const { typeDefs, selectReactions } = createRuntimeDefinition({
+const typeDefs = createRuntimeDefinition({
   playerProperties: {
     health: z.number(),
   },
@@ -110,6 +108,7 @@ const { typeDefs, selectReactions } = createRuntimeDefinition({
   },
 });
 
+type TypeDefs = typeof typeDefs;
 type RuntimePlayerId = z.infer<typeof typeDefs.playerId>;
 type RuntimePlayer = z.infer<typeof typeDefs.player>;
 type RuntimeCard = z.infer<typeof typeDefs.card>;
@@ -170,8 +169,5 @@ function resetPlayerCards(player: RuntimePlayer) {
 }
 
 function createGameRuntime(initialState: RuntimeState) {
-  return createMachine(initialState)
-    .actions(actions)
-    .reactions(selectReactions)
-    .build();
+  return deriveMachine<TypeDefs>(actions, initialState);
 }
