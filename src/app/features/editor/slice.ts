@@ -11,7 +11,7 @@ import {
   createEntityReducerFactory,
   createId,
 } from "../../../lib/createEntityReducers";
-import type { MakePartial } from "../../../lib/MakePartial";
+import type { MakePartial } from "../../../lib/ts-extensions/MakePartial";
 import { createZodStorage } from "../../../lib/zod-extensions/zodStorage";
 import {
   addNodeBySplitting,

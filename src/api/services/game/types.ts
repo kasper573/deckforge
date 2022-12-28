@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { NominalString } from "../../../lib/NominalString";
+import type { NominalString } from "../../../lib/ts-extensions/NominalString";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 import { codeType } from "../../utils/codeType";
 import { zodIdentifier } from "../../utils/zodIdentifier";

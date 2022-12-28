@@ -14,7 +14,7 @@ import {
   propertyValue,
 } from "../../../api/services/game/types";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
-import type { NominalString } from "../../../lib/NominalString";
+import type { NominalString } from "../../../lib/ts-extensions/NominalString";
 import type {
   MachineAction,
   MachineReaction,

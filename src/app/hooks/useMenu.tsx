@@ -5,7 +5,7 @@ import Menu from "@mui/material/Menu";
 import { createStore, useStore } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { concatFunctions } from "../../lib/ts-extensions/concatFunctions";
-import type { NominalString } from "../../lib/NominalString";
+import type { NominalString } from "../../lib/ts-extensions/NominalString";
 
 export type UseMenuItems = ReactElement[];
 
