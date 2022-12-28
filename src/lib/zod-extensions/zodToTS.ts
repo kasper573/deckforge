@@ -41,12 +41,20 @@ export function zodToTS(
   type: ZodType,
   { indentation = 0, ...rest }: Partial<ZodToTSOptions> = {}
 ): string {
-  return zodToTSImpl(type, { indentation, ...rest });
+  return zodToTSImpl(type, { indentation, ...rest }, []);
 }
 
-function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
-  const zodToTS = (type: ZodType) =>
-    zodToTSImpl(type, { ...options, indentation: options.indentation + 1 });
+function zodToTSImpl(
+  type: ZodType,
+  options: ZodToTSOptions,
+  path: string[]
+): string {
+  const zodToTS = (type: ZodType, addToPath?: string) =>
+    zodToTSImpl(
+      type,
+      { ...options, indentation: options.indentation + 1 },
+      addToPath !== undefined ? [...path, addToPath] : path
+    );
 
   const resolved = options.resolvers?.get(type);
   if (resolved !== undefined) {
@@ -109,7 +117,7 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
       const [isOptional, typeWithoutOptional] = extractOptional(propType);
       return `${indent(options.indentation + 1)}${propName}${
         isOptional ? "?" : ""
-      }: ${zodToTS(typeWithoutOptional)}`;
+      }: ${zodToTS(typeWithoutOptional, propName)}`;
     });
     switch (propertyStrings.length) {
       case 0:
@@ -123,8 +131,9 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
     }
   }
   if (type instanceof ZodFunction) {
-    return `(...args: ${zodToTS(type._def.args)}) => ${zodToTS(
-      type._def.returns
+    return `(...args: ${zodToTS(type._def.args, "args")}) => ${zodToTS(
+      type._def.returns,
+      "returns"
     )}`;
   }
   if (type instanceof ZodPromise) {
@@ -154,12 +163,17 @@ function zodToTSImpl(type: ZodType, options: ZodToTSOptions): string {
     return type._def.options.map(zodToTS).join(" | ");
   }
   if (type instanceof ZodIntersection) {
-    return `${zodToTS(type._def.left)} & ${zodToTS(type._def.right)}`;
+    return `${zodToTS(type._def.left, "left")} & ${zodToTS(
+      type._def.right,
+      "right"
+    )}`;
   }
   if (type instanceof ZodLazy) {
     const resolved = options.lazyResolvers?.get(type);
     if (resolved === undefined) {
-      throw new Error("No resolver provided for lazy type");
+      throw new Error(
+        "No resolver provided for lazy type at path: " + path.join(".")
+      );
     }
     return resolved;
   }
