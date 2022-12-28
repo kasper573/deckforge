@@ -1,9 +1,8 @@
 import Editor, { useMonaco } from "@monaco-editor/react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, MutableRefObject } from "react";
 import { useEffect, useRef } from "react";
 import { v4 } from "uuid";
 import type { editor } from "monaco-editor";
-import { useDebouncedControl } from "../hooks/useDebouncedControl";
 
 export type CodeEditorTypeDefs = string;
 
@@ -18,18 +17,19 @@ export function CodeEditor({
   typeDefs,
   onChange,
 }: CodeEditorProps) {
-  const control = useDebouncedControl({ value, onChange });
   const editorRef = useRef<editor.IStandaloneCodeEditor>();
-  useTypeDefs(
-    typeDefs,
-    () => editorRef.current && refreshEditor(editorRef.current)
-  );
+  const [isRefreshingRef, refreshEditor] = useRefreshEditor(editorRef);
+  useTypeDefs(typeDefs, refreshEditor);
 
   return (
     <CodeEditorWithoutTypedefs
       onMount={(editor) => (editorRef.current = editor)}
-      value={control.value}
-      onChange={(newValue = "") => control.setValue(newValue)}
+      value={value}
+      onChange={(newValue = "") => {
+        if (!isRefreshingRef.current) {
+          onChange(newValue);
+        }
+      }}
     />
   );
 }
@@ -47,10 +47,21 @@ export function CodeEditorWithoutTypedefs(
   );
 }
 
-function refreshEditor(editor: editor.IStandaloneCodeEditor) {
-  const original = editor.getValue();
-  editor.setValue(original + " ");
-  editor.setValue(original);
+function useRefreshEditor(
+  editorRef: MutableRefObject<editor.IStandaloneCodeEditor | undefined>
+) {
+  const isRefreshingRef = useRef(false);
+  function refresh() {
+    if (!editorRef.current) {
+      return;
+    }
+    isRefreshingRef.current = true;
+    const original = editorRef.current.getValue();
+    editorRef.current.setValue(original + " ");
+    editorRef.current.setValue(original);
+    isRefreshingRef.current = false;
+  }
+  return [isRefreshingRef, refresh] as const;
 }
 
 function useTypeDefs(
