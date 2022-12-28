@@ -25,19 +25,7 @@ export function compileEditorApi(definition: RuntimeDefinition): EditorApi {
         resolvers: new Map<ZodType, string>([[definition.card, TypeName.Card]]),
       })
     ),
-    declareType(
-      TypeName.Card,
-      zodToTS(definition.card, {
-        lazyResolvers,
-        resolvers: new Map<ZodType, string>([
-          [definition.effects, TypeName.Events],
-        ]),
-      })
-    ),
-    declareType(
-      TypeName.Events,
-      zodToTS(definition.effects, { lazyResolvers })
-    ),
+    declareType(TypeName.Card, zodToTS(definition.card, { lazyResolvers })),
     declareType(
       TypeName.State,
       zodToTS(definition.state, {
