@@ -7,7 +7,7 @@ import type {
 } from "../../../api/services/game/types";
 import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
 import { compileEditorApi } from "../compiler/compileEditorApi";
-import { deriveRuntimeDefinition } from "../runtime/createRuntimeDefinition";
+import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import type { EditorObjectId, EditorState } from "./types";
 
 export const selectors = {

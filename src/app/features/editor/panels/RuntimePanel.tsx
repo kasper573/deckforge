@@ -14,7 +14,7 @@ import { PanelEmptyState } from "../components/PanelEmptyState";
 import { PanelControls } from "../components/PanelControls";
 import { compileGame } from "../../compiler/compileGame";
 import type { DeckId } from "../../../../api/services/game/types";
-import type { RuntimeCard } from "../../runtime/createRuntimeDefinition";
+import type { RuntimeCard } from "../../compiler/defineRuntime";
 import type { Builtins } from "../../games/1v1/definition";
 import { Reload } from "../../../components/icons";
 import type { PanelProps } from "./definition";

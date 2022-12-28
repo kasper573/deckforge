@@ -31,11 +31,9 @@ export type RuntimeDefinition<
   CardProperties extends ZodRawShape = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Events extends RuntimeEventShape = any
-> = ReturnType<
-  typeof createRuntimeDefinition<PlayerProperties, CardProperties, Events>
->;
+> = ReturnType<typeof defineRuntime<PlayerProperties, CardProperties, Events>>;
 
-export function createRuntimeDefinition<
+export function defineRuntime<
   PlayerProperties extends ZodRawShape,
   CardProperties extends ZodRawShape,
   Events extends RuntimeEventShape
@@ -106,13 +104,15 @@ export function createRuntimeDefinition<
   };
 }
 
+// TODO RuntimeDefinition should be the single source of truth (should not infer from function)
+
 export function deriveRuntimeDefinition({
   properties,
   events,
 }: Game["definition"]) {
   const playerPropertyList = properties.filter((p) => p.entityId === "player");
   const cardPropertyList = properties.filter((p) => p.entityId === "card");
-  return createRuntimeDefinition({
+  return defineRuntime({
     playerProperties: propertiesToZodShape(playerPropertyList),
     cardProperties: propertiesToZodShape(cardPropertyList),
     events: () => eventsToZodShape(events),
@@ -140,7 +140,7 @@ const eventsToZodShape = (eventList: Event[]): RuntimeEventShape =>
     {}
   );
 
-export function effectToReaction<State, Payload>(
+function effectToReaction<State, Payload>(
   effect: (state: State, payload: Payload) => void
 ): MachineReaction<MachineAction<State, Payload, void>> {
   return (state, { input }) => {

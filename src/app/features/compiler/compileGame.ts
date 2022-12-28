@@ -1,13 +1,13 @@
 import { groupBy } from "lodash";
 import { z } from "zod";
 import type { Game, Card, DeckId } from "../../../api/services/game/types";
+import type { Machine } from "../../../lib/machine/Machine";
 import type {
   RuntimeCard,
   RuntimeDefinition,
   MachineContextFor,
-} from "../runtime/createRuntimeDefinition";
-import { deriveMachine } from "../runtime/createRuntimeDefinition";
-import type { Machine } from "../../../lib/machine/Machine";
+} from "./defineRuntime";
+import { deriveMachine } from "./defineRuntime";
 
 export type GameRuntime<RD extends RuntimeDefinition = RuntimeDefinition> =
   Machine<MachineContextFor<RD>>;

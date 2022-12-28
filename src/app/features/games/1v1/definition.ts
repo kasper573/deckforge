@@ -1,13 +1,10 @@
 import { z } from "zod";
-import type { MachineContextFor } from "../../runtime/createRuntimeDefinition";
-import {
-  createRuntimeDefinition,
-  runtimeEvent,
-} from "../../runtime/createRuntimeDefinition";
+import type { MachineContextFor } from "../../compiler/defineRuntime";
+import { defineRuntime, runtimeEvent } from "../../compiler/defineRuntime";
 import { createReactAdapter } from "../../../../lib/machine/createReactAdapter";
 import { cardIdType } from "../../../../api/services/game/types";
 
-export const builtinDefinition = createRuntimeDefinition({
+export const builtinDefinition = defineRuntime({
   playerProperties: {
     health: z.number(),
   },
