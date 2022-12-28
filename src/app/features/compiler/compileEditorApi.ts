@@ -1,9 +1,8 @@
 import { memoize } from "lodash";
-import type { Game } from "../../../api/services/game/types";
+import type { ZodType } from "zod";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
-import type { Event } from "../../../api/services/game/types";
 import { zodToTS } from "../../../lib/zod-extensions/zodToTS";
-import { gameStateType } from "../runtime/Runtime";
+import type { RuntimeDefinition } from "../runtime/createRuntimeDefinition";
 
 export interface EditorApi {
   card: EditorObjectApi;
@@ -15,17 +14,40 @@ export interface EditorObjectApi {
   typeDefs: CodeEditorTypeDefs;
 }
 
-export function compileEditorApi(game: Game): EditorApi {
-  const { events, properties } = game.definition;
-  const playerProperties = properties.filter((p) => p.entityId === "player");
-  const cardProperties = properties.filter((p) => p.entityId === "card");
+export function compileEditorApi(definition: RuntimeDefinition): EditorApi {
+  const lazyResolvers = new Map([[definition.lazy.state, TypeName.State]]);
 
   const common: CodeEditorTypeDefs = add(
-    declareInterface(TypeName.Player, playerProperties),
-    declareInterface(TypeName.Card, cardProperties),
-    declareInterface(TypeName.Effects, eventsToEffectMembers(events)),
-    declareInterface(TypeName.Actions, eventsToActionMembers(events)),
-    declareType(TypeName.State, zodToTS(gameStateType))
+    declareType(
+      TypeName.Player,
+      zodToTS(definition.player, {
+        lazyResolvers,
+        resolvers: new Map<ZodType, string>([[definition.card, TypeName.Card]]),
+      })
+    ),
+    declareType(
+      TypeName.Card,
+      zodToTS(definition.card, {
+        lazyResolvers,
+        resolvers: new Map<ZodType, string>([
+          [definition.effects, TypeName.Events],
+        ]),
+      })
+    ),
+    declareType(
+      TypeName.Events,
+      zodToTS(definition.effects, { lazyResolvers })
+    ),
+    declareType(
+      TypeName.State,
+      zodToTS(definition.state, {
+        lazyResolvers,
+        resolvers: new Map<ZodType, string>([
+          [definition.player, TypeName.Player],
+          [definition.card, TypeName.Card],
+        ]),
+      })
+    )
   );
   return {
     card: {
@@ -36,7 +58,7 @@ export function compileEditorApi(game: Game): EditorApi {
           name: "card",
           type: defineFactoryType({
             inputType: TypeName.Card,
-            outputType: TypeName.Effects,
+            outputType: TypeName.Events,
           }),
         })
       ),
@@ -45,7 +67,7 @@ export function compileEditorApi(game: Game): EditorApi {
       factoryVariableName: "event",
       typeDefs: add(
         common,
-        declareGlobalVariable({ name: "event", type: TypeName.Effects })
+        declareGlobalVariable({ name: "event", type: TypeName.Events })
       ),
     },
   };
@@ -54,26 +76,9 @@ export function compileEditorApi(game: Game): EditorApi {
 enum TypeName {
   Player = "Player",
   Card = "Card",
-  Effects = "Effects",
+  Events = "Events",
   Actions = "Actions",
   State = "State",
-}
-
-function eventsToEffectMembers(events: Event[]): Member[] {
-  return events.map(({ name, inputType }) => ({
-    name,
-    type: `(state: ${TypeName.State}, input: ${defineType(
-      inputType,
-      2
-    )}) => void`,
-  }));
-}
-
-function eventsToActionMembers(events: Event[]): Member[] {
-  return events.map(({ name, inputType }) => ({
-    name,
-    type: `(input: ${defineType(inputType, 2)}) => void`,
-  }));
 }
 
 function defineFactoryType(p: { inputType: string; outputType: string }) {
@@ -82,10 +87,6 @@ function defineFactoryType(p: { inputType: string; outputType: string }) {
 
 function declareGlobalVariable(p: { name: string; type: string }): string {
   return `declare let ${p.name}: ${p.type};`;
-}
-
-function declareInterface(interfaceName: string, members: Member[]) {
-  return `interface ${interfaceName} ${defineObjectType(members)}`;
 }
 
 function declareType(typeName: string, type: Type): string {

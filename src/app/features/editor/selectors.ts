@@ -7,6 +7,7 @@ import type {
 } from "../../../api/services/game/types";
 import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
 import { compileEditorApi } from "../compiler/compileEditorApi";
+import { deriveRuntimeDefinition } from "../runtime/createRuntimeDefinition";
 import type { EditorObjectId, EditorState } from "./types";
 
 export const selectors = {
@@ -75,5 +76,7 @@ export const selectors = {
         ...property,
       })) ?? [],
   editorApi: (state: EditorState) =>
-    state.game ? compileEditorApi(state.game) : undefined,
+    state.game
+      ? compileEditorApi(deriveRuntimeDefinition(state.game))
+      : undefined,
 };
