@@ -1,13 +1,11 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo } from "react";
 import { createStore, useStore } from "zustand";
-import type { GameRuntime } from "../compiler/compileGame";
-import type { RuntimeDefinition } from "./createRuntimeDefinition";
+import type { MachineContext } from "./MachineContext";
+import type { Machine } from "./Machine";
 
-export function createReactRuntimeAdapter<RD extends RuntimeDefinition>(
-  definition?: RD
-) {
-  type Runtime = GameRuntime<RD>;
+export function createReactAdapter<Context extends MachineContext>() {
+  type Runtime = Machine<Context>;
 
   function useRuntimeState<Selection>(
     selector: (state: Runtime["state"]) => Selection

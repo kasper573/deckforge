@@ -1,9 +1,10 @@
 import { z } from "zod";
+import type { MachineContextFor } from "../../runtime/createRuntimeDefinition";
 import {
   createRuntimeDefinition,
   runtimeEvent,
 } from "../../runtime/createRuntimeDefinition";
-import { createReactRuntimeAdapter } from "../../runtime/ReactRuntimeAdapter";
+import { createReactAdapter } from "../../../../lib/machine/createReactAdapter";
 import { cardIdType } from "../../../../api/services/game/types";
 
 export const builtinDefinition = createRuntimeDefinition({
@@ -31,4 +32,4 @@ export type Builtins = {
   [K in keyof BuiltinSchemas]: z.infer<BuiltinSchemas[K]>;
 };
 
-export const adapter = createReactRuntimeAdapter(builtinDefinition);
+export const adapter = createReactAdapter<MachineContextFor<BuiltinSchemas>>();
