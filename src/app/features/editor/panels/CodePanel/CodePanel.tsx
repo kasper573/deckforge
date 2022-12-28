@@ -1,4 +1,5 @@
 import Button from "@mui/material/Button";
+import { useMemo } from "react";
 import { useSelector } from "../../../../store";
 import { selectors } from "../../selectors";
 
@@ -19,13 +20,19 @@ export function CodePanel({ title, ...props }: PanelProps) {
   const { objectSelector, typeDefs, update, error } = useEditorProps();
   const object = useSelector(objectSelector);
   const id = useSelector(selectors.selectedObject);
+  const idAsKey = useMemo(() => JSON.stringify(id), [id]);
   const breadcrumbs = useSelector(selectors.selectedObjectBreadcrumbs);
   const showApiReference = useModal(ApiReferenceDialog);
 
   const content = error ? (
     <PanelEmptyState>{error}</PanelEmptyState>
   ) : (
-    <CodeEditor value={object?.code} onChange={update} typeDefs={typeDefs} />
+    <CodeEditor
+      key={idAsKey} // Forced remount per unique object avoids invalid onChange events when selecting objects
+      value={object?.code}
+      onChange={update}
+      typeDefs={typeDefs}
+    />
   );
 
   return (
