@@ -77,6 +77,6 @@ export const selectors = {
       })) ?? [],
   editorApi: (state: EditorState) =>
     state.game
-      ? compileEditorApi(deriveRuntimeDefinition(state.game))
+      ? compileEditorApi(deriveRuntimeDefinition(state.game.definition))
       : undefined,
 };

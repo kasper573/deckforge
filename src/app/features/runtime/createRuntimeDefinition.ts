@@ -20,6 +20,7 @@ import type {
   MachineReaction,
 } from "../../../lib/machine/MachineAction";
 import { createMachine } from "../../../lib/machine/Machine";
+import type { MachineContext } from "../../../lib/machine/MachineContext";
 
 export type RuntimeCard = z.infer<RuntimeDefinition["card"]>;
 
@@ -106,8 +107,9 @@ export function createRuntimeDefinition<
 }
 
 export function deriveRuntimeDefinition({
-  definition: { properties, events },
-}: Game) {
+  properties,
+  events,
+}: Game["definition"]) {
   const playerPropertyList = properties.filter((p) => p.entityId === "player");
   const cardPropertyList = properties.filter((p) => p.entityId === "card");
   return createRuntimeDefinition({
@@ -168,9 +170,9 @@ function deriveEffectType<Event extends RuntimeEvent, State extends ZodType>(
   return effectType as EffectType<Event, State>;
 }
 
-export function deriveMachine<Definition extends RuntimeDefinition>(
-  eventHandlers: z.infer<Definition["events"]>,
-  initialState: z.infer<Definition["state"]>
+export function deriveMachine<RD extends RuntimeDefinition>(
+  eventHandlers: z.infer<RD["events"]>,
+  initialState: z.infer<RD["state"]>
 ) {
   return createMachine(initialState)
     .actions(eventHandlers)
@@ -187,6 +189,17 @@ export function deriveMachine<Definition extends RuntimeDefinition>(
     })
     .build();
 }
+
+type MachineActionsFor<Events, State> = {
+  [K in keyof Events]: Events[K] extends (input: infer I) => infer O
+    ? MachineAction<State, I, O>
+    : never;
+};
+
+export type MachineContextFor<RD extends RuntimeDefinition> = MachineContext<
+  z.infer<RD["state"]>,
+  MachineActionsFor<z.infer<RD["events"]>, z.infer<RD["state"]>>
+>;
 
 export type RuntimeEventArgs = [] | [ZodTypeAny];
 export type RuntimeEventShape = Record<string, RuntimeEvent>;
