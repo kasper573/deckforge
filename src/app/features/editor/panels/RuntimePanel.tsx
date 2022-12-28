@@ -20,12 +20,12 @@ import { Reload } from "../../../components/icons";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
-  const [resetCount, resetRuntime] = useReducer((c) => c + 1, 0);
+  const [manualResetCount, resetRuntime] = useReducer((c) => c + 1, 0);
   const game = useSelector(selectors.game);
   const compiled = useMemo(
     () => (game ? compileGame(game.definition, createInitialState) : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [game, resetCount]
+    [game, manualResetCount]
   );
   return (
     <Panel
