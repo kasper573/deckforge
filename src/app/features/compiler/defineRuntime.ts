@@ -104,8 +104,6 @@ export function defineRuntime<
   };
 }
 
-// TODO RuntimeDefinition should be the single source of truth (should not infer from function)
-
 export function deriveRuntimeDefinition({
   properties,
   events,
