@@ -72,7 +72,7 @@ export function createRuntimeDefinition<
 
   const card = z.object({
     ...cardWithoutEffects.shape,
-    effects: effects,
+    effects: effects.partial(),
   }) as unknown as ZodType<Card>;
 
   const cardPile = z.array(card);
@@ -101,9 +101,7 @@ export function createRuntimeDefinition<
     state,
     effects,
     events,
-    lazy: {
-      state: lazyState,
-    },
+    lazyState,
   };
 }
 
@@ -158,7 +156,7 @@ function deriveEffectsType<
     },
     {} as EffectTypeShape<Events, State>
   );
-  return z.object(shape).partial();
+  return z.object(shape);
 }
 
 function deriveEffectType<Event extends RuntimeEvent, State extends ZodType>(

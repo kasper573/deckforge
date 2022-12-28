@@ -15,7 +15,7 @@ export interface EditorObjectApi {
 }
 
 export function compileEditorApi(definition: RuntimeDefinition): EditorApi {
-  const lazyResolvers = new Map([[definition.lazy.state, TypeName.State]]);
+  const lazyResolvers = new Map([[definition.lazyState, TypeName.State]]);
 
   const common: CodeEditorTypeDefs = add(
     declareType(
