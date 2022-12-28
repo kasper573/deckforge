@@ -1,36 +1,28 @@
 import type { ComponentProps } from "react";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
-import type { RuntimeBattleId, RuntimeBattleMember } from "../runtime/Entities";
-import {
-  useRuntimeActions,
-  useRuntimeState,
-} from "../runtime/ReactRuntimeAdapter";
+
 import { Status } from "./Status";
 import { EndTurnButton } from "./EndTurnButton";
 import { CardPile } from "./CardPile";
 import { Hand } from "./Hand";
+import type { Builtins } from "./definition";
+import { adapter } from "./definition";
 
 export function PlayerBoard({
   sx,
   placement,
-  battleId,
   player,
   opponent,
   ...props
 }: ComponentProps<typeof Stack> & {
   placement: "top" | "bottom";
-  player: RuntimeBattleMember;
-  battleId: RuntimeBattleId;
-  opponent: RuntimeBattleMember;
+  player: Builtins["player"];
+  opponent: Builtins["player"];
 }) {
-  const actions = useRuntimeActions();
-  const playerInfo = useRuntimeState((state) =>
-    state.players.get(player.playerId)
-  );
-  const drawCard = () =>
-    actions.drawCard({ playerId: player.playerId, battleId });
-  const endTurn = () => actions.endTurn(battleId);
+  const actions = adapter.useRuntimeActions();
+  const drawCard = () => actions.drawCard({ playerId: player.id });
+  const endTurn = () => actions.endTurn();
   return (
     <Box
       sx={{
@@ -56,7 +48,7 @@ export function PlayerBoard({
           transform: `translateY(${placement === "top" ? 100 : -100}%)`,
         }}
       >
-        {playerInfo && <Status player={playerInfo} />}
+        <Status player={player} />
         <EndTurnButton onClick={endTurn} />
       </Stack>
       <Stack
@@ -73,9 +65,8 @@ export function PlayerBoard({
         <Hand
           cards={player.cards.hand}
           playCardProps={{
-            playerId: player.playerId,
-            battleId,
-            targetId: opponent.playerId,
+            playerId: player.id,
+            targetId: opponent.id,
           }}
         />
         <CardPile

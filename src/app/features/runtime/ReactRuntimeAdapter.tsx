@@ -1,45 +1,62 @@
+import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo } from "react";
 import { createStore, useStore } from "zustand";
-import { pick } from "lodash";
-import type { GameRuntime } from "./Runtime";
+import type { GameRuntime } from "../compiler/compileGame";
+import type { RuntimeDefinition } from "./createRuntimeDefinition";
 
-export function useRuntimeState<Selection>(
-  selector: (state: ReactRuntimeMembers["state"]) => Selection
+export function createReactRuntimeAdapter<RD extends RuntimeDefinition>(
+  definition?: RD
 ) {
-  const store = useContext(RuntimeContext);
-  return useStore(store, ({ state }) => selector(state));
-}
+  type Runtime = GameRuntime<RD>;
 
-export function useRuntimeActions() {
-  const store = useContext(RuntimeContext);
-  return useStore(store, ({ actions }) => actions);
-}
+  function useRuntimeState<Selection>(
+    selector: (state: Runtime["state"]) => Selection
+  ) {
+    const store = useContext(RuntimeStoreContext);
+    return useStore(store, ({ state }) => selector(state));
+  }
 
-export const RuntimeContext = createContext<ReactRuntimeStore>(
-  new Proxy({} as ReactRuntimeStore, {
-    get() {
-      throw new Error("RuntimeContext not provided");
-    },
-  })
-);
+  function useRuntimeActions() {
+    const store = useContext(RuntimeStoreContext);
+    return useStore(store, ({ actions }) => actions);
+  }
 
-type ReactRuntimeStore = ReturnType<typeof useCreateRuntimeStore>;
-
-type ReactRuntimeMembers = Pick<GameRuntime, "state" | "actions">;
-
-export function useCreateRuntimeStore(runtime: GameRuntime) {
-  const store = useMemo(
-    () =>
-      createStore<ReactRuntimeMembers>(() =>
-        pick(runtime, ["state", "actions"])
-      ),
-    [runtime]
+  const RuntimeStoreContext = createContext<RuntimeContextProps>(
+    new Proxy({} as RuntimeContextProps, {
+      get() {
+        throw new Error("RuntimeContext not provided");
+      },
+    })
   );
 
-  useEffect(
-    () => runtime.subscribe((state) => store.setState({ state })),
-    [runtime, store]
-  );
+  type RuntimeContextProps = ReturnType<typeof useRuntimeStore>;
+  function useRuntimeStore(runtime: Runtime) {
+    const store = useMemo(() => createStore<Runtime>(() => runtime), [runtime]);
+    useEffect(
+      () => runtime.subscribe((state) => store.setState({ state })),
+      [runtime, store]
+    );
+    return store;
+  }
 
-  return store;
+  function RuntimeProvider({
+    value: runtime,
+    children,
+  }: {
+    value: Runtime;
+    children?: ReactNode;
+  }) {
+    const context = useRuntimeStore(runtime);
+    return (
+      <RuntimeStoreContext.Provider value={context}>
+        {children}
+      </RuntimeStoreContext.Provider>
+    );
+  }
+
+  return {
+    useRuntimeState,
+    useRuntimeActions,
+    RuntimeProvider,
+  };
 }

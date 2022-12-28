@@ -1,4 +1,4 @@
-import { ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import Button from "@mui/material/Button";
 
 export const EndTurnButton = (props: ComponentProps<typeof Button>) => (
