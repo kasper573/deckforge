@@ -1,3 +1,4 @@
+import { createSelector } from "@reduxjs/toolkit";
 import type {
   EventId,
   CardId,
@@ -9,6 +10,16 @@ import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
 import { compileEditorApi } from "../compiler/compileEditorApi";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import type { EditorObjectId, EditorState } from "./types";
+
+const gameDefinition = (state: EditorState) => state.game?.definition;
+
+const runtimeDefinition = createSelector(gameDefinition, (def) =>
+  def ? deriveRuntimeDefinition(def) : undefined
+);
+
+const editorApi = createSelector(runtimeDefinition, (def) =>
+  def ? compileEditorApi(def) : undefined
+);
 
 export const selectors = {
   panelLayout: (state: EditorState) => state.panelLayout,
@@ -75,13 +86,8 @@ export const selectors = {
         } as EditorObjectId,
         ...property,
       })) ?? [],
-  gameDefinition: (state: EditorState) => state.game?.definition,
-  runtimeDefinition(state: EditorState) {
-    const def = selectors.gameDefinition(state);
-    return def ? deriveRuntimeDefinition(def) : undefined;
-  },
-  editorApi(state: EditorState) {
-    const def = selectors.runtimeDefinition(state);
-    return def ? compileEditorApi(def) : undefined;
-  },
+
+  gameDefinition,
+  runtimeDefinition,
+  editorApi,
 };
