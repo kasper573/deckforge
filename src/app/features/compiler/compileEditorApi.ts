@@ -1,16 +1,19 @@
 import { memoize } from "lodash";
 import type { ZodType } from "zod";
-import { z } from "zod";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTS } from "../../../lib/zod-extensions/zodToTS";
-import type { RuntimeDefinition } from "./types";
+import type { RuntimeDefinition, RuntimeGenerics } from "./types";
 
-export interface EditorApi {
+export interface EditorApi<G extends RuntimeGenerics> {
   card: CodeEditorTypeDefs;
-  event: CodeEditorTypeDefs;
+  events: {
+    [K in keyof G["actions"]]: CodeEditorTypeDefs;
+  };
 }
 
-export function compileEditorApi(definition: RuntimeDefinition): EditorApi {
+export function compileEditorApi<G extends RuntimeGenerics>(
+  definition: RuntimeDefinition<G>
+): EditorApi<G> {
   const lazyResolvers = new Map([[definition.lazyState, TypeName.State]]);
 
   const common: CodeEditorTypeDefs = add(
@@ -40,7 +43,18 @@ export function compileEditorApi(definition: RuntimeDefinition): EditorApi {
       declareGlobalVariable({ name: "card", type: TypeName.Card }),
       declareModuleOutput(TypeName.Effects)
     ),
-    event: add(common, declareModuleOutput(zodToTS(z.function()))),
+    events: Object.entries(definition.effects.shape).reduce(
+      (eventTypeDefs, [effectName, effectType]) => {
+        return {
+          ...eventTypeDefs,
+          [effectName]: add(
+            common,
+            declareModuleOutput(zodToTS(effectType, { lazyResolvers }))
+          ),
+        };
+      },
+      {} as EditorApi<G>["events"]
+    ),
   };
 }
 

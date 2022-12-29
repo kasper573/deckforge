@@ -67,6 +67,7 @@ function useEditorProps(): {
   const id = useSelector(selectors.selectedObject);
   const actions = useActions(editorActions);
   const editorApi = useSelector(selectors.editorApi);
+  const events = useSelector(selectors.events);
 
   switch (id?.type) {
     case "card":
@@ -76,8 +77,9 @@ function useEditorProps(): {
         update: (code) => actions.updateCard({ ...id, code }),
       };
     case "event":
+      const eventName = events.find((e) => e.eventId === id.eventId)?.name;
       return {
-        typeDefs: editorApi?.event,
+        typeDefs: eventName ? editorApi?.events[eventName] : undefined,
         objectSelector: selectors.event(id.eventId),
         update: (code) => actions.updateEvent({ ...id, code }),
       };
