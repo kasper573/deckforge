@@ -36,7 +36,7 @@ export function compileGame<G extends RuntimeGenerics>(
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {
       effects[name as keyof typeof effects] = compile(
         code,
-        runtimeDefinition.effect
+        runtimeDefinition.effects.shape[name]
       );
       return effects;
     }, {} as RuntimeEffects<G>);
@@ -49,7 +49,7 @@ export function compileGame<G extends RuntimeGenerics>(
 
 export function compileCard<G extends RuntimeGenerics>(
   card: Card,
-  effectsType: ZodType<RuntimeEffects<G>>
+  effectsType: RuntimeDefinition<G>["effects"]
 ): RuntimeCard<G> {
   return {
     id: card.cardId,

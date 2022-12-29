@@ -1,12 +1,13 @@
 import type { ZodLazy, ZodType } from "zod";
+import type { ZodObject } from "zod";
 import type { CardId } from "../../../api/services/game/types";
 import type {
   MachineActions,
-  MachineEffect,
   MachineEffects,
 } from "../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../lib/machine/MachineContext";
 import type { NominalString } from "../../../lib/ts-extensions/NominalString";
+import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 
 export interface RuntimeCard<G extends RuntimeGenerics> {
   id: CardId;
@@ -46,12 +47,6 @@ export interface RuntimeState<G extends RuntimeGenerics> {
   winner?: RuntimePlayerId;
 }
 
-export type RuntimeEffect<
-  G extends RuntimeGenerics,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Payload = any
-> = MachineEffect<RuntimeState<G>, Payload>;
-
 export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<
   RuntimeMachineContext<G>
 >;
@@ -62,8 +57,7 @@ export interface RuntimeDefinition<
   state: ZodType<RuntimeState<G>>;
   card: ZodType<RuntimeCard<G>>;
   player: ZodType<RuntimePlayer<G>>;
-  effect: ZodType<RuntimeEffect<G>>;
-  effects: ZodType<RuntimeEffects<G>>;
+  effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
   actions: ZodType<G["actions"]>;
   lazyState: ZodLazy<ZodType<RuntimeState<G>>>;
 }
