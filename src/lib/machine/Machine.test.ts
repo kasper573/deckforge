@@ -62,15 +62,6 @@ describe("Machine", () => {
       expect(receivedState).toEqual(startState);
     });
 
-    it("can receive input", () => {
-      let receivedInput: number | undefined;
-      const machine = createReactionMachine((state, { input }) => {
-        receivedInput = input;
-      });
-      machine.actions.a(123);
-      expect(receivedInput).toBe(123);
-    });
-
     it("can update state", () => {
       const machine = createReactionMachine((state) => {
         state.value = "Updated";
