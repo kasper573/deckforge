@@ -1,17 +1,13 @@
 import { memoize } from "lodash";
 import type { ZodType } from "zod";
+import { z } from "zod";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTS } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition } from "./types";
 
 export interface EditorApi {
-  card: EditorObjectApi;
-  event: EditorObjectApi;
-}
-
-export interface EditorObjectApi {
-  factoryVariableName: string;
-  typeDefs: CodeEditorTypeDefs;
+  card: CodeEditorTypeDefs;
+  event: CodeEditorTypeDefs;
 }
 
 export function compileEditorApi(definition: RuntimeDefinition): EditorApi {
@@ -37,40 +33,26 @@ export function compileEditorApi(definition: RuntimeDefinition): EditorApi {
       })
     )
   );
+
   return {
-    card: {
-      factoryVariableName: "card",
-      typeDefs: add(
-        common,
-        declareGlobalVariable({
-          name: "card",
-          type: defineFactoryType({
-            inputType: TypeName.Card,
-            outputType: TypeName.Events,
-          }),
-        })
-      ),
-    },
-    event: {
-      factoryVariableName: "event",
-      typeDefs: add(
-        common,
-        declareGlobalVariable({ name: "event", type: TypeName.Events })
-      ),
-    },
+    card: add(
+      common,
+      declareGlobalVariable({ name: "card", type: TypeName.Card }),
+      declareModuleOutput(TypeName.Effects)
+    ),
+    event: add(common, declareModuleOutput(zodToTS(z.function()))),
   };
 }
 
 enum TypeName {
   Player = "Player",
   Card = "Card",
-  Events = "Events",
-  Actions = "Actions",
+  Effects = "Effects",
   State = "State",
 }
 
-function defineFactoryType(p: { inputType: string; outputType: string }) {
-  return `(definition: ${p.inputType}) => ${p.outputType}`;
+function declareModuleOutput(type: string) {
+  return `declare function define(output: ${type}): void;`;
 }
 
 function declareGlobalVariable(p: { name: string; type: string }): string {

@@ -75,8 +75,13 @@ export const selectors = {
         } as EditorObjectId,
         ...property,
       })) ?? [],
-  editorApi: (state: EditorState) =>
-    state.game
-      ? compileEditorApi(deriveRuntimeDefinition(state.game.definition))
-      : undefined,
+  gameDefinition: (state: EditorState) => state.game?.definition,
+  runtimeDefinition(state: EditorState) {
+    const def = selectors.gameDefinition(state);
+    return def ? deriveRuntimeDefinition(def) : undefined;
+  },
+  editorApi(state: EditorState) {
+    const def = selectors.runtimeDefinition(state);
+    return def ? compileEditorApi(def) : undefined;
+  },
 };

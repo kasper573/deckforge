@@ -21,11 +21,20 @@ import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
   const [manualResetCount, resetRuntime] = useReducer((c) => c + 1, 0);
-  const game = useSelector(selectors.game);
+  const gameDefinition = useSelector(selectors.gameDefinition);
+  const runtimeDefinition = useSelector(selectors.runtimeDefinition);
   const compiled = useMemo(
-    () => (game ? compileGame(game.definition, createInitialState) : undefined),
+    () => {
+      if (gameDefinition && runtimeDefinition) {
+        return compileGame(
+          runtimeDefinition,
+          gameDefinition,
+          createInitialState
+        );
+      }
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [game, manualResetCount]
+    [gameDefinition, runtimeDefinition, manualResetCount]
   );
   return (
     <Panel

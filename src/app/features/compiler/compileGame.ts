@@ -1,11 +1,11 @@
 import { groupBy } from "lodash";
-import { z } from "zod";
+import type { ZodType } from "zod";
 import type { Game, Card, DeckId } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
 import { deriveMachine } from "./defineRuntime";
 import type {
   RuntimeCard,
-  RuntimeEffect,
+  RuntimeDefinition,
   RuntimeEffects,
   RuntimeGenerics,
   RuntimeMachineContext,
@@ -17,6 +17,7 @@ export type GameRuntime<G extends RuntimeGenerics> = Machine<
 >;
 
 export function compileGame<G extends RuntimeGenerics>(
+  runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
   createInitialState: (decks: Map<DeckId, RuntimeCard<G>[]>) => RuntimeState<G>
 ): { runtime?: GameRuntime<G>; error?: unknown } {
@@ -24,11 +25,19 @@ export function compileGame<G extends RuntimeGenerics>(
     const decks = Object.entries(
       groupBy(gameDefinition.cards, "deckId")
     ).reduce((map, [deckId, cardDefinitions]) => {
-      return map.set(deckId as DeckId, cardDefinitions.map(compileCard<G>));
+      return map.set(
+        deckId as DeckId,
+        cardDefinitions.map((card) =>
+          compileCard(card, runtimeDefinition.effects)
+        )
+      );
     }, new Map<DeckId, RuntimeCard<G>[]>());
 
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {
-      effects[name as keyof typeof effects] = compileEffect(code);
+      effects[name as keyof typeof effects] = compile(
+        code,
+        runtimeDefinition.effect
+      );
       return effects;
     }, {} as RuntimeEffects<G>);
 
@@ -38,29 +47,38 @@ export function compileGame<G extends RuntimeGenerics>(
   }
 }
 
-export function compileCard<G extends RuntimeGenerics>(card: Card) {
-  const createEffects = compileEffectsFactory<G, Card>(card.code);
-
-  const runtimeCard: RuntimeCard<G> = {
+export function compileCard<G extends RuntimeGenerics>(
+  card: Card,
+  effectsType: ZodType<RuntimeEffects<G>>
+): RuntimeCard<G> {
+  return {
     id: card.cardId,
     name: card.name,
     properties: {},
-    effects: createEffects(card),
+    effects: compile(card.code, effectsType, { card }),
   };
-
-  return runtimeCard;
 }
 
-function compileEffectsFactory<G extends RuntimeGenerics, Payload>(
-  code: string
+function compile<T extends ZodType>(
+  code: string,
+  definitionType: T,
+  globals: Record<string, unknown> = {}
 ) {
   code = code.trim();
-  return z.function().parse(eval(`(${code})`)) as (
-    payload: Payload
-  ) => RuntimeEffects<G>;
+  // eslint-disable-next-line prefer-const
+  let definition: unknown = undefined;
+  eval(`
+    function define(arg) {
+      definition = arg;
+    }
+    ${objectToDeclarationCode(globals)}
+    ${code}
+  `);
+  return definitionType.parse(definition);
 }
 
-function compileEffect<G extends RuntimeGenerics, Payload>(code: string) {
-  code = code.trim();
-  return eval(`(${code})`) as RuntimeEffect<G, Payload>;
+function objectToDeclarationCode(globals: object) {
+  return Object.entries(globals).reduce((code, [name, value]) => {
+    return `${code}const ${name} = ${JSON.stringify(value)};`;
+  }, "");
 }

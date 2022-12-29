@@ -13,6 +13,7 @@ import type {
   PropRecord,
   RuntimeCard,
   RuntimeDefinition,
+  RuntimeEffect,
   RuntimeEffects,
   RuntimeGenerics,
   RuntimePlayer,
@@ -71,6 +72,7 @@ export function defineRuntime<
     card,
     player,
     state,
+    effect: deriveEffectType(state, []) as unknown as ZodType<RuntimeEffect<G>>,
     effects: effects as unknown as ZodType<RuntimeEffects<G>>,
     actions: actions as unknown as ZodType<G["actions"]>,
     lazyState,
@@ -118,14 +120,20 @@ function deriveEffectsType<G extends RuntimeGenerics>(
   stateType: ZodType<RuntimeState<G>>
 ) {
   const shape = Object.entries(actionTypes).reduce(
-    (shape, [eventName, eventType]) => {
-      const args = eventType._def.args._def.items;
-      const effectType = z.function(z.tuple([stateType, ...args]), z.void());
-      return { ...shape, [eventName]: effectType };
+    (shape, [actionName, actionType]) => {
+      const args = actionType._def.args._def.items;
+      return { ...shape, [actionName]: deriveEffectType(stateType, args) };
     },
     {} as ZodShapeFor<RuntimeEffects<G>>
   );
   return z.object(shape);
+}
+
+function deriveEffectType<G extends RuntimeGenerics>(
+  stateType: ZodType<RuntimeState<G>>,
+  args: ZodTypeAny[]
+) {
+  return z.function(z.tuple([stateType, ...args]), z.void());
 }
 
 export function deriveMachine<G extends RuntimeGenerics>(

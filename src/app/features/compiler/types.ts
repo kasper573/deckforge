@@ -46,10 +46,12 @@ export interface RuntimeState<G extends RuntimeGenerics> {
   winner?: RuntimePlayerId;
 }
 
-export type RuntimeEffect<G extends RuntimeGenerics, Payload> = MachineEffect<
-  RuntimeState<G>,
-  Payload
->;
+export type RuntimeEffect<
+  G extends RuntimeGenerics,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Payload = any
+> = MachineEffect<RuntimeState<G>, Payload>;
+
 export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<
   RuntimeMachineContext<G>
 >;
@@ -60,6 +62,7 @@ export interface RuntimeDefinition<
   state: ZodType<RuntimeState<G>>;
   card: ZodType<RuntimeCard<G>>;
   player: ZodType<RuntimePlayer<G>>;
+  effect: ZodType<RuntimeEffect<G>>;
   effects: ZodType<RuntimeEffects<G>>;
   actions: ZodType<G["actions"]>;
   lazyState: ZodLazy<ZodType<RuntimeState<G>>>;
