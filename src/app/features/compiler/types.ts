@@ -1,0 +1,77 @@
+import type { ZodLazy, ZodType } from "zod";
+import type { CardId } from "../../../api/services/game/types";
+import type {
+  MachineActions,
+  MachineEffect,
+  MachineEffects,
+} from "../../../lib/machine/MachineAction";
+import type { MachineContext } from "../../../lib/machine/MachineContext";
+import type { NominalString } from "../../../lib/ts-extensions/NominalString";
+
+export interface RuntimeCard<G extends RuntimeGenerics> {
+  id: CardId;
+  name: string;
+  properties: G["cardProps"];
+  effects: Partial<RuntimeEffects<G>>;
+}
+
+export type RuntimePlayerId = NominalString<"PlayerId">;
+
+export interface RuntimePlayer<G extends RuntimeGenerics> {
+  id: RuntimePlayerId;
+  properties: G["playerProps"];
+  cards: {
+    draw: RuntimeCard<G>[];
+    hand: RuntimeCard<G>[];
+    discard: RuntimeCard<G>[];
+    deck: RuntimeCard<G>[];
+  };
+}
+
+export interface RuntimeGenerics<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PlayerProps extends PropRecord = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  CardProps extends PropRecord = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Actions extends MachineActions = any
+> {
+  playerProps: PlayerProps;
+  cardProps: CardProps;
+  actions: Actions;
+}
+
+export interface RuntimeState<G extends RuntimeGenerics> {
+  players: [RuntimePlayer<G>, RuntimePlayer<G>];
+  winner?: RuntimePlayerId;
+}
+
+export type RuntimeEffect<G extends RuntimeGenerics, Payload> = MachineEffect<
+  RuntimeState<G>,
+  Payload
+>;
+export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<
+  RuntimeMachineContext<G>
+>;
+
+export interface RuntimeDefinition<
+  G extends RuntimeGenerics = RuntimeGenerics
+> {
+  state: ZodType<RuntimeState<G>>;
+  card: ZodType<RuntimeCard<G>>;
+  player: ZodType<RuntimePlayer<G>>;
+  effects: ZodType<RuntimeEffects<G>>;
+  actions: ZodType<G["actions"]>;
+  lazyState: ZodLazy<ZodType<RuntimeState<G>>>;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type PropRecord = Record<string, any>;
+
+export type RuntimeGenericsFor<T extends RuntimeDefinition> =
+  T extends RuntimeDefinition<infer G> ? G : never;
+
+export type RuntimeMachineContext<G extends RuntimeGenerics> = MachineContext<
+  RuntimeState<G>,
+  G["actions"]
+>;

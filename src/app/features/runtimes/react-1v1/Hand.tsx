@@ -1,6 +1,6 @@
 import type { CardId } from "../../../../api/services/game/types";
 
-import type { RuntimePlayerId } from "../../compiler/defineRuntime";
+import type { RuntimePlayerId } from "../../compiler/types";
 import { Card } from "./Card";
 import type { React1v1Types } from "./definition";
 import { adapter } from "./definition";

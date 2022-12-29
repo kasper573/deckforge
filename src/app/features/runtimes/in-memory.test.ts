@@ -2,14 +2,13 @@ import { v4 } from "uuid";
 import { z } from "zod";
 import { without } from "lodash";
 import { cardIdType } from "../../../api/services/game/types";
-import { createMachineActions } from "../../../lib/machine/Machine";
-import type { RuntimePlayerId } from "../compiler/defineRuntime";
 import {
   defineRuntime,
   deriveMachine,
   runtimeEvent,
 } from "../compiler/defineRuntime";
 import type { ZodTypesFor } from "../../../lib/zod-extensions/ZodShapeFor";
+import type { RuntimePlayerId } from "../compiler/types";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = createDamageCard(1);
@@ -115,9 +114,8 @@ type InMemoryTypes = ZodTypesFor<InMemoryDefinition>;
 type Player = InMemoryTypes["player"];
 type Card = InMemoryTypes["card"];
 type State = InMemoryTypes["state"];
-type Actions = InMemoryTypes["actions"];
 
-const actions = createMachineActions<State>()<Actions>({
+const actions: InMemoryTypes["effects"] = {
   startBattle(state) {
     state.winner = undefined;
     state.players.forEach(resetPlayerCards);
@@ -153,7 +151,7 @@ const actions = createMachineActions<State>()<Actions>({
     const [discardedCard] = player.cards.hand.splice(index, 1);
     player.cards.discard.push(discardedCard);
   },
-});
+};
 
 function selectPlayer(state: State, playerId: RuntimePlayerId) {
   const player = state.players.find((p) => p.id === playerId);

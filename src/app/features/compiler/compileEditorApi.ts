@@ -2,7 +2,7 @@ import { memoize } from "lodash";
 import type { ZodType } from "zod";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTS } from "../../../lib/zod-extensions/zodToTS";
-import type { RuntimeDefinition } from "./defineRuntime";
+import type { RuntimeDefinition } from "./types";
 
 export interface EditorApi {
   card: EditorObjectApi;

@@ -21,7 +21,7 @@ export function PlayerBoard({
   opponent: React1v1Types["player"];
 }) {
   const actions = adapter.useRuntimeActions();
-  const drawCard = () => actions.drawCard({ playerId: player.id });
+  const drawCard = () => actions.drawCard(player.id);
   const endTurn = () => actions.endTurn();
   return (
     <Box

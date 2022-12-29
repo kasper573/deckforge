@@ -14,9 +14,9 @@ import { PanelEmptyState } from "../components/PanelEmptyState";
 import { PanelControls } from "../components/PanelControls";
 import { compileGame } from "../../compiler/compileGame";
 import type { DeckId } from "../../../../api/services/game/types";
-import type { RuntimeCard } from "../../compiler/defineRuntime";
 import type { React1v1Types } from "../../runtimes/react-1v1/definition";
 import { Reload } from "../../../components/icons";
+import type { RuntimePlayerId } from "../../compiler/types";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
@@ -70,7 +70,7 @@ function RuntimeErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 }
 
 function createInitialState(
-  decks: Map<DeckId, RuntimeCard[]>
+  decks: Map<DeckId, React1v1Types["card"][]>
 ): React1v1Types["state"] {
   const deck = Array.from(decks.values())[0];
   if (!deck) {
@@ -78,7 +78,7 @@ function createInitialState(
   }
   function createPlayer(): React1v1Types["player"] {
     return {
-      id: v4() as React1v1Types["playerId"],
+      id: v4() as RuntimePlayerId,
       properties: { health: 5 },
       cards: {
         hand: [],

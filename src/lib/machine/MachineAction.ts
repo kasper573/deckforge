@@ -11,11 +11,8 @@ type SingleOrNoArgument<T> = void extends T
   ? [] | [T]
   : [T];
 
-export type MachinePayload<T> = T extends MachineEffect<any, infer P>
-  ? P
-  : T extends MachineAction<infer P>
-  ? P
-  : never;
+export type MachineActionPayload<T extends MachineAction> =
+  T extends MachineAction<infer P> ? P : never;
 
 export type MachineActions<Names extends string = string> = Record<
   Names,
@@ -29,6 +26,9 @@ export type MachineEffect<
   Payload = any
 > = (state: State, payload: Payload) => void;
 
+export type MachineEffectPayload<T extends MachineEffect> =
+  T extends MachineEffect<any, infer P> ? P : never;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyMachineEffects<State = any> = Record<
   string,
@@ -38,12 +38,12 @@ export type AnyMachineEffects<State = any> = Record<
 export type MachineEffects<MC extends MachineContext> = {
   [K in keyof MC["actions"]]: MachineEffect<
     MC["state"],
-    MachinePayload<MC["actions"][K]>
+    MachineActionPayload<MC["actions"][K]>
   >;
 };
 
 export type MachineActionsFor<Effects extends MachineEffects<any>> = {
-  [K in keyof Effects]: MachineAction<MachinePayload<Effects[K]>>;
+  [K in keyof Effects]: MachineAction<MachineEffectPayload<Effects[K]>>;
 };
 
 export type MachineEffectSelector<MC extends MachineContext> =
@@ -55,11 +55,11 @@ export type MachineEffectCollector<MC extends MachineContext> = <
 >(
   state: MC["state"],
   actionName: ActionName
-) => Iterable<MachineEffect<MC["state"], unknown>> | undefined;
+) => Iterable<MachineEffect<MC["state"]>> | undefined;
 
 export type MachineEffectGenerator<MC extends MachineContext> = <
   ActionName extends keyof MC["actions"]
 >(
   state: MC["state"],
   actionName: ActionName
-) => Generator<MachineEffect<MC["state"], unknown>>;
+) => Generator<MachineEffect<MC["state"]>>;

@@ -1,6 +1,6 @@
 import produce, { enableMapSet } from "immer";
 import type {
-  MachinePayload,
+  MachineActionPayload,
   MachineEffects,
   MachineActionsFor,
 } from "./MachineAction";
@@ -23,7 +23,7 @@ export class Machine<MC extends MachineContext> {
       get:
         (target, prop) =>
         <ActionName extends keyof MC["actions"]>(
-          payload: MachinePayload<MC["actions"][ActionName]>
+          payload: MachineActionPayload<MC["actions"][ActionName]>
         ) =>
           this.performAction(prop as ActionName, payload),
     });
@@ -31,7 +31,7 @@ export class Machine<MC extends MachineContext> {
 
   private performAction<ActionName extends keyof MC["actions"]>(
     name: ActionName,
-    payload: MachinePayload<MC["actions"][ActionName]>
+    payload: MachineActionPayload<MC["actions"][ActionName]>
   ) {
     this.execute((draft) => {
       const handleEffect = this.effects[name];
