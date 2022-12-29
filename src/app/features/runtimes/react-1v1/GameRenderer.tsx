@@ -3,10 +3,11 @@ import type { ComponentProps } from "react";
 import { useEffect } from "react";
 import type { GameRuntime } from "../../compiler/compileGame";
 import { PlayerBoard } from "./PlayerBoard";
+import type { React1v1Generics } from "./definition";
 import { adapter } from "./definition";
 
 export interface GameRendererProps extends ComponentProps<typeof Viewport> {
-  runtime: GameRuntime;
+  runtime: GameRuntime<React1v1Generics>;
 }
 
 export function GameRenderer({ runtime, ...viewportProps }: GameRendererProps) {

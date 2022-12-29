@@ -3,11 +3,13 @@ import { z } from "zod";
 import { without } from "lodash";
 import { cardIdType } from "../../../api/services/game/types";
 import { createMachineActions } from "../../../lib/machine/Machine";
+import type { RuntimePlayerId } from "../compiler/defineRuntime";
 import {
   defineRuntime,
   deriveMachine,
   runtimeEvent,
 } from "../compiler/defineRuntime";
+import type { ZodTypesFor } from "../../../lib/zod-extensions/ZodShapeFor";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = createDamageCard(1);
@@ -55,9 +57,9 @@ it("1v1: can play a two card deck and win the game", () => {
   });
 });
 
-function createPlayer(health: number, cards: RuntimeCard[]): RuntimePlayer {
+function createPlayer(health: number, cards: Card[]): Player {
   return {
-    id: v4() as RuntimePlayer["id"],
+    id: v4() as Player["id"],
     properties: { health },
     cards: {
       deck: cards,
@@ -68,8 +70,8 @@ function createPlayer(health: number, cards: RuntimeCard[]): RuntimePlayer {
   };
 }
 
-function createDamageCard(damage: number): RuntimeCard {
-  const id = v4() as RuntimeCard["id"];
+function createDamageCard(damage: number): Card {
+  const id = v4() as Card["id"];
   return {
     id,
     name: "Attack",
@@ -88,12 +90,12 @@ function createDamageCard(damage: number): RuntimeCard {
   };
 }
 
-const typeDefs = defineRuntime({
+const inMemoryDefinition = defineRuntime({
   playerProperties: {
     health: z.number(),
   },
   cardProperties: {},
-  events: ({ playerId }) => {
+  actions: ({ playerId }) => {
     const cardPayload = z.object({
       playerId,
       cardId: cardIdType,
@@ -108,14 +110,14 @@ const typeDefs = defineRuntime({
   },
 });
 
-type TypeDefs = typeof typeDefs;
-type RuntimePlayerId = z.infer<typeof typeDefs.playerId>;
-type RuntimePlayer = z.infer<typeof typeDefs.player>;
-type RuntimeCard = z.infer<typeof typeDefs.card>;
-type RuntimeState = z.infer<typeof typeDefs.state>;
-type MachineActions = z.infer<typeof typeDefs.effects>;
+type InMemoryDefinition = typeof inMemoryDefinition;
+type InMemoryTypes = ZodTypesFor<InMemoryDefinition>;
+type Player = InMemoryTypes["player"];
+type Card = InMemoryTypes["card"];
+type State = InMemoryTypes["state"];
+type Actions = InMemoryTypes["actions"];
 
-const actions = createMachineActions<RuntimeState>()<MachineActions>({
+const actions = createMachineActions<State>()<Actions>({
   startBattle(state) {
     state.winner = undefined;
     state.players.forEach(resetPlayerCards);
@@ -153,7 +155,7 @@ const actions = createMachineActions<RuntimeState>()<MachineActions>({
   },
 });
 
-function selectPlayer(state: RuntimeState, playerId: RuntimePlayerId) {
+function selectPlayer(state: State, playerId: RuntimePlayerId) {
   const player = state.players.find((p) => p.id === playerId);
   if (!player) {
     throw new Error(`Player ${playerId} not found`);
@@ -161,13 +163,13 @@ function selectPlayer(state: RuntimeState, playerId: RuntimePlayerId) {
   return player;
 }
 
-function resetPlayerCards(player: RuntimePlayer) {
+function resetPlayerCards(player: Player) {
   const { cards } = player;
   cards.discard = [];
   cards.hand = [];
   cards.draw = cards.deck;
 }
 
-function createGameRuntime(initialState: RuntimeState) {
-  return deriveMachine<TypeDefs>(actions, initialState);
+function createGameRuntime(initialState: State) {
+  return deriveMachine(actions, initialState);
 }

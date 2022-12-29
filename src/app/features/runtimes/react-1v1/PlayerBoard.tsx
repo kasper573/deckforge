@@ -6,7 +6,7 @@ import { Status } from "./Status";
 import { EndTurnButton } from "./EndTurnButton";
 import { CardPile } from "./CardPile";
 import { Hand } from "./Hand";
-import type { Builtins } from "./definition";
+import type { React1v1Types } from "./definition";
 import { adapter } from "./definition";
 
 export function PlayerBoard({
@@ -17,8 +17,8 @@ export function PlayerBoard({
   ...props
 }: ComponentProps<typeof Stack> & {
   placement: "top" | "bottom";
-  player: Builtins["player"];
-  opponent: Builtins["player"];
+  player: React1v1Types["player"];
+  opponent: React1v1Types["player"];
 }) {
   const actions = adapter.useRuntimeActions();
   const drawCard = () => actions.drawCard({ playerId: player.id });

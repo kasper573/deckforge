@@ -4,44 +4,44 @@ import type { Game, Card, DeckId } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
 import type {
   RuntimeCard,
-  RuntimeDefinition,
-  MachineContextFor,
+  RuntimeEffects,
+  RuntimeGenerics,
+  RuntimeState,
+  RuntimeMachineContext,
+  RuntimeEffect,
 } from "./defineRuntime";
 import { deriveMachine } from "./defineRuntime";
 
-export type GameRuntime<RD extends RuntimeDefinition = RuntimeDefinition> =
-  Machine<MachineContextFor<RD>>;
+export type GameRuntime<G extends RuntimeGenerics> = Machine<
+  RuntimeMachineContext<G>
+>;
 
-export function compileGame<RD extends RuntimeDefinition>(
+export function compileGame<G extends RuntimeGenerics>(
   gameDefinition: Game["definition"],
-  createInitialState: (
-    decks: Map<DeckId, RuntimeCard[]>
-  ) => z.infer<RD["state"]>
-): { runtime?: GameRuntime<RD>; error?: unknown } {
+  createInitialState: (decks: Map<DeckId, RuntimeCard<G>[]>) => RuntimeState<G>
+): { runtime?: GameRuntime<G>; error?: unknown } {
   try {
     const decks = Object.entries(
       groupBy(gameDefinition.cards, "deckId")
     ).reduce((map, [deckId, cardDefinitions]) => {
-      return map.set(deckId as DeckId, cardDefinitions.map(compileCard));
-    }, new Map<DeckId, RuntimeCard[]>());
+      return map.set(deckId as DeckId, cardDefinitions.map(compileCard<G>));
+    }, new Map<DeckId, RuntimeCard<G>[]>());
 
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {
-      effects[name] = compileEffect(code);
+      effects[name as keyof typeof effects] = compileEffect(code);
       return effects;
-    }, {} as AnyEffectRecord);
+    }, {} as RuntimeEffects<G>);
 
-    return { runtime: deriveMachine<RD>(effects, createInitialState(decks)) };
+    return { runtime: deriveMachine<G>(effects, createInitialState(decks)) };
   } catch (error) {
     return { error };
   }
 }
 
-export function compileCard(card: Card) {
-  const createEffects = compileEffectsFactory<Card, RuntimeCard["effects"]>(
-    card.code
-  );
+export function compileCard<G extends RuntimeGenerics>(card: Card) {
+  const createEffects = compileEffectsFactory<G, Card>(card.code);
 
-  const runtimeCard: RuntimeCard = {
+  const runtimeCard: RuntimeCard<G> = {
     id: card.cardId,
     name: card.name,
     properties: {},
@@ -51,18 +51,16 @@ export function compileCard(card: Card) {
   return runtimeCard;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyEffect = (state: any, payload: any) => void;
-type AnyEffectRecord = Record<string, AnyEffect>;
-
-function compileEffectsFactory<Input, Effects extends AnyEffectRecord>(
+function compileEffectsFactory<G extends RuntimeGenerics, Payload>(
   code: string
 ) {
   code = code.trim();
-  return z.function().parse(eval(`(${code})`)) as (input: Input) => Effects;
+  return z.function().parse(eval(`(${code})`)) as (
+    payload: Payload
+  ) => RuntimeEffects<G>;
 }
 
-function compileEffect<Effect extends AnyEffect>(code: string) {
+function compileEffect<G extends RuntimeGenerics, Payload>(code: string) {
   code = code.trim();
-  return eval(`(${code})`) as Effect;
+  return eval(`(${code})`) as RuntimeEffect<G, Payload>;
 }

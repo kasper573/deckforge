@@ -1,15 +1,19 @@
 import { z } from "zod";
-import type { MachineContextFor } from "../../compiler/defineRuntime";
+import type {
+  RuntimeGenericsFor,
+  RuntimeMachineContext,
+} from "../../compiler/defineRuntime";
 import { defineRuntime, runtimeEvent } from "../../compiler/defineRuntime";
 import { createReactAdapter } from "../../../../lib/machine/createReactAdapter";
 import { cardIdType } from "../../../../api/services/game/types";
+import type { ZodTypesFor } from "../../../../lib/zod-extensions/ZodShapeFor";
 
 export const builtinDefinition = defineRuntime({
   playerProperties: {
     health: z.number(),
   },
   cardProperties: {},
-  events: ({ playerId }) => {
+  actions: ({ playerId }) => {
     const cardPayload = z.object({
       playerId,
       cardId: cardIdType,
@@ -24,9 +28,9 @@ export const builtinDefinition = defineRuntime({
   },
 });
 
-type BuiltinSchemas = typeof builtinDefinition;
-export type Builtins = {
-  [K in keyof BuiltinSchemas]: z.infer<BuiltinSchemas[K]>;
-};
+export type React1v1Definition = typeof builtinDefinition;
+export type React1v1Generics = RuntimeGenericsFor<React1v1Definition>;
+export type React1v1Types = ZodTypesFor<React1v1Definition>;
+export type React1v1MachineContext = RuntimeMachineContext<React1v1Generics>;
 
-export const adapter = createReactAdapter<MachineContextFor<BuiltinSchemas>>();
+export const adapter = createReactAdapter<React1v1MachineContext>();

@@ -1,11 +1,11 @@
 import type { ComponentProps } from "react";
 import Box from "@mui/material/Box";
-import type { Builtins } from "./definition";
+import type { React1v1Types } from "./definition";
 
 export const Status = ({
   player,
   ...props
-}: ComponentProps<typeof Box> & { player: Builtins["player"] }) => (
+}: ComponentProps<typeof Box> & { player: React1v1Types["player"] }) => (
   <Box sx={{ color: "black" }} {...props}>
     HP: {player.properties.health}
   </Box>

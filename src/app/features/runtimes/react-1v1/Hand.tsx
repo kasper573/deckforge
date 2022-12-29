@@ -1,17 +1,18 @@
 import type { CardId } from "../../../../api/services/game/types";
 
+import type { RuntimePlayerId } from "../../compiler/defineRuntime";
 import { Card } from "./Card";
-import type { Builtins } from "./definition";
+import type { React1v1Types } from "./definition";
 import { adapter } from "./definition";
 
 export function Hand({
   cards,
   playCardProps,
 }: {
-  cards: Builtins["cardPile"];
+  cards: React1v1Types["card"][];
   playCardProps: {
-    playerId: Builtins["playerId"];
-    targetId: Builtins["playerId"];
+    playerId: RuntimePlayerId;
+    targetId: RuntimePlayerId;
   };
 }) {
   const actions = adapter.useRuntimeActions();

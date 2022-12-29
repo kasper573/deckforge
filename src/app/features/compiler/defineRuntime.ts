@@ -1,14 +1,12 @@
-import type {
-  ZodRawShape,
-  ZodFunction,
-  ZodVoid,
-  ZodType,
-  ZodObject,
-} from "zod";
+import type { ZodRawShape, ZodType, ZodLazy } from "zod";
 import { z } from "zod";
-import type { ZodTuple } from "zod/lib/types";
 import type { ZodTypeAny } from "zod/lib/types";
-import type { Game, Event, Property } from "../../../api/services/game/types";
+import type {
+  Game,
+  Event,
+  Property,
+  CardId,
+} from "../../../api/services/game/types";
 import {
   cardType as cardDefinitionType,
   propertyValue,
@@ -21,58 +19,103 @@ import type {
 } from "../../../lib/machine/MachineAction";
 import { createMachine } from "../../../lib/machine/Machine";
 import type { MachineContext } from "../../../lib/machine/MachineContext";
+import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 
-export type RuntimeCard = z.infer<RuntimeDefinition["card"]>;
+export interface RuntimeCard<G extends RuntimeGenerics> {
+  id: CardId;
+  name: string;
+  properties: G["cardProps"];
+  effects: Partial<RuntimeEffects<G>>;
+}
 
-export type RuntimeDefinition<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PlayerProperties extends ZodRawShape = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  CardProperties extends ZodRawShape = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Events extends RuntimeEventShape = any
-> = ReturnType<typeof defineRuntime<PlayerProperties, CardProperties, Events>>;
+export type RuntimePlayerId = NominalString<"PlayerId">;
+export interface RuntimePlayer<G extends RuntimeGenerics> {
+  id: RuntimePlayerId;
+  properties: G["playerProps"];
+  cards: {
+    draw: RuntimeCard<G>[];
+    hand: RuntimeCard<G>[];
+    discard: RuntimeCard<G>[];
+    deck: RuntimeCard<G>[];
+  };
+}
+
+export interface RuntimeGenerics<
+  PlayerProps extends PropRecord = any,
+  CardProps extends PropRecord = any,
+  Actions extends ActionRecord = any
+> {
+  playerProps: PlayerProps;
+  cardProps: CardProps;
+  actions: Actions;
+}
+
+export interface RuntimeState<G extends RuntimeGenerics> {
+  players: [RuntimePlayer<G>, RuntimePlayer<G>];
+  winner?: RuntimePlayerId;
+}
+
+export type RuntimeEffect<
+  G extends RuntimeGenerics,
+  Args extends ActionArgs
+> = (state: RuntimeState<G>, ...args: Args) => void;
+
+export type RuntimeEffects<G extends RuntimeGenerics> = {
+  [K in keyof G["actions"]]: RuntimeEffect<G, Parameters<G["actions"][K]>>;
+};
+
+export interface RuntimeDefinition<
+  G extends RuntimeGenerics = RuntimeGenerics
+> {
+  state: ZodType<RuntimeState<G>>;
+  card: ZodType<RuntimeCard<G>>;
+  player: ZodType<RuntimePlayer<G>>;
+  effects: ZodType<RuntimeEffects<G>>;
+  actions: ZodType<G["actions"]>;
+  lazyState: ZodLazy<ZodType<RuntimeState<G>>>;
+}
+
+type PropRecord = Record<string, any>;
+type ActionRecord = Record<string, ActionFn>;
+type ActionArgs = any[];
+type ActionFn<Args extends ActionArgs = any> = (...args: Args) => void;
+
+export type RuntimeGenericsFor<T extends RuntimeDefinition> =
+  T extends RuntimeDefinition<infer G> ? G : never;
+
+export type RuntimeMachineContext<G extends RuntimeGenerics> = MachineContext<
+  RuntimeState<G>,
+  RuntimeEffects<G>
+>;
 
 export function defineRuntime<
-  PlayerProperties extends ZodRawShape,
-  CardProperties extends ZodRawShape,
-  Events extends RuntimeEventShape
+  PlayerProps extends PropRecord,
+  CardProps extends PropRecord,
+  ActionTypeDefs extends ZodRawShape
 >({
   playerProperties,
   cardProperties,
-  events: defineEvents,
+  actions: createActionsShape,
 }: {
-  playerProperties: PlayerProperties;
-  cardProperties: CardProperties;
-  events: (types: { playerId: ZodType<RuntimePlayerId> }) => Events;
+  playerProperties: ZodShapeFor<PlayerProps>;
+  cardProperties: ZodShapeFor<CardProps>;
+  actions: (types: { playerId: ZodType<RuntimePlayerId> }) => ActionTypeDefs;
 }) {
-  type State = {
-    players: [Player, Player];
-    winner?: RuntimePlayerId;
-  };
-  type Player = z.infer<typeof player>;
-  type EffectsType = ZodObject<EffectTypeShape<Events, ZodType<State>>>;
-  type Effects = z.infer<EffectsType>;
-  type Card = z.infer<typeof cardWithoutEffects> & {
-    effects: Partial<Effects>;
-  };
+  type Actions = z.objectInputType<ActionTypeDefs, ZodTypeAny>;
+  type G = RuntimeGenerics<PlayerProps, CardProps, Actions>;
 
   const playerId = zodNominalString<RuntimePlayerId>();
-  const eventShape = defineEvents({ playerId });
-  const events = z.object(eventShape);
+  const actionsShape = createActionsShape({ playerId });
+  const actions = z.object(actionsShape);
   const lazyState = z.lazy(() => state);
-  const effects = deriveEffectsType(eventShape, lazyState);
+  const effects = deriveEffectsType(actionsShape, lazyState);
 
-  const cardWithoutEffects = z.object({
+  const card = z.object({
     id: cardDefinitionType.shape.cardId,
     name: cardDefinitionType.shape.name,
     properties: z.object(cardProperties),
-  });
-
-  const card = z.object({
-    ...cardWithoutEffects.shape,
     effects: effects.partial(),
-  }) as unknown as ZodType<Card>;
+  }) as unknown as ZodType<RuntimeCard<G>>;
 
   const cardPile = z.array(card);
 
@@ -85,23 +128,23 @@ export function defineRuntime<
       hand: cardPile,
       discard: cardPile,
     }),
-  });
+  }) as unknown as ZodType<RuntimePlayer<G>>;
 
   const state = z.object({
     players: z.tuple([player, player]),
     winner: playerId.optional(),
-  });
+  }) as unknown as ZodType<RuntimeState<G>>;
 
-  return {
+  const def: RuntimeDefinition<G> = {
     card,
-    cardPile,
     player,
-    playerId,
     state,
-    effects,
-    events,
+    effects: effects as unknown as ZodType<RuntimeEffects<G>>,
+    actions: actions as unknown as ZodType<G["actions"]>,
     lazyState,
   };
+
+  return def;
 }
 
 export function deriveRuntimeDefinition({
@@ -113,7 +156,7 @@ export function deriveRuntimeDefinition({
   return defineRuntime({
     playerProperties: propertiesToZodShape(playerPropertyList),
     cardProperties: propertiesToZodShape(cardPropertyList),
-    events: () => eventsToZodShape(events),
+    actions: () => eventsToZodShape(events),
   });
 }
 
@@ -126,7 +169,7 @@ const propertiesToZodShape = (propertyList: Property[]) =>
     {} as ZodRawShape
   );
 
-const eventsToZodShape = (eventList: Event[]): RuntimeEventShape =>
+const eventsToZodShape = <G extends RuntimeGenerics>(eventList: Event[]) =>
   eventList.reduce(
     (shape, event) => ({
       ...shape,
@@ -135,7 +178,7 @@ const eventsToZodShape = (eventList: Event[]): RuntimeEventShape =>
         .args(propertyValue.valueTypeOf(event.inputType))
         .returns(z.void()),
     }),
-    {}
+    {} as ZodShapeFor<G["actions"]>
   );
 
 function effectToReaction<State, Payload>(
@@ -146,31 +189,24 @@ function effectToReaction<State, Payload>(
   };
 }
 
-function deriveEffectsType<
-  Events extends RuntimeEventShape,
-  State extends ZodType
->(eventTypes: Events, stateType: State) {
-  const shape = Object.entries(eventTypes).reduce(
+function deriveEffectsType<G extends RuntimeGenerics>(
+  actionTypes: ZodShapeFor<G["actions"]>,
+  stateType: ZodType<RuntimeState<G>>
+) {
+  const shape = Object.entries(actionTypes).reduce(
     (shape, [eventName, eventType]) => {
-      return { ...shape, [eventName]: deriveEffectType(eventType, stateType) };
+      const args = eventType._def.args._def.items;
+      const effectType = z.function(z.tuple([stateType, ...args]), z.void());
+      return { ...shape, [eventName]: effectType };
     },
-    {} as EffectTypeShape<Events, State>
+    {} as ZodShapeFor<RuntimeEffects<G>>
   );
   return z.object(shape);
 }
 
-function deriveEffectType<Event extends RuntimeEvent, State extends ZodType>(
-  eventType: Event,
-  stateType: State
-) {
-  const args = eventType._def.args._def.items;
-  const effectType = z.function(z.tuple([stateType, ...args]), z.void());
-  return effectType as EffectType<Event, State>;
-}
-
-export function deriveMachine<RD extends RuntimeDefinition>(
-  eventHandlers: z.infer<RD["events"]>,
-  initialState: z.infer<RD["state"]>
+export function deriveMachine<G extends RuntimeGenerics>(
+  eventHandlers: RuntimeEffects<G>,
+  initialState: RuntimeState<G>
 ) {
   return createMachine(initialState)
     .actions(eventHandlers)
@@ -188,43 +224,6 @@ export function deriveMachine<RD extends RuntimeDefinition>(
     .build();
 }
 
-type MachineActionsFor<Events, State> = {
-  [K in keyof Events]: Events[K] extends (input: infer I) => infer O
-    ? MachineAction<State, I, O>
-    : never;
-};
-
-export type MachineContextFor<RD extends RuntimeDefinition> = MachineContext<
-  z.infer<RD["state"]>,
-  MachineActionsFor<z.infer<RD["events"]>, z.infer<RD["state"]>>
->;
-
-export type RuntimeEventArgs = [] | [ZodTypeAny];
-export type RuntimeEventShape = Record<string, RuntimeEvent>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RuntimeEvent<Args extends RuntimeEventArgs = any> = ZodFunction<
-  ZodTuple<Args>,
-  ZodVoid
->;
-
-export type EffectType<
-  Event extends RuntimeEvent,
-  State extends ZodType
-> = Event extends RuntimeEvent<infer Args>
-  ? ZodFunction<ZodTuple<[State, ...Args]>, ZodVoid>
-  : never;
-
-export type EffectTypeShape<
-  Events extends RuntimeEventShape,
-  State extends ZodType
-> = {
-  [K in keyof Events]: EffectType<Events[K], State>;
-};
-
-export function runtimeEvent<Args extends RuntimeEventArgs>(
-  ...args: Args
-): RuntimeEvent<Args> {
+export function runtimeEvent<Args extends [] | [ZodTypeAny]>(...args: Args) {
   return z.function(z.tuple(args), z.void());
 }
-
-type RuntimePlayerId = NominalString<"PlayerId">;
