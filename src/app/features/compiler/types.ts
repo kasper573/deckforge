@@ -55,7 +55,7 @@ export interface RuntimeDefinition<
   G extends RuntimeGenerics = RuntimeGenerics
 > {
   state: ZodType<RuntimeState<G>>;
-  card: ZodType<RuntimeCard<G>>;
+  card: ZodObject<ZodShapeFor<RuntimeCard<G>>>;
   player: ZodType<RuntimePlayer<G>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
   actions: ZodType<G["actions"]>;

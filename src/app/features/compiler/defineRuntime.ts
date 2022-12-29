@@ -11,11 +11,9 @@ import { createMachine } from "../../../lib/machine/Machine";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import type {
   PropRecord,
-  RuntimeCard,
   RuntimeDefinition,
   RuntimeEffects,
   RuntimeGenerics,
-  RuntimePlayer,
   RuntimePlayerId,
   RuntimeState,
 } from "./types";
@@ -37,17 +35,24 @@ export function defineRuntime<
   type G = RuntimeGenerics<PlayerProps, CardProps, Actions>;
 
   const playerId = zodNominalString<RuntimePlayerId>();
-  const actionsShape = createActionsShape({ playerId });
-  const actions = z.object(actionsShape);
   const lazyState = z.lazy(() => state);
-  const effects = deriveEffectsType(actionsShape, lazyState);
+
+  const actionsShape = createActionsShape({ playerId });
+  const actions = z.object(
+    actionsShape
+  ) as unknown as RuntimeDefinition<G>["actions"];
+
+  const effects = deriveEffectsType(
+    actionsShape,
+    lazyState
+  ) as unknown as RuntimeDefinition<G>["effects"];
 
   const card = z.object({
     id: cardDefinitionType.shape.cardId,
     name: cardDefinitionType.shape.name,
     properties: z.object(cardProperties),
     effects: effects.partial(),
-  }) as unknown as ZodType<RuntimeCard<G>>;
+  }) as unknown as RuntimeDefinition<G>["card"];
 
   const cardPile = z.array(card);
 
@@ -60,23 +65,21 @@ export function defineRuntime<
       hand: cardPile,
       discard: cardPile,
     }),
-  }) as unknown as ZodType<RuntimePlayer<G>>;
+  }) as unknown as RuntimeDefinition<G>["player"];
 
   const state = z.object({
     players: z.tuple([player, player]),
     winner: playerId.optional(),
-  }) as unknown as ZodType<RuntimeState<G>>;
+  }) as unknown as RuntimeDefinition<G>["state"];
 
-  const def: RuntimeDefinition<G> = {
+  return {
     card,
     player,
     state,
-    effects: effects as unknown as RuntimeDefinition<G>["effects"],
-    actions: actions as unknown as ZodType<G["actions"]>,
+    effects,
+    actions,
     lazyState,
-  };
-
-  return def;
+  } as RuntimeDefinition<G>;
 }
 
 export function deriveRuntimeDefinition({

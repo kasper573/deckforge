@@ -3,6 +3,7 @@ import type { ZodType } from "zod";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTS } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
+import type { RuntimeCard } from "./types";
 
 export interface EditorApi<G extends RuntimeGenerics> {
   card: CodeEditorTypeDefs;
@@ -37,11 +38,13 @@ export function compileEditorApi<G extends RuntimeGenerics>(
     )
   );
 
+  const cardEffectsProp: keyof RuntimeCard<G> = "effects";
+
   return {
     card: add(
       common,
       declareGlobalVariable({ name: "card", type: TypeName.Card }),
-      declareModuleOutput(TypeName.Effects)
+      declareModuleOutput(memberReference(TypeName.Card, cardEffectsProp))
     ),
     events: Object.entries(definition.effects.shape).reduce(
       (eventTypeDefs, [effectName, effectType]) => {
@@ -70,11 +73,15 @@ function declareModuleOutput(type: string) {
 }
 
 function declareGlobalVariable(p: { name: string; type: string }): string {
-  return `declare let ${p.name}: ${p.type};`;
+  return `declare const ${p.name}: ${p.type};`;
 }
 
 function declareType(typeName: string, type: Type): string {
   return `type ${typeName} = ${defineType(type)};`;
+}
+
+function memberReference(target: string, member: string) {
+  return `${target}["${member}"]`;
 }
 
 function defineType(type: Type, indentation?: number): string {

@@ -1,5 +1,6 @@
 import { groupBy } from "lodash";
 import type { ZodType } from "zod";
+import type { z } from "zod";
 import type { Game, Card, DeckId } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
 import { deriveMachine } from "./defineRuntime";
@@ -27,17 +28,15 @@ export function compileGame<G extends RuntimeGenerics>(
     ).reduce((map, [deckId, cardDefinitions]) => {
       return map.set(
         deckId as DeckId,
-        cardDefinitions.map((card) =>
-          compileCard(card, runtimeDefinition.effects)
-        )
+        cardDefinitions.map((card) => compileCard(card, runtimeDefinition))
       );
     }, new Map<DeckId, RuntimeCard<G>[]>());
 
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {
-      effects[name as keyof typeof effects] = compile(
-        code,
-        runtimeDefinition.effects.shape[name]
-      );
+      effects[name as keyof typeof effects] = compile(code, {
+        type: runtimeDefinition.effects.shape[name],
+        initialValue: () => {},
+      });
       return effects;
     }, {} as RuntimeEffects<G>);
 
@@ -49,35 +48,42 @@ export function compileGame<G extends RuntimeGenerics>(
 
 export function compileCard<G extends RuntimeGenerics>(
   card: Card,
-  effectsType: RuntimeDefinition<G>["effects"]
+  runtimeDefinition: RuntimeDefinition<G>
 ): RuntimeCard<G> {
   return {
     id: card.cardId,
     name: card.name,
     properties: {},
-    effects: compile(card.code, effectsType, { card }),
+    effects: compile(card.code, {
+      type: runtimeDefinition.card.shape.effects,
+      globals: { card },
+      initialValue: {},
+    }),
   };
 }
 
 function compile<T extends ZodType>(
   code: string,
-  definitionType: T,
-  globals: Record<string, unknown> = {}
+  options: {
+    type: T;
+    globals?: Record<string, unknown>;
+    initialValue?: z.infer<T>;
+  }
 ) {
   code = code.trim();
   // eslint-disable-next-line prefer-const
-  let definition: unknown = undefined;
+  let definition: unknown = options.initialValue;
   eval(`
     function define(arg) {
       definition = arg;
     }
-    ${objectToDeclarationCode(globals)}
+    ${objectToDeclarationCode(options.globals)}
     ${code}
   `);
-  return definitionType.parse(definition);
+  return options.type.parse(definition);
 }
 
-function objectToDeclarationCode(globals: object) {
+function objectToDeclarationCode(globals: object = {}) {
   return Object.entries(globals).reduce((code, [name, value]) => {
     return `${code}const ${name} = ${JSON.stringify(value)};`;
   }, "");
