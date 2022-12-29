@@ -1,6 +1,6 @@
 import { original } from "immer";
 import { createMachine } from "./Machine";
-import type { AnyMachineAction, AnyMachineReaction } from "./MachineAction";
+import type { MachineEffect } from "./MachineAction";
 
 describe("Machine", () => {
   describe("actions", () => {
@@ -13,13 +13,6 @@ describe("Machine", () => {
       expect(fn).toHaveBeenCalled();
     });
 
-    it("can produce output", () => {
-      const fn = () => 123;
-      const machine = createActionMachine(fn);
-      const res = machine.actions.a();
-      expect(res).toBe(123);
-    });
-
     it("can receive state", () => {
       let receivedState: unknown;
       const machine = createActionMachine((state) => {
@@ -28,15 +21,6 @@ describe("Machine", () => {
       const startState = machine.state;
       machine.actions.a();
       expect(receivedState).toEqual(startState);
-    });
-
-    it("can receive input", () => {
-      let receivedInput: number | undefined;
-      const machine = createActionMachine((state, input) => {
-        receivedInput = input;
-      });
-      machine.actions.a(123);
-      expect(receivedInput).toBe(123);
     });
 
     it("can update state", () => {
@@ -109,7 +93,7 @@ describe("Machine", () => {
   describe("execution context", () => {
     it("state changes from actions are reflected in the context state draft", () => {
       const machine = createMachine({ value: "start" })
-        .actions({
+        .effects({
           change(state) {
             state.value = "changed";
           },
@@ -124,7 +108,7 @@ describe("Machine", () => {
 
     it("actions impact machine state once execution finishes", () => {
       const machine = createMachine({ count: 0 })
-        .actions({
+        .effects({
           increase(state) {
             state.count++;
           },
@@ -144,7 +128,7 @@ describe("Machine", () => {
 
   it("can subscribe to state changes", () => {
     const machine = createMachine({ count: 0 })
-      .actions({
+      .effects({
         increase(state) {
           state.count++;
         },
@@ -159,7 +143,7 @@ describe("Machine", () => {
 
   it("can unsubscribe from state changes", () => {
     const machine = createMachine({ count: 0 })
-      .actions({
+      .effects({
         increase(state) {
           state.count++;
         },
@@ -171,13 +155,14 @@ describe("Machine", () => {
     machine.actions.increase();
     unsub();
     machine.actions.increase();
+
     expect(fn).toHaveBeenCalledTimes(1);
   });
 });
 
-function createActionMachine(fn: AnyMachineAction) {
+function createActionMachine(fn: MachineEffect) {
   return createMachine({ value: undefined as unknown })
-    .actions({
+    .effects({
       a(state, n?: number) {
         return fn(state, n);
       },
@@ -186,12 +171,12 @@ function createActionMachine(fn: AnyMachineAction) {
     .build();
 }
 
-function createReactionMachine(fn: AnyMachineReaction) {
+function createReactionMachine(fn: MachineEffect) {
   return createMachine({
     value: undefined as unknown,
     reactions: { a: [fn], b: [] },
   })
-    .actions({ a(state, n?: number) {}, b() {} })
+    .effects({ a(state, n?: number) {}, b() {} })
     .reactions((state, actionName) => state.reactions[actionName])
     .build();
 }
