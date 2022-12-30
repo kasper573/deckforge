@@ -29,7 +29,6 @@ import {
   ZodVoid,
 } from "zod";
 import { memoize } from "lodash";
-import type { CodeEditorTypeDefs } from "../../app/components/CodeEditor";
 
 export interface ZodToTSOptions {
   resolvers?: Map<ZodType, string>;
@@ -216,7 +215,7 @@ export function zodToTSResolver(typeMap: Record<string, ZodType | ZodType[]>) {
     );
   }
 
-  function add(...args: CodeEditorTypeDefs[]): CodeEditorTypeDefs {
+  function add(...args: string[]): string {
     return args.join("\n");
   }
 

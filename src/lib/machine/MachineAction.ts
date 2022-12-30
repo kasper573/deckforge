@@ -27,6 +27,7 @@ export type MachineEffect<
 > = (state: State, payload: Payload) => void;
 
 export type MachineEffectPayload<T extends MachineEffect> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends MachineEffect<any, infer P> ? P : never;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,6 +43,7 @@ export type MachineEffects<MC extends MachineContext> = {
   >;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MachineActionsFor<Effects extends MachineEffects<any>> = {
   [K in keyof Effects]: MachineAction<MachineEffectPayload<Effects[K]>>;
 };
