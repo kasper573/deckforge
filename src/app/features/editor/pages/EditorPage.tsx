@@ -1,10 +1,8 @@
 import "react-mosaic-component/react-mosaic-component.css";
 import type { MouseEvent } from "react";
 import { styled } from "@mui/material/styles";
-import * as React from "react";
 import { Provider as ReduxProvider } from "react-redux/es/exports";
 import { StateSynchronizer } from "../StateSynchronizer";
-
 import { panelsDefinition } from "../panels/definition";
 import { PanelContainer } from "../components/PanelContainer";
 import { useActions } from "../../../../lib/useActions";
