@@ -5,7 +5,8 @@ import type {
   Game,
   DeckId,
   PropertyDefaults,
-  Property, CardId
+  Property,
+  CardId,
 } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
 import { propertyValue } from "../../../api/services/game/types";
@@ -36,7 +37,7 @@ export function compileGame<G extends RuntimeGenerics>(
       (p) => p.entityId === "card"
     );
 
-    const scriptAPI = {
+    const scriptAPI: ScriptAPI<G> = {
       [scriptAPIProperties.actions]: new Proxy({} as typeof runtime.actions, {
         get: (target, propertyName) =>
           runtime.actions[propertyName as keyof typeof runtime.actions],
@@ -49,13 +50,10 @@ export function compileGame<G extends RuntimeGenerics>(
       (map, [deckId, cardDefinitions]) =>
         map.set(
           deckId as DeckId,
-          cardDefinitions.map(({cardId, name, code, propertyDefaults}) => ({
+          cardDefinitions.map(({ cardId, name, code, propertyDefaults }) => ({
             id: cardId,
             name: name,
-            properties: namedPropertyDefaults(
-              cardProperties,
-              propertyDefaults
-            ),
+            properties: namedPropertyDefaults(cardProperties, propertyDefaults),
             effects: compile(code, {
               type: runtimeDefinition.card.shape.effects,
               scriptAPI: { ...scriptAPI, [scriptAPIProperties.cardId]: cardId },
@@ -90,12 +88,12 @@ export function compileGame<G extends RuntimeGenerics>(
 type ScriptAPI<G extends RuntimeGenerics = RuntimeGenerics> = {
   actions: G["actions"];
   thisCardId?: CardId;
-}
+};
 
 export const scriptAPIProperties = {
   cardId: "thisCardId",
   actions: "actions",
-} satisfies Record<string, keyof ScriptAPI>;
+} as const;
 
 function compile<T extends ZodType>(
   code: string,
