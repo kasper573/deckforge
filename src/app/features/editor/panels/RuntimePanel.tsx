@@ -83,7 +83,7 @@ function createInitialState(
 ): React1v1Types["state"] {
   const deck = Array.from(decks.values())[0];
   if (!deck) {
-    throw new Error("No game or deck available, cannot start battle");
+    throw new Error("No game or deck available, cannot initialize runtime");
   }
   function createPlayer(): React1v1Types["player"] {
     return {
