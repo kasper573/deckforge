@@ -217,7 +217,7 @@ define({
           eventId: v4() as EventId,
           name: "increaseUntil",
           code: `
-          define((state, max) => {
+          derive(({actions}) => (state, max) => {
             const [player] = state.players;
             if (player.properties.count < max) {
               player.properties.count++;

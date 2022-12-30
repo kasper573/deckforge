@@ -3,7 +3,6 @@ import type { ZodType } from "zod";
 import type { z } from "zod";
 import type {
   Game,
-  Card,
   DeckId,
   PropertyDefaults,
   Property,
@@ -37,24 +36,40 @@ export function compileGame<G extends RuntimeGenerics>(
       (p) => p.entityId === "card"
     );
 
+    const scriptAPI = {
+      actions: new Proxy({} as typeof runtime.actions, {
+        get: (target, propertyName) =>
+          runtime.actions[propertyName as keyof typeof runtime.actions],
+      }),
+    };
+
     const decks = Object.entries(
       groupBy(gameDefinition.cards, "deckId")
-    ).reduce((map, [deckId, cardDefinitions]) => {
-      return map.set(
-        deckId as DeckId,
-        cardDefinitions.map((card) =>
-          compileCard(
-            card,
-            runtimeDefinition,
-            namedPropertyDefaults(cardProperties, card.propertyDefaults)
-          )
-        )
-      );
-    }, new Map<DeckId, RuntimeCard<G>[]>());
+    ).reduce(
+      (map, [deckId, cardDefinitions]) =>
+        map.set(
+          deckId as DeckId,
+          cardDefinitions.map((card) => ({
+            id: card.cardId,
+            name: card.name,
+            properties: namedPropertyDefaults(
+              cardProperties,
+              card.propertyDefaults
+            ),
+            effects: compile(card.code, {
+              type: runtimeDefinition.card.shape.effects,
+              scriptAPI: { ...scriptAPI, card },
+              initialValue: {},
+            }),
+          }))
+        ),
+      new Map<DeckId, RuntimeCard<G>[]>()
+    );
 
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {
       effects[name as keyof typeof effects] = compile(code, {
         type: runtimeDefinition.effects.shape[name],
+        scriptAPI,
         initialValue: () => {},
       });
       return effects;
@@ -65,63 +80,40 @@ export function compileGame<G extends RuntimeGenerics>(
       player.properties = { ...playerPropertyDefaults, ...player.properties };
     }
 
-    return { runtime: deriveMachine<G>(effects, initialState) };
+    const runtime = deriveMachine<G>(effects, initialState);
+    return { runtime };
   } catch (error) {
     return { error };
   }
 }
 
-export function compileCard<G extends RuntimeGenerics>(
-  card: Card,
-  runtimeDefinition: RuntimeDefinition<G>,
-  propertyDefaults: RuntimeCard<G>["properties"]
-): RuntimeCard<G> {
-  return {
-    id: card.cardId,
-    name: card.name,
-    properties: propertyDefaults,
-    effects: compile(card.code, {
-      type: runtimeDefinition.card.shape.effects,
-      globals: { card },
-      initialValue: {},
-    }),
-  };
-}
-
-function compile<T extends ZodType>(
+function compile<T extends ZodType, ScriptAPI>(
   code: string,
   options: {
     type: T;
-    globals?: Record<string, unknown>;
+    scriptAPI: ScriptAPI;
     initialValue?: z.infer<T>;
   }
 ): z.infer<T> {
-  code = code.trim();
-  // eslint-disable-next-line prefer-const
-  let definition: unknown = options.initialValue;
-  eval(`
-    (() => {
-      function define(arg) {
-        definition = arg;
-      }
-      ${objectToDeclarationCode(options.globals)}
-      ${code}
-    })();
-  `);
-  const result = options.type.safeParse(definition);
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-  // Cannot use parsed data because zod injects destructive behavior on parsed functions.
-  // There's no need for using the parsed data anyway, since it's already json.
-  // We're just using zod for validation here, not for parsing.
-  return definition;
-}
+  let definition = options.initialValue;
 
-function objectToDeclarationCode(globals: object = {}) {
-  return Object.entries(globals).reduce((code, [name, value]) => {
-    return `${code}const ${name} = ${JSON.stringify(value)};`;
-  }, "");
+  function define(newDefinition: unknown) {
+    const result = options.type.safeParse(newDefinition);
+    if (!result.success) {
+      throw new Error(result.error.message);
+    }
+    // Cannot use parsed data because zod injects destructive behavior on parsed functions.
+    // There's no need for using the parsed data anyway, since it's already json.
+    // We're just using zod for validation here, not for parsing.
+    definition = newDefinition;
+  }
+
+  function derive(createDefinition: (scriptAPI: ScriptAPI) => unknown) {
+    define(createDefinition(options.scriptAPI));
+  }
+
+  eval(code.trim()); // Assume code calls define/derive to set definition
+  return definition;
 }
 
 function namedPropertyDefaults(

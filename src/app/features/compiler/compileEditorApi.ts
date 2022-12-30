@@ -1,5 +1,6 @@
 import { memoize } from "lodash";
 import type { ZodType } from "zod";
+import { z } from "zod";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTS } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
@@ -44,7 +45,13 @@ export function compileEditorApi<G extends RuntimeGenerics>(
     card: add(
       common,
       declareGlobalVariable({ name: "card", type: TypeName.Card }),
-      declareModuleOutput(memberReference(TypeName.Card, cardEffectsProp))
+      declareModuleDefinition({
+        apiType: zodToTS(
+          z.object({ card: definition.card, actions: definition.actions }),
+          { lazyResolvers }
+        ),
+        definitionType: memberReference(TypeName.Card, cardEffectsProp),
+      })
     ),
     events: Object.entries(definition.effects.shape).reduce(
       (eventTypeDefs, [effectName, effectType]) => {
@@ -52,7 +59,10 @@ export function compileEditorApi<G extends RuntimeGenerics>(
           ...eventTypeDefs,
           [effectName]: add(
             common,
-            declareModuleOutput(zodToTS(effectType, { lazyResolvers }))
+            declareModuleDefinition({
+              apiType: zodToTS(z.object({ actions: definition.actions })),
+              definitionType: zodToTS(effectType, { lazyResolvers }),
+            })
           ),
         };
       },
@@ -68,8 +78,14 @@ enum TypeName {
   State = "State",
 }
 
-function declareModuleOutput(type: string) {
-  return `declare function define(output: ${type}): void;`;
+function declareModuleDefinition(p: {
+  apiType: string;
+  definitionType: string;
+}) {
+  return [
+    `declare function define(definition: ${p.definitionType}): void;`,
+    `declare function derive(createDefinition: (api: ${p.apiType}) => ${p.definitionType}): void;`,
+  ].join("\n");
 }
 
 function declareGlobalVariable(p: { name: string; type: string }): string {
