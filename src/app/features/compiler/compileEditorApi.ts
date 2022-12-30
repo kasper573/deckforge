@@ -58,8 +58,8 @@ enum TypeName {
   Player = "Player",
   Card = "Card",
   State = "State",
-  Effects = "Effects",
-  Actions = "Actions",
+  Effects = "EventHandlers",
+  Actions = "EventDispatchers",
 }
 
 function declareModuleDefinition(p: {
