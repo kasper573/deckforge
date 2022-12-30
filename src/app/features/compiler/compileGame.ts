@@ -1,8 +1,15 @@
 import { groupBy } from "lodash";
 import type { ZodType } from "zod";
 import type { z } from "zod";
-import type { Game, Card, DeckId } from "../../../api/services/game/types";
+import type {
+  Game,
+  Card,
+  DeckId,
+  PropertyDefaults,
+  Property,
+} from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
+import { propertyValue } from "../../../api/services/game/types";
 import { deriveMachine } from "./defineRuntime";
 import type {
   RuntimeCard,
@@ -23,13 +30,24 @@ export function compileGame<G extends RuntimeGenerics>(
   createInitialState: (decks: Map<DeckId, RuntimeCard<G>[]>) => RuntimeState<G>
 ): { runtime?: GameRuntime<G>; error?: unknown } {
   try {
+    const playerPropertyDefaults = namedPropertyDefaults(
+      gameDefinition.properties.filter((p) => p.entityId === "player")
+    );
+    const cardProperties = gameDefinition.properties.filter(
+      (p) => p.entityId === "card"
+    );
+
     const decks = Object.entries(
       groupBy(gameDefinition.cards, "deckId")
     ).reduce((map, [deckId, cardDefinitions]) => {
       return map.set(
         deckId as DeckId,
         cardDefinitions.map((card) =>
-          compileCard(card, runtimeDefinition, gameDefinition)
+          compileCard(
+            card,
+            runtimeDefinition,
+            namedPropertyDefaults(cardProperties, card.propertyDefaults)
+          )
         )
       );
     }, new Map<DeckId, RuntimeCard<G>[]>());
@@ -42,7 +60,12 @@ export function compileGame<G extends RuntimeGenerics>(
       return effects;
     }, {} as RuntimeEffects<G>);
 
-    return { runtime: deriveMachine<G>(effects, createInitialState(decks)) };
+    const initialState = createInitialState(decks);
+    for (const player of initialState.players.values()) {
+      player.properties = { ...playerPropertyDefaults, ...player.properties };
+    }
+
+    return { runtime: deriveMachine<G>(effects, initialState) };
   } catch (error) {
     return { error };
   }
@@ -51,22 +74,12 @@ export function compileGame<G extends RuntimeGenerics>(
 export function compileCard<G extends RuntimeGenerics>(
   card: Card,
   runtimeDefinition: RuntimeDefinition<G>,
-  gameDefinition: Game["definition"]
+  propertyDefaults: RuntimeCard<G>["properties"]
 ): RuntimeCard<G> {
-  const defaults = Object.entries(card.propertyDefaults).reduce(
-    (defaults, [id, value]) => {
-      const prop = gameDefinition.properties.find((p) => p.propertyId === id);
-      if (prop) {
-        defaults[prop.name] = value;
-      }
-      return defaults;
-    },
-    {} as RuntimeCard<G>["properties"]
-  );
   return {
     id: card.cardId,
     name: card.name,
-    properties: defaults,
+    properties: propertyDefaults,
     effects: compile(card.code, {
       type: runtimeDefinition.card.shape.effects,
       globals: { card },
@@ -109,4 +122,15 @@ function objectToDeclarationCode(globals: object = {}) {
   return Object.entries(globals).reduce((code, [name, value]) => {
     return `${code}const ${name} = ${JSON.stringify(value)};`;
   }, "");
+}
+
+function namedPropertyDefaults(
+  properties: Property[],
+  defaultsById: PropertyDefaults = {}
+) {
+  return properties.reduce((defaults, prop) => {
+    defaults[prop.name] =
+      defaultsById[prop.propertyId] ?? propertyValue.defaultOf(prop.type);
+    return defaults;
+  }, {} as Record<string, unknown>);
 }
