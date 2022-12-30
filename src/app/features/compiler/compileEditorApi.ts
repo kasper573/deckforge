@@ -1,8 +1,7 @@
 import { memoize } from "lodash";
-import type { ZodType } from "zod";
 import { z } from "zod";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
-import { zodToTS } from "../../../lib/zod-extensions/zodToTS";
+import { zodToTSResolver } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
 import type { RuntimeCard } from "./types";
 
@@ -16,28 +15,15 @@ export interface EditorApi<G extends RuntimeGenerics> {
 export function compileEditorApi<G extends RuntimeGenerics>(
   definition: RuntimeDefinition<G>
 ): EditorApi<G> {
-  const lazyResolvers = new Map([[definition.lazyState, TypeName.State]]);
+  const zodToTS = zodToTSResolver({
+    [TypeName.Card]: definition.card,
+    [TypeName.Player]: definition.player,
+    [TypeName.State]: [definition.state, definition.lazyState],
+    [TypeName.Effects]: definition.effects,
+    [TypeName.Actions]: definition.actions,
+  });
 
-  const common: CodeEditorTypeDefs = add(
-    declareType(
-      TypeName.Player,
-      zodToTS(definition.player, {
-        lazyResolvers,
-        resolvers: new Map<ZodType, string>([[definition.card, TypeName.Card]]),
-      })
-    ),
-    declareType(TypeName.Card, zodToTS(definition.card, { lazyResolvers })),
-    declareType(
-      TypeName.State,
-      zodToTS(definition.state, {
-        lazyResolvers,
-        resolvers: new Map<ZodType, string>([
-          [definition.player, TypeName.Player],
-          [definition.card, TypeName.Card],
-        ]),
-      })
-    )
-  );
+  const common: CodeEditorTypeDefs = zodToTS.declare();
 
   const cardEffectsProp: keyof RuntimeCard<G> = "effects";
 
@@ -47,8 +33,7 @@ export function compileEditorApi<G extends RuntimeGenerics>(
       declareGlobalVariable({ name: "card", type: TypeName.Card }),
       declareModuleDefinition({
         apiType: zodToTS(
-          z.object({ card: definition.card, actions: definition.actions }),
-          { lazyResolvers }
+          z.object({ card: definition.card, actions: definition.actions })
         ),
         definitionType: memberReference(TypeName.Card, cardEffectsProp),
       })
@@ -61,7 +46,7 @@ export function compileEditorApi<G extends RuntimeGenerics>(
             common,
             declareModuleDefinition({
               apiType: zodToTS(z.object({ actions: definition.actions })),
-              definitionType: zodToTS(effectType, { lazyResolvers }),
+              definitionType: zodToTS(effectType),
             })
           ),
         };
@@ -74,8 +59,9 @@ export function compileEditorApi<G extends RuntimeGenerics>(
 enum TypeName {
   Player = "Player",
   Card = "Card",
-  Effects = "Effects",
   State = "State",
+  Effects = "Effects",
+  Actions = "Actions",
 }
 
 function declareModuleDefinition(p: {

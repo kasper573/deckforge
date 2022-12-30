@@ -1,6 +1,6 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
-import { zodToTS } from "./zodToTS";
+import { zodToTS, zodToTSResolver } from "./zodToTS";
 
 const expectations = [
   { name: "string", type: z.string(), expected: "string" },
@@ -88,12 +88,12 @@ const expectations = [
 
 describe("zodToTS", () => {
   for (const { name, type, expected } of expectations) {
-    it(`Can convert ${name} to TS`, () => {
+    it(`can convert ${name} to TS`, () => {
       expect(zodToTS(type)).toEqual(expected);
     });
   }
 
-  it("Can resolve nested types", () => {
+  it("can resolve nested types", () => {
     type Node = { id: string; children: Node[] };
     const nested = z.any();
     const root = z.object({ nested });
@@ -103,7 +103,7 @@ describe("zodToTS", () => {
     );
   });
 
-  it("Can convert recursive types", () => {
+  it("can convert recursive types", () => {
     type Node = { id: string; children: Node[] };
     const circularNode = z.lazy(() => node);
     const node: ZodType<Node> = z.object({
@@ -114,5 +114,70 @@ describe("zodToTS", () => {
     expect(
       zodToTS(node, { resolvers: new Map([[circularNode, "Node"]]) })
     ).toBe(`{\n\tid: string;\n\tchildren: Node[]\n}`);
+  });
+});
+
+describe("zodToTSResolver", () => {
+  it("can declare all types", () => {
+    const schema = z.object({
+      foo: z.object({ bar: z.object({ baz: z.number() }) }),
+    });
+    const { declare } = zodToTSResolver({
+      Foo: schema.shape.foo,
+      Bar: schema.shape.foo.shape.bar,
+      Baz: schema.shape.foo.shape.bar.shape.baz,
+    });
+    expect(declare()).toBe(
+      [
+        `type Foo = { bar: Bar }`,
+        `type Bar = { baz: Baz }`,
+        `type Baz = number`,
+      ].join(";\n")
+    );
+  });
+
+  it("resolves known type into type name", () => {
+    const schema = z.object({
+      foo: z.object({ bar: z.object({ baz: z.number() }) }),
+    });
+    const resolve = zodToTSResolver({
+      Foo: schema.shape.foo,
+    });
+    expect(resolve(schema.shape.foo)).toBe("Foo");
+  });
+
+  it("resolves unknown type into type definition", () => {
+    const schema = z.object({
+      foo: z.object({ bar: z.object({ baz: z.number() }) }),
+    });
+    const resolve = zodToTSResolver({
+      Foo: schema.shape.foo,
+    });
+    expect(resolve(schema.shape.foo.shape.bar)).toBe("{ baz: number }");
+  });
+
+  describe("multiple types per type name", () => {
+    it("uses first type for declaration", () => {
+      const schema = z.object({
+        foo: z.string(),
+        bar: z.number(),
+      });
+      const { declare } = zodToTSResolver({
+        Either: [schema.shape.foo, schema.shape.bar],
+      });
+      expect(declare()).toBe("type Either = string");
+    });
+
+    it("resolves to the same type name", () => {
+      const schema = z.object({
+        foo: z.string(),
+        bar: z.number(),
+      });
+      const resolve = zodToTSResolver({
+        Either: [schema.shape.foo, schema.shape.bar],
+      });
+      expect(resolve(schema.shape.foo)).toBe("Either");
+      expect(resolve(schema.shape.bar)).toBe("Either");
+    });
   });
 });

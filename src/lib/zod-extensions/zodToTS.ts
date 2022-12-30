@@ -31,8 +31,6 @@ import {
 import { memoize } from "lodash";
 
 export interface ZodToTSOptions {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  lazyResolvers?: Map<ZodLazy<any>, string>;
   resolvers?: Map<ZodType, string>;
   indentation: number;
 }
@@ -193,3 +191,40 @@ function extractOptional(type: ZodType): [boolean, ZodType] {
 }
 
 const indent = memoize((indentation: number) => "\t".repeat(indentation));
+
+export function zodToTSResolver(typeMap: Record<string, ZodType | ZodType[]>) {
+  function resolve(
+    oneOrManyTypes: ZodType | ZodType[],
+    includeSelf = true
+  ): string {
+    const type = Array.isArray(oneOrManyTypes)
+      ? oneOrManyTypes[0]
+      : oneOrManyTypes;
+    const resolvers = recordToInverseMap(typeMap);
+    if (!includeSelf) {
+      resolvers.delete(type);
+    }
+    return zodToTS(type, { resolvers });
+  }
+
+  function declare() {
+    return Object.entries(typeMap)
+      .map(([typeName, type]) => `type ${typeName} = ${resolve(type, false)}`)
+      .join(";\n");
+  }
+
+  resolve.declare = declare;
+
+  return resolve;
+}
+
+function recordToInverseMap<T>(record: Record<string, T | T[]>) {
+  const inverseMap = new Map<T, string>();
+  for (const [key, value] of Object.entries(record)) {
+    const multi = Array.isArray(value) ? value : [value];
+    for (const one of multi) {
+      inverseMap.set(one, key);
+    }
+  }
+  return inverseMap;
+}
