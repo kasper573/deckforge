@@ -1,5 +1,5 @@
 import MenuItem from "@mui/material/MenuItem";
-import { useSelector } from "../../../store";
+import { useSelector } from "../store";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
 import { Tree } from "../../../components/Tree";

@@ -3,8 +3,9 @@ import Tooltip from "@mui/material/Tooltip";
 import Container from "@mui/material/Container";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import { Provider as ReduxProvider } from "react-redux";
 import { selectors } from "../../selectors";
-import { useSelector } from "../../../../store";
+import { useSelector } from "../../store";
 import { useActions } from "../../../../../lib/useActions";
 import { editorActions } from "../../actions";
 import { ExitToApp } from "../../../../components/icons";
@@ -14,9 +15,19 @@ import { LinkIconButton } from "../../../../components/Link";
 import { router } from "../../../../router";
 import { pageMaxWidth } from "../../../layout/Page";
 import { gameType } from "../../../../../api/services/game/types";
+import { editorStore } from "../../store";
 import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
 
 export default function EditorAppBarContent() {
+  // Store must be provided since app bar is outside the editor page
+  return (
+    <ReduxProvider store={editorStore}>
+      <Content />
+    </ReduxProvider>
+  );
+}
+
+function Content() {
   const prompt = useModal(PromptDialog);
   const game = useSelector(selectors.game);
   const { renameGame } = useActions(editorActions);

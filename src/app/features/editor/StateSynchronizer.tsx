@@ -4,9 +4,9 @@ import { isEqual } from "lodash";
 import { useDebounce } from "use-debounce";
 import { router } from "../../router";
 import { trpc } from "../../trpc";
-import { useSelector } from "../../store";
 import { useToastProcedure } from "../../hooks/useToastProcedure";
 import { useActions } from "../../../lib/useActions";
+import { useSelector } from "./store";
 import { selectors } from "./selectors";
 import { editorActions } from "./actions";
 

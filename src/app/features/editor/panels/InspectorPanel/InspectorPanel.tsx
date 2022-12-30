@@ -1,4 +1,4 @@
-import { useSelector } from "../../../../store";
+import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 import type { CardId } from "../../../../../api/services/game/types";
 import type { EditorObjectId } from "../../types";

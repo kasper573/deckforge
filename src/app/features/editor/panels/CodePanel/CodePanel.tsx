@@ -1,6 +1,6 @@
 import Button from "@mui/material/Button";
 import { useMemo } from "react";
-import { useSelector } from "../../../../store";
+import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 
 import { useActions } from "../../../../../lib/useActions";

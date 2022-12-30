@@ -4,7 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useMemo, useReducer } from "react";
 import { v4 } from "uuid";
-import { useSelector } from "../../../store";
+import { useSelector } from "../store";
 import { selectors } from "../selectors";
 import { Panel } from "../components/Panel";
 import { GameRenderer } from "../../runtimes/react-1v1/GameRenderer";

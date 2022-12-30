@@ -4,7 +4,7 @@ import List from "@mui/material/List";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import { useSelector } from "../../../store";
+import { useSelector } from "../store";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";

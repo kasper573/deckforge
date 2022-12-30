@@ -14,7 +14,12 @@ const access = createAccessFactory({
 });
 
 export const router = OptionsRouter(
-  { appBar: { content: Logo as ComponentType, container: true } },
+  {
+    appBar: {
+      content: Logo as ComponentType,
+      container: true,
+    },
+  },
   (route) => ({
     home: route("", {
       exact: true,

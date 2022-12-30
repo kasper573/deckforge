@@ -9,7 +9,6 @@ import type { TRPCClient } from "@trpc/client";
 import { Router } from "react-router";
 import { RouterSwitch } from "react-typesafe-routes";
 import type { History } from "history";
-import { Provider as ReduxProvider } from "react-redux";
 import type { ApiRouter } from "../api/router";
 import { ModalOutlet } from "../lib/useModal";
 import { Layout } from "./features/layout/Layout";
@@ -20,7 +19,6 @@ import {
   PlainErrorFallback,
   PrettyErrorFallback,
 } from "./ErrorBoundary";
-import type { AppStore } from "./store";
 import { MenuOutlet } from "./hooks/useMenu";
 
 export function App({
@@ -28,39 +26,35 @@ export function App({
   queryClient,
   theme,
   history,
-  store,
 }: {
   trpcClient: TRPCClient<ApiRouter>;
   queryClient: QueryClient;
   theme: Theme;
   history: History;
-  store: AppStore;
 }) {
   // Note: We cannot use React.StrictMode because react-mosaic-component does not support it
   return (
     <ErrorBoundary fallback={PlainErrorFallback} onError={console.error}>
-      <ReduxProvider store={store}>
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <Router history={history}>
-              <ThemeProvider theme={theme}>
-                <CssBaseline />
-                {globalStyles}
-                <Layout>
-                  <ErrorBoundary
-                    fallback={PrettyErrorFallback}
-                    onError={console.error}
-                  >
-                    <RouterSwitch router={router} />
-                    <ModalOutlet />
-                  </ErrorBoundary>
-                </Layout>
-                <MenuOutlet />
-              </ThemeProvider>
-            </Router>
-          </QueryClientProvider>
-        </trpc.Provider>
-      </ReduxProvider>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <Router history={history}>
+            <ThemeProvider theme={theme}>
+              <CssBaseline />
+              {globalStyles}
+              <Layout>
+                <ErrorBoundary
+                  fallback={PrettyErrorFallback}
+                  onError={console.error}
+                >
+                  <RouterSwitch router={router} />
+                  <ModalOutlet />
+                </ErrorBoundary>
+              </Layout>
+              <MenuOutlet />
+            </ThemeProvider>
+          </Router>
+        </QueryClientProvider>
+      </trpc.Provider>
     </ErrorBoundary>
   );
 }
