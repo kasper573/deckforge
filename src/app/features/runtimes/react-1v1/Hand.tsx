@@ -1,6 +1,5 @@
-import type { CardId } from "../../../../api/services/game/types";
-
 import type { RuntimePlayerId } from "../../compiler/types";
+import type { CardInstanceId } from "../../compiler/types";
 import { Card } from "./Card";
 import type { React1v1Types } from "./definition";
 import { adapter } from "./definition";
@@ -16,7 +15,7 @@ export function Hand({
   };
 }) {
   const actions = adapter.useRuntimeActions();
-  const playCard = (cardId: CardId) =>
+  const playCard = (cardId: CardInstanceId) =>
     actions.playCard({ cardId, ...playCardProps });
   return (
     <>

@@ -1,7 +1,6 @@
 import { v4 } from "uuid";
 import { z } from "zod";
 import { without } from "lodash";
-import { cardIdType } from "../../../api/services/game/types";
 import {
   defineRuntime,
   deriveMachine,
@@ -9,6 +8,7 @@ import {
 } from "../compiler/defineRuntime";
 import type { ZodTypesFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import type { RuntimePlayerId } from "../compiler/types";
+import { cardInstanceIdType } from "../compiler/types";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = createDamageCard(1);
@@ -97,7 +97,7 @@ const inMemoryDefinition = defineRuntime({
   actions: ({ playerId }) => {
     const cardPayload = z.object({
       playerId,
-      cardId: cardIdType,
+      cardId: cardInstanceIdType,
     });
     return {
       startBattle: runtimeEvent(),

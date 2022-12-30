@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { defineRuntime, runtimeEvent } from "../../compiler/defineRuntime";
 import { createReactAdapter } from "../../../../lib/machine/createReactAdapter";
-import { cardIdType } from "../../../../api/services/game/types";
 import type { ZodTypesFor } from "../../../../lib/zod-extensions/ZodShapeFor";
 import type {
   RuntimeGenericsFor,
   RuntimeMachineContext,
 } from "../../compiler/types";
+import { cardInstanceIdType } from "../../compiler/types";
 
 export const builtinDefinition = defineRuntime({
   playerProperties: {
@@ -16,7 +16,7 @@ export const builtinDefinition = defineRuntime({
   actions: ({ playerId }) => {
     const cardPayload = z.object({
       playerId,
-      cardId: cardIdType,
+      cardId: cardInstanceIdType,
     });
     return {
       startBattle: runtimeEvent(),

@@ -1,6 +1,7 @@
 import { groupBy } from "lodash";
 import type { ZodType } from "zod";
 import type { z } from "zod";
+import { v4 } from "uuid";
 import type {
   Game,
   DeckId,
@@ -14,6 +15,7 @@ import { propertyValue } from "../../../api/services/game/types";
 import { deriveMachine } from "./defineRuntime";
 import type {
   RuntimeCard,
+  CardInstanceId,
   RuntimeDefinition,
   RuntimeEffects,
   RuntimeGenerics,
@@ -102,7 +104,7 @@ function compileCard<G extends RuntimeGenerics>(
   }
 ): RuntimeCard<G> {
   return {
-    id: cardId,
+    id: v4() as CardInstanceId,
     name: name,
     properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
     effects: compile(code, {

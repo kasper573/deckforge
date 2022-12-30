@@ -1,6 +1,5 @@
 import type { ZodLazy, ZodType } from "zod";
 import type { ZodObject } from "zod";
-import type { CardId } from "../../../api/services/game/types";
 import type {
   MachineActions,
   MachineEffects,
@@ -8,9 +7,13 @@ import type {
 import type { MachineContext } from "../../../lib/machine/MachineContext";
 import type { NominalString } from "../../../lib/ts-extensions/NominalString";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
+import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+
+export type CardInstanceId = NominalString<"CardInstanceId">;
+export const cardInstanceIdType = zodNominalString<CardInstanceId>();
 
 export interface RuntimeCard<G extends RuntimeGenerics> {
-  id: CardId;
+  id: CardInstanceId;
   name: string;
   properties: G["cardProps"];
   effects: Partial<RuntimeEffects<G>>;
