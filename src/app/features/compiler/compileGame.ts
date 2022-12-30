@@ -69,18 +69,27 @@ function compile<T extends ZodType>(
     globals?: Record<string, unknown>;
     initialValue?: z.infer<T>;
   }
-) {
+): z.infer<T> {
   code = code.trim();
   // eslint-disable-next-line prefer-const
   let definition: unknown = options.initialValue;
   eval(`
-    function define(arg) {
-      definition = arg;
-    }
-    ${objectToDeclarationCode(options.globals)}
-    ${code}
+    (() => {
+      function define(arg) {
+        definition = arg;
+      }
+      ${objectToDeclarationCode(options.globals)}
+      ${code}
+    })();
   `);
-  return options.type.parse(definition);
+  const result = options.type.safeParse(definition);
+  if (!result.success) {
+    throw new Error(result.error.message);
+  }
+  // Cannot use parsed data because zod injects destructive behavior on parsed functions.
+  // There's no need for using the parsed data anyway, since it's already json.
+  // We're just using zod for validation here, not for parsing.
+  return definition;
 }
 
 function objectToDeclarationCode(globals: object = {}) {
