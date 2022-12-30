@@ -7,6 +7,7 @@ import type {
   PropertyDefaults,
   Property,
   CardId,
+  Card,
 } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
 import { propertyValue } from "../../../api/services/game/types";
@@ -50,16 +51,13 @@ export function compileGame<G extends RuntimeGenerics>(
       (map, [deckId, cardDefinitions]) =>
         map.set(
           deckId as DeckId,
-          cardDefinitions.map(({ cardId, name, code, propertyDefaults }) => ({
-            id: cardId,
-            name: name,
-            properties: namedPropertyDefaults(cardProperties, propertyDefaults),
-            effects: compile(code, {
-              type: runtimeDefinition.card.shape.effects,
-              scriptAPI: { ...scriptAPI, [scriptAPIProperties.cardId]: cardId },
-              initialValue: {},
-            }),
-          }))
+          cardDefinitions.map((card) =>
+            compileCard(card, {
+              runtimeDefinition,
+              scriptAPI,
+              cardProperties,
+            })
+          )
         ),
       new Map<DeckId, RuntimeCard<G>[]>()
     );
@@ -94,6 +92,26 @@ export const scriptAPIProperties = {
   cardId: "thisCardId",
   actions: "actions",
 } as const;
+
+function compileCard<G extends RuntimeGenerics>(
+  { cardId, name, code, propertyDefaults }: Card,
+  options: {
+    runtimeDefinition: RuntimeDefinition<G>;
+    scriptAPI: ScriptAPI<G>;
+    cardProperties: Property[];
+  }
+): RuntimeCard<G> {
+  return {
+    id: cardId,
+    name: name,
+    properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
+    effects: compile(code, {
+      type: options.runtimeDefinition.card.shape.effects,
+      scriptAPI: { ...options.scriptAPI, [scriptAPIProperties.cardId]: cardId },
+      initialValue: {},
+    }),
+  };
+}
 
 function compile<T extends ZodType>(
   code: string,
