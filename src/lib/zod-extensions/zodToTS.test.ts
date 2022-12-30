@@ -112,7 +112,7 @@ describe("zodToTS", () => {
     });
 
     expect(
-      zodToTS(node, { lazyResolvers: new Map([[circularNode, "Node"]]) })
+      zodToTS(node, { resolvers: new Map([[circularNode, "Node"]]) })
     ).toBe(`{\n\tid: string;\n\tchildren: Node[]\n}`);
   });
 });

@@ -169,13 +169,9 @@ function zodToTSImpl(
     )}`;
   }
   if (type instanceof ZodLazy) {
-    const resolved = options.lazyResolvers?.get(type);
-    if (resolved === undefined) {
-      throw new Error(
-        "No resolver provided for lazy type at path: " + path.join(".")
-      );
-    }
-    return resolved;
+    throw new Error(
+      "No resolver provided for lazy type at path: " + path.join(".")
+    );
   }
 
   throw new Error(
