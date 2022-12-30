@@ -129,10 +129,10 @@ describe("zodToTSResolver", () => {
     });
     expect(declare()).toBe(
       [
-        `type Foo = { bar: Bar }`,
-        `type Bar = { baz: Baz }`,
-        `type Baz = number`,
-      ].join(";\n")
+        `type Foo = { bar: Bar };`,
+        `type Bar = { baz: Baz };`,
+        `type Baz = number;`,
+      ].join("\n")
     );
   });
 
@@ -165,7 +165,7 @@ describe("zodToTSResolver", () => {
       const { declare } = zodToTSResolver({
         Either: [schema.shape.foo, schema.shape.bar],
       });
-      expect(declare()).toBe("type Either = string");
+      expect(declare()).toBe("type Either = string;");
     });
 
     it("resolves to the same type name", () => {
