@@ -136,6 +136,45 @@ define({
       expect(player2.properties.health).toBe(5);
     });
   });
+
+  it("compiled runtime can chain events ", () => {
+    const gameDefinition: GameDefinition = {
+      properties: [
+        {
+          entityId: "player" as EntityId,
+          propertyId: v4() as PropertyId,
+          name: "count",
+          type: "number",
+        },
+      ],
+      events: [
+        {
+          eventId: v4() as EventId,
+          name: "increaseUntil",
+          code: `
+          define((state, max) => {
+            const [player] = state.players;
+            if (player.properties.count < max) {
+              player.properties.count++;
+              actions.increaseUntil(max);
+            }
+          });
+          `,
+          inputType: "number",
+        },
+      ],
+      cards: [],
+      decks: [],
+    };
+    const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
+    const { runtime } = compileGame(runtimeDefinition, gameDefinition, () => ({
+      players: [mockPlayer(), mockPlayer()],
+    }));
+    runtime!.execute((state) => {
+      runtime?.actions.increaseUntil(10);
+      expect(state.players[0].properties.count).toBe(10);
+    });
+  });
 });
 
 function mockPlayer<G extends RuntimeGenerics>(deck: RuntimeCard<G>[] = []) {
