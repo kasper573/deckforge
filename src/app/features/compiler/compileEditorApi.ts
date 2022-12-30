@@ -40,16 +40,14 @@ export function compileEditorApi<G extends RuntimeGenerics>(
     ),
     events: Object.entries(definition.effects.shape).reduce(
       (eventTypeDefs, [effectName, effectType]) => {
-        return {
-          ...eventTypeDefs,
-          [effectName]: add(
-            common,
-            declareModuleDefinition({
-              apiType: zodToTS(z.object({ actions: definition.actions })),
-              definitionType: zodToTS(effectType),
-            })
-          ),
-        };
+        eventTypeDefs[effectName as keyof G["actions"]] = add(
+          common,
+          declareModuleDefinition({
+            apiType: zodToTS(z.object({ actions: definition.actions })),
+            definitionType: zodToTS(effectType),
+          })
+        );
+        return eventTypeDefs;
       },
       {} as EditorApi<G>["events"]
     ),
