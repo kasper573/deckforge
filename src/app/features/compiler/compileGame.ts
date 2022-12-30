@@ -29,7 +29,9 @@ export type GameRuntime<G extends RuntimeGenerics> = Machine<
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
-  createInitialState: (decks: Map<DeckId, RuntimeCard<G>[]>) => RuntimeState<G>
+  createInitialState: (
+    decks: Map<DeckId, Array<() => RuntimeCard<G>>>
+  ) => RuntimeState<G>
 ): { runtime?: GameRuntime<G>; error?: unknown } {
   try {
     const playerPropertyDefaults = namedPropertyDefaults(
@@ -52,15 +54,16 @@ export function compileGame<G extends RuntimeGenerics>(
       (map, [deckId, cardDefinitions]) =>
         map.set(
           deckId as DeckId,
-          cardDefinitions.map((card) =>
-            compileCard(card, {
-              runtimeDefinition,
-              scriptAPI,
-              cardProperties,
-            })
+          cardDefinitions.map(
+            (card) => () =>
+              compileCard(card, {
+                runtimeDefinition,
+                scriptAPI,
+                cardProperties,
+              })
           )
         ),
-      new Map<DeckId, RuntimeCard<G>[]>()
+      new Map<DeckId, Array<() => RuntimeCard<G>>>()
     );
 
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {

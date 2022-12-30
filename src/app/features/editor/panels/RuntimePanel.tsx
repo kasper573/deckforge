@@ -79,7 +79,7 @@ function RuntimeErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 }
 
 function createInitialState(
-  decks: Map<DeckId, React1v1Types["card"][]>
+  decks: Map<DeckId, Array<() => React1v1Types["card"]>>
 ): React1v1Types["state"] {
   const deck = Array.from(decks.values())[0];
   if (!deck) {
@@ -91,7 +91,7 @@ function createInitialState(
       properties: { health: 5 },
       cards: {
         hand: [],
-        deck,
+        deck: deck.map((createCard) => createCard()),
         discard: [],
         draw: [],
       },

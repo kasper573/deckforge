@@ -63,16 +63,9 @@ define((state, damage) => {
       decks: [],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(
-      runtimeDefinition,
-      gameDefinition,
-      (decks) => {
-        const deck = Array.from(decks.values())[0];
-        return {
-          players: [mockPlayer(deck), mockPlayer([])],
-        };
-      }
-    );
+    const { runtime } = compileGame(runtimeDefinition, gameDefinition, () => ({
+      players: [mockPlayer(), mockPlayer()],
+    }));
 
     runtime?.actions.attack(5);
     expect(runtime?.state.players[0].properties.health).toBe(5);
@@ -124,8 +117,9 @@ define({
       gameDefinition,
       (decks) => {
         const deck = Array.from(decks.values())[0];
+        const cards = deck.map((createCard) => createCard());
         return {
-          players: [mockPlayer(deck), mockPlayer([])],
+          players: [mockPlayer(cards), mockPlayer([])],
         };
       }
     );
@@ -188,8 +182,9 @@ define({
         gameDefinition,
         (decks) => {
           const deck = Array.from(decks.values())[0];
+          const createCards = () => deck.map((createCard) => createCard());
           return {
-            players: [mockPlayer(deck), mockPlayer(deck)],
+            players: [mockPlayer(createCards()), mockPlayer(createCards())],
           };
         }
       );
