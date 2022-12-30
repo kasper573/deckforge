@@ -16,7 +16,7 @@ import { compileGame } from "../../compiler/compileGame";
 import type { DeckId } from "../../../../api/services/game/types";
 import type { React1v1Types } from "../../runtimes/react-1v1/definition";
 import { Reload } from "../../../components/icons";
-import type { RuntimePlayerId } from "../../compiler/types";
+import type { RuntimeGenerics, RuntimePlayerId } from "../../compiler/types";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
@@ -26,7 +26,7 @@ export function RuntimePanel(props: PanelProps) {
   const compiled = useMemo(
     () => {
       if (gameDefinition && runtimeDefinition) {
-        return compileGame(
+        return compileGame<RuntimeGenerics>(
           runtimeDefinition,
           gameDefinition,
           createInitialState
