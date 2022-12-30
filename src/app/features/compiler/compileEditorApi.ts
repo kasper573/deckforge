@@ -31,12 +31,11 @@ export function compileEditorApi<G extends RuntimeGenerics>(
   return {
     card: add(
       common,
-      declareGlobalVariable({ name: "card", type: TypeName.Card }),
       declareModuleDefinition({
         definitionType: memberReference(TypeName.Card, cardEffectsProp),
         apiType: zodToTS(
           z.object({
-            [scriptAPIProperties.card]: definition.card,
+            [scriptAPIProperties.cardId]: definition.card.shape.id,
             [scriptAPIProperties.actions]: definition.actions,
           })
         ),
@@ -76,14 +75,6 @@ function declareModuleDefinition(p: {
     `declare function define(definition: ${p.definitionType}): void;`,
     `declare function derive(createDefinition: (api: ${p.apiType}) => ${p.definitionType}): void;`,
   ].join("\n");
-}
-
-function declareGlobalVariable(p: { name: string; type: string }): string {
-  return `declare const ${p.name}: ${p.type};`;
-}
-
-function declareType(typeName: string, type: Type): string {
-  return `type ${typeName} = ${defineType(type)};`;
 }
 
 function memberReference(target: string, member: string) {
