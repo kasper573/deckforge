@@ -7,7 +7,6 @@ import type {
   DeckId,
   PropertyDefaults,
   Property,
-  CardId,
   Card,
 } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
@@ -87,7 +86,7 @@ export function compileGame<G extends RuntimeGenerics>(
 
 type ScriptAPI<G extends RuntimeGenerics = RuntimeGenerics> = {
   actions: G["actions"];
-  thisCardId?: CardId;
+  thisCardId?: CardInstanceId;
 };
 
 export const scriptAPIProperties = {
@@ -103,13 +102,14 @@ function compileCard<G extends RuntimeGenerics>(
     cardProperties: Property[];
   }
 ): RuntimeCard<G> {
+  const id = v4() as CardInstanceId;
   return {
-    id: v4() as CardInstanceId,
+    id,
     name: name,
     properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
     effects: compile(code, {
       type: options.runtimeDefinition.card.shape.effects,
-      scriptAPI: { ...options.scriptAPI, [scriptAPIProperties.cardId]: cardId },
+      scriptAPI: { ...options.scriptAPI, [scriptAPIProperties.cardId]: id },
       initialValue: {},
     }),
   };
