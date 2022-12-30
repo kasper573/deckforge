@@ -37,7 +37,7 @@ export function compileGame<G extends RuntimeGenerics>(
     );
 
     const scriptAPI = {
-      actions: new Proxy({} as typeof runtime.actions, {
+      [scriptAPIProperties.actions]: new Proxy({} as typeof runtime.actions, {
         get: (target, propertyName) =>
           runtime.actions[propertyName as keyof typeof runtime.actions],
       }),
@@ -58,7 +58,7 @@ export function compileGame<G extends RuntimeGenerics>(
             ),
             effects: compile(card.code, {
               type: runtimeDefinition.card.shape.effects,
-              scriptAPI: { ...scriptAPI, card },
+              scriptAPI: { ...scriptAPI, [scriptAPIProperties.card]: card },
               initialValue: {},
             }),
           }))
@@ -86,6 +86,11 @@ export function compileGame<G extends RuntimeGenerics>(
     return { error };
   }
 }
+
+export const scriptAPIProperties = {
+  card: "card",
+  actions: "actions",
+} as const;
 
 function compile<T extends ZodType, ScriptAPI>(
   code: string,

@@ -4,6 +4,7 @@ import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTSResolver } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
 import type { RuntimeCard } from "./types";
+import { scriptAPIProperties } from "./compileGame";
 
 export interface EditorApi<G extends RuntimeGenerics> {
   card: CodeEditorTypeDefs;
@@ -32,10 +33,13 @@ export function compileEditorApi<G extends RuntimeGenerics>(
       common,
       declareGlobalVariable({ name: "card", type: TypeName.Card }),
       declareModuleDefinition({
-        apiType: zodToTS(
-          z.object({ card: definition.card, actions: definition.actions })
-        ),
         definitionType: memberReference(TypeName.Card, cardEffectsProp),
+        apiType: zodToTS(
+          z.object({
+            [scriptAPIProperties.card]: definition.card,
+            [scriptAPIProperties.actions]: definition.actions,
+          })
+        ),
       })
     ),
     events: Object.entries(definition.effects.shape).reduce(
@@ -43,8 +47,10 @@ export function compileEditorApi<G extends RuntimeGenerics>(
         eventTypeDefs[effectName as keyof G["actions"]] = add(
           common,
           declareModuleDefinition({
-            apiType: zodToTS(z.object({ actions: definition.actions })),
             definitionType: zodToTS(effectType),
+            apiType: zodToTS(
+              z.object({ [scriptAPIProperties.actions]: definition.actions })
+            ),
           })
         );
         return eventTypeDefs;
