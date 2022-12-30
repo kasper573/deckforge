@@ -137,6 +137,71 @@ define({
     });
   });
 
+  describe("compiled runtime entities have correct default property values", () => {
+    const properties = {
+      num: {
+        entityId: "player" as EntityId,
+        propertyId: v4() as PropertyId,
+        name: "num",
+        type: "number" as const,
+      },
+      str: {
+        entityId: "card" as EntityId,
+        propertyId: v4() as PropertyId,
+        name: "str",
+        type: "string" as const,
+      },
+    };
+    const gameDefinition: GameDefinition = {
+      properties: Object.values(properties),
+      events: [],
+      cards: [
+        {
+          cardId: v4() as CardId,
+          deckId: v4() as DeckId,
+          name: "baz",
+          propertyDefaults: {
+            [properties.str.propertyId]: "default",
+          },
+          code: ``,
+        },
+      ],
+      decks: [],
+    };
+    it("player properties", () => {
+      const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
+      const { runtime } = compileGame(
+        runtimeDefinition,
+        gameDefinition,
+        () => ({
+          players: [mockPlayer(), mockPlayer()],
+        })
+      );
+      expect(runtime?.state.players[0].properties.num).toBe(0);
+      expect(runtime?.state.players[1].properties.num).toBe(0);
+    });
+
+    it("card properties", () => {
+      const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
+      const { runtime } = compileGame(
+        runtimeDefinition,
+        gameDefinition,
+        (decks) => {
+          const deck = Array.from(decks.values())[0];
+          return {
+            players: [mockPlayer(deck), mockPlayer(deck)],
+          };
+        }
+      );
+      expect(runtime?.state.players[0].cards.deck[0].properties.str).toBe(
+        "default"
+      );
+      expect(runtime?.state.players[1].cards.deck[0].properties.str).toBe(
+        "default"
+      );
+    });
+  });
+
   it("compiled runtime can chain events ", () => {
     const gameDefinition: GameDefinition = {
       properties: [

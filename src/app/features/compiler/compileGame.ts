@@ -28,7 +28,9 @@ export function compileGame<G extends RuntimeGenerics>(
     ).reduce((map, [deckId, cardDefinitions]) => {
       return map.set(
         deckId as DeckId,
-        cardDefinitions.map((card) => compileCard(card, runtimeDefinition))
+        cardDefinitions.map((card) =>
+          compileCard(card, runtimeDefinition, gameDefinition)
+        )
       );
     }, new Map<DeckId, RuntimeCard<G>[]>());
 
@@ -48,12 +50,23 @@ export function compileGame<G extends RuntimeGenerics>(
 
 export function compileCard<G extends RuntimeGenerics>(
   card: Card,
-  runtimeDefinition: RuntimeDefinition<G>
+  runtimeDefinition: RuntimeDefinition<G>,
+  gameDefinition: Game["definition"]
 ): RuntimeCard<G> {
+  const defaults = Object.entries(card.propertyDefaults).reduce(
+    (defaults, [id, value]) => {
+      const prop = gameDefinition.properties.find((p) => p.propertyId === id);
+      if (prop) {
+        defaults[prop.name] = value;
+      }
+      return defaults;
+    },
+    {} as RuntimeCard<G>["properties"]
+  );
   return {
     id: card.cardId,
     name: card.name,
-    properties: {},
+    properties: defaults,
     effects: compile(card.code, {
       type: runtimeDefinition.card.shape.effects,
       globals: { card },
