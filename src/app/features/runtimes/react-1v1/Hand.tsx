@@ -8,7 +8,7 @@ export function Hand({
   cards,
   playCardProps,
 }: {
-  cards: React1v1Types["card"][];
+  cards: React1v1Types["cardPile"];
   playCardProps: {
     playerId: RuntimePlayerId;
     targetId: RuntimePlayerId;

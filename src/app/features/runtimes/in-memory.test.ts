@@ -9,6 +9,7 @@ import {
 import type { ZodTypesFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import type { RuntimePlayerId } from "../compiler/types";
 import { cardInstanceIdType } from "../compiler/types";
+import { createPile } from "../compiler/apis/Pile";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = createDamageCard(1);
@@ -25,7 +26,7 @@ it("1v1: can play a one card deck and win the game", () => {
     game.actions.playCard({
       playerId: player1.id,
       targetId: player2.id,
-      cardId: player1.cards.hand[0].id,
+      cardId: player1.cards.hand.at(0)!.id,
     });
 
     game.actions.endTurn();
@@ -48,7 +49,7 @@ it("1v1: can play a two card deck and win the game", () => {
     game.actions.playCard({
       playerId: player1.id,
       targetId: player2.id,
-      cardId: player1.cards.hand[0].id,
+      cardId: player1.cards.hand.at(0)!.id,
     });
 
     game.actions.endTurn();
@@ -61,10 +62,10 @@ function createPlayer(health: number, cards: Card[]): Player {
     id: v4() as Player["id"],
     properties: { health },
     cards: {
-      deck: cards,
-      hand: [],
-      draw: [],
-      discard: [],
+      deck: createPile(cards),
+      hand: createPile(),
+      draw: createPile(),
+      discard: createPile(),
     },
   };
 }
@@ -130,12 +131,10 @@ const actions: InMemoryTypes["effects"] = {
     }
   },
   drawCard(state, playerId) {
-    const player = selectPlayer(state, playerId);
-    const card = player.cards.draw.shift();
-    if (!card) {
-      throw new Error(`No cards to draw`);
-    }
-    player.cards.hand.push(card);
+    const {
+      cards: { draw, hand },
+    } = selectPlayer(state, playerId);
+    draw.move(1, hand);
   },
   playCard(context, payload) {
     // The card effect is handled by reactions
@@ -143,13 +142,13 @@ const actions: InMemoryTypes["effects"] = {
     actions.discardCard(context, payload);
   },
   discardCard(state, { playerId, cardId }) {
-    const player = selectPlayer(state, playerId);
-    const index = player.cards.hand.findIndex((c) => c.id === cardId);
-    if (index === -1) {
+    const { cards: { hand, discard }, } = selectPlayer(state, playerId);
+    const card = hand.find((c) => c.id === cardId);
+    if (!card) {
       throw new Error(`Card ${cardId} not in hand`);
     }
-    const [discardedCard] = player.cards.hand.splice(index, 1);
-    player.cards.discard.push(discardedCard);
+    hand.remove(card);
+    discard.add(card);
   },
 };
 
@@ -163,8 +162,8 @@ function selectPlayer(state: State, playerId: RuntimePlayerId) {
 
 function resetPlayerCards(player: Player) {
   const { cards } = player;
-  cards.discard = [];
-  cards.hand = [];
+  cards.discard.clear();
+  cards.hand.clear();
   cards.draw = cards.deck;
 }
 

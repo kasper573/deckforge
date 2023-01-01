@@ -9,7 +9,13 @@ import type {
 } from "../../../api/services/game/types";
 import { deriveRuntimeDefinition } from "./defineRuntime";
 import { compileGame } from "./compileGame";
-import type { RuntimeCard, RuntimeGenerics, RuntimePlayerId } from "./types";
+import type {
+  RuntimeCard,
+  RuntimeGenerics,
+  RuntimePlayer,
+  RuntimePlayerId,
+} from "./types";
+import { createPile } from "./apis/Pile";
 
 describe("compileGame", () => {
   it("can compile game with a single event without errors", () => {
@@ -70,6 +76,101 @@ define((state, damage) => {
     runtime?.actions.attack(5);
     expect(runtime?.state.players[0].properties.health).toBe(5);
     expect(runtime?.state.players[1].properties.health).toBe(5);
+  });
+
+  it("compiled event can mutate card pile", () => {
+    const gameDefinition: GameDefinition = {
+      properties: [],
+      events: [
+        {
+          eventId: v4() as EventId,
+          name: "moveCard",
+          inputType: "void",
+          code: `
+define((state) => {
+  for (const player of state.players) {
+    const {deck, draw} = player.cards;
+    deck.move(1, draw);
+  }
+});`,
+        },
+      ],
+      cards: [
+        {
+          cardId: v4() as CardId,
+          deckId: v4() as DeckId,
+          name: "Foo",
+          propertyDefaults: {},
+          code: ``,
+        },
+      ],
+      decks: [],
+    };
+    const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
+    const { runtime } = compileGame(
+      runtimeDefinition,
+      gameDefinition,
+      (decks) => {
+        const deck = Array.from(decks.values())[0];
+        const createCards = () => deck.map((createCard) => createCard());
+        return {
+          players: [mockPlayer(createCards()), mockPlayer(createCards())],
+        };
+      }
+    );
+    runtime?.actions.moveCard();
+    const [player1, player2] = runtime!.state.players;
+    expect(player1.cards.deck.size).toBe(0);
+    expect(player1.cards.draw.size).toBe(1);
+    expect(player2.cards.deck.size).toBe(0);
+    expect(player2.cards.draw.size).toBe(1);
+  });
+
+  it("compiled event can take from card pile", () => {
+    const gameDefinition: GameDefinition = {
+      properties: [],
+      events: [
+        {
+          eventId: v4() as EventId,
+          name: "moveCard",
+          inputType: "void",
+          code: `
+define((state) => {
+  for (const {cards: {deck, draw}} of state.players) {
+    deck.take(1).forEach((card) => draw.add(card));
+  }
+});`,
+        },
+      ],
+      cards: [
+        {
+          cardId: v4() as CardId,
+          deckId: v4() as DeckId,
+          name: "Foo",
+          propertyDefaults: {},
+          code: ``,
+        },
+      ],
+      decks: [],
+    };
+    const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
+    const { runtime } = compileGame(
+      runtimeDefinition,
+      gameDefinition,
+      (decks) => {
+        const deck = Array.from(decks.values())[0];
+        const createCards = () => deck.map((createCard) => createCard());
+        return {
+          players: [mockPlayer(createCards()), mockPlayer(createCards())],
+        };
+      }
+    );
+    runtime?.actions.moveCard();
+    const [player1, player2] = runtime!.state.players;
+    expect(player1.cards.deck.size).toBe(0);
+    expect(player1.cards.draw.size).toBe(1);
+    expect(player2.cards.deck.size).toBe(0);
+    expect(player2.cards.draw.size).toBe(1);
   });
 
   it("compiled card effect can mutate player property", () => {
@@ -188,10 +289,10 @@ define({
           };
         }
       );
-      expect(runtime?.state.players[0].cards.deck[0].properties.str).toBe(
+      expect(runtime?.state.players[0].cards.deck.at(0)?.properties.str).toBe(
         "default"
       );
-      expect(runtime?.state.players[1].cards.deck[0].properties.str).toBe(
+      expect(runtime?.state.players[1].cards.deck.at(0)?.properties.str).toBe(
         "default"
       );
     });
@@ -237,15 +338,17 @@ define({
   });
 });
 
-function mockPlayer<G extends RuntimeGenerics>(deck: RuntimeCard<G>[] = []) {
+function mockPlayer<G extends RuntimeGenerics>(
+  deck: RuntimeCard<G>[] = []
+): RuntimePlayer<G> {
   return {
     id: v4() as RuntimePlayerId,
     properties: { health: 10 },
     cards: {
-      hand: [],
-      deck,
-      discard: [],
-      draw: [],
+      hand: createPile(),
+      deck: createPile(deck),
+      discard: createPile(),
+      draw: createPile(),
     },
   };
 }

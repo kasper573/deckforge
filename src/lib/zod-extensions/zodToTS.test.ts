@@ -115,6 +115,24 @@ describe("zodToTS", () => {
       zodToTS(node, { resolvers: new Map([[circularNode, "Node"]]) })
     ).toBe(`{\n\tid: string;\n\tchildren: Node[]\n}`);
   });
+
+  it("can convert lazy inner types", () => {
+    const bar = z.string();
+    const foo = z.object({ foo: z.lazy(() => bar) });
+
+    expect(zodToTS(foo, { resolvers: new Map([[bar, "Bar"]]) })).toBe(
+      `{ foo: Bar }`
+    );
+  });
+
+  it("can convert optional lazy inner types", () => {
+    const bar = z.string();
+    const foo = z.lazy(() => bar.optional());
+
+    expect(
+      zodToTS(z.object({ foo }), { resolvers: new Map([[bar, "Bar"]]) })
+    ).toBe(`{ foo?: Bar }`);
+  });
 });
 
 describe("zodToTSResolver", () => {
@@ -123,15 +141,15 @@ describe("zodToTSResolver", () => {
       foo: z.object({ bar: z.object({ baz: z.number() }) }),
     });
     const { declare } = zodToTSResolver({
-      Foo: schema.shape.foo,
-      Bar: schema.shape.foo.shape.bar,
       Baz: schema.shape.foo.shape.bar.shape.baz,
+      Bar: schema.shape.foo.shape.bar,
+      Foo: schema.shape.foo,
     });
     expect(declare()).toBe(
       [
-        `type Foo = { bar: Bar };`,
-        `type Bar = { baz: Baz };`,
         `type Baz = number;`,
+        `type Bar = { baz: Baz };`,
+        `type Foo = { bar: Bar };`,
       ].join("\n")
     );
   });
@@ -154,30 +172,5 @@ describe("zodToTSResolver", () => {
       Foo: schema.shape.foo,
     });
     expect(resolve(schema.shape.foo.shape.bar)).toBe("{ baz: number }");
-  });
-
-  describe("multiple types per type name", () => {
-    it("uses first type for declaration", () => {
-      const schema = z.object({
-        foo: z.string(),
-        bar: z.number(),
-      });
-      const { declare } = zodToTSResolver({
-        Either: [schema.shape.foo, schema.shape.bar],
-      });
-      expect(declare()).toBe("type Either = string;");
-    });
-
-    it("resolves to the same type name", () => {
-      const schema = z.object({
-        foo: z.string(),
-        bar: z.number(),
-      });
-      const resolve = zodToTSResolver({
-        Either: [schema.shape.foo, schema.shape.bar],
-      });
-      expect(resolve(schema.shape.foo)).toBe("Either");
-      expect(resolve(schema.shape.bar)).toBe("Either");
-    });
   });
 });

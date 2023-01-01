@@ -17,6 +17,7 @@ import { Reload } from "../../../components/icons";
 import type { RuntimeGenerics, RuntimePlayerId } from "../../compiler/types";
 import { GameRenderer } from "../../runtimes/react-1v1/GameRenderer";
 import { ErrorBoundary } from "../../../ErrorBoundary";
+import { createPile } from "../../compiler/apis/Pile";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
@@ -90,10 +91,10 @@ function createInitialState(
       id: v4() as RuntimePlayerId,
       properties: { health: 5 },
       cards: {
-        hand: [],
-        deck: deck.map((createCard) => createCard()),
-        discard: [],
-        draw: [],
+        hand: createPile(),
+        deck: createPile(deck.map((createCard) => createCard())),
+        discard: createPile(),
+        draw: createPile(),
       },
     };
   }

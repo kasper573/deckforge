@@ -1,4 +1,4 @@
-import type { ZodLazy, ZodType } from "zod";
+import type { ZodType } from "zod";
 import type { ZodObject } from "zod";
 import type {
   MachineActions,
@@ -8,6 +8,7 @@ import type { MachineContext } from "../../../lib/machine/MachineContext";
 import type { NominalString } from "../../../lib/ts-extensions/NominalString";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+import type { Pile } from "./apis/Pile";
 
 export type CardInstanceId = NominalString<"CardInstanceId">;
 export const cardInstanceIdType = zodNominalString<CardInstanceId>();
@@ -25,10 +26,10 @@ export interface RuntimePlayer<G extends RuntimeGenerics> {
   id: RuntimePlayerId;
   properties: G["playerProps"];
   cards: {
-    draw: RuntimeCard<G>[];
-    hand: RuntimeCard<G>[];
-    discard: RuntimeCard<G>[];
-    deck: RuntimeCard<G>[];
+    draw: Pile<RuntimeCard<G>>;
+    hand: Pile<RuntimeCard<G>>;
+    discard: Pile<RuntimeCard<G>>;
+    deck: Pile<RuntimeCard<G>>;
   };
 }
 
@@ -59,10 +60,10 @@ export interface RuntimeDefinition<
 > {
   state: ZodType<RuntimeState<G>>;
   card: ZodObject<ZodShapeFor<RuntimeCard<G>>>;
+  cardPile: ZodType<Pile<RuntimeCard<G>>>;
   player: ZodType<RuntimePlayer<G>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
   actions: ZodType<G["actions"]>;
-  lazyState: ZodLazy<ZodType<RuntimeState<G>>>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -32,32 +32,54 @@ import { memoize } from "lodash";
 
 export interface ZodToTSOptions {
   resolvers?: Map<ZodType, string>;
+  allowRootResolution: boolean;
   indentation: number;
 }
 
 export function zodToTS(
   type: ZodType,
-  { indentation = 0, ...rest }: Partial<ZodToTSOptions> = {}
+  {
+    indentation = 0,
+    allowRootResolution = true,
+    ...rest
+  }: Partial<ZodToTSOptions> = {}
 ): string {
-  return zodToTSImpl(type, { indentation, ...rest }, []);
+  return zodToTSImpl(
+    type,
+    { indentation, allowRootResolution, ...rest },
+    [],
+    []
+  );
 }
 
 function zodToTSImpl(
   type: ZodType,
   options: ZodToTSOptions,
-  path: string[]
+  path: string[],
+  ancestors: ZodType[]
 ): string {
-  const zodToTS = (type: ZodType, addToPath?: string) =>
-    zodToTSImpl(
-      type,
-      { ...options, indentation: options.indentation + 1 },
-      addToPath !== undefined ? [...path, addToPath] : path
-    );
-
-  const resolved = options.resolvers?.get(type);
-  if (resolved !== undefined) {
-    return resolved;
+  const isCircular = ancestors.includes(type);
+  const allowResolve = ancestors.length > 0 || options.allowRootResolution;
+  if (allowResolve) {
+    const resolved = options.resolvers?.get(type);
+    if (resolved !== undefined) {
+      return resolved;
+    }
   }
+
+  if (isCircular) {
+    throw new Error(
+      "Circular dependency without resolution detected at " + path.join(".")
+    );
+  }
+
+  const zodToTS = (childType: ZodType, childName?: string) =>
+    zodToTSImpl(
+      childType,
+      { ...options, indentation: options.indentation + 1 },
+      childName !== undefined ? [...path, childName] : path,
+      [...ancestors, type]
+    );
 
   // Direct types
   if (type instanceof ZodString) {
@@ -167,9 +189,7 @@ function zodToTSImpl(
     )}`;
   }
   if (type instanceof ZodLazy) {
-    throw new Error(
-      "No resolver provided for lazy type at path: " + path.join(".")
-    );
+    return zodToTS(type._def.getter());
   }
 
   throw new Error(
@@ -180,6 +200,9 @@ function zodToTSImpl(
 function extractOptional(type: ZodType): [boolean, ZodType] {
   if (type instanceof ZodOptional) {
     return [true, type._def.innerType];
+  }
+  if (type instanceof ZodLazy) {
+    return extractOptional(type._def.getter());
   }
   if (type instanceof ZodEffects) {
     return extractOptional(type.innerType());
@@ -192,27 +215,23 @@ function extractOptional(type: ZodType): [boolean, ZodType] {
 
 const indent = memoize((indentation: number) => "\t".repeat(indentation));
 
-export function zodToTSResolver(typeMap: Record<string, ZodType | ZodType[]>) {
-  function resolve(
-    oneOrManyTypes: ZodType | ZodType[],
-    includeSelf = true
-  ): string {
-    const type = Array.isArray(oneOrManyTypes)
-      ? oneOrManyTypes[0]
-      : oneOrManyTypes;
-    const resolvers = recordToInverseMap(typeMap);
-    if (!includeSelf) {
-      resolvers.delete(type);
-    }
-    return zodToTS(type, { resolvers });
-  }
+export function zodToTSResolver(typeMap: Record<string, ZodType>) {
+  const resolvers = recordToInverseMap(typeMap);
 
   function declare() {
     return add(
       ...Object.entries(typeMap).map(
-        ([typeName, type]) => `type ${typeName} = ${resolve(type, false)};`
+        ([typeName, type]) =>
+          `type ${typeName} = ${zodToTS(type, {
+            resolvers,
+            allowRootResolution: false,
+          })};`
       )
     );
+  }
+
+  function resolve(type: ZodType) {
+    return zodToTS(type, { resolvers });
   }
 
   function add(...args: string[]): string {
@@ -225,13 +244,10 @@ export function zodToTSResolver(typeMap: Record<string, ZodType | ZodType[]>) {
   return resolve;
 }
 
-function recordToInverseMap<T>(record: Record<string, T | T[]>) {
+function recordToInverseMap<T>(record: Record<string, T>) {
   const inverseMap = new Map<T, string>();
   for (const [key, value] of Object.entries(record)) {
-    const multi = Array.isArray(value) ? value : [value];
-    for (const one of multi) {
-      inverseMap.set(one, key);
-    }
+    inverseMap.set(value, key);
   }
   return inverseMap;
 }

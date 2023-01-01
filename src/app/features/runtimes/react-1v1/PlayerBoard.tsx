@@ -61,7 +61,7 @@ export function PlayerBoard({
         direction="row"
         spacing={2}
       >
-        <CardPile name="Discard" size={player.cards.discard.length} />
+        <CardPile name="Discard" size={player.cards.discard.size} />
         <Hand
           cards={player.cards.hand}
           playCardProps={{
@@ -71,7 +71,7 @@ export function PlayerBoard({
         />
         <CardPile
           name="Draw"
-          size={player.cards.draw.length}
+          size={player.cards.draw.size}
           onClick={drawCard}
         />
       </Stack>
