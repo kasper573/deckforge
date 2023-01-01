@@ -143,7 +143,7 @@ function compile<T extends ZodType>(
     define(createDefinition(options.scriptAPI));
   }
 
-  eval(code.trim()); // Assume code calls define/derive to set definition
+  eval(code); // Assume code calls define/derive to set definition
   return definition;
 }
 
