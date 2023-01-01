@@ -28,7 +28,11 @@ export class Pile<T> implements Iterable<T> {
   }
 
   clear(): void {
-    this.items.length = 0;
+    this.reset();
+  }
+
+  reset(newValues: T[] = []): void {
+    this.items.splice(0, this.items.length, ...newValues);
   }
 
   has(value: T): boolean {
@@ -97,6 +101,7 @@ export function zodPile<ItemType extends ZodType>(itemType: ItemType) {
     size: z.number(),
     add: z.function().args(itemType).returns(z.void()),
     clear: z.function().returns(z.void()),
+    reset: z.function().args(z.array(itemType).optional()).returns(z.void()),
     has: z.function().args(itemType).returns(z.boolean()),
     remove: z.function().args(itemType).returns(z.boolean()),
     forEach: z.function().args(z.function().args(itemType).returns(z.void())),
