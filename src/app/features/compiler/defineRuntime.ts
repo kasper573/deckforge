@@ -1,6 +1,7 @@
 import type { ZodRawShape, ZodType } from "zod";
 import { z } from "zod";
 import type { ZodTypeAny } from "zod/lib/types";
+import { uniq } from "lodash";
 import type { Event, Game, Property } from "../../../api/services/game/types";
 import {
   cardType as cardDefinitionType,
@@ -140,12 +141,16 @@ export function deriveMachine<G extends RuntimeGenerics>(
     .effects(effects)
     .reactions(function* (state, effectName) {
       for (const player of state.players) {
-        for (const pile of Object.values(player.cards)) {
-          for (const card of pile) {
-            const effect = card.effects[effectName];
-            if (effect !== undefined) {
-              yield effect;
-            }
+        const cards = uniq(
+          Object.values(player.cards)
+            .map((pile) => Array.from(pile))
+            .flat()
+        );
+
+        for (const card of cards) {
+          const effect = card.effects[effectName];
+          if (effect !== undefined) {
+            yield effect;
           }
         }
       }

@@ -1,94 +1,108 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
+import { immerable } from "immer";
 
-export function createPile<T>(initialItems: T[] = []) {
-  const items = new Array<T>(...initialItems);
-  const pile: Pile<T> = {
-    add(item) {
-      items.push(item);
-    },
-    insert(item, atIndex: number) {
-      items.splice(atIndex, 0, item);
-    },
-    take(amount: number) {
-      return items.splice(0, amount);
-    },
-    move(amount, to) {
-      for (const item of pile.take(amount)) {
-        to.add(item);
-      }
-    },
-    clear() {
-      items.splice(0, items.length);
-    },
-    remove(value: T) {
-      const index = items.indexOf(value);
-      if (index !== -1) {
-        items.splice(index, 1);
-        return true;
-      }
-      return false;
-    },
-    has(value: T) {
-      return items.includes(value);
-    },
-    forEach(callback) {
-      items.forEach(callback);
-    },
-    find(callback) {
-      return items.find(callback);
-    },
-    map(callback) {
-      return items.map(callback);
-    },
-    at(index) {
-      return items[index];
-    },
-    get size() {
-      return items.length;
-    },
-    [Symbol.iterator]() {
-      return items[Symbol.iterator]();
-    },
-  };
-
-  return pile;
+export function createPile<T>(items: T[] = []): Pile<T> {
+  return new Pile<T>(items);
 }
 
-export interface Pile<T>
-  extends Pick<Set<T>, "clear" | "has" | "size">,
-    Iterable<T> {
-  add(item: T): void;
-  insert(item: T, atIndex: number): void;
-  take(amount: number): T[];
-  move(amount: number, to: Pile<T>): void;
-  remove(value: T): boolean;
-  forEach(callback: (item: T) => void): void;
-  map<M>(callback: (item: T) => M): M[];
-  at(index: number): T | undefined;
-  find(callback: (item: T) => boolean): T | undefined;
+export class Pile<T> implements Iterable<T> {
+  [immerable] = true;
+
+  private readonly items: T[];
+
+  get size() {
+    return this.items.length;
+  }
+
+  [Symbol.iterator]() {
+    return this.items[Symbol.iterator]();
+  }
+
+  constructor(initialItems: T[] = []) {
+    this.items = new Array<T>(...initialItems);
+  }
+
+  add(value: T) {
+    this.items.push(value);
+  }
+
+  clear(): void {
+    this.items.length = 0;
+  }
+
+  has(value: T): boolean {
+    return this.items.includes(value);
+  }
+
+  remove(value: T): boolean {
+    const index = this.items.indexOf(value);
+    if (index !== -1) {
+      this.items.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  insert(item: T, atIndex: number): void {
+    this.items.splice(atIndex, 0, item);
+  }
+
+  take(amount: number): readonly T[] {
+    return this.items.splice(0, amount);
+  }
+
+  move(amount: number, to: Pile<T>) {
+    for (const item of this.take(amount)) {
+      to.add(item);
+    }
+  }
+
+  forEach(callback: (item: T) => void): void {
+    this.items.forEach(callback);
+  }
+
+  map<M>(callback: (item: T) => M): M[] {
+    return this.items.map(callback);
+  }
+
+  find(callback: (item: T) => boolean): T | undefined {
+    return this.items.find(callback);
+  }
+
+  at(index: number): T | undefined {
+    return this.items[index];
+  }
 }
 
 export function zodPile<ItemType extends ZodType>(itemType: ItemType) {
+  type ItemPile = Pile<z.infer<ItemType>>;
+  type ItemPileMembers = Omit<ItemPile, typeof immerable | "items">;
+
   const selfType = z.lazy(() => pileType);
-  const pileType: ZodType<Pile<z.infer<ItemType>>> = z.object({
-    add: z.function().args(itemType).returns(z.void()),
+  const pileMembers: ZodType<ItemPileMembers> = z.object({
     insert: z.function().args(itemType, z.number()).returns(z.void()),
     take: z.function().args(z.number()).returns(z.array(itemType)),
     move: z.function().args(z.number(), selfType).returns(z.void()),
-    clear: z.function().returns(z.void()),
-    remove: z.function().args(itemType).returns(z.boolean()),
-    forEach: z.function().args(z.function().args(itemType)),
+    map: z
+      .function()
+      .args(z.function().args(itemType).returns(z.any()))
+      .returns(z.array(z.any())),
     find: z
       .function()
       .args(z.function().args(itemType).returns(z.boolean()))
       .returns(itemType.optional()),
-    map: z.function().args(z.function().args(itemType)).returns(z.any()),
     at: z.function().args(z.number()).returns(itemType.optional()),
-    has: z.function().args(itemType).returns(z.boolean()),
+    [Symbol.iterator]: z.any(),
     size: z.number(),
-    [Symbol.iterator]: z.function().returns(z.any()),
-  });
+    add: z.function().args(itemType).returns(z.void()),
+    clear: z.function().returns(z.void()),
+    has: z.function().args(itemType).returns(z.boolean()),
+    remove: z.function().args(itemType).returns(z.boolean()),
+    forEach: z.function().args(z.function().args(itemType).returns(z.void())),
+  }) as ZodType<ItemPileMembers>;
+
+  const pileType = pileMembers as ZodType<ItemPile>;
 
   return pileType;
 }

@@ -142,7 +142,9 @@ const actions: InMemoryTypes["effects"] = {
     actions.discardCard(context, payload);
   },
   discardCard(state, { playerId, cardId }) {
-    const { cards: { hand, discard }, } = selectPlayer(state, playerId);
+    const {
+      cards: { hand, discard },
+    } = selectPlayer(state, playerId);
     const card = hand.find((c) => c.id === cardId);
     if (!card) {
       throw new Error(`Card ${cardId} not in hand`);

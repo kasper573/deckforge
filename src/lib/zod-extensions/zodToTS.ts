@@ -21,6 +21,7 @@ import {
   ZodOptional,
   ZodPromise,
   ZodRecord,
+  ZodSet,
   ZodString,
   ZodTuple,
   ZodUndefined,
@@ -169,6 +170,9 @@ function zodToTSImpl(
     return `Map<${zodToTS(type._def.keyType)}, ${zodToTS(
       type._def.valueType
     )}>`;
+  }
+  if (type instanceof ZodSet) {
+    return `Set<${zodToTS(type._def.valueType)}>`;
   }
   if (type instanceof ZodLiteral) {
     return JSON.stringify(type._def.value);

@@ -18,6 +18,12 @@ const expectations = [
   { name: "enum", type: z.enum(["foo", "bar"]), expected: `"foo" | "bar"` },
   { name: "array", type: z.array(z.string()), expected: "string[]" },
   {
+    name: "map",
+    type: z.map(z.number(), z.string()),
+    expected: "Map<number, string>",
+  },
+  { name: "set", type: z.set(z.number()), expected: "Set<number>" },
+  {
     name: "tuple",
     type: z.tuple([z.string(), z.number()]),
     expected: "[string, number]",
