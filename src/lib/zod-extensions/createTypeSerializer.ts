@@ -93,5 +93,12 @@ export function createSerializableType<TypeSchemas extends ZodRawShape>(
     return valueTypeOf(serialized).parse(undefined);
   }
 
-  return { serializedType, valueTypeOf, isObject, defaultOf, isTypeName };
+  return {
+    serializedType,
+    valueTypeOf,
+    isObject,
+    defaultOf,
+    isTypeName,
+    primitiveTypes,
+  };
 }

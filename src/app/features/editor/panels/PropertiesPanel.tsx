@@ -16,7 +16,7 @@ import type { EditorObjectId } from "../types";
 import { useMenu } from "../../../hooks/useMenu";
 import { propertyValue } from "../../../../api/services/game/types";
 import { HoverListItem } from "../../../components/HoverListItem";
-import { ZodPicker } from "../../../controls/ZodPicker";
+import { PropertyTypePicker } from "../../../controls/PropertyTypePicker";
 import type { PanelProps } from "./definition";
 
 export function CardPropertiesPanel(props: PanelProps) {
@@ -100,7 +100,7 @@ function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
           <Typography noWrap>{name}</Typography>
         </Box>
         <div>
-          <ZodPicker
+          <PropertyTypePicker
             schema={propertyValue.serializedType}
             value={type}
             onChange={(type) => updateProperty({ propertyId, type })}
