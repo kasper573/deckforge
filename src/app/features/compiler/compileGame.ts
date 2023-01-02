@@ -1,6 +1,6 @@
 import { groupBy } from "lodash";
 import type { ZodType } from "zod";
-import type { z } from "zod";
+import { z } from "zod";
 import { v4 } from "uuid";
 import type {
   Game,
@@ -11,6 +11,7 @@ import type {
 } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
 import { propertyValue } from "../../../api/services/game/types";
+import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import { deriveMachine } from "./defineRuntime";
 import type {
   RuntimeCard,
@@ -51,7 +52,8 @@ export function compileGame<G extends RuntimeGenerics>(
     );
 
     const scriptAPI: ScriptAPI<G> = {
-      [scriptAPIProperties.actions]: new Proxy({} as typeof runtime.actions, {
+      cloneCard,
+      actions: new Proxy({} as typeof runtime.actions, {
         get: (target, propertyName) =>
           runtime.actions[propertyName as keyof typeof runtime.actions],
       }),
@@ -89,6 +91,20 @@ export function compileGame<G extends RuntimeGenerics>(
       gameDefinition
     );
 
+    function cloneCard(card: RuntimeCard<G>): RuntimeCard<G> {
+      const cardDefinition = gameDefinition.cards.find(
+        (c) => c.cardId === card.typeId
+      );
+      if (!cardDefinition) {
+        throw new Error(`Card ${card.typeId} not found`);
+      }
+      return compileCard(cardDefinition, {
+        runtimeDefinition,
+        scriptAPI,
+        cardProperties,
+      });
+    }
+
     const runtime = deriveMachine<G>(effects, initialState);
     return { runtime };
   } catch (error) {
@@ -124,15 +140,24 @@ function normalizeInitialState<G extends RuntimeGenerics>(
   };
 }
 
-type ScriptAPI<G extends RuntimeGenerics = RuntimeGenerics> = {
+type ScriptAPI<G extends RuntimeGenerics> = {
   actions: G["actions"];
   thisCardId?: CardInstanceId;
+  cloneCard: (card: RuntimeCard<G>) => RuntimeCard<G>;
 };
 
-export const scriptAPIProperties = {
-  cardId: "thisCardId",
-  actions: "actions",
-} as const;
+export function createScriptApiDefinition<G extends RuntimeGenerics>(
+  runtimeDefinition: RuntimeDefinition<G>
+): ZodShapeFor<ScriptAPI<G>> {
+  return {
+    cloneCard: z
+      .function()
+      .args(runtimeDefinition.card)
+      .returns(runtimeDefinition.card) as any,
+    actions: runtimeDefinition.actions,
+    thisCardId: runtimeDefinition.card.shape.id,
+  };
+}
 
 function compileCard<G extends RuntimeGenerics>(
   { cardId, name, code, propertyDefaults }: Card,
@@ -145,21 +170,22 @@ function compileCard<G extends RuntimeGenerics>(
   const id = v4() as CardInstanceId;
   return {
     id,
+    typeId: cardId,
     name: name,
     properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
     effects: compile(code, {
       type: options.runtimeDefinition.card.shape.effects,
-      scriptAPI: { ...options.scriptAPI, [scriptAPIProperties.cardId]: id },
+      scriptAPI: { ...options.scriptAPI, thisCardId: id },
       initialValue: {},
     }),
   };
 }
 
-function compile<T extends ZodType>(
+function compile<T extends ZodType, G extends RuntimeGenerics>(
   code: string,
   options: {
     type: T;
-    scriptAPI: ScriptAPI;
+    scriptAPI: ScriptAPI<G>;
     initialValue?: z.infer<T>;
   }
 ): z.infer<T> {
@@ -176,7 +202,7 @@ function compile<T extends ZodType>(
     definition = newDefinition;
   }
 
-  function derive(createDefinition: (scriptAPI: ScriptAPI) => unknown) {
+  function derive(createDefinition: (scriptAPI: ScriptAPI<G>) => unknown) {
     define(createDefinition(options.scriptAPI));
   }
 

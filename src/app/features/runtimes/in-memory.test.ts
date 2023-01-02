@@ -10,6 +10,7 @@ import type { ZodTypesFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import type { RuntimePlayerId } from "../compiler/types";
 import { cardInstanceIdType } from "../compiler/types";
 import { createPile } from "../compiler/apis/Pile";
+import type { CardId } from "../../../api/services/game/types";
 
 it("1v1: can play a one card deck and win the game", () => {
   const card = createDamageCard(1);
@@ -80,6 +81,7 @@ function createDamageCard(damage: number): Card {
   const id = v4() as Card["id"];
   return {
     id,
+    typeId: id as CardId,
     name: "Attack",
     properties: {},
     effects: {
