@@ -24,7 +24,7 @@ export type MachineEffect<
   State = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Payload = any
-> = (state: State, payload: Payload) => void;
+> = (state: State, payload: Payload) => void | MachineEffect<State, Payload>;
 
 export type MachineEffectPayload<T extends MachineEffect> =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

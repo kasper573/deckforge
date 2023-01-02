@@ -52,6 +52,29 @@ describe("Machine", () => {
       expect(fn).toHaveBeenCalled();
     });
 
+    it("effects may return an additional effect that will be called after reactions", () => {
+      const output: unknown[] = [];
+      const machine = createMachine({
+        reactions: {
+          a: () => {
+            output.push("state-reaction");
+          },
+        },
+      })
+        .effects({
+          a: () => {
+            output.push("effect");
+            return () => {
+              output.push("returned-reaction");
+            };
+          },
+        })
+        .reactions((state, effectName) => [state.reactions[effectName]])
+        .build();
+      machine.actions.a();
+      expect(output).toEqual(["effect", "state-reaction", "returned-reaction"]);
+    });
+
     it("can receive state", () => {
       let receivedState: unknown;
       const machine = createReactionMachine((state) => {
