@@ -1,6 +1,5 @@
 import { styled } from "@mui/material/styles";
 import type { ComponentProps } from "react";
-import { useEffect } from "react";
 import type { GameRuntime } from "../../compiler/compileGame";
 import type { React1v1Generics } from "./definition";
 import { adapter } from "./definition";
@@ -11,10 +10,6 @@ export interface GameRendererProps extends ComponentProps<typeof Viewport> {
 }
 
 export function GameRenderer({ runtime, ...viewportProps }: GameRendererProps) {
-  useEffect(() => {
-    runtime.actions.startBattle();
-  }, [runtime]);
-
   return (
     <adapter.RuntimeProvider value={runtime}>
       <Viewport {...viewportProps}>
