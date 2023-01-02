@@ -4,6 +4,7 @@ import {
   ZodArray,
   ZodBigInt,
   ZodBoolean,
+  ZodBranded,
   ZodDate,
   ZodDefault,
   ZodEffects,
@@ -194,6 +195,11 @@ function zodToTSImpl(
   }
   if (type instanceof ZodLazy) {
     return zodToTS(type._def.getter());
+  }
+  if (type instanceof ZodBranded) {
+    throw new Error(
+      "Branded types are not supported. Use the resolvers option and provide manual resolutions for these types."
+    );
   }
 
   throw new Error(
