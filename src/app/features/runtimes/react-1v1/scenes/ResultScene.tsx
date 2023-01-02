@@ -5,12 +5,18 @@ import { adapter } from "../definition";
 import { Center } from "../../../../components/Center";
 
 export function ResultScene({ winner }: { winner: RuntimePlayerId }) {
-  const [player1, player2] = adapter.useRuntimeState((state) => state.players);
+  const players = adapter.useRuntimeState((state) => state.players);
   const { startBattle } = adapter.useRuntimeActions();
+
+  function getPlayerName(id: RuntimePlayerId) {
+    const index = players.findIndex((p) => p.id === id);
+    return `Player ${index + 1}`;
+  }
+
   return (
     <Center>
       <Typography sx={{ textAlign: "center", color: "black" }}>
-        {winner === player1.id ? "You win!" : "You lost!"}
+        {getPlayerName(winner)} won!
       </Typography>
       <Button variant="contained" onClick={startBattle} sx={{ mt: 2 }}>
         Play again
