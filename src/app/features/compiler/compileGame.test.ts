@@ -352,7 +352,7 @@ define({
           middlewareId: v4() as MiddlewareId,
           name: "make player 1 win",
           code: `define((state) => {
-            state.winner = state.players[0].id;
+            state.status = { type: "result", winner: state.players[0].id };
           })`,
         },
       ],
@@ -373,7 +373,10 @@ define({
       players: [mockPlayer(), mockPlayer()],
     }));
     runtime!.actions.foo();
-    expect(runtime!.state.winner).toBe(runtime!.state.players[0].id);
+    expect(runtime!.state.status).toEqual({
+      type: "result",
+      winner: runtime!.state.players[0].id,
+    });
   });
 });
 
