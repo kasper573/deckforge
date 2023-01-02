@@ -49,6 +49,7 @@ export interface RuntimeGenerics<
 export interface RuntimeState<G extends RuntimeGenerics> {
   players: [RuntimePlayer<G>, RuntimePlayer<G>];
   winner?: RuntimePlayerId;
+  currentPlayerId: RuntimePlayerId;
 }
 
 export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<

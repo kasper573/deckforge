@@ -120,6 +120,7 @@ function normalizeInitialState<G extends RuntimeGenerics>(
   return {
     ...initialState,
     players: [normalizePlayer(player1), normalizePlayer(player2)],
+    currentPlayerId: player1.id,
   };
 }
 

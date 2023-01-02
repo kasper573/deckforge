@@ -14,8 +14,11 @@ import { createPile } from "../compiler/apis/Pile";
 it("1v1: can play a one card deck and win the game", () => {
   const card = createDamageCard(1);
 
+  const p1 = createPlayer(1, [card]);
+  const p2 = createPlayer(1, [card]);
   const game = createGameRuntime({
-    players: [createPlayer(1, [card]), createPlayer(1, [card])],
+    players: [p1, p2],
+    currentPlayerId: p1.id,
   });
 
   game.execute((state) => {
@@ -37,8 +40,11 @@ it("1v1: can play a one card deck and win the game", () => {
 it("1v1: can play a two card deck and win the game", () => {
   const cards = [createDamageCard(1), createDamageCard(-1)];
 
+  const p1 = createPlayer(1, cards);
+  const p2 = createPlayer(1, cards);
   const game = createGameRuntime({
-    players: [createPlayer(1, cards), createPlayer(1, cards)],
+    players: [p1, p2],
+    currentPlayerId: p1.id,
   });
 
   game.execute((state) => {

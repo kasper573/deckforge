@@ -72,6 +72,7 @@ export function defineRuntime<
   const state = z.object({
     players: z.tuple([player, player]),
     winner: playerId.optional(),
+    currentPlayerId: playerId,
   }) as unknown as RuntimeDefinition<G>["state"];
 
   return {
