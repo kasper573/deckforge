@@ -5,6 +5,7 @@ import type { GameRuntime } from "../../compiler/compileGame";
 import { PlayerBoard } from "./PlayerBoard";
 import type { React1v1Generics } from "./definition";
 import { adapter } from "./definition";
+import { EndTurnButton } from "./EndTurnButton";
 
 export interface GameRendererProps extends ComponentProps<typeof Viewport> {
   runtime: GameRuntime<React1v1Generics>;
@@ -24,10 +25,13 @@ export function GameRenderer({ runtime, ...viewportProps }: GameRendererProps) {
 
 function GameViewport(props: ComponentProps<typeof Viewport>) {
   const [player1, player2] = adapter.useRuntimeState((state) => state.players);
+  const { endTurn } = adapter.useRuntimeActions();
   return (
     <Viewport {...props}>
-      <PlayerBoard placement="bottom" player={player1} opponent={player2} />
       <PlayerBoard placement="top" player={player2} opponent={player1} />
+      <PlayerBoard placement="bottom" player={player1} opponent={player2}>
+        <EndTurnButton onClick={endTurn} />
+      </PlayerBoard>
     </Viewport>
   );
 }

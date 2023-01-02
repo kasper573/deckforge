@@ -4,7 +4,7 @@ import { Card } from "./Card";
 import type { React1v1Types } from "./definition";
 import { adapter } from "./definition";
 
-export function Hand({
+export function PlayerHand({
   cards,
   playCardProps,
 }: {

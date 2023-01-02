@@ -1,11 +1,10 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 
-import { Status } from "./Status";
-import { EndTurnButton } from "./EndTurnButton";
+import { PlayerStatus } from "./PlayerStatus";
 import { CardPile } from "./CardPile";
-import { Hand } from "./Hand";
+import { PlayerHand } from "./PlayerHand";
 import type { React1v1Types } from "./definition";
 import { adapter } from "./definition";
 
@@ -14,15 +13,16 @@ export function PlayerBoard({
   placement,
   player,
   opponent,
+  children,
   ...props
 }: ComponentProps<typeof Stack> & {
   placement: "top" | "bottom";
   player: React1v1Types["player"];
   opponent: React1v1Types["player"];
+  children?: ReactNode;
 }) {
   const actions = adapter.useRuntimeActions();
   const drawCard = () => actions.drawCard(player.id);
-  const endTurn = () => actions.endTurn();
   return (
     <Box
       sx={{
@@ -48,8 +48,8 @@ export function PlayerBoard({
           transform: `translateY(${placement === "top" ? 100 : -100}%)`,
         }}
       >
-        <Status player={player} />
-        <EndTurnButton onClick={endTurn} />
+        <PlayerStatus player={player} />
+        {children}
       </Stack>
       <Stack
         sx={{
@@ -62,7 +62,7 @@ export function PlayerBoard({
         spacing={2}
       >
         <CardPile name="Discard" size={player.cards.discard.size} />
-        <Hand
+        <PlayerHand
           cards={player.cards.hand}
           playCardProps={{
             playerId: player.id,
