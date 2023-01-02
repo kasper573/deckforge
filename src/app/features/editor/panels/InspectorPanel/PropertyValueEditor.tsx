@@ -35,21 +35,24 @@ export function PropertyDefaultsEditor({
           name,
           type,
         }: Property) => (
-          <PropertyValueEditor
-            key={propertyId}
-            type={type}
-            name={name}
-            value={
-              defaults[propertyId] as TypeOfPropertyValue<ValueType> | undefined
-            }
-            onChange={(newValue) =>
-              onChange(
-                produce(defaults, (draft) => {
-                  draft[propertyId] = newValue;
-                })
-              )
-            }
-          />
+          <ListItem key={propertyId}>
+            <PropertyValueEditor
+              type={type}
+              name={name}
+              value={
+                defaults[propertyId] as
+                  | TypeOfPropertyValue<ValueType>
+                  | undefined
+              }
+              onChange={(newValue) =>
+                onChange(
+                  produce(defaults, (draft) => {
+                    draft[propertyId] = newValue;
+                  })
+                )
+              }
+            />
+          </ListItem>
         )
       )}
     </List>
@@ -77,9 +80,8 @@ export function PropertyValueEditor<
 
   const control = useDebouncedControl({ value, onChange });
 
-  let content: JSX.Element = <></>;
   if (propertyValue.isObject(type)) {
-    content = (
+    return (
       <ZodControl
         schema={propertyValue.valueTypeOf(type)}
         value={control.value}
@@ -87,34 +89,37 @@ export function PropertyValueEditor<
         label={name}
       />
     );
-  } else if (propertyValue.isTypeName(type)) {
-    type ExactPrimitiveControl = ComponentType<
-      ControlProps<TypeOfPropertyValue<ValueType>>
-    >;
-    const PrimitiveControl = primitiveControls[type] as
-      | ExactPrimitiveControl
-      | undefined;
-    if (!PrimitiveControl) {
-      content = (
-        <>
-          {name}{" "}
-          <Tooltip title={`Cannot edit. No control exists for type "${type}"`}>
-            <span>({String(type)})</span>
-          </Tooltip>
-        </>
-      );
-    } else {
-      content = (
-        <PrimitiveControl
-          label={name}
-          value={control.value}
-          onChange={control.setValue}
-        />
-      );
-    }
   }
 
-  return <ListItem>{content}</ListItem>;
+  if (!propertyValue.isTypeName(type)) {
+    return null;
+  }
+
+  type ExactPrimitiveControl = ComponentType<
+    ControlProps<TypeOfPropertyValue<ValueType>>
+  >;
+  const PrimitiveControl = primitiveControls[type] as
+    | ExactPrimitiveControl
+    | undefined;
+
+  if (!PrimitiveControl) {
+    return (
+      <>
+        {name}{" "}
+        <Tooltip title={`Cannot edit. No control exists for type "${type}"`}>
+          <span>({String(type)})</span>
+        </Tooltip>
+      </>
+    );
+  }
+
+  return (
+    <PrimitiveControl
+      label={name}
+      value={control.value}
+      onChange={control.setValue}
+    />
+  );
 }
 
 type ControlProps<Value> = {

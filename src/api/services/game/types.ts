@@ -40,16 +40,18 @@ export const propertyValue = createSerializableType(primitiveTypes, {
 export type PropertyId = NominalString<"PropertyId">;
 export const propertyIdType = zodNominalString<PropertyId>();
 
+export type PropertyDefaults = z.infer<typeof propertyDefaultsType>;
+export const propertyDefault = z.unknown();
+export const propertyDefaultsType = z.record(propertyIdType, propertyDefault);
+
 export type Property = z.infer<typeof propertyType>;
 export const propertyType = z.object({
   entityId: entityIdType,
   propertyId: propertyIdType,
   name: zodIdentifier,
   type: propertyValue.serializedType,
+  defaultValue: propertyDefault,
 });
-
-export type PropertyDefaults = z.infer<typeof propertyDefaultsType>;
-export const propertyDefaultsType = z.record(propertyIdType, z.unknown());
 
 export type EventId = NominalString<"EventId">;
 export const eventIdType = zodNominalString<EventId>();

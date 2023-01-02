@@ -20,6 +20,7 @@ export type ZodDialogProps<T extends ZodType> = ModalProps<
     title?: ReactNode;
     submitLabel?: ReactNode;
     cancelLabel?: ReactNode;
+    extraFields?: ReactNode | ((value: z.infer<T>) => ReactNode);
   }
 >;
 
@@ -31,10 +32,15 @@ export function ZodDialog<T extends ZodType>({
     title,
     submitLabel = "Submit",
     cancelLabel = "Cancel",
+    extraFields: extraFieldsNodeOrFn,
     ...controlProps
   },
 }: ZodDialogProps<T>) {
   const [value, setValue] = useState(inputValue);
+  const extraFields =
+    typeof extraFieldsNodeOrFn === "function"
+      ? extraFieldsNodeOrFn(value)
+      : extraFieldsNodeOrFn;
 
   function cancel() {
     resolve({ closed: true });
@@ -50,7 +56,13 @@ export function ZodDialog<T extends ZodType>({
       <form name="prompt" onSubmit={onSubmit}>
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
-          <ZodControl {...controlProps} value={value} onChange={setValue} />
+          <ZodControl
+            size="small"
+            {...controlProps}
+            value={value}
+            onChange={setValue}
+          />
+          {extraFields}
         </DialogContent>
         <DialogActions>
           <Button onClick={cancel}>{cancelLabel}</Button>

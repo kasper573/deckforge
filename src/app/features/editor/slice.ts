@@ -17,6 +17,7 @@ import {
   addNodeBySplitting,
   removeNodeByKey,
 } from "../../../lib/reactMosaicExtensions";
+import { propertyValue } from "../../../api/services/game/types";
 import type {
   EditorObjectId,
   EditorState,
@@ -153,9 +154,12 @@ const editorSlice = createSlice({
     createProperty(
       state,
       {
-        payload,
+        payload: { type = "number", ...payload },
       }: PayloadAction<
-        MakePartial<Omit<Property, "propertyId">, "name" | "type">
+        MakePartial<
+          Omit<Property, "propertyId">,
+          "name" | "type" | "defaultValue"
+        >
       >
     ) {
       if (!state.game) {
@@ -164,7 +168,8 @@ const editorSlice = createSlice({
       state.game.definition.properties.push({
         propertyId: createId(),
         name: "newProperty",
-        type: "number",
+        type,
+        defaultValue: propertyValue.defaultOf(type),
         ...payload,
       });
     },

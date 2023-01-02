@@ -153,7 +153,9 @@ function namedPropertyDefaults(
 ) {
   return properties.reduce((defaults, prop) => {
     defaults[prop.name] =
-      defaultsById[prop.propertyId] ?? propertyValue.defaultOf(prop.type);
+      defaultsById[prop.propertyId] ??
+      prop.defaultValue ??
+      propertyValue.defaultOf(prop.type);
     return defaults;
   }, {} as Record<string, unknown>);
 }
