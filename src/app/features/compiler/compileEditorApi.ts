@@ -7,6 +7,7 @@ import { createScriptApiDefinition } from "./compileGame";
 
 export interface EditorApi<G extends RuntimeGenerics> {
   card: CodeEditorTypeDefs;
+  middleware: CodeEditorTypeDefs;
   events: {
     [K in keyof G["actions"]]: CodeEditorTypeDefs;
   };
@@ -23,17 +24,27 @@ export function compileEditorApi<G extends RuntimeGenerics>(
     State: definition.state,
     EventHandlers: definition.effects,
     EventDispatchers: definition.actions,
+    Middleware: definition.middleware,
   });
 
   const common: CodeEditorTypeDefs = zodToTS.declare();
   const scriptAPIShape = createScriptApiDefinition(definition);
+  const generalApiType = zodToTS(z.object(omit(scriptAPIShape, "thisCardId")));
+  const cardApiType = zodToTS(z.object(scriptAPIShape));
 
   return {
+    middleware: zodToTS.add(
+      common,
+      declareModuleDefinition({
+        definitionType: zodToTS(definition.middleware),
+        apiType: generalApiType,
+      })
+    ),
     card: zodToTS.add(
       common,
       declareModuleDefinition({
         definitionType: zodToTS(definition.card.shape.effects),
-        apiType: zodToTS(z.object(scriptAPIShape)),
+        apiType: cardApiType,
       })
     ),
     events: Object.entries(definition.effects.shape).reduce(
@@ -42,7 +53,7 @@ export function compileEditorApi<G extends RuntimeGenerics>(
           common,
           declareModuleDefinition({
             definitionType: zodToTS(effectType),
-            apiType: zodToTS(z.object(omit(scriptAPIShape, "thisCardId"))),
+            apiType: generalApiType,
           })
         );
         return eventTypeDefs;

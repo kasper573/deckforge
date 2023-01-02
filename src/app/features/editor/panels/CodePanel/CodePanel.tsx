@@ -83,6 +83,12 @@ function useEditorProps(): {
         objectSelector: selectors.event(id.eventId),
         update: (code) => actions.updateEvent({ ...id, code }),
       };
+    case "middleware":
+      return {
+        typeDefs: editorApi?.middleware,
+        objectSelector: selectors.middleware(id.middlewareId),
+        update: (code) => actions.updateMiddleware({ ...id, code }),
+      };
   }
 
   return {

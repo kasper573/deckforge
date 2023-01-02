@@ -3,6 +3,7 @@ import type { ZodObject } from "zod";
 import type {
   MachineActions,
   MachineEffects,
+  MachineMiddleware,
 } from "../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../lib/machine/MachineContext";
 import type { NominalString } from "../../../lib/ts-extensions/NominalString";
@@ -67,6 +68,7 @@ export interface RuntimeDefinition<
   player: ZodType<RuntimePlayer<G>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
   actions: ZodType<G["actions"]>;
+  middleware: ZodType<RuntimeMiddleware<G>>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,6 +76,10 @@ export type PropRecord = Record<string, any>;
 
 export type RuntimeGenericsFor<T extends RuntimeDefinition> =
   T extends RuntimeDefinition<infer G> ? G : never;
+
+export type RuntimeMiddleware<G extends RuntimeGenerics> = MachineMiddleware<
+  RuntimeMachineContext<G>
+>;
 
 export type RuntimeMachineContext<G extends RuntimeGenerics> = MachineContext<
   RuntimeState<G>,

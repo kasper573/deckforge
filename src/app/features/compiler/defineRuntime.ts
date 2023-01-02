@@ -75,6 +75,13 @@ export function defineRuntime<
     currentPlayerId: playerId,
   }) as unknown as RuntimeDefinition<G>["state"];
 
+  const actionUnion = z.unknown();
+
+  const middleware = z
+    .function()
+    .args(state, actionUnion)
+    .returns(z.void()) as RuntimeDefinition<G>["middleware"];
+
   return {
     card,
     cardPile,
@@ -82,6 +89,7 @@ export function defineRuntime<
     state,
     effects,
     actions,
+    middleware,
   } as RuntimeDefinition<G>;
 }
 

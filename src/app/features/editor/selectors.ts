@@ -5,6 +5,7 @@ import type {
   DeckId,
   EntityId,
   PropertyId,
+  MiddlewareId,
 } from "../../../api/services/game/types";
 import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
 import { compileEditorApi } from "../compiler/compileEditorApi";
@@ -34,6 +35,8 @@ export const selectors = {
     switch (id.type) {
       case "event":
         return [selectors.event(id.eventId)(state)?.name ?? ""];
+      case "middleware":
+        return [selectors.middleware(id.middlewareId)(state)?.name ?? ""];
       case "card":
         const card = selectors.card(id.cardId)(state);
         const deck = card && selectors.deck(card.deckId)(state);
@@ -87,6 +90,10 @@ export const selectors = {
     state.game?.definition.cards.find((c) => c.cardId === cardId),
   event: (eventId: EventId) => (state: EditorState) =>
     state.game?.definition.events.find((a) => a.eventId === eventId),
+  middleware: (middlewareId: MiddlewareId) => (state: EditorState) =>
+    state.game?.definition.middlewares.find(
+      (a) => a.middlewareId === middlewareId
+    ),
   property: (propertyId: PropertyId) => (state: EditorState) =>
     state.game?.definition.properties.find((p) => p.propertyId === propertyId),
   propertiesFor: (entityId: EntityId) => (state: EditorState) =>
