@@ -6,7 +6,6 @@ import { PlayerStatus } from "./PlayerStatus";
 import { CardPile } from "./CardPile";
 import { PlayerHand } from "./PlayerHand";
 import type { React1v1Types } from "./definition";
-import { adapter } from "./definition";
 
 export function PlayerBoard({
   sx,
@@ -21,8 +20,6 @@ export function PlayerBoard({
   opponent: React1v1Types["player"];
   children?: ReactNode;
 }) {
-  const actions = adapter.useRuntimeActions();
-  const drawCard = () => actions.drawCard(player.id);
   return (
     <Box
       sx={{
@@ -67,11 +64,7 @@ export function PlayerBoard({
           player={player}
           target={opponent}
         />
-        <CardPile
-          name="Draw"
-          size={player.cards.draw.size}
-          onClick={drawCard}
-        />
+        <CardPile name="Draw" size={player.cards.draw.size} />
       </Stack>
     </Box>
   );

@@ -2,21 +2,13 @@ import { styled } from "@mui/material/styles";
 import type { ComponentProps } from "react";
 import type { MakePartial } from "../../../../lib/ts-extensions/MakePartial";
 
-export type CardProps = MakePartial<ComponentProps<typeof Root>, "enabled">;
+export type CardProps = MakePartial<ComponentProps<typeof Card>, "disabled">;
 
-export function Card({ sx, children, enabled = true, ...props }: CardProps) {
-  return (
-    <Root enabled={enabled} {...props}>
-      {children}
-    </Root>
-  );
-}
-
-const Root = styled("div", {
+export const Card = styled("div", {
   shouldForwardProp(propName: PropertyKey) {
-    return propName !== "enabled";
+    return propName !== "disabled";
   },
-})<{ enabled: boolean }>`
+})<{ disabled?: boolean }>`
   background: white;
   border-radius: 4px;
   aspect-ratio: 1 / 1.5;
@@ -24,9 +16,9 @@ const Root = styled("div", {
   color: black;
   text-align: center;
   position: relative;
-  cursor: pointer;
-  opacity: ${(props) => (props.enabled ? 1 : 0.5)};
-  pointer-events: ${(props) => (props.enabled ? "auto" : "none")};
+  cursor: ${(props) => (props.onClick ? "pointer" : undefined)};
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
+  pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
 `;
 
 export const CardCost = styled("div")`

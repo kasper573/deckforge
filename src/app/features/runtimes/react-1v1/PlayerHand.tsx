@@ -21,7 +21,7 @@ export function PlayerHand({
         <Card
           key={card.id}
           onClick={() => playCard(card.id)}
-          enabled={card.properties.manaCost <= player.properties.mana}
+          disabled={card.properties.manaCost > player.properties.mana}
         >
           {card.name}
           <CardCost>{card.properties.manaCost}</CardCost>
