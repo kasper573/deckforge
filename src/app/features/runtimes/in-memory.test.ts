@@ -178,5 +178,5 @@ function resetPlayerCards(player: Player) {
 }
 
 function createGameRuntime(initialState: State) {
-  return deriveMachine(actions, initialState);
+  return deriveMachine(actions, initialState).build();
 }

@@ -105,7 +105,20 @@ export function compileGame<G extends RuntimeGenerics>(
       });
     }
 
-    const runtime = deriveMachine<G>(effects, initialState);
+    const compiledMiddlewares = gameDefinition.middlewares.map((middleware) =>
+      compile(middleware.code, {
+        type: runtimeDefinition.middleware,
+        scriptAPI,
+        initialValue: () => {},
+      })
+    );
+
+    let builder = deriveMachine<G>(effects, initialState);
+    builder = compiledMiddlewares.reduce(
+      (builder, next) => builder.middleware(next),
+      builder
+    );
+    const runtime = builder.build();
     return { runtime };
   } catch (error) {
     return { error };

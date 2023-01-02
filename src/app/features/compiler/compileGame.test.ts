@@ -5,6 +5,7 @@ import type {
   EntityId,
   EventId,
   GameDefinition,
+  MiddlewareId,
   PropertyId,
 } from "../../../api/services/game/types";
 import { deriveRuntimeDefinition } from "./defineRuntime";
@@ -342,6 +343,37 @@ define({
       runtime?.actions.increaseUntil(10);
       expect(state.players[0].properties.count).toBe(10);
     });
+  });
+
+  it("compiled middleware can read and mutate state", () => {
+    const gameDefinition: GameDefinition = {
+      middlewares: [
+        {
+          middlewareId: v4() as MiddlewareId,
+          name: "make player 1 win",
+          code: `define((state) => {
+            state.winner = state.players[0].id;
+          })`,
+        },
+      ],
+      properties: [],
+      events: [
+        {
+          eventId: v4() as EventId,
+          name: "foo",
+          code: ``,
+          inputType: "void",
+        },
+      ],
+      cards: [],
+      decks: [],
+    };
+    const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
+    const { runtime } = compileGame(runtimeDefinition, gameDefinition, () => ({
+      players: [mockPlayer(), mockPlayer()],
+    }));
+    runtime!.actions.foo();
+    expect(runtime!.state.winner).toBe(runtime!.state.players[0].id);
   });
 });
 

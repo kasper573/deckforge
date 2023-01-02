@@ -163,8 +163,7 @@ export function deriveMachine<G extends RuntimeGenerics>(
           }
         }
       }
-    })
-    .build();
+    });
 }
 
 export function runtimeEvent<Args extends [] | [ZodTypeAny]>(...args: Args) {
