@@ -1,6 +1,8 @@
 import { styled } from "@mui/material/styles";
 import type { ComponentProps } from "react";
 import { useEffect } from "react";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 import type { GameRuntime } from "../../compiler/compileGame";
 import { Center } from "../../../components/Center";
 import { PlayerBoard } from "./PlayerBoard";
@@ -27,12 +29,17 @@ export function GameRenderer({ runtime, ...viewportProps }: GameRendererProps) {
 function GameViewport(props: ComponentProps<typeof Viewport>) {
   const [player1, player2] = adapter.useRuntimeState((state) => state.players);
   const status = adapter.useRuntimeState((state) => state.status);
-  const { nextTurn } = adapter.useRuntimeActions();
+  const { nextTurn, startBattle } = adapter.useRuntimeActions();
   return (
     <Viewport {...props}>
       {status.type === "result" ? (
         <Center>
-          <h1>{status.winner} wins!</h1>
+          <Typography sx={{ textAlign: "center", color: "black" }}>
+            {status.winner === player1.id ? "You win!" : "You lost!"}
+          </Typography>
+          <Button variant="contained" onClick={startBattle} sx={{ mt: 2 }}>
+            Play again
+          </Button>
         </Center>
       ) : (
         <>
