@@ -11,6 +11,9 @@ import { cardInstanceIdType } from "../../compiler/types";
 export const builtinDefinition = defineRuntime({
   playerProperties: {
     health: z.number(),
+    healthMax: z.number(),
+    mana: z.number(),
+    manaMax: z.number(),
   },
   cardProperties: {},
   actions: ({ playerId }) => {

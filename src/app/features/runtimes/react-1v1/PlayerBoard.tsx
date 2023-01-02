@@ -64,10 +64,8 @@ export function PlayerBoard({
         <CardPile name="Discard" size={player.cards.discard.size} />
         <PlayerHand
           cards={player.cards.hand}
-          playCardProps={{
-            playerId: player.id,
-            targetId: opponent.id,
-          }}
+          player={player}
+          target={opponent}
         />
         <CardPile
           name="Draw"
