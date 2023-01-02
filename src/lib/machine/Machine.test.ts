@@ -172,6 +172,52 @@ describe("Machine", () => {
 
     expect(fn).toHaveBeenCalledTimes(1);
   });
+
+  it("can define a middleware", () => {
+    const machine = createMachine({ count: 0, trace: [] as unknown[] })
+      .effects({
+        increase(state, by: number) {
+          state.count += by;
+        },
+        decrease(state, by: number) {
+          state.count -= by;
+        },
+      })
+      .middleware((state, action) => {
+        state.trace.push(action);
+      })
+      .build();
+
+    machine.actions.increase(5);
+    machine.actions.decrease(3);
+    expect(machine.state.count).toBe(2);
+    expect(machine.state.trace).toEqual([
+      { name: "increase", payload: 5 },
+      { name: "decrease", payload: 3 },
+    ]);
+  });
+
+  it("can define multiple middlewares", () => {
+    const machine = createMachine({ trace: [] as unknown[] })
+      .effects({
+        foo() {},
+      })
+      .middleware((state) => state.trace.push("first"))
+      .middleware((state) => state.trace.push("second"))
+      .middleware((state) => state.trace.push("third"))
+      .build();
+
+    machine.actions.foo();
+    machine.actions.foo();
+    expect(machine.state.trace).toEqual([
+      "first",
+      "second",
+      "third",
+      "first",
+      "second",
+      "third",
+    ]);
+  });
 });
 
 function createActionMachine(fn: MachineEffect) {

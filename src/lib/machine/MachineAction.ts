@@ -65,3 +65,16 @@ export type MachineEffectGenerator<MC extends MachineContext> = <
   state: MC["state"],
   actionName: ActionName
 ) => Generator<MachineEffect<MC["state"]>>;
+
+export type MachineMiddleware<MC extends MachineContext> = (
+  state: MC["state"],
+  action: MachineMiddlewareAction<MC, keyof MC["actions"]>
+) => void;
+
+export type MachineMiddlewareAction<
+  MC extends MachineContext,
+  ActionName extends keyof MC["actions"]
+> = {
+  name: ActionName;
+  payload: MachineActionPayload<MC["actions"][ActionName]>;
+};

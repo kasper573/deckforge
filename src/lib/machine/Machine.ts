@@ -7,6 +7,7 @@ import type {
 import type { MachineContext } from "./MachineContext";
 import type { MachineEffectSelector } from "./MachineAction";
 import type { AnyMachineEffects } from "./MachineAction";
+import type { MachineMiddleware } from "./MachineAction";
 
 enableMapSet();
 
@@ -17,7 +18,8 @@ export class Machine<MC extends MachineContext> {
   constructor(
     public state: MC["state"],
     private effects: MachineEffects<MC>,
-    private selectReactions?: MachineEffectSelector<MC>
+    private selectReactions?: MachineEffectSelector<MC>,
+    private middleware?: MachineMiddleware<MC>
   ) {
     this.actions = new Proxy({} as MC["actions"], {
       get:
@@ -47,6 +49,8 @@ export class Machine<MC extends MachineContext> {
       if (additionalReaction) {
         additionalReaction(draft, payload);
       }
+
+      this.middleware?.(draft, { name, payload });
     });
   }
 
@@ -88,17 +92,16 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
   constructor(
     private _state: State,
     private _effects: Effects,
-    private _reactions: MachineEffectSelector<
+    private _reactions?: MachineEffectSelector<
+      MachineContext<State, MachineActionsFor<Effects>>
+    >,
+    private _middleware?: MachineMiddleware<
       MachineContext<State, MachineActionsFor<Effects>>
     >
   ) {}
 
   effects<Effects extends AnyMachineEffects<State>>(newEffects: Effects) {
-    return new MachineBuilder<State, Effects>(
-      this._state,
-      newEffects,
-      () => undefined
-    );
+    return new MachineBuilder<State, Effects>(this._state, newEffects);
   }
 
   reactions(
@@ -109,7 +112,21 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
     return new MachineBuilder<State, Effects>(
       this._state,
       this._effects,
-      newReactions
+      newReactions,
+      this._middleware
+    );
+  }
+
+  middleware(
+    middleware: MachineMiddleware<
+      MachineContext<State, MachineActionsFor<Effects>>
+    >
+  ) {
+    return new MachineBuilder<State, Effects>(
+      this._state,
+      this._effects,
+      this._reactions,
+      combineMiddlewares(this._middleware, middleware)
     );
   }
 
@@ -117,7 +134,24 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
     return new Machine<MachineContext<State, MachineActionsFor<Effects>>>(
       this._state,
       this._effects,
-      this._reactions
+      this._reactions,
+      this._middleware
     );
   }
+}
+
+function combineMiddlewares<MC extends MachineContext>(
+  a: MachineMiddleware<MC> | undefined,
+  b: MachineMiddleware<MC> | undefined
+): MachineMiddleware<MC> | undefined {
+  if (!a) {
+    return b;
+  }
+  if (!b) {
+    return a;
+  }
+  return (...args) => {
+    a(...args);
+    b(...args);
+  };
 }
