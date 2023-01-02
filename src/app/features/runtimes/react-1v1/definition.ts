@@ -23,7 +23,7 @@ export const builtinDefinition = defineRuntime({
     });
     return {
       startBattle: runtimeEvent(),
-      endTurn: runtimeEvent(),
+      nextTurn: runtimeEvent(),
       drawCard: runtimeEvent(playerId),
       playCard: runtimeEvent(cardPayload.and(z.object({ targetId: playerId }))),
       discardCard: runtimeEvent(cardPayload),
