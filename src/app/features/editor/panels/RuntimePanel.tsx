@@ -81,24 +81,32 @@ function RuntimeErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 
 function createInitialState(
   decks: Map<DeckId, Array<() => React1v1Types["card"]>>
-): React1v1Types["state"] {
+) {
   const deck = Array.from(decks.values())[0];
   if (!deck) {
     throw new Error("No game or deck available, cannot initialize runtime");
   }
-  function createPlayer(): React1v1Types["player"] {
+  function createPlayer() {
     return {
       id: v4() as RuntimePlayerId,
-      properties: { health: 5 },
+      properties: {},
       cards: {
-        hand: createPile(),
-        deck: createPile(deck.map((createCard) => createCard())),
-        discard: createPile(),
-        draw: createPile(),
+        hand: createPile<React1v1Types["card"]>(),
+        deck: createPile<React1v1Types["card"]>(
+          deck.map((createCard) => createCard())
+        ),
+        discard: createPile<React1v1Types["card"]>(),
+        draw: createPile<React1v1Types["card"]>(),
       },
     };
   }
+
+  type Players = [
+    ReturnType<typeof createPlayer>,
+    ReturnType<typeof createPlayer>
+  ];
+
   return {
-    players: [createPlayer(), createPlayer()],
+    players: [createPlayer(), createPlayer()] as Players,
   };
 }

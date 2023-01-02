@@ -20,23 +20,32 @@ import type {
   RuntimeGenerics,
   RuntimeMachineContext,
   RuntimeState,
+  RuntimePlayer,
 } from "./types";
 
 export type GameRuntime<G extends RuntimeGenerics> = Machine<
   RuntimeMachineContext<G>
 >;
 
+export type GameInitialPlayer<G extends RuntimeGenerics> = Omit<
+  RuntimePlayer<G>,
+  "properties"
+> & {
+  properties?: Partial<RuntimePlayer<G>["properties"]>;
+};
+
+export interface GameInitialState<G extends RuntimeGenerics> {
+  players: [GameInitialPlayer<G>, GameInitialPlayer<G>];
+}
+
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
   createInitialState: (
     decks: Map<DeckId, Array<() => RuntimeCard<G>>>
-  ) => RuntimeState<G>
+  ) => GameInitialState<G>
 ): { runtime?: GameRuntime<G>; error?: unknown } {
   try {
-    const playerPropertyDefaults = namedPropertyDefaults(
-      gameDefinition.properties.filter((p) => p.entityId === "player")
-    );
     const cardProperties = gameDefinition.properties.filter(
       (p) => p.entityId === "card"
     );
@@ -75,16 +84,43 @@ export function compileGame<G extends RuntimeGenerics>(
       return effects;
     }, {} as RuntimeEffects<G>);
 
-    const initialState = createInitialState(decks);
-    for (const player of initialState.players.values()) {
-      player.properties = { ...playerPropertyDefaults, ...player.properties };
-    }
+    const initialState = normalizeInitialState(
+      createInitialState(decks),
+      gameDefinition
+    );
 
     const runtime = deriveMachine<G>(effects, initialState);
     return { runtime };
   } catch (error) {
     return { error };
   }
+}
+
+function normalizeInitialState<G extends RuntimeGenerics>(
+  initialState: GameInitialState<G>,
+  gameDefinition: Game["definition"]
+): RuntimeState<G> {
+  const playerPropertyDefaults = namedPropertyDefaults(
+    gameDefinition.properties.filter((p) => p.entityId === "player")
+  );
+
+  function normalizePlayer<G extends RuntimeGenerics>(
+    player: GameInitialPlayer<G>
+  ): RuntimePlayer<G> {
+    return {
+      ...player,
+      properties: {
+        ...playerPropertyDefaults,
+        ...player.properties,
+      } as RuntimePlayer<G>["properties"],
+    };
+  }
+
+  const [player1, player2] = initialState.players;
+  return {
+    ...initialState,
+    players: [normalizePlayer(player1), normalizePlayer(player2)],
+  };
 }
 
 type ScriptAPI<G extends RuntimeGenerics = RuntimeGenerics> = {
