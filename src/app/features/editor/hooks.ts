@@ -8,6 +8,7 @@ import {
   cardType,
   deckType,
   propertyType,
+  middlewareType,
 } from "../../../api/services/game/types";
 import type { EditorObjectId } from "./types";
 import { editorActions } from "./actions";
@@ -73,6 +74,7 @@ export function usePromptCreate() {
 
 const objectNameSchemas: Record<EditorObjectId["type"], ZodString> = {
   property: propertyType.shape.name,
+  middleware: middlewareType.shape.name,
   event: eventType.shape.name,
   card: cardType.shape.name,
   deck: deckType.shape.name,

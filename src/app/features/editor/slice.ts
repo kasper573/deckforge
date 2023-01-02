@@ -6,6 +6,7 @@ import type {
   Deck,
   Game,
   Property,
+  Middleware,
 } from "../../../api/services/game/types";
 import {
   createEntityReducerFactory,
@@ -95,6 +96,11 @@ const editorSlice = createSlice({
       "eventId",
       (state) => state.game?.definition.events ?? []
     ),
+    ...entityReducers<Middleware>()(
+      "Middleware",
+      "middlewareId",
+      (state) => state.game?.definition.middlewares ?? []
+    ),
     ...entityReducers<Card>()(
       "Card",
       "cardId",
@@ -148,6 +154,24 @@ const editorSlice = createSlice({
         name: "newEvent",
         code: "",
         inputType: "void",
+        ...payload,
+      });
+    },
+    createMiddleware(
+      state,
+      {
+        payload,
+      }: PayloadAction<
+        MakePartial<Omit<Middleware, "middlewareId">, "name" | "code">
+      >
+    ) {
+      if (!state.game) {
+        return;
+      }
+      state.game.definition.middlewares.push({
+        middlewareId: createId(),
+        name: "New middleware",
+        code: "",
         ...payload,
       });
     },

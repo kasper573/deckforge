@@ -7,6 +7,7 @@ import type {
   DeckId,
   Game,
   PropertyId,
+  MiddlewareId,
 } from "../../../api/services/game/types";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 
@@ -15,6 +16,12 @@ export const editorObjectIdType = z
     type: z.literal("event"),
     eventId: zodNominalString<EventId>(),
   })
+  .or(
+    z.object({
+      type: z.literal("middleware"),
+      middlewareId: zodNominalString<MiddlewareId>(),
+    })
+  )
   .or(
     z.object({
       type: z.literal("deck"),
@@ -47,6 +54,7 @@ export const panelIdType = z.enum([
   "code",
   "decks",
   "events",
+  "middlewares",
   "cardProperties",
   "playerProperties",
   "inspector",

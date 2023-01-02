@@ -68,6 +68,19 @@ export const selectors = {
       ...event,
     }));
   },
+  middlewares: (state: EditorState) => {
+    if (!state.game) {
+      return [];
+    }
+    const { middlewares } = state.game.definition;
+    return middlewares.map((middleware) => ({
+      objectId: {
+        type: "middleware",
+        middlewareId: middleware.middlewareId,
+      } as EditorObjectId,
+      ...middleware,
+    }));
+  },
   deck: (deckId: DeckId) => (state: EditorState) =>
     state.game?.definition.decks.find((d) => d.deckId === deckId),
   card: (cardId: CardId) => (state: EditorState) =>

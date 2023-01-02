@@ -7,6 +7,7 @@ import { CodePanel } from "./CodePanel/CodePanel";
 import { InspectorPanel } from "./InspectorPanel/InspectorPanel";
 import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
 import { RuntimePanel } from "./RuntimePanel";
+import { MiddlewaresPanel } from "./MiddlewaresPanel";
 
 export type PanelProps = { path: MosaicBranch[]; title: string };
 
@@ -19,6 +20,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
   code: { component: CodePanel, title: "Code" },
   decks: { component: DecksPanel, title: "Decks" },
   events: { component: EventsPanel, title: "Events" },
+  middlewares: { component: MiddlewaresPanel, title: "Middlewares" },
   cardProperties: { component: CardPropertiesPanel, title: "Card Properties" },
   playerProperties: {
     component: PlayerPropertiesPanel,

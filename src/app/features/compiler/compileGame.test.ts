@@ -20,6 +20,7 @@ import { createPile } from "./apis/Pile";
 describe("compileGame", () => {
   it("can compile game with a single event without errors", () => {
     const gameDefinition: GameDefinition = {
+      middlewares: [],
       properties: [],
       events: [
         {
@@ -44,6 +45,7 @@ describe("compileGame", () => {
 
   it("compiled event can mutate player property", () => {
     const gameDefinition: GameDefinition = {
+      middlewares: [],
       properties: [
         {
           entityId: "player" as EntityId,
@@ -81,6 +83,7 @@ define((state, damage) => {
   it("compiled event can mutate card pile", () => {
     const gameDefinition: GameDefinition = {
       properties: [],
+      middlewares: [],
       events: [
         {
           eventId: v4() as EventId,
@@ -129,6 +132,7 @@ define((state) => {
   it("compiled event can take from card pile", () => {
     const gameDefinition: GameDefinition = {
       properties: [],
+      middlewares: [],
       events: [
         {
           eventId: v4() as EventId,
@@ -183,6 +187,7 @@ define((state) => {
           type: "number",
         },
       ],
+      middlewares: [],
       events: [
         {
           eventId: v4() as EventId,
@@ -250,6 +255,7 @@ define({
     const gameDefinition: GameDefinition = {
       properties: Object.values(properties),
       events: [],
+      middlewares: [],
       cards: [
         {
           cardId: v4() as CardId,
@@ -308,6 +314,7 @@ define({
           type: "number",
         },
       ],
+      middlewares: [],
       events: [
         {
           eventId: v4() as EventId,

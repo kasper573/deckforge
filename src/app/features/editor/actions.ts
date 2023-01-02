@@ -6,6 +6,8 @@ function deleteObject(objectId: EditorObjectId): Action {
   switch (objectId.type) {
     case "event":
       return editorActions.deleteEvent(objectId.eventId);
+    case "middleware":
+      return editorActions.deleteMiddleware(objectId.middlewareId);
     case "deck":
       return editorActions.deleteDeck(objectId.deckId);
     case "card":
@@ -19,6 +21,8 @@ function renameObject(objectId: EditorObjectId, name: string): Action {
   switch (objectId.type) {
     case "event":
       return editorActions.updateEvent({ ...objectId, name });
+    case "middleware":
+      return editorActions.updateMiddleware({ ...objectId, name });
     case "deck":
       return editorActions.updateDeck({ ...objectId, name });
     case "card":

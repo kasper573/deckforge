@@ -69,6 +69,16 @@ export const eventType = z.object({
   inputType: propertyValue.serializedType,
 });
 
+export type MiddlewareId = NominalString<"MiddlewareId">;
+export const middlewareIdType = zodNominalString<MiddlewareId>();
+
+export type Middleware = z.infer<typeof middlewareType>;
+export const middlewareType = z.object({
+  middlewareId: middlewareIdType,
+  name: z.string().min(1).max(32),
+  code: codeType,
+});
+
 export type DeckId = NominalString<"DeckId">;
 export const deckIdType = zodNominalString<DeckId>();
 
@@ -96,6 +106,7 @@ export const gameDefinitionType = z.object({
   cards: z.array(cardType).default([]),
   properties: z.array(propertyType).default([]),
   events: z.array(eventType).default([]),
+  middlewares: z.array(middlewareType).default([]),
 });
 
 export type Game = z.infer<typeof gameType>;
