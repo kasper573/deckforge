@@ -4,8 +4,7 @@ import { EndTurnButton } from "../EndTurnButton";
 
 export function BattleScene() {
   const [player1, player2] = adapter.useRuntimeState((state) => state.players);
-  const status = adapter.useRuntimeState((state) => state.status);
-  const { nextTurn, startBattle } = adapter.useRuntimeActions();
+  const { nextTurn } = adapter.useRuntimeActions();
   return (
     <>
       <PlayerBoard placement="top" player={player2} opponent={player1} />
