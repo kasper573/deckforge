@@ -14,9 +14,8 @@ import { Panel } from "../components/Panel";
 import type { EntityId, Property } from "../../../../api/services/game/types";
 import type { EditorObjectId } from "../types";
 import { useMenu } from "../../../hooks/useMenu";
-import { propertyValue } from "../../../../api/services/game/types";
 import { HoverListItem } from "../../../components/HoverListItem";
-import { PropertyTypePicker } from "../../../controls/PropertyTypePicker";
+import { PropertyEditor } from "../../../controls/PropertyEditor";
 import type { PanelProps } from "./definition";
 
 export function CardPropertiesPanel(props: PanelProps) {
@@ -67,7 +66,7 @@ export function PropertiesPanel({
     <Panel onContextMenu={openContextMenu} {...props}>
       <List>
         {properties.map((property, index) => (
-          <PropertyEditor key={index} {...property} />
+          <PropertyListItem key={index} {...property} />
         ))}
       </List>
       {properties.length === 0 && (
@@ -77,8 +76,7 @@ export function PropertiesPanel({
   );
 }
 
-function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
-  const { propertyId, name, type } = property;
+function PropertyListItem(property: Property & { objectId: EditorObjectId }) {
   const { updateProperty } = useActions(editorActions);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
@@ -97,14 +95,13 @@ function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
         sx={{ width: "100%" }}
       >
         <Box sx={{ flex: 1, overflow: "hidden" }}>
-          <Typography noWrap>{name}</Typography>
+          <Typography noWrap>{property.name}</Typography>
         </Box>
         <div>
-          <PropertyTypePicker
-            schema={propertyValue.serializedType}
-            value={type}
-            onChange={(type) => updateProperty({ propertyId, type })}
-            title={`Edit type of property "${name}"`}
+          <PropertyEditor
+            value={property}
+            onChange={updateProperty}
+            title={`Edit type of property "${property.name}"`}
           />
         </div>
       </Stack>

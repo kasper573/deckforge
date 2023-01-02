@@ -1,26 +1,18 @@
-import type { ZodType } from "zod";
-import Box from "@mui/material/Box";
 import { propertyValue } from "../../api/services/game/types";
-import { PropertyValueEditor } from "../features/editor/panels/InspectorPanel/PropertyValueEditor";
 import type { ZodPickerProps } from "./ZodPicker";
 import { ZodPicker } from "./ZodPicker";
 
-export function PropertyTypePicker<T extends ZodType>(
-  props: ZodPickerProps<T>
-) {
+export type PropertyTypePickerProps = Omit<
+  ZodPickerProps<typeof propertyValue.serializedType>,
+  "schema"
+>;
+
+export function PropertyTypePicker(props: PropertyTypePickerProps) {
   return (
     <ZodPicker
       label="Type"
+      schema={propertyValue.serializedType}
       helperText={propertyValueTypeDescription}
-      extraFields={(currentType) => (
-        <Box sx={{ mt: 2 }}>
-          <PropertyValueEditor
-            type={currentType}
-            name="Default value"
-            onChange={() => {}}
-          />
-        </Box>
-      )}
       {...props}
     />
   );

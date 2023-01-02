@@ -9,7 +9,6 @@ import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
 import { ObjectIcon } from "../components/ObjectIcon";
-import { propertyValue } from "../../../../api/services/game/types";
 import { PropertyTypePicker } from "../../../controls/PropertyTypePicker";
 import type { PanelProps } from "./definition";
 
@@ -38,7 +37,6 @@ export function EventsPanel(props: PanelProps) {
           label: event.name,
           action: (
             <PropertyTypePicker
-              schema={propertyValue.serializedType}
               value={event.inputType}
               onChange={(inputType) => updateEvent({ ...event, inputType })}
               title={`Edit input type of event "${event.name}"`}
