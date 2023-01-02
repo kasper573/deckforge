@@ -104,6 +104,7 @@ function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
             schema={propertyValue.serializedType}
             value={type}
             onChange={(type) => updateProperty({ propertyId, type })}
+            title={`Edit type of property "${name}"`}
           />
         </div>
       </Stack>

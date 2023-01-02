@@ -41,6 +41,7 @@ export function EventsPanel(props: PanelProps) {
               schema={propertyValue.serializedType}
               value={event.inputType}
               onChange={(inputType) => updateEvent({ ...event, inputType })}
+              title={`Edit input type of event "${event.name}"`}
             />
           ),
           icon: <ObjectIcon type="event" />,
