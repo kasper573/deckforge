@@ -19,6 +19,7 @@ it("1v1: can play a one card deck and win the game", () => {
   const p2 = createPlayer(1, [card]);
   const game = createGameRuntime({
     players: [p1, p2],
+    status: { type: "idle" },
     currentPlayerId: p1.id,
   });
 
@@ -34,7 +35,7 @@ it("1v1: can play a one card deck and win the game", () => {
     });
 
     game.actions.endTurn();
-    expect(state.winner).toBe(player1.id);
+    expect(state.status).toEqual({ type: "result", winner: player1.id });
   });
 });
 
@@ -45,6 +46,7 @@ it("1v1: can play a two card deck and win the game", () => {
   const p2 = createPlayer(1, cards);
   const game = createGameRuntime({
     players: [p1, p2],
+    status: { type: "idle" },
     currentPlayerId: p1.id,
   });
 
@@ -60,7 +62,7 @@ it("1v1: can play a two card deck and win the game", () => {
     });
 
     game.actions.endTurn();
-    expect(state.winner).toBe(player1.id);
+    expect(state.status).toEqual({ type: "result", winner: player1.id });
   });
 });
 
@@ -126,14 +128,14 @@ type State = InMemoryTypes["state"];
 
 const actions: InMemoryTypes["effects"] = {
   startBattle(state) {
-    state.winner = undefined;
+    state.status = { type: "battle" };
     state.players.forEach(resetPlayerCards);
   },
   endTurn(state) {
     for (const player of state.players) {
       if (player.properties.health <= 0) {
         const anyOtherPlayer = without(state.players, player)[0];
-        state.winner = anyOtherPlayer?.id;
+        state.status = { type: "result", winner: anyOtherPlayer.id };
         break;
       }
     }

@@ -148,6 +148,7 @@ function normalizeInitialState<G extends RuntimeGenerics>(
   const [player1, player2] = initialState.players;
   return {
     ...initialState,
+    status: { type: "idle" },
     players: [normalizePlayer(player1), normalizePlayer(player2)],
     currentPlayerId: player1.id,
   };

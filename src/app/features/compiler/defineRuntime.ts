@@ -19,6 +19,7 @@ import type {
   RuntimeState,
 } from "./types";
 import { zodPile } from "./apis/Pile";
+import { runtimeStatusType } from "./types";
 
 export function defineRuntime<
   PlayerProps extends PropRecord,
@@ -71,7 +72,7 @@ export function defineRuntime<
 
   const state = z.object({
     players: z.tuple([player, player]),
-    winner: playerId.optional(),
+    status: runtimeStatusType,
     currentPlayerId: playerId,
   }) as unknown as RuntimeDefinition<G>["state"];
 
@@ -83,6 +84,7 @@ export function defineRuntime<
     .returns(z.void()) as RuntimeDefinition<G>["middleware"];
 
   return {
+    status: runtimeStatusType,
     card,
     cardPile,
     player,

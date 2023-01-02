@@ -22,6 +22,7 @@ export function compileEditorApi<G extends RuntimeGenerics>(
     CardEffects: definition.card.shape.effects,
     Player: definition.player,
     State: definition.state,
+    GameStatus: definition.status,
     EventHandlers: definition.effects,
     EventDispatchers: definition.actions,
     Middleware: definition.middleware,

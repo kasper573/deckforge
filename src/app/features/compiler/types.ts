@@ -1,5 +1,6 @@
 import type { ZodType } from "zod";
 import type { ZodObject } from "zod";
+import { z } from "zod";
 import type {
   MachineActions,
   MachineEffects,
@@ -23,6 +24,7 @@ export interface RuntimeCard<G extends RuntimeGenerics> {
   effects: Partial<RuntimeEffects<G>>;
 }
 
+export const runtimePlayerIdType = zodNominalString<RuntimePlayerId>();
 export type RuntimePlayerId = NominalString<"PlayerId">;
 
 export interface RuntimePlayer<G extends RuntimeGenerics> {
@@ -49,9 +51,17 @@ export interface RuntimeGenerics<
   actions: Actions;
 }
 
+export const runtimeStatusType = z.union([
+  z.object({ type: z.literal("idle") }),
+  z.object({ type: z.literal("battle") }),
+  z.object({ type: z.literal("result"), winner: runtimePlayerIdType }),
+]);
+
+export type RuntimeStatus = z.infer<typeof runtimeStatusType>;
+
 export interface RuntimeState<G extends RuntimeGenerics> {
   players: [RuntimePlayer<G>, RuntimePlayer<G>];
-  winner?: RuntimePlayerId;
+  status: RuntimeStatus;
   currentPlayerId: RuntimePlayerId;
 }
 
@@ -63,6 +73,7 @@ export interface RuntimeDefinition<
   G extends RuntimeGenerics = RuntimeGenerics
 > {
   state: ZodType<RuntimeState<G>>;
+  status: typeof runtimeStatusType;
   card: ZodObject<ZodShapeFor<RuntimeCard<G>>>;
   cardPile: ZodType<Pile<RuntimeCard<G>>>;
   player: ZodType<RuntimePlayer<G>>;

@@ -2,6 +2,7 @@ import { styled } from "@mui/material/styles";
 import type { ComponentProps } from "react";
 import { useEffect } from "react";
 import type { GameRuntime } from "../../compiler/compileGame";
+import { Center } from "../../../components/Center";
 import { PlayerBoard } from "./PlayerBoard";
 import type { React1v1Generics } from "./definition";
 import { adapter } from "./definition";
@@ -25,13 +26,22 @@ export function GameRenderer({ runtime, ...viewportProps }: GameRendererProps) {
 
 function GameViewport(props: ComponentProps<typeof Viewport>) {
   const [player1, player2] = adapter.useRuntimeState((state) => state.players);
+  const status = adapter.useRuntimeState((state) => state.status);
   const { nextTurn } = adapter.useRuntimeActions();
   return (
     <Viewport {...props}>
-      <PlayerBoard placement="top" player={player2} opponent={player1} />
-      <PlayerBoard placement="bottom" player={player1} opponent={player2}>
-        <EndTurnButton onClick={nextTurn} />
-      </PlayerBoard>
+      {status.type === "result" ? (
+        <Center>
+          <h1>{status.winner} wins!</h1>
+        </Center>
+      ) : (
+        <>
+          <PlayerBoard placement="top" player={player2} opponent={player1} />
+          <PlayerBoard placement="bottom" player={player1} opponent={player2}>
+            <EndTurnButton onClick={nextTurn} />
+          </PlayerBoard>
+        </>
+      )}
     </Viewport>
   );
 }
