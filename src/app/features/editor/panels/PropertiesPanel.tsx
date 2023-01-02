@@ -99,7 +99,7 @@ function PropertyListItem(property: Property & { objectId: EditorObjectId }) {
         </Box>
         <div>
           <PropertyEditor
-            value={property}
+            property={property}
             onChange={updateProperty}
             title={`Edit type of property "${property.name}"`}
           />
