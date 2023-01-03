@@ -68,6 +68,7 @@ function DeckSelector<G extends RuntimeGenerics>({
       <InputLabel>{label}</InputLabel>
       <Select
         value={value.id}
+        label={label}
         onChange={(e) => {
           const newDeck = options.find((d) => d.id === e.target.value);
           if (newDeck) {
