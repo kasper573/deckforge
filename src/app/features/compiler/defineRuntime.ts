@@ -22,9 +22,10 @@ import type {
   RuntimeGenerics,
   RuntimePlayerId,
   RuntimeState,
+  RuntimeScriptAPI,
 } from "./types";
-import { zodPile } from "./apis/Pile";
 import { runtimeStatusType } from "./types";
+import { zodPile } from "./apis/Pile";
 
 export function defineRuntime<
   PlayerProps extends PropRecord,
@@ -189,4 +190,20 @@ export function deriveMachine<G extends RuntimeGenerics>(
 
 export function runtimeEvent<Args extends [] | [ZodTypeAny]>(...args: Args) {
   return z.function(z.tuple(args), z.void());
+}
+
+export function createScriptApiDefinition<G extends RuntimeGenerics>({
+  card,
+  actions,
+}: Pick<RuntimeDefinition<G>, "card" | "actions">): ZodShapeFor<
+  RuntimeScriptAPI<G>
+> {
+  const cloneCard = z.function().args(card).returns(card) as unknown as ZodType<
+    RuntimeScriptAPI<G>["cloneCard"]
+  >;
+  return {
+    cloneCard,
+    actions,
+    thisCardId: card.shape.id,
+  };
 }

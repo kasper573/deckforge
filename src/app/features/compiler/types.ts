@@ -1,5 +1,4 @@
-import type { ZodType } from "zod";
-import type { ZodObject } from "zod";
+import type { ZodObject, ZodType } from "zod";
 import { z } from "zod";
 import type {
   MachineActions,
@@ -104,3 +103,9 @@ export type RuntimeMachineContext<G extends RuntimeGenerics> = MachineContext<
   RuntimeState<G>,
   G["actions"]
 >;
+
+export type RuntimeScriptAPI<G extends RuntimeGenerics> = {
+  actions: G["actions"];
+  thisCardId?: CardInstanceId;
+  cloneCard: (card: RuntimeCard<G>) => RuntimeCard<G>;
+};

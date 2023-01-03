@@ -3,7 +3,7 @@ import { omit } from "lodash";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTSResolver } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
-import { createScriptApiDefinition } from "./compileGame";
+import { createScriptApiDefinition } from "./defineRuntime";
 
 export interface EditorApi<G extends RuntimeGenerics> {
   card: CodeEditorTypeDefs;
