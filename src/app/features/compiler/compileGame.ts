@@ -159,16 +159,17 @@ type ScriptAPI<G extends RuntimeGenerics> = {
   cloneCard: (card: RuntimeCard<G>) => RuntimeCard<G>;
 };
 
-export function createScriptApiDefinition<G extends RuntimeGenerics>(
-  runtimeDefinition: RuntimeDefinition<G>
-): ZodShapeFor<ScriptAPI<G>> {
+export function createScriptApiDefinition<G extends RuntimeGenerics>({
+  card,
+  actions,
+}: RuntimeDefinition<G>): ZodShapeFor<ScriptAPI<G>> {
+  const cloneCard = z.function().args(card).returns(card) as unknown as ZodType<
+    ScriptAPI<G>["cloneCard"]
+  >;
   return {
-    cloneCard: z
-      .function()
-      .args(runtimeDefinition.card)
-      .returns(runtimeDefinition.card) as any,
-    actions: runtimeDefinition.actions,
-    thisCardId: runtimeDefinition.card.shape.id,
+    cloneCard,
+    actions,
+    thisCardId: card.shape.id,
   };
 }
 
