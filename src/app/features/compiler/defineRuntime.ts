@@ -2,7 +2,12 @@ import type { ZodRawShape, ZodType } from "zod";
 import { z } from "zod";
 import type { ZodTypeAny } from "zod/lib/types";
 import { uniq } from "lodash";
-import type { Event, Game, Property } from "../../../api/services/game/types";
+import type {
+  DeckId,
+  Event,
+  Game,
+  Property,
+} from "../../../api/services/game/types";
 import {
   cardType as cardDefinitionType,
   propertyValue,
@@ -32,15 +37,20 @@ export function defineRuntime<
 }: {
   playerProperties: ZodShapeFor<PlayerProps>;
   cardProperties: ZodShapeFor<CardProps>;
-  actions: (types: { playerId: ZodType<RuntimePlayerId> }) => ActionTypeDefs;
+  actions: (types: {
+    playerId: ZodType<RuntimePlayerId>;
+    deckId: ZodType<DeckId>;
+  }) => ActionTypeDefs;
 }) {
   type Actions = z.objectInputType<ActionTypeDefs, ZodTypeAny>;
   type G = RuntimeGenerics<PlayerProps, CardProps, Actions>;
 
   const playerId = zodNominalString<RuntimePlayerId>();
-  const lazyState = z.lazy(() => state);
+  const deckId = cardDefinitionType.shape.deckId;
 
-  const actionsShape = createActionsShape({ playerId });
+  const lazyState = z.lazy(() => state);
+  const actionsShape = createActionsShape({ playerId, deckId });
+
   const actions = z.object(
     actionsShape
   ) as unknown as RuntimeDefinition<G>["actions"];
@@ -58,7 +68,7 @@ export function defineRuntime<
   }) as unknown as RuntimeDefinition<G>["card"];
 
   const deck = z.object({
-    id: cardDefinitionType.shape.deckId,
+    id: deckId,
     name: cardDefinitionType.shape.name,
     cards: z.array(card),
   }) as unknown as RuntimeDefinition<G>["deck"];
@@ -67,7 +77,7 @@ export function defineRuntime<
 
   const player = z.object({
     id: playerId,
-    deckId: cardDefinitionType.shape.deckId,
+    deckId,
     properties: z.object(playerProperties),
     board: z.object({
       draw: cardPile,

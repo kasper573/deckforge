@@ -16,13 +16,19 @@ export const builtinDefinition = defineRuntime({
     manaMax: z.number(),
   },
   cardProperties: {},
-  actions: ({ playerId }) => {
+  actions: ({ playerId, deckId }) => {
     const cardPayload = z.object({
       playerId,
       cardId: cardInstanceIdType,
     });
     return {
-      startBattle: runtimeEvent(),
+      restartGame: runtimeEvent(),
+      startBattle: runtimeEvent(
+        z.object({
+          player1Deck: deckId,
+          player2Deck: deckId,
+        })
+      ),
       nextTurn: runtimeEvent(),
       drawCard: runtimeEvent(playerId),
       playCard: runtimeEvent(cardPayload.and(z.object({ targetId: playerId }))),
