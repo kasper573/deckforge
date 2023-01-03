@@ -205,5 +205,6 @@ export function createScriptApiDefinition<G extends RuntimeGenerics>({
     cloneCard,
     actions,
     thisCardId: card.shape.id,
+    random: z.function().args(z.void()).returns(z.number()),
   };
 }

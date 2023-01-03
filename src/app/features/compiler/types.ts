@@ -108,4 +108,5 @@ export type RuntimeScriptAPI<G extends RuntimeGenerics> = {
   actions: G["actions"];
   thisCardId?: CardInstanceId;
   cloneCard: (card: RuntimeCard<G>) => RuntimeCard<G>;
+  random: () => number;
 };

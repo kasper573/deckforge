@@ -1,6 +1,7 @@
 import type { ZodType } from "zod";
 import type { z } from "zod";
 import { v4 } from "uuid";
+import Rand from "rand-seed";
 import type {
   Card,
   Game,
@@ -42,7 +43,8 @@ export interface GameInitialState<G extends RuntimeGenerics> {
 
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
-  gameDefinition: Game["definition"]
+  gameDefinition: Game["definition"],
+  seed?: string
 ): { runtime?: GameRuntime<G>; error?: unknown } {
   try {
     const cardProperties = gameDefinition.properties.filter(
@@ -50,6 +52,7 @@ export function compileGame<G extends RuntimeGenerics>(
     );
 
     const scriptAPI: RuntimeScriptAPI<G> = {
+      random: createRandomFn(seed),
       cloneCard,
       actions: new Proxy({} as typeof runtime.actions, {
         get: (target, propertyName) =>
@@ -217,4 +220,9 @@ function namedPropertyDefaults(
       propertyValue.defaultOf(prop.type);
     return defaults;
   }, {} as Record<string, unknown>);
+}
+
+function createRandomFn(seed?: string) {
+  const rng = new Rand(seed);
+  return () => rng.next();
 }
