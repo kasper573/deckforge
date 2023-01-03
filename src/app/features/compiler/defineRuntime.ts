@@ -57,13 +57,19 @@ export function defineRuntime<
     effects: effects.partial(),
   }) as unknown as RuntimeDefinition<G>["card"];
 
+  const deck = z.object({
+    id: cardDefinitionType.shape.deckId,
+    name: cardDefinitionType.shape.name,
+    cards: z.array(card),
+  }) as unknown as RuntimeDefinition<G>["deck"];
+
   const cardPile = zodPile(card);
 
   const player = z.object({
     id: playerId,
+    deckId: cardDefinitionType.shape.deckId,
     properties: z.object(playerProperties),
-    cards: z.object({
-      deck: cardPile,
+    board: z.object({
       draw: cardPile,
       hand: cardPile,
       discard: cardPile,
@@ -71,6 +77,7 @@ export function defineRuntime<
   }) as unknown as RuntimeDefinition<G>["player"];
 
   const state = z.object({
+    decks: z.array(deck),
     players: z.tuple([player, player]),
     status: runtimeStatusType,
     currentPlayerId: playerId,
@@ -85,6 +92,7 @@ export function defineRuntime<
 
   return {
     status: runtimeStatusType,
+    deck,
     card,
     cardPile,
     player,
@@ -151,18 +159,19 @@ export function deriveMachine<G extends RuntimeGenerics>(
   return createMachine(initialState)
     .effects(effects)
     .reactions(function* (state, effectName) {
-      for (const player of state.players) {
-        const cards = uniq(
-          Object.values(player.cards)
-            .map((pile) => Array.from(pile))
-            .flat()
-        );
+      const cardsInDecks = state.decks.map((deck) => deck.cards).flat();
+      const cardOnBoards = state.players.flatMap((p) =>
+        Object.values(p.board)
+          .map((pile) => Array.from(pile))
+          .flat()
+      );
 
-        for (const card of cards) {
-          const effect = card.effects[effectName];
-          if (effect !== undefined) {
-            yield effect;
-          }
+      const cards = uniq([...cardsInDecks, ...cardOnBoards]);
+
+      for (const card of cards) {
+        const effect = card.effects[effectName];
+        if (effect !== undefined) {
+          yield effect;
         }
       }
     });

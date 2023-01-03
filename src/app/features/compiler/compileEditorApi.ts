@@ -19,6 +19,7 @@ export function compileEditorApi<G extends RuntimeGenerics>(
   const zodToTS = zodToTSResolver({
     Card: definition.card,
     CardPile: definition.cardPile,
+    Deck: definition.deck,
     CardEffects: definition.card.shape.effects,
     Player: definition.player,
     State: definition.state,

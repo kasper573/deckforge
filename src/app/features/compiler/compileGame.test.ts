@@ -10,12 +10,7 @@ import type {
 } from "../../../api/services/game/types";
 import { deriveRuntimeDefinition } from "./defineRuntime";
 import { compileGame } from "./compileGame";
-import type {
-  RuntimeCard,
-  RuntimeGenerics,
-  RuntimePlayer,
-  RuntimePlayerId,
-} from "./types";
+import type { RuntimeGenerics, RuntimePlayer, RuntimePlayerId } from "./types";
 import { createPile } from "./apis/Pile";
 
 describe("compileGame", () => {
@@ -35,11 +30,7 @@ describe("compileGame", () => {
       decks: [],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { error, runtime } = compileGame(
-      runtimeDefinition,
-      gameDefinition,
-      () => ({ players: [mockPlayer(), mockPlayer()] })
-    );
+    const { error, runtime } = compileGame(runtimeDefinition, gameDefinition);
     expect(error).toBeUndefined();
     expect(runtime).toBeDefined();
   });
@@ -53,6 +44,7 @@ describe("compileGame", () => {
           propertyId: v4() as PropertyId,
           name: "health",
           type: "number",
+          defaultValue: 10,
         },
       ],
       events: [
@@ -72,29 +64,28 @@ define((state, damage) => {
       decks: [],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(runtimeDefinition, gameDefinition, () => ({
-      players: [mockPlayer(), mockPlayer()],
-    }));
+    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
 
     runtime?.actions.attack(5);
     expect(runtime?.state.players[0].properties.health).toBe(5);
     expect(runtime?.state.players[1].properties.health).toBe(5);
   });
 
-  it("compiled event can mutate card pile", () => {
+  it("compiled event can add card to draw pile", () => {
+    const deckId = v4() as DeckId;
     const gameDefinition: GameDefinition = {
       properties: [],
       middlewares: [],
       events: [
         {
           eventId: v4() as EventId,
-          name: "moveCard",
+          name: "addCard",
           inputType: "void",
           code: `
 define((state) => {
-  for (const player of state.players) {
-    const {deck, draw} = player.cards;
-    deck.move(1, draw);
+  const deck = state.decks[0].cards;
+  for (const {board: {draw}} of state.players) {
+    draw.add(deck[0]);
   }
 });`,
         },
@@ -102,83 +93,24 @@ define((state) => {
       cards: [
         {
           cardId: v4() as CardId,
-          deckId: v4() as DeckId,
+          deckId,
           name: "Foo",
           propertyDefaults: {},
           code: ``,
         },
       ],
-      decks: [],
+      decks: [{ deckId, name: "Test Deck" }],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(
-      runtimeDefinition,
-      gameDefinition,
-      (decks) => {
-        const deck = Array.from(decks.values())[0];
-        const createCards = () => deck.map((createCard) => createCard());
-        return {
-          players: [mockPlayer(createCards()), mockPlayer(createCards())],
-        };
-      }
-    );
-    runtime?.actions.moveCard();
-    const [player1, player2] = runtime!.state.players;
-    expect(player1.cards.deck.size).toBe(0);
-    expect(player1.cards.draw.size).toBe(1);
-    expect(player2.cards.deck.size).toBe(0);
-    expect(player2.cards.draw.size).toBe(1);
-  });
-
-  it("compiled event can take from card pile", () => {
-    const gameDefinition: GameDefinition = {
-      properties: [],
-      middlewares: [],
-      events: [
-        {
-          eventId: v4() as EventId,
-          name: "moveCard",
-          inputType: "void",
-          code: `
-define((state) => {
-  for (const {cards: {deck, draw}} of state.players) {
-    deck.take(1).forEach((card) => draw.add(card));
-  }
-});`,
-        },
-      ],
-      cards: [
-        {
-          cardId: v4() as CardId,
-          deckId: v4() as DeckId,
-          name: "Foo",
-          propertyDefaults: {},
-          code: ``,
-        },
-      ],
-      decks: [],
-    };
-    const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(
-      runtimeDefinition,
-      gameDefinition,
-      (decks) => {
-        const deck = Array.from(decks.values())[0];
-        const createCards = () => deck.map((createCard) => createCard());
-        return {
-          players: [mockPlayer(createCards()), mockPlayer(createCards())],
-        };
-      }
-    );
-    runtime?.actions.moveCard();
-    const [player1, player2] = runtime!.state.players;
-    expect(player1.cards.deck.size).toBe(0);
-    expect(player1.cards.draw.size).toBe(1);
-    expect(player2.cards.deck.size).toBe(0);
-    expect(player2.cards.draw.size).toBe(1);
+    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
+    runtime?.actions.addCard();
+    const [player1] = runtime!.state.players;
+    expect(player1.board.draw.size).toBe(1);
+    expect(player1.board.draw.at(0)).toBe(runtime!.state.decks[0].cards[0]);
   });
 
   it("compiled card effect can mutate player property", () => {
+    const deckId = v4() as DeckId;
     const gameDefinition: GameDefinition = {
       properties: [
         {
@@ -186,6 +118,7 @@ define((state) => {
           propertyId: v4() as PropertyId,
           name: "health",
           type: "number",
+          defaultValue: 10,
         },
       ],
       middlewares: [],
@@ -200,39 +133,36 @@ define((state) => {
       cards: [
         {
           cardId: v4() as CardId,
-          deckId: v4() as DeckId,
+          deckId,
           name: "Lifesteal",
           propertyDefaults: {},
           code: `
-define({
-  playCard (state, {player: playerId, target: targetId}) {
+derive(({thisCardId}) => ({
+  playCard (state, {player: playerId, target: targetId, cardId}) {
+    if (cardId !== thisCardId) {
+      return;
+    }
     const player = state.players.find((p) => p.id === playerId);
     const target = state.players.find((p) => p.id === targetId);
-    if (player && target) {
-      player.properties.health += 5;
-      target.properties.health -= 5;
-    }
+    player.properties.health += 5;
+    target.properties.health -= 5;
   }
-})`,
+}))`,
         },
       ],
-      decks: [],
+      decks: [{ deckId, name: "Test Deck" }],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(
-      runtimeDefinition,
-      gameDefinition,
-      (decks) => {
-        const deck = Array.from(decks.values())[0];
-        const cards = deck.map((createCard) => createCard());
-        return {
-          players: [mockPlayer(cards), mockPlayer([])],
-        };
-      }
-    );
+    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
+
     runtime!.execute((state) => {
       const [player1, player2] = state.players;
-      runtime?.actions.playCard({ player: player1.id, target: player2.id });
+      const cardId = state.decks[0].cards[0].id;
+      runtime?.actions.playCard({
+        player: player1.id,
+        target: player2.id,
+        cardId,
+      });
       expect(player1.properties.health).toBe(15);
       expect(player2.properties.health).toBe(5);
     });
@@ -253,6 +183,7 @@ define({
         type: "string" as const,
       },
     };
+    const deckId = v4() as DeckId;
     const gameDefinition: GameDefinition = {
       properties: Object.values(properties),
       events: [],
@@ -260,7 +191,7 @@ define({
       cards: [
         {
           cardId: v4() as CardId,
-          deckId: v4() as DeckId,
+          deckId,
           name: "baz",
           propertyDefaults: {
             [properties.str.propertyId]: "default",
@@ -268,40 +199,24 @@ define({
           code: ``,
         },
       ],
-      decks: [],
+      decks: [
+        {
+          deckId,
+          name: "Test Deck",
+        },
+      ],
     };
     it("player properties", () => {
       const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-      const { runtime } = compileGame(
-        runtimeDefinition,
-        gameDefinition,
-        () => ({
-          players: [mockPlayer(), mockPlayer()],
-        })
-      );
+      const { runtime } = compileGame(runtimeDefinition, gameDefinition);
       expect(runtime?.state.players[0].properties.num).toBe(0);
       expect(runtime?.state.players[1].properties.num).toBe(0);
     });
 
     it("card properties", () => {
       const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-      const { runtime } = compileGame(
-        runtimeDefinition,
-        gameDefinition,
-        (decks) => {
-          const deck = Array.from(decks.values())[0];
-          const createCards = () => deck.map((createCard) => createCard());
-          return {
-            players: [mockPlayer(createCards()), mockPlayer(createCards())],
-          };
-        }
-      );
-      expect(runtime?.state.players[0].cards.deck.at(0)?.properties.str).toBe(
-        "default"
-      );
-      expect(runtime?.state.players[1].cards.deck.at(0)?.properties.str).toBe(
-        "default"
-      );
+      const { runtime } = compileGame(runtimeDefinition, gameDefinition);
+      expect(runtime?.state.decks[0].cards[0].properties.str).toBe("default");
     });
   });
 
@@ -336,9 +251,7 @@ define({
       decks: [],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(runtimeDefinition, gameDefinition, () => ({
-      players: [mockPlayer(), mockPlayer()],
-    }));
+    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
     runtime!.execute((state) => {
       runtime?.actions.increaseUntil(10);
       expect(state.players[0].properties.count).toBe(10);
@@ -369,9 +282,7 @@ define({
       decks: [],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(runtimeDefinition, gameDefinition, () => ({
-      players: [mockPlayer(), mockPlayer()],
-    }));
+    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
     runtime!.actions.foo();
     expect(runtime!.state.status).toEqual({
       type: "result",
@@ -381,14 +292,14 @@ define({
 });
 
 function mockPlayer<G extends RuntimeGenerics>(
-  deck: RuntimeCard<G>[] = []
+  deckId: DeckId
 ): RuntimePlayer<G> {
   return {
     id: v4() as RuntimePlayerId,
     properties: { health: 10 },
-    cards: {
+    deckId,
+    board: {
       hand: createPile(),
-      deck: createPile(deck),
       discard: createPile(),
       draw: createPile(),
     },

@@ -3,7 +3,6 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useMemo, useReducer } from "react";
-import { v4 } from "uuid";
 import { useSelector } from "../store";
 import { selectors } from "../selectors";
 import { Panel } from "../components/Panel";
@@ -11,13 +10,10 @@ import type { FallbackProps } from "../../../ErrorBoundary";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { PanelControls } from "../components/PanelControls";
 import { compileGame } from "../../compiler/compileGame";
-import type { DeckId } from "../../../../api/services/game/types";
-import type { React1v1Types } from "../../runtimes/react-1v1/definition";
 import { Reload } from "../../../components/icons";
-import type { RuntimeGenerics, RuntimePlayerId } from "../../compiler/types";
+import type { RuntimeGenerics } from "../../compiler/types";
 import { GameRenderer } from "../../runtimes/react-1v1/GameRenderer";
 import { ErrorBoundary } from "../../../ErrorBoundary";
-import { createPile } from "../../compiler/apis/Pile";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
@@ -27,11 +23,7 @@ export function RuntimePanel(props: PanelProps) {
   const compiled = useMemo(
     () => {
       if (gameDefinition && runtimeDefinition) {
-        return compileGame<RuntimeGenerics>(
-          runtimeDefinition,
-          gameDefinition,
-          createInitialState
-        );
+        return compileGame<RuntimeGenerics>(runtimeDefinition, gameDefinition);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -77,36 +69,4 @@ function RuntimeErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
       <Button onClick={resetErrorBoundary}>Retry</Button>
     </PanelEmptyState>
   );
-}
-
-function createInitialState(
-  decks: Map<DeckId, Array<() => React1v1Types["card"]>>
-) {
-  const deck = Array.from(decks.values())[0];
-  if (!deck) {
-    throw new Error("No game or deck available, cannot initialize runtime");
-  }
-  function createPlayer() {
-    return {
-      id: v4() as RuntimePlayerId,
-      properties: {},
-      cards: {
-        hand: createPile<React1v1Types["card"]>(),
-        deck: createPile<React1v1Types["card"]>(
-          deck.map((createCard) => createCard())
-        ),
-        discard: createPile<React1v1Types["card"]>(),
-        draw: createPile<React1v1Types["card"]>(),
-      },
-    };
-  }
-
-  type Players = [
-    ReturnType<typeof createPlayer>,
-    ReturnType<typeof createPlayer>
-  ];
-
-  return {
-    players: [createPlayer(), createPlayer()] as Players,
-  };
 }

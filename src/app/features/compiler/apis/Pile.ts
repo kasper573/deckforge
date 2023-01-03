@@ -2,8 +2,8 @@ import type { ZodType } from "zod";
 import { z } from "zod";
 import { immerable } from "immer";
 
-export function createPile<T>(items: T[] = []): Pile<T> {
-  return new Pile<T>(items);
+export function createPile<T>(items: Iterable<T> = []): Pile<T> {
+  return new Pile<T>(Array.from(items));
 }
 
 export class Pile<T> implements Iterable<T> {
@@ -31,7 +31,7 @@ export class Pile<T> implements Iterable<T> {
     this.reset();
   }
 
-  reset(newValues: T[] = []): void {
+  reset(newValues: readonly T[] = []): void {
     this.items.splice(0, this.items.length, ...newValues);
   }
 

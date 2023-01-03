@@ -58,13 +58,13 @@ export function PlayerBoard({
         direction="row"
         spacing={2}
       >
-        <CardPile name="Discard" size={player.cards.discard.size} />
+        <CardPile name="Discard" size={player.board.discard.size} />
         <PlayerHand
-          cards={player.cards.hand}
+          cards={player.board.hand}
           player={player}
           target={opponent}
         />
-        <CardPile name="Draw" size={player.cards.draw.size} />
+        <CardPile name="Draw" size={player.board.draw.size} />
       </Stack>
     </Box>
   );

@@ -39,7 +39,7 @@ export class Machine<MC extends MachineContext> {
       const handleEffect = this.effects[name];
 
       const additionalReaction = handleEffect(draft, payload);
-      const reactions = this.selectReactions?.(this.state, name);
+      const reactions = this.selectReactions?.(draft, name);
 
       if (reactions) {
         for (const reaction of reactions) {

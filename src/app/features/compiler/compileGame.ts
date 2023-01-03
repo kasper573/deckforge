@@ -1,10 +1,8 @@
-import { groupBy } from "lodash";
 import type { ZodType } from "zod";
 import { z } from "zod";
 import { v4 } from "uuid";
 import type {
   Game,
-  DeckId,
   PropertyDefaults,
   Property,
   Card,
@@ -22,7 +20,10 @@ import type {
   RuntimeMachineContext,
   RuntimeState,
   RuntimePlayer,
+  RuntimePlayerId,
+  RuntimeDeck,
 } from "./types";
+import { createPile } from "./apis/Pile";
 
 export type GameRuntime<G extends RuntimeGenerics> = Machine<
   RuntimeMachineContext<G>
@@ -41,10 +42,7 @@ export interface GameInitialState<G extends RuntimeGenerics> {
 
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
-  gameDefinition: Game["definition"],
-  createInitialState: (
-    decks: Map<DeckId, Array<() => RuntimeCard<G>>>
-  ) => GameInitialState<G>
+  gameDefinition: Game["definition"]
 ): { runtime?: GameRuntime<G>; error?: unknown } {
   try {
     const cardProperties = gameDefinition.properties.filter(
@@ -59,22 +57,20 @@ export function compileGame<G extends RuntimeGenerics>(
       }),
     };
 
-    const decks = Object.entries(
-      groupBy(gameDefinition.cards, "deckId")
-    ).reduce(
-      (map, [deckId, cardDefinitions]) =>
-        map.set(
-          deckId as DeckId,
-          cardDefinitions.map(
-            (card) => () =>
-              compileCard(card, {
-                runtimeDefinition,
-                scriptAPI,
-                cardProperties,
-              })
-          )
-        ),
-      new Map<DeckId, Array<() => RuntimeCard<G>>>()
+    const decks = gameDefinition.decks.map(
+      (deck): RuntimeDeck<G> => ({
+        id: deck.deckId,
+        name: deck.name,
+        cards: gameDefinition.cards
+          .filter((c) => c.deckId === deck.deckId)
+          .map((card) =>
+            compileCard(card, {
+              runtimeDefinition,
+              scriptAPI,
+              cardProperties,
+            })
+          ),
+      })
     );
 
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {
@@ -85,11 +81,6 @@ export function compileGame<G extends RuntimeGenerics>(
       });
       return effects;
     }, {} as RuntimeEffects<G>);
-
-    const initialState = normalizeInitialState(
-      createInitialState(decks),
-      gameDefinition
-    );
 
     function cloneCard(card: RuntimeCard<G>): RuntimeCard<G> {
       const cardDefinition = gameDefinition.cards.find(
@@ -113,11 +104,17 @@ export function compileGame<G extends RuntimeGenerics>(
       })
     );
 
+    const initialState = createDefaultInitialState(
+      decks,
+      gameDefinition.properties
+    );
+
     let builder = deriveMachine<G>(effects, initialState);
     builder = compiledMiddlewares.reduce(
       (builder, next) => builder.middleware(next),
       builder
     );
+
     const runtime = builder.build();
     return { runtime };
   } catch (error) {
@@ -125,32 +122,34 @@ export function compileGame<G extends RuntimeGenerics>(
   }
 }
 
-function normalizeInitialState<G extends RuntimeGenerics>(
-  initialState: GameInitialState<G>,
-  gameDefinition: Game["definition"]
+function createDefaultInitialState<G extends RuntimeGenerics>(
+  decks: RuntimeDeck<G>[],
+  propertyDefinitions: Property[]
 ): RuntimeState<G> {
-  const playerPropertyDefaults = namedPropertyDefaults(
-    gameDefinition.properties.filter((p) => p.entityId === "player")
-  );
+  const properties = namedPropertyDefaults(
+    propertyDefinitions.filter((p) => p.entityId === "player")
+  ) as RuntimePlayer<G>["properties"];
 
-  function normalizePlayer<G extends RuntimeGenerics>(
-    player: GameInitialPlayer<G>
-  ): RuntimePlayer<G> {
+  function createDefaultPlayer(): RuntimePlayer<G> {
     return {
-      ...player,
-      properties: {
-        ...playerPropertyDefaults,
-        ...player.properties,
-      } as RuntimePlayer<G>["properties"],
+      id: v4() as RuntimePlayerId,
+      deckId: decks[0]?.id,
+      properties,
+      board: {
+        draw: createPile(),
+        discard: createPile(),
+        hand: createPile(),
+      },
     };
   }
 
-  const [player1, player2] = initialState.players;
+  const p1 = createDefaultPlayer();
+  const p2 = createDefaultPlayer();
   return {
-    ...initialState,
+    decks,
     status: { type: "idle" },
-    players: [normalizePlayer(player1), normalizePlayer(player2)],
-    currentPlayerId: player1.id,
+    players: [p1, p2],
+    currentPlayerId: p1.id,
   };
 }
 
