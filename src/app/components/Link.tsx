@@ -12,7 +12,7 @@ export interface LinkTo {
   $: string;
 }
 
-type AdditionalLinkProps = Pick<TypesafeRouterLinkProps, "to">;
+type AdditionalLinkProps = Pick<TypesafeRouterLinkProps, "to" | "target">;
 
 type TypesafeRouterLinkProps = Omit<ComponentProps<typeof RouterLink>, "to"> & {
   to: LinkTo;

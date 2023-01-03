@@ -8,7 +8,7 @@ import { selectors } from "../../selectors";
 import { useSelector } from "../../store";
 import { useActions } from "../../../../../lib/useActions";
 import { editorActions } from "../../actions";
-import { ExitToApp } from "../../../../components/icons";
+import { ExitToApp, Play } from "../../../../components/icons";
 import { useModal } from "../../../../../lib/useModal";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { LinkIconButton } from "../../../../components/Link";
@@ -61,13 +61,20 @@ function Content() {
       <GameName maxWidth={pageMaxWidth}>
         <Stack direction="row" spacing={1} alignItems="center">
           <Tooltip title="Rename game">
-            <Box
-              onClick={promptRename}
-              sx={{ cursor: "pointer", pointerEvents: "all" }}
-            >
-              {game?.name}
-            </Box>
+            <Clickable onClick={promptRename}>{game?.name}</Clickable>
           </Tooltip>
+          {game && (
+            <Tooltip title="Open public game play page">
+              <Clickable>
+                <LinkIconButton
+                  to={router.play().game({ gameId: game.gameId })}
+                  target="_blank"
+                >
+                  <Play />
+                </LinkIconButton>
+              </Clickable>
+            </Tooltip>
+          )}
         </Stack>
       </GameName>
     </Stack>
@@ -86,4 +93,9 @@ const GameName = styled(Container)`
     bottom: 0;
     top: 0;
   }
+`;
+
+const Clickable = styled(Box)`
+  cursor: pointer;
+  pointer-events: all;
 `;
