@@ -49,7 +49,7 @@ export function RuntimePanel(props: PanelProps) {
       {compiled &&
         (compiled?.runtime ? (
           <ErrorBoundary fallback={RuntimeErrorFallback}>
-            <GameRenderer runtime={compiled.runtime} sx={{ flex: 1 }} />
+            <GameRenderer runtime={compiled.runtime} />
           </ErrorBoundary>
         ) : (
           <PanelEmptyState>

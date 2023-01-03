@@ -23,4 +23,5 @@ const Viewport = styled("div")`
   background: skyblue;
   position: relative;
   user-select: none;
+  flex: 1;
 `;
