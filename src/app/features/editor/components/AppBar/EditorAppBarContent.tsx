@@ -64,7 +64,7 @@ function Content() {
             <Clickable onClick={promptRename}>{game?.name}</Clickable>
           </Tooltip>
           {game && (
-            <Tooltip title="Open public game play page">
+            <Tooltip title="Open public gameplay page">
               <Clickable>
                 <LinkIconButton
                   to={router.play().game({ gameId: game.gameId })}
