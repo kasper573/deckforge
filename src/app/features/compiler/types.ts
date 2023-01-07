@@ -83,14 +83,13 @@ export interface RuntimeDefinition<
   deck: ZodType<RuntimeDeck<G>>;
   card: ZodObject<ZodShapeFor<RuntimeCard<G>>>;
   cardPile: ZodType<Pile<RuntimeCard<G>>>;
-  player: ZodType<RuntimePlayer<G>>;
+  player: ZodObject<ZodShapeFor<RuntimePlayer<G>>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
   actions: ZodType<G["actions"]>;
   middleware: ZodType<RuntimeMiddleware<G>>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type PropRecord = Record<string, any>;
+export type PropRecord = Record<string, unknown>;
 
 export type RuntimeGenericsFor<T extends RuntimeDefinition> =
   T extends RuntimeDefinition<infer G> ? G : never;

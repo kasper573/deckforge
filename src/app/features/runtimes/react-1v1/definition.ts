@@ -15,7 +15,9 @@ export const builtinDefinition = defineRuntime({
     mana: z.number(),
     manaMax: z.number(),
   },
-  cardProperties: {},
+  cardProperties: {
+    manaCost: z.number(),
+  },
   actions: ({ playerId, deckId }) => {
     const cardPayload = z.object({
       playerId,
