@@ -51,7 +51,7 @@ interface MenuState {
 export type CloseHandler = (e: MouseEvent) => void;
 
 const menuStore = createStore<MenuState>()(
-  immer((set) => ({
+  immer((set, getState) => ({
     menus: new Map(),
     upsert(menu) {
       set((state) => {
@@ -64,6 +64,10 @@ const menuStore = createStore<MenuState>()(
       });
     },
     open(e, openId) {
+      const menu = getState().menus.get(openId);
+      if (menu?.items.length === 0) {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       set((state) => {
