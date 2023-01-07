@@ -7,7 +7,7 @@ import {
   deriveMachine,
   runtimeEvent,
 } from "../compiler/defineRuntime";
-import type { ZodTypesFor } from "../../../lib/zod-extensions/ZodShapeFor";
+import type { inferFromZodShape } from "../../../lib/zod-extensions/ZodShapeFor";
 import type { CardInstanceId, RuntimePlayerId } from "../compiler/types";
 import { cardInstanceIdType } from "../compiler/types";
 import { createPile } from "../compiler/apis/Pile";
@@ -140,7 +140,7 @@ const inMemoryDefinition = defineRuntime({
 });
 
 type InMemoryDefinition = typeof inMemoryDefinition;
-type InMemoryTypes = ZodTypesFor<InMemoryDefinition>;
+type InMemoryTypes = inferFromZodShape<InMemoryDefinition>;
 type Player = InMemoryTypes["player"];
 type Deck = InMemoryTypes["deck"];
 type Card = InMemoryTypes["card"];

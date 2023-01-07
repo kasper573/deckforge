@@ -5,6 +5,6 @@ export type ZodShapeFor<T> = {
   [K in keyof T]: ZodType<T[K]>;
 };
 
-export type ZodTypesFor<T> = {
+export type inferFromZodShape<T> = {
   [K in keyof T]: T[K] extends ZodType ? z.infer<T[K]> : never;
 };
