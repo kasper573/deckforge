@@ -16,6 +16,8 @@ import type { EditorObjectId } from "../types";
 import { useMenu } from "../../../hooks/useMenu";
 import { HoverListItem } from "../../../components/HoverListItem";
 import { PropertyEditor } from "../../../controls/PropertyEditor";
+import { defined } from "../../../../lib/ts-extensions/defined";
+import { describePropertyValueType } from "../../../controls/ZodPicker";
 import type { PanelProps } from "./definition";
 
 export function CardPropertiesPanel(props: PanelProps) {
@@ -81,10 +83,18 @@ function PropertyListItem(property: Property & { objectId: EditorObjectId }) {
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
 
-  const openContextMenu = useMenu([
-    <MenuItem onClick={() => promptRename(property)}>Rename</MenuItem>,
-    <MenuItem onClick={() => confirmDelete(property)}>Delete</MenuItem>,
-  ]);
+  const isEditable = true;
+
+  const openContextMenu = useMenu(
+    defined([
+      isEditable && (
+        <MenuItem onClick={() => promptRename(property)}>Rename</MenuItem>
+      ),
+      isEditable && (
+        <MenuItem onClick={() => confirmDelete(property)}>Delete</MenuItem>
+      ),
+    ])
+  );
 
   return (
     <HoverListItem sx={{ py: 0 }} onContextMenu={openContextMenu}>
@@ -92,17 +102,21 @@ function PropertyListItem(property: Property & { objectId: EditorObjectId }) {
         direction="row"
         alignItems="center"
         spacing={1}
-        sx={{ width: "100%" }}
+        sx={{ width: "100%", height: 34 }}
       >
         <Box sx={{ flex: 1, overflow: "hidden" }}>
           <Typography noWrap>{property.name}</Typography>
         </Box>
         <div>
-          <PropertyEditor
-            property={property}
-            onChange={updateProperty}
-            title={`Edit type of property "${property.name}"`}
-          />
+          {isEditable ? (
+            <PropertyEditor
+              property={property}
+              onChange={updateProperty}
+              title={`Edit type of property "${property.name}"`}
+            />
+          ) : (
+            describePropertyValueType(property.type)
+          )}
         </div>
       </Stack>
     </HoverListItem>

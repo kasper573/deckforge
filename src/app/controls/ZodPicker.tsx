@@ -34,7 +34,7 @@ export function ZodPicker<T extends ZodType>({
   );
 }
 
-function describePropertyValueType<T extends PropertyValueType>(
+export function describePropertyValueType<T extends PropertyValueType>(
   type: T
 ): string {
   if (typeof type === "string") {
