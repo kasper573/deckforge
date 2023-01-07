@@ -1,4 +1,6 @@
 import MenuItem from "@mui/material/MenuItem";
+import { ZodObject } from "zod";
+import Tooltip from "@mui/material/Tooltip";
 import { useSelector } from "../store";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
@@ -10,10 +12,14 @@ import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
 import { ObjectIcon } from "../components/ObjectIcon";
 import { PropertyTypePicker } from "../../../controls/PropertyTypePicker";
+import type { Event } from "../../../../api/services/game/types";
+import type { RuntimeDefinition } from "../../compiler/types";
+import { defined } from "../../../../lib/ts-extensions/defined";
 import type { PanelProps } from "./definition";
 
 export function EventsPanel(props: PanelProps) {
   const events = useSelector(selectors.events);
+  const builtinDef = useSelector(selectors.builtinDefinition);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
@@ -32,27 +38,55 @@ export function EventsPanel(props: PanelProps) {
       <Tree
         selected={selectedObjectId}
         onSelectedChanged={selectObject}
-        items={events.map((event) => ({
-          nodeId: event.objectId,
-          label: event.name,
-          action: (
-            <PropertyTypePicker
-              value={event.inputType}
-              onChange={(inputType) => updateEvent({ ...event, inputType })}
-              title={`Edit input type of event "${event.name}"`}
-            />
-          ),
-          icon: <ObjectIcon type="event" />,
-          onDoubleClick: () => promptRename(event),
-          contextMenu: [
-            <MenuItem onClick={() => promptRename(event)}>Rename</MenuItem>,
-            <MenuItem onClick={() => confirmDelete(event)}>Delete</MenuItem>,
-          ],
-        }))}
+        items={events.map((event) => {
+          const isEditable = isEventEditable(event, builtinDef);
+          return {
+            nodeId: event.objectId,
+            label: event.name,
+            action: (
+              <Tooltip
+                title={
+                  isEditable
+                    ? undefined
+                    : "This is a built-in property and may not be edited"
+                }
+              >
+                <div>
+                  <PropertyTypePicker
+                    disabled={!isEditable}
+                    value={event.inputType}
+                    onChange={(inputType) =>
+                      updateEvent({ ...event, inputType })
+                    }
+                    title={`Edit input type of event "${event.name}"`}
+                  />
+                </div>
+              </Tooltip>
+            ),
+            icon: <ObjectIcon type="event" />,
+            onDoubleClick: isEditable ? () => promptRename(event) : undefined,
+            contextMenu: defined([
+              isEditable && (
+                <MenuItem onClick={() => promptRename(event)}>Rename</MenuItem>
+              ),
+              isEditable && (
+                <MenuItem onClick={() => confirmDelete(event)}>Delete</MenuItem>
+              ),
+            ]),
+          };
+        })}
       />
       {events.length === 0 && (
         <PanelEmptyState>This game has no events</PanelEmptyState>
       )}
     </Panel>
+  );
+}
+
+function isEventEditable(event: Event, builtinDef?: RuntimeDefinition) {
+  const type = builtinDef?.actions;
+  return (
+    type &&
+    !(type instanceof ZodObject && Object.keys(type.shape).includes(event.name))
   );
 }
