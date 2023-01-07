@@ -48,7 +48,7 @@ export function EventsPanel(props: PanelProps) {
                 title={
                   isEditable
                     ? undefined
-                    : "This is a built-in property and may not be edited"
+                    : "This is a required event and may not be edited"
                 }
               >
                 <div>

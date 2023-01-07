@@ -124,7 +124,7 @@ function PropertyListItem({
             title={
               isEditable
                 ? undefined
-                : "This is a built-in property and may not be edited"
+                : "This is a required property and may not be edited"
             }
           >
             <div>
