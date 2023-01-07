@@ -10,6 +10,7 @@ import type {
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
+import { evalWithScope } from "../../../lib/evalWithScope";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -205,7 +206,8 @@ function compile<T extends ZodType, G extends RuntimeGenerics>(
     define(createDefinition(options.scriptAPI));
   }
 
-  eval(code); // Assume code calls define/derive to set definition
+  evalWithScope(code, { define, derive }); // Assume code calls define/derive to set definition
+
   return definition;
 }
 
