@@ -113,7 +113,10 @@ function PropertyListItem({
         spacing={1}
         sx={{ width: "100%", height: 34 }}
       >
-        <Box sx={{ flex: 1, overflow: "hidden" }}>
+        <Box
+          sx={{ flex: 1, overflow: "hidden" }}
+          onDoubleClick={isEditable ? () => promptRename(property) : undefined}
+        >
           <Typography noWrap>{property.name}</Typography>
         </Box>
         <div>
