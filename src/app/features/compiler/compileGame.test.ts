@@ -10,8 +10,7 @@ import type {
 } from "../../../api/services/game/types";
 import { deriveRuntimeDefinition } from "./defineRuntime";
 import { compileGame } from "./compileGame";
-import type { RuntimeGenerics, RuntimePlayer, RuntimePlayerId } from "./types";
-import { createPile } from "./apis/Pile";
+import type { RuntimeGenerics } from "./types";
 
 describe("compileGame", () => {
   it("can compile game with a single event without errors", () => {
@@ -64,11 +63,11 @@ define((state, damage) => {
       decks: [],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
+    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
 
-    runtime?.actions.attack(5);
-    expect(runtime?.state.players[0].properties.health).toBe(5);
-    expect(runtime?.state.players[1].properties.health).toBe(5);
+    runtime.actions.attack(5);
+    expect(runtime.state.players[0].properties.health).toBe(5);
+    expect(runtime.state.players[1].properties.health).toBe(5);
   });
 
   it("compiled event can add card to draw pile", () => {
@@ -84,8 +83,8 @@ define((state, damage) => {
           code: `
 define((state) => {
   const deck = state.decks[0].cards;
-  for (const {board: {draw}} of state.players) {
-    draw.add(deck[0]);
+  for (const player of state.players) {
+    player.board.draw.add(deck[0]);
   }
 });`,
         },
@@ -102,11 +101,11 @@ define((state) => {
       decks: [{ deckId, name: "Test Deck" }],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
-    runtime?.actions.addCard();
-    const [player1] = runtime!.state.players;
+    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
+    runtime.actions.addCard();
+    const [player1] = runtime.state.players;
     expect(player1.board.draw.size).toBe(1);
-    expect(player1.board.draw.at(0)).toBe(runtime!.state.decks[0].cards[0]);
+    expect(player1.board.draw.at(0)).toBe(runtime.state.decks[0].cards[0]);
   });
 
   it("compiled card effect can mutate player property", () => {
@@ -153,9 +152,9 @@ derive(({thisCardId}) => ({
       decks: [{ deckId, name: "Test Deck" }],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
+    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
 
-    runtime!.execute((state) => {
+    runtime.execute((state) => {
       const [player1, player2] = state.players;
       const cardId = state.decks[0].cards[0].id;
       runtime?.actions.playCard({
@@ -208,15 +207,15 @@ derive(({thisCardId}) => ({
     };
     it("player properties", () => {
       const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-      const { runtime } = compileGame(runtimeDefinition, gameDefinition);
-      expect(runtime?.state.players[0].properties.num).toBe(0);
-      expect(runtime?.state.players[1].properties.num).toBe(0);
+      const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
+      expect(runtime.state.players[0].properties.num).toBe(0);
+      expect(runtime.state.players[1].properties.num).toBe(0);
     });
 
     it("card properties", () => {
       const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-      const { runtime } = compileGame(runtimeDefinition, gameDefinition);
-      expect(runtime?.state.decks[0].cards[0].properties.str).toBe("default");
+      const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
+      expect(runtime.state.decks[0].cards[0].properties.str).toBe("default");
     });
   });
 
@@ -251,9 +250,9 @@ derive(({thisCardId}) => ({
       decks: [],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
-    runtime!.execute((state) => {
-      runtime?.actions.increaseUntil(10);
+    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
+    runtime.execute((state) => {
+      runtime.actions.increaseUntil(10);
       expect(state.players[0].properties.count).toBe(10);
     });
   });
@@ -282,7 +281,7 @@ derive(({thisCardId}) => ({
       decks: [],
     };
     const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
-    const { runtime } = compileGame(runtimeDefinition, gameDefinition);
+    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
     runtime!.actions.foo();
     expect(runtime!.state.status).toEqual({
       type: "result",
@@ -291,17 +290,12 @@ derive(({thisCardId}) => ({
   });
 });
 
-function mockPlayer<G extends RuntimeGenerics>(
-  deckId: DeckId
-): RuntimePlayer<G> {
-  return {
-    id: v4() as RuntimePlayerId,
-    properties: { health: 10 },
-    deckId,
-    board: {
-      hand: createPile(),
-      discard: createPile(),
-      draw: createPile(),
-    },
-  };
+function tryCompileGame<G extends RuntimeGenerics>(
+  ...args: Parameters<typeof compileGame<G>>
+) {
+  const { runtime, error } = compileGame<G>(...args);
+  if (error) {
+    throw error;
+  }
+  return runtime!;
 }
