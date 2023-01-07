@@ -5,99 +5,145 @@ import type { ComponentType, HTMLAttributes } from "react";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import List from "@mui/material/List";
 import produce from "immer";
-import { useDebouncedControl } from "../../../../hooks/useDebouncedControl";
+import { useMemo } from "react";
+import Tooltip from "@mui/material/Tooltip";
 import type {
   Property,
-  PropertyType,
-  PropertyValues,
+  PropertyDefaults,
+  PropertyValueType,
+  PrimitiveTypes,
+  TypeOfPropertyValue,
 } from "../../../../../api/services/game/types";
+import { ZodControl } from "../../../../controls/ZodControl";
+import { propertyValue } from "../../../../../api/services/game/types";
+import { useDebouncedControl } from "../../../../hooks/useDebouncedControl";
 
-export function PropertyValuesEditor({
+export function PropertyDefaultsEditor({
   properties,
-  values,
+  defaults,
   onChange,
 }: {
   properties: Property[];
-  values: PropertyValues;
-  onChange: (updated: PropertyValues) => void;
+  defaults: PropertyDefaults;
+  onChange: (updated: PropertyDefaults) => void;
 }) {
   return (
     <List>
-      {properties.map(({ propertyId, name, type }) => {
-        return (
-          <PropertyValueEditor
-            key={propertyId}
-            type={type}
-            name={name}
-            value={values[propertyId]}
-            onChange={(newValue) =>
-              onChange(
-                produce(values, (draft) => {
-                  draft[propertyId] = newValue;
-                })
-              )
-            }
-          />
-        );
-      })}
+      {properties.map(
+        <ValueType extends PropertyValueType>({
+          propertyId,
+          name,
+          type,
+        }: Property) => (
+          <ListItem key={propertyId}>
+            <PropertyValueEditor
+              type={type}
+              name={name}
+              value={
+                defaults[propertyId] as
+                  | TypeOfPropertyValue<ValueType>
+                  | undefined
+              }
+              onChange={(newValue) =>
+                onChange(
+                  produce(defaults, (draft) => {
+                    draft[propertyId] = newValue;
+                  })
+                )
+              }
+            />
+          </ListItem>
+        )
+      )}
     </List>
   );
 }
 
-export function PropertyValueEditor<T extends PropertyType>({
+export function PropertyValueEditor<
+  ValueType extends PropertyValueType,
+  Foo extends keyof PrimitiveTypes
+>({
   type,
   name,
-  value,
+  value: valueOrUndefined,
   onChange,
 }: {
-  type: T;
+  type: ValueType;
   name: string;
-  value: ControlValue<T>;
-  onChange: (newValue: ControlValue<T>) => void;
+  value?: TypeOfPropertyValue<ValueType>;
+  onChange: (newValue: TypeOfPropertyValue<ValueType>) => void;
 }) {
-  const control = useDebouncedControl({ value, onChange });
-  const ValueControl = controls[type] as Control<ControlValue<T>>;
+  const value = useMemo(
+    () => valueOrUndefined ?? propertyValue.defaultOf(type),
+    [valueOrUndefined, type]
+  );
 
-  return (
-    <ListItem>
-      <ValueControl
-        label={name}
+  const control = useDebouncedControl({ value, onChange });
+
+  if (propertyValue.isObject(type)) {
+    return (
+      <ZodControl
+        schema={propertyValue.valueTypeOf(type)}
         value={control.value}
         onChange={control.setValue}
+        label={name}
       />
-    </ListItem>
+    );
+  }
+
+  if (!propertyValue.isTypeName(type)) {
+    return null;
+  }
+
+  type ExactPrimitiveControl = ComponentType<
+    ControlProps<TypeOfPropertyValue<ValueType>>
+  >;
+  const PrimitiveControl = primitiveControls[type] as
+    | ExactPrimitiveControl
+    | undefined;
+
+  if (!PrimitiveControl) {
+    return (
+      <>
+        {name}{" "}
+        <Tooltip title={`Cannot edit. No control exists for type "${type}"`}>
+          <span>({String(type)})</span>
+        </Tooltip>
+      </>
+    );
+  }
+
+  return (
+    <PrimitiveControl
+      label={name}
+      value={control.value}
+      onChange={control.setValue}
+    />
   );
 }
 
-type ControlValue<T extends PropertyType> = typeof controls[T] extends Control<
-  infer V
->
-  ? V
-  : never;
-
-type Control<T> = ComponentType<ControlProps<T>>;
-
-type ControlProps<T> = {
+type ControlProps<Value> = {
   label?: string;
-  value?: T;
-  onChange: (value: T) => void;
+  value: Value;
+  onChange: (value: Value) => void;
 } & Omit<HTMLAttributes<unknown>, "onChange">;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const controls: Record<PropertyType, Control<any>> = {
-  boolean: ({ label, value = false, onChange }: ControlProps<boolean>) => (
+const primitiveControls: {
+  [K in keyof PrimitiveTypes]?: ComponentType<ControlProps<PrimitiveTypes[K]>>;
+} = {
+  boolean: ({ label, value, onChange }) => (
     <FormControlLabel
       label={label}
       control={
         <Checkbox
           size="small"
-          checked={!!value}
+          checked={value}
           onChange={(e) => onChange(e.target.checked)}
         />
       }
     />
   ),
-  string: ({ label, value = "", onChange }: ControlProps<string>) => (
+  string: ({ label, value, onChange }) => (
     <TextField
       size="small"
       label={label}
@@ -105,7 +151,7 @@ const controls: Record<PropertyType, Control<any>> = {
       onChange={(e) => onChange(e.target.value)}
     />
   ),
-  number: ({ label, value = 0, onChange }: ControlProps<number>) => (
+  number: ({ label, value, onChange }) => (
     <TextField
       size="small"
       label={label}

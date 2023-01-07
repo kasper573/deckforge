@@ -51,12 +51,12 @@ export function useForm<T extends ZodType>(
         ...fieldOptions,
       });
 
-      const muiProps = {
-        error: error !== undefined,
-        helperText: error?.message,
-      };
+      if (error !== undefined) {
+        // Add MUI props
+        return { ...rhfProps, error: true, helperText: error.message };
+      }
 
-      return { ...rhfProps, ...muiProps };
+      return rhfProps;
     },
     [schema, errors, register]
   );

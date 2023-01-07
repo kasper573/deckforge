@@ -4,10 +4,10 @@ import type { EditorObjectId } from "./types";
 
 function deleteObject(objectId: EditorObjectId): Action {
   switch (objectId.type) {
-    case "action":
-      return editorActions.deleteAction(objectId.actionId);
-    case "reaction":
-      return editorActions.deleteReaction(objectId.reactionId);
+    case "event":
+      return editorActions.deleteEvent(objectId.eventId);
+    case "middleware":
+      return editorActions.deleteMiddleware(objectId.middlewareId);
     case "deck":
       return editorActions.deleteDeck(objectId.deckId);
     case "card":
@@ -19,10 +19,10 @@ function deleteObject(objectId: EditorObjectId): Action {
 
 function renameObject(objectId: EditorObjectId, name: string): Action {
   switch (objectId.type) {
-    case "action":
-      return editorActions.updateAction({ ...objectId, name });
-    case "reaction":
-      return editorActions.updateReaction({ ...objectId, name });
+    case "event":
+      return editorActions.updateEvent({ ...objectId, name });
+    case "middleware":
+      return editorActions.updateMiddleware({ ...objectId, name });
     case "deck":
       return editorActions.updateDeck({ ...objectId, name });
     case "card":

@@ -1,33 +1,36 @@
 import MenuItem from "@mui/material/MenuItem";
-import { useSelector } from "../../../store";
+import { ZodObject } from "zod";
+import Tooltip from "@mui/material/Tooltip";
+import { useSelector } from "../store";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
 import { Tree } from "../../../components/Tree";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
 import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
-import type { ActionId } from "../../../../api/services/game/types";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
 import { ObjectIcon } from "../components/ObjectIcon";
+import { PropertyTypePicker } from "../../../controls/PropertyTypePicker";
+import type { Event } from "../../../../api/services/game/types";
+import type { RuntimeDefinition } from "../../compiler/types";
+import { defined } from "../../../../lib/ts-extensions/defined";
 import type { PanelProps } from "./definition";
 
 export function EventsPanel(props: PanelProps) {
   const events = useSelector(selectors.events);
+  const builtinDef = useSelector(selectors.builtinDefinition);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
-  const { createAction, createReaction, selectObject } =
-    useActions(editorActions);
+  const { createEvent, updateEvent, selectObject } = useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObject);
 
-  const promptCreateAction = () =>
-    promptCreate("action", (name) => createAction({ name }));
-  const promptCreateReaction = (actionId: ActionId) =>
-    promptCreate("reaction", (name) => createReaction({ name, actionId }));
+  const promptCreateEvent = () =>
+    promptCreate("event", (name) => createEvent({ name }));
 
   const openContextMenu = useMenu([
-    <MenuItem onClick={promptCreateAction}>New action</MenuItem>,
+    <MenuItem onClick={promptCreateEvent}>New event</MenuItem>,
   ]);
 
   return (
@@ -35,37 +38,55 @@ export function EventsPanel(props: PanelProps) {
       <Tree
         selected={selectedObjectId}
         onSelectedChanged={selectObject}
-        items={events.map((action) => ({
-          nodeId: action.objectId,
-          label: action.name,
-          icon: <ObjectIcon type="action" />,
-          onDoubleClick: () => promptRename(action),
-          contextMenu: [
-            <MenuItem onClick={() => promptRename(action)}>Rename</MenuItem>,
-            <MenuItem onClick={() => promptCreateReaction(action.actionId)}>
-              New reaction
-            </MenuItem>,
-            <MenuItem onClick={() => confirmDelete(action)}>Delete</MenuItem>,
-          ],
-          children: action.reactions.map((reaction) => ({
-            nodeId: reaction.objectId,
-            label: reaction.name,
-            icon: <ObjectIcon type="reaction" />,
-            onDoubleClick: () => promptRename(reaction),
-            contextMenu: [
-              <MenuItem onClick={() => promptRename(reaction)}>
-                Rename
-              </MenuItem>,
-              <MenuItem onClick={() => confirmDelete(reaction)}>
-                Delete
-              </MenuItem>,
-            ],
-          })),
-        }))}
+        items={events.map((event) => {
+          const isEditable = isEventEditable(event, builtinDef);
+          return {
+            nodeId: event.objectId,
+            label: event.name,
+            action: (
+              <Tooltip
+                title={
+                  isEditable
+                    ? undefined
+                    : "This is a required event and may not be edited"
+                }
+              >
+                <div>
+                  <PropertyTypePicker
+                    disabled={!isEditable}
+                    value={event.inputType}
+                    onChange={(inputType) =>
+                      updateEvent({ ...event, inputType })
+                    }
+                    title={`Edit input type of event "${event.name}"`}
+                  />
+                </div>
+              </Tooltip>
+            ),
+            icon: <ObjectIcon type="event" />,
+            onDoubleClick: isEditable ? () => promptRename(event) : undefined,
+            contextMenu: defined([
+              isEditable && (
+                <MenuItem onClick={() => promptRename(event)}>Rename</MenuItem>
+              ),
+              isEditable && (
+                <MenuItem onClick={() => confirmDelete(event)}>Delete</MenuItem>
+              ),
+            ]),
+          };
+        })}
       />
       {events.length === 0 && (
         <PanelEmptyState>This game has no events</PanelEmptyState>
       )}
     </Panel>
+  );
+}
+
+function isEventEditable(event: Event, builtinDef?: RuntimeDefinition) {
+  const type = builtinDef?.actions;
+  return (
+    type &&
+    !(type instanceof ZodObject && Object.keys(type.shape).includes(event.name))
   );
 }

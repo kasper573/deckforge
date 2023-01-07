@@ -20,6 +20,7 @@ export type PromptDialogProps<T extends ZodString> = ModalProps<
     defaultValue?: z.infer<T>;
     submitLabel?: ReactNode;
     cancelLabel?: ReactNode;
+    helperText?: ReactNode;
   }
 >;
 
@@ -32,6 +33,7 @@ export function PromptDialog<T extends ZodString>({
     defaultValue,
     submitLabel = "Submit",
     cancelLabel = "Cancel",
+    helperText,
   },
   resolve,
 }: PromptDialogProps<T>) {
@@ -59,6 +61,7 @@ export function PromptDialog<T extends ZodString>({
         <DialogContent>
           <TextField
             label={label}
+            helperText={helperText}
             margin="dense"
             fullWidth
             autoFocus

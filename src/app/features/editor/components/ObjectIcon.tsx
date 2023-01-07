@@ -21,13 +21,13 @@ export function ObjectIcon({
   );
 }
 
-const ActionIcon = styled(Reply)`
+const EventIcon = styled(Reply)`
   transform: rotate(180deg);
 `;
 
 const iconComponents: Record<EditorObjectId["type"], ComponentType> = {
-  action: ActionIcon,
-  reaction: Reply,
+  event: EventIcon,
+  middleware: Link,
   deck: Collections,
   card: CropPortrait,
   property: Link,

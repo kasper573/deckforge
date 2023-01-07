@@ -1,13 +1,27 @@
+import { createSelector } from "@reduxjs/toolkit";
 import type {
-  ActionId,
+  EventId,
   CardId,
   DeckId,
   EntityId,
   PropertyId,
-  ReactionId,
+  MiddlewareId,
 } from "../../../api/services/game/types";
 import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
+import { compileEditorApi } from "../compiler/compileEditorApi";
+import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
+import { builtinDefinition } from "../runtimes/react-1v1/definition";
 import type { EditorObjectId, EditorState } from "./types";
+
+const gameDefinition = (state: EditorState) => state.game?.definition;
+
+const runtimeDefinition = createSelector(gameDefinition, (def) =>
+  def ? deriveRuntimeDefinition(def) : undefined
+);
+
+const editorApi = createSelector(runtimeDefinition, (def) =>
+  def ? compileEditorApi(def) : undefined
+);
 
 export const selectors = {
   panelLayout: (state: EditorState) => state.panelLayout,
@@ -20,12 +34,10 @@ export const selectors = {
       return;
     }
     switch (id.type) {
-      case "action":
-        return [selectors.action(id.actionId)(state)?.name ?? ""];
-      case "reaction":
-        const reaction = selectors.reaction(id.reactionId)(state);
-        const action = reaction && selectors.action(reaction.actionId)(state);
-        return [action?.name ?? "", reaction?.name ?? ""];
+      case "event":
+        return [selectors.event(id.eventId)(state)?.name ?? ""];
+      case "middleware":
+        return [selectors.middleware(id.middlewareId)(state)?.name ?? ""];
       case "card":
         const card = selectors.card(id.cardId)(state);
         const deck = card && selectors.deck(card.deckId)(state);
@@ -54,29 +66,35 @@ export const selectors = {
     if (!state.game) {
       return [];
     }
-    const { actions, reactions } = state.game.definition;
-    return actions.map((action) => ({
-      objectId: { type: "action", actionId: action.actionId } as EditorObjectId,
-      ...action,
-      reactions: reactions
-        .filter((reaction) => reaction.actionId === action.actionId)
-        .map((reaction) => ({
-          objectId: {
-            type: "reaction",
-            reactionId: reaction.reactionId,
-          } as EditorObjectId,
-          ...reaction,
-        })),
+    const { events } = state.game.definition;
+    return events.map((event) => ({
+      objectId: { type: "event", eventId: event.eventId } as EditorObjectId,
+      ...event,
+    }));
+  },
+  middlewares: (state: EditorState) => {
+    if (!state.game) {
+      return [];
+    }
+    const { middlewares } = state.game.definition;
+    return middlewares.map((middleware) => ({
+      objectId: {
+        type: "middleware",
+        middlewareId: middleware.middlewareId,
+      } as EditorObjectId,
+      ...middleware,
     }));
   },
   deck: (deckId: DeckId) => (state: EditorState) =>
     state.game?.definition.decks.find((d) => d.deckId === deckId),
   card: (cardId: CardId) => (state: EditorState) =>
     state.game?.definition.cards.find((c) => c.cardId === cardId),
-  action: (actionId: ActionId) => (state: EditorState) =>
-    state.game?.definition.actions.find((a) => a.actionId === actionId),
-  reaction: (reactionId: ReactionId) => (state: EditorState) =>
-    state.game?.definition.reactions.find((r) => r.reactionId === reactionId),
+  event: (eventId: EventId) => (state: EditorState) =>
+    state.game?.definition.events.find((a) => a.eventId === eventId),
+  middleware: (middlewareId: MiddlewareId) => (state: EditorState) =>
+    state.game?.definition.middlewares.find(
+      (a) => a.middlewareId === middlewareId
+    ),
   property: (propertyId: PropertyId) => (state: EditorState) =>
     state.game?.definition.properties.find((p) => p.propertyId === propertyId),
   propertiesFor: (entityId: EntityId) => (state: EditorState) =>
@@ -89,4 +107,9 @@ export const selectors = {
         } as EditorObjectId,
         ...property,
       })) ?? [],
+
+  gameDefinition,
+  runtimeDefinition,
+  builtinDefinition: () => builtinDefinition,
+  editorApi,
 };

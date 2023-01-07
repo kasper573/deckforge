@@ -1,55 +1,57 @@
 import produce, { enableMapSet } from "immer";
 import type {
-  MachineReactionSelector,
-  MachineActionInput,
-  MachineActionOutput,
-  MachineActionRecord,
+  MachineActionPayload,
+  MachineEffects,
+  MachineActionsFor,
 } from "./MachineAction";
 import type { MachineContext } from "./MachineContext";
-import type { MachineActionsWithoutContext } from "./MachineAction";
+import type { MachineEffectSelector } from "./MachineAction";
+import type { AnyMachineEffects } from "./MachineAction";
+import type { MachineMiddleware } from "./MachineAction";
 
 enableMapSet();
 
 export class Machine<MC extends MachineContext> {
-  readonly actions: MachineActionsWithoutContext<MC["actions"]>;
+  readonly actions: MC["actions"];
+  private subscriptions = new Set<(state: MC["state"]) => void>();
 
   constructor(
     public state: MC["state"],
-    private actionMap: MC["actions"],
-    private selectReactions?: MachineReactionSelector<MC>
+    private effects: MachineEffects<MC>,
+    private selectReactions?: MachineEffectSelector<MC>,
+    private middleware?: MachineMiddleware<MC>
   ) {
-    this.actions = new Proxy(
-      {} as MachineActionsWithoutContext<MC["actions"]>,
-      {
-        get:
-          (target, prop) =>
-          <ActionName extends keyof MC["actions"]>(
-            input: MachineActionInput<MC["actions"][ActionName]>
-          ) =>
-            this.performAction(prop as ActionName, input),
-      }
-    );
+    this.actions = new Proxy({} as MC["actions"], {
+      get:
+        (target, prop) =>
+        <ActionName extends keyof MC["actions"]>(
+          payload: MachineActionPayload<MC["actions"][ActionName]>
+        ) =>
+          this.performAction(prop as ActionName, payload),
+    });
   }
 
   private performAction<ActionName extends keyof MC["actions"]>(
     name: ActionName,
-    input: MachineActionInput<MC["actions"][ActionName]>
+    payload: MachineActionPayload<MC["actions"][ActionName]>
   ) {
-    let output: MachineActionOutput<MC["actions"][ActionName]>;
     this.execute((draft) => {
-      const action = this.actionMap[name] as MC["actions"][ActionName];
+      const handleEffect = this.effects[name];
 
-      output = action(draft, input);
-      const reactions = this.selectReactions?.(this.state, name);
+      const additionalReaction = handleEffect(draft, payload);
+      const reactions = this.selectReactions?.(draft, name);
 
       if (reactions) {
         for (const reaction of reactions) {
-          reaction(draft, { output, input });
+          reaction(draft, payload);
         }
       }
+      if (additionalReaction) {
+        additionalReaction(draft, payload);
+      }
+
+      this.middleware?.(draft, { name, payload });
     });
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return output!;
   }
 
   private currentDraft?: MC["state"];
@@ -59,11 +61,26 @@ export class Machine<MC extends MachineContext> {
       return;
     }
 
+    const previousState = this.state;
+
     this.state = produce(this.state, (draft: MC["state"]) => {
       this.currentDraft = draft;
       fn(draft);
       this.currentDraft = undefined;
     });
+
+    if (previousState !== this.state) {
+      for (const fn of this.subscriptions) {
+        fn(this.state);
+      }
+    }
+  }
+
+  subscribe(fn: (state: MC["state"]) => void) {
+    this.subscriptions.add(fn);
+    return () => {
+      this.subscriptions.delete(fn);
+    };
   }
 }
 
@@ -71,40 +88,70 @@ export function createMachine<State>(state: State) {
   return new MachineBuilder(state, {}, () => undefined);
 }
 
-export function createMachineActions<State>() {
-  return <T extends MachineActionRecord<State>>(actions: T) => actions;
-}
-
-class MachineBuilder<State, Actions extends MachineActionRecord> {
+class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
   constructor(
     private _state: State,
-    private _actions: Actions,
-    private _reactions: MachineReactionSelector<MachineContext<State, Actions>>
+    private _effects: Effects,
+    private _reactions?: MachineEffectSelector<
+      MachineContext<State, MachineActionsFor<Effects>>
+    >,
+    private _middleware?: MachineMiddleware<
+      MachineContext<State, MachineActionsFor<Effects>>
+    >
   ) {}
 
-  actions<Actions extends MachineActionRecord<State>>(newActions: Actions) {
-    return new MachineBuilder<State, Actions>(
-      this._state,
-      newActions,
-      () => undefined
-    );
+  effects<Effects extends AnyMachineEffects<State>>(newEffects: Effects) {
+    return new MachineBuilder<State, Effects>(this._state, newEffects);
   }
 
   reactions(
-    newReactions: MachineReactionSelector<MachineContext<State, Actions>>
+    newReactions: MachineEffectSelector<
+      MachineContext<State, MachineActionsFor<Effects>>
+    >
   ) {
-    return new MachineBuilder<State, Actions>(
+    return new MachineBuilder<State, Effects>(
       this._state,
-      this._actions,
-      newReactions
+      this._effects,
+      newReactions,
+      this._middleware
+    );
+  }
+
+  middleware(
+    middleware: MachineMiddleware<
+      MachineContext<State, MachineActionsFor<Effects>>
+    >
+  ) {
+    return new MachineBuilder<State, Effects>(
+      this._state,
+      this._effects,
+      this._reactions,
+      combineMiddlewares(this._middleware, middleware)
     );
   }
 
   build() {
-    return new Machine<MachineContext<State, Actions>>(
+    return new Machine<MachineContext<State, MachineActionsFor<Effects>>>(
       this._state,
-      this._actions,
-      this._reactions
+      this._effects,
+      this._reactions,
+      this._middleware
     );
   }
+}
+
+function combineMiddlewares<MC extends MachineContext>(
+  a: MachineMiddleware<MC> | undefined,
+  b: MachineMiddleware<MC> | undefined
+): MachineMiddleware<MC> | undefined {
+  if (!a) {
+    return b;
+  }
+  if (!b) {
+    return a;
+  }
+  return (...args) => {
+    a(...args);
+    b(...args);
+  };
 }

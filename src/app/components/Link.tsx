@@ -6,14 +6,13 @@ import IconButton from "@mui/material/IconButton";
 import ListItemButton from "@mui/material/ListItemButton";
 import MenuItem from "@mui/material/MenuItem";
 import { Link as RouterLink, useLocation } from "react-router-dom";
-import * as React from "react";
 import Card from "@mui/material/Card";
 
 export interface LinkTo {
   $: string;
 }
 
-type AdditionalLinkProps = Pick<TypesafeRouterLinkProps, "to">;
+type AdditionalLinkProps = Pick<TypesafeRouterLinkProps, "to" | "target">;
 
 type TypesafeRouterLinkProps = Omit<ComponentProps<typeof RouterLink>, "to"> & {
   to: LinkTo;

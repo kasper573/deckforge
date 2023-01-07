@@ -4,11 +4,11 @@ import { PromptDialog } from "../../dialogs/PromptDialog";
 import { useActions } from "../../../lib/useActions";
 import { ConfirmDialog } from "../../dialogs/ConfirmDialog";
 import {
-  actionType,
+  eventType,
   cardType,
   deckType,
   propertyType,
-  reactionType,
+  middlewareType,
 } from "../../../api/services/game/types";
 import type { EditorObjectId } from "./types";
 import { editorActions } from "./actions";
@@ -74,8 +74,8 @@ export function usePromptCreate() {
 
 const objectNameSchemas: Record<EditorObjectId["type"], ZodString> = {
   property: propertyType.shape.name,
-  reaction: reactionType.shape.name,
-  action: actionType.shape.name,
+  middleware: middlewareType.shape.name,
+  event: eventType.shape.name,
   card: cardType.shape.name,
   deck: deckType.shape.name,
 };

@@ -1,11 +1,13 @@
 import MenuItem from "@mui/material/MenuItem";
 import type { ReactNode } from "react";
 import List from "@mui/material/List";
-import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import { useSelector } from "../../../store";
+import type { ZodType } from "zod";
+import { ZodObject } from "zod";
+import Tooltip from "@mui/material/Tooltip";
+import { useSelector } from "../store";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
@@ -15,8 +17,10 @@ import { Panel } from "../components/Panel";
 import type { EntityId, Property } from "../../../../api/services/game/types";
 import type { EditorObjectId } from "../types";
 import { useMenu } from "../../../hooks/useMenu";
-import { propertyValueType } from "../../../../api/services/game/types";
 import { HoverListItem } from "../../../components/HoverListItem";
+import { PropertyEditor } from "../../../controls/PropertyEditor";
+import { defined } from "../../../../lib/ts-extensions/defined";
+import type { RuntimeDefinition } from "../../compiler/types";
 import type { PanelProps } from "./definition";
 
 export function CardPropertiesPanel(props: PanelProps) {
@@ -54,6 +58,7 @@ export function PropertiesPanel({
   title: string;
   properties: Array<Property & { objectId: EditorObjectId }>;
 }) {
+  const runtimeDef = useSelector(selectors.builtinDefinition);
   const { createProperty } = useActions(editorActions);
   const promptCreate = usePromptCreate();
   const promptCreateProperty = () =>
@@ -67,7 +72,11 @@ export function PropertiesPanel({
     <Panel onContextMenu={openContextMenu} {...props}>
       <List>
         {properties.map((property, index) => (
-          <PropertyEditor key={index} {...property} />
+          <PropertyListItem
+            key={index}
+            isEditable={isPropertyEditable(property, runtimeDef)}
+            {...property}
+          />
         ))}
       </List>
       {properties.length === 0 && (
@@ -77,16 +86,24 @@ export function PropertiesPanel({
   );
 }
 
-function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
-  const { propertyId, name, type } = property;
+function PropertyListItem({
+  isEditable,
+  ...property
+}: Property & { objectId: EditorObjectId; isEditable: boolean }) {
   const { updateProperty } = useActions(editorActions);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
 
-  const openContextMenu = useMenu([
-    <MenuItem onClick={() => promptRename(property)}>Rename</MenuItem>,
-    <MenuItem onClick={() => confirmDelete(property)}>Delete</MenuItem>,
-  ]);
+  const openContextMenu = useMenu(
+    defined([
+      isEditable && (
+        <MenuItem onClick={() => promptRename(property)}>Rename</MenuItem>
+      ),
+      isEditable && (
+        <MenuItem onClick={() => confirmDelete(property)}>Delete</MenuItem>
+      ),
+    ])
+  );
 
   return (
     <HoverListItem sx={{ py: 0 }} onContextMenu={openContextMenu}>
@@ -94,25 +111,54 @@ function PropertyEditor(property: Property & { objectId: EditorObjectId }) {
         direction="row"
         alignItems="center"
         spacing={1}
-        sx={{ width: "100%" }}
+        sx={{ width: "100%", height: 34 }}
       >
-        <Box sx={{ flex: 1, overflow: "hidden" }}>
-          <Typography noWrap>{name}</Typography>
+        <Box
+          sx={{ flex: 1, overflow: "hidden" }}
+          onDoubleClick={isEditable ? () => promptRename(property) : undefined}
+        >
+          <Typography noWrap>{property.name}</Typography>
         </Box>
         <div>
-          <Select size="small" value={type}>
-            {propertyValueType._def.values.map((type) => (
-              <MenuItem
-                key={type}
-                value={type}
-                onClick={() => updateProperty({ propertyId, type })}
-              >
-                {type}
-              </MenuItem>
-            ))}
-          </Select>
+          <Tooltip
+            title={
+              isEditable
+                ? undefined
+                : "This is a required property and may not be edited"
+            }
+          >
+            <div>
+              <PropertyEditor
+                disabled={!isEditable}
+                property={property}
+                onChange={updateProperty}
+                title={`Edit type of property "${property.name}"`}
+              />
+            </div>
+          </Tooltip>
         </div>
       </Stack>
     </HoverListItem>
+  );
+}
+
+function isPropertyEditable(
+  property: Property,
+  runtimeDef?: RuntimeDefinition
+): boolean {
+  if (!runtimeDef) {
+    return false;
+  }
+  switch (property.entityId) {
+    case "card":
+      return !isPropertyInType(property, runtimeDef.card.shape.properties);
+    case "player":
+      return !isPropertyInType(property, runtimeDef.player.shape.properties);
+  }
+}
+
+function isPropertyInType(property: Property, type: ZodType) {
+  return (
+    type instanceof ZodObject && Object.keys(type.shape).includes(property.name)
   );
 }

@@ -2,9 +2,10 @@ import TreeView from "@mui/lab/TreeView";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MuiTreeItem from "@mui/lab/TreeItem";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { useMemo } from "react";
 import { isEqual } from "lodash";
+import Stack from "@mui/material/Stack";
 import type { UseMenuItems } from "../hooks/useMenu";
 import { useMenu } from "../hooks/useMenu";
 
@@ -47,6 +48,7 @@ export interface TreeItemProps<Id>
   nodeId: Id;
   contextMenu?: UseMenuItems;
   children?: TreeItemProps<Id>[];
+  action?: ReactNode;
 }
 
 export function TreeItem<Id>({
@@ -54,6 +56,8 @@ export function TreeItem<Id>({
   nodeId,
   children,
   onDoubleClick,
+  label,
+  action,
   ...props
 }: TreeItemProps<Id>) {
   const openContextMenu = useMenu(contextMenu);
@@ -66,6 +70,16 @@ export function TreeItem<Id>({
         e.stopPropagation();
         onDoubleClick?.(e);
       }}
+      label={
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          {label}
+          {action}
+        </Stack>
+      }
       {...props}
     >
       {renderItems(children)}

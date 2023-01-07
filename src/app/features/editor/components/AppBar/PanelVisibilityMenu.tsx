@@ -5,7 +5,7 @@ import Divider from "@mui/material/Divider";
 import ListItemButton from "@mui/material/ListItemButton";
 import { MenuFor } from "../../../../components/MenuFor";
 import { panelDefinitionList } from "../../panels/definition";
-import { useSelector } from "../../../../store";
+import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 import { editorActions } from "../../actions";
 import { useActions } from "../../../../../lib/useActions";

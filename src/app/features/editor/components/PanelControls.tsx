@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useContext, useMemo } from "react";
 import {
   getNodeAtPath,
@@ -10,15 +11,16 @@ import type { PanelLayout } from "../types";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 
-export function PanelControls() {
+export function PanelControls({ children }: { children?: ReactNode }) {
   return (
     <div>
+      {children}
       <ClosePanelButton />
     </div>
   );
 }
 
-export function ClosePanelButton() {
+function ClosePanelButton() {
   const { setPanelVisibility } = useActions(editorActions);
   const id = usePanelId();
 

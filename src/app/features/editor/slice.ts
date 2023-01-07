@@ -1,30 +1,31 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
 import type {
-  Action,
+  Event,
   Card,
   Deck,
   Game,
   Property,
-  Reaction,
+  Middleware,
 } from "../../../api/services/game/types";
 import {
   createEntityReducerFactory,
   createId,
 } from "../../../lib/createEntityReducers";
-import type { MakePartial } from "../../../lib/MakePartial";
+import type { MakePartial } from "../../../lib/ts-extensions/MakePartial";
 import { createZodStorage } from "../../../lib/zod-extensions/zodStorage";
 import {
   addNodeBySplitting,
   removeNodeByKey,
 } from "../../../lib/reactMosaicExtensions";
+import { propertyValue } from "../../../api/services/game/types";
 import type {
   EditorObjectId,
   EditorState,
   PanelId,
   PanelLayout,
 } from "./types";
-import { panelLayoutType } from "./types";
+import { editorObjectIdType, panelLayoutType } from "./types";
 import { defaultPanelLayout } from "./panels/defaultPanelLayout";
 import { selectors } from "./selectors";
 
@@ -33,7 +34,13 @@ const panelStorage = createZodStorage(
   "panel-layout"
 );
 
+const selectedObjectStorage = createZodStorage(
+  editorObjectIdType.optional(),
+  "selected-object"
+);
+
 const initialState: EditorState = {
+  selectedObjectId: selectedObjectStorage.load(),
   panelLayout: panelStorage.load(defaultPanelLayout),
 };
 
@@ -84,15 +91,15 @@ const editorSlice = createSlice({
       "deckId",
       (state) => state.game?.definition.decks ?? []
     ),
-    ...entityReducers<Action>()(
-      "Action",
-      "actionId",
-      (state) => state.game?.definition.actions ?? []
+    ...entityReducers<Event>()(
+      "Event",
+      "eventId",
+      (state) => state.game?.definition.events ?? []
     ),
-    ...entityReducers<Reaction>()(
-      "Reaction",
-      "reactionId",
-      (state) => state.game?.definition.reactions ?? []
+    ...entityReducers<Middleware>()(
+      "Middleware",
+      "middlewareId",
+      (state) => state.game?.definition.middlewares ?? []
     ),
     ...entityReducers<Card>()(
       "Card",
@@ -131,36 +138,39 @@ const editorSlice = createSlice({
         ...payload,
       });
     },
-    createAction(
-      state,
-      {
-        payload,
-      }: PayloadAction<MakePartial<Omit<Action, "actionId">, "name" | "code">>
-    ) {
-      if (!state.game) {
-        return;
-      }
-      state.game.definition.actions.push({
-        actionId: createId(),
-        name: "New Action",
-        code: "",
-        ...payload,
-      });
-    },
-    createReaction(
+    createEvent(
       state,
       {
         payload,
       }: PayloadAction<
-        MakePartial<Omit<Reaction, "reactionId">, "name" | "code">
+        MakePartial<Omit<Event, "eventId">, "name" | "code" | "inputType">
       >
     ) {
       if (!state.game) {
         return;
       }
-      state.game.definition.reactions.push({
-        reactionId: createId(),
-        name: "New Reaction",
+      state.game.definition.events.push({
+        eventId: createId(),
+        name: "newEvent",
+        code: "",
+        inputType: "void",
+        ...payload,
+      });
+    },
+    createMiddleware(
+      state,
+      {
+        payload,
+      }: PayloadAction<
+        MakePartial<Omit<Middleware, "middlewareId">, "name" | "code">
+      >
+    ) {
+      if (!state.game) {
+        return;
+      }
+      state.game.definition.middlewares.push({
+        middlewareId: createId(),
+        name: "New middleware",
         code: "",
         ...payload,
       });
@@ -168,9 +178,12 @@ const editorSlice = createSlice({
     createProperty(
       state,
       {
-        payload,
+        payload: { type = "number", ...payload },
       }: PayloadAction<
-        MakePartial<Omit<Property, "propertyId">, "name" | "type">
+        MakePartial<
+          Omit<Property, "propertyId">,
+          "name" | "type" | "defaultValue"
+        >
       >
     ) {
       if (!state.game) {
@@ -178,8 +191,9 @@ const editorSlice = createSlice({
       }
       state.game.definition.properties.push({
         propertyId: createId(),
-        name: "New Property",
-        type: "number",
+        name: "newProperty",
+        type,
+        defaultValue: propertyValue.defaultOf(type),
         ...payload,
       });
     },
@@ -195,6 +209,9 @@ export const reducer: typeof editorSlice.reducer = (
   const currentState = state;
   const updatedState = editorSlice.reducer(state, action);
 
+  if (updatedState.selectedObjectId !== currentState.selectedObjectId) {
+    selectedObjectStorage.save(updatedState.selectedObjectId);
+  }
   if (updatedState.panelLayout !== currentState.panelLayout) {
     panelStorage.save(updatedState.panelLayout);
   }

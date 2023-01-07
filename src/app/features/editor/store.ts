@@ -9,14 +9,10 @@ import {
 import type { StateWithHistory } from "redux-undo";
 import undoable, { excludeAction } from "redux-undo";
 import { configureStore } from "@reduxjs/toolkit";
-import {
-  getInitialState,
-  noUndoActions,
-  reducer,
-} from "./features/editor/slice";
-import type { EditorState } from "./features/editor/types";
+import { getInitialState, noUndoActions, reducer } from "./slice";
+import type { EditorState } from "./types";
 
-export function createRootReducer(): Reducer<RootState> {
+function createRootReducer(): Reducer<EditorRootState> {
   return combineReducers({
     editor: undoable(reducer, {
       filter: excludeAction(["@@INIT", ...noUndoActions]),
@@ -25,10 +21,10 @@ export function createRootReducer(): Reducer<RootState> {
   });
 }
 
-export const createRootState = (
+const createRootState = (
   history: History,
   editorState: EditorState
-): RootState => ({
+): EditorRootState => ({
   editor: {
     past: [],
     present: editorState,
@@ -36,28 +32,26 @@ export const createRootState = (
   },
 });
 
-export function createStore() {
-  return configureStore({
-    reducer: createRootReducer(),
-    preloadedState: createRootState(history, getInitialState()),
-    middleware: (defaults) =>
-      defaults({
-        serializableCheck: false, // To allow superjson
-      }),
-  });
-}
+export const editorStore = configureStore({
+  reducer: createRootReducer(),
+  preloadedState: createRootState(history, getInitialState()),
+  middleware: (defaults) =>
+    defaults({
+      serializableCheck: false, // To allow superjson
+    }),
+});
 
-export type AppStore = ReturnType<typeof createStore>;
-export type AppDispatch = AppStore["dispatch"];
-export type RootState = {
+export type EditorStore = typeof editorStore;
+export type EditorDispatch = EditorStore["dispatch"];
+export type EditorRootState = {
   editor: StateWithHistory<EditorState>;
 };
 
-export const useStore: () => AppStore = useReduxStore;
+export const useStore: () => EditorStore = useReduxStore;
 
-export const useDispatch: () => AppDispatch = useReduxDispatch;
+export const useDispatch: () => EditorDispatch = useReduxDispatch;
 
-export const useRootSelector: TypedUseSelectorHook<RootState> =
+export const useRootSelector: TypedUseSelectorHook<EditorRootState> =
   useReduxSelector;
 
 export const useSelector: TypedUseSelectorHook<EditorState> = (

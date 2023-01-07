@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserHistory } from "history";
 import { App } from "./App";
@@ -10,7 +9,6 @@ import {
   setupAuthBehavior,
 } from "./features/auth/store";
 import { env } from "./env";
-import { createStore } from "./store";
 
 if (env.analyticsId) {
   import("@vercel/analytics").then(({ inject }) => inject());
@@ -24,14 +22,12 @@ if (env.analyticsId) {
 
 const queryClient = createQueryClient(resetAuthToken);
 const trpcClient = createTRPCClient(getAuthToken);
-const store = createStore();
 const history = createBrowserHistory();
 const theme = createTheme();
 setupAuthBehavior({ history });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <App
-    store={store}
     theme={theme}
     history={history}
     trpcClient={trpcClient}

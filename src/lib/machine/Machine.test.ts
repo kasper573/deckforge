@@ -1,6 +1,6 @@
 import { original } from "immer";
 import { createMachine } from "./Machine";
-import type { AnyMachineAction, AnyMachineReaction } from "./MachineAction";
+import type { MachineEffect } from "./MachineAction";
 
 describe("Machine", () => {
   describe("actions", () => {
@@ -13,13 +13,6 @@ describe("Machine", () => {
       expect(fn).toHaveBeenCalled();
     });
 
-    it("can produce output", () => {
-      const fn = () => 123;
-      const machine = createActionMachine(fn);
-      const res = machine.actions.a();
-      expect(res).toBe(123);
-    });
-
     it("can receive state", () => {
       let receivedState: unknown;
       const machine = createActionMachine((state) => {
@@ -28,15 +21,6 @@ describe("Machine", () => {
       const startState = machine.state;
       machine.actions.a();
       expect(receivedState).toEqual(startState);
-    });
-
-    it("can receive input", () => {
-      let receivedInput: number | undefined;
-      const machine = createActionMachine((state, input) => {
-        receivedInput = input;
-      });
-      machine.actions.a(123);
-      expect(receivedInput).toBe(123);
     });
 
     it("can update state", () => {
@@ -68,6 +52,29 @@ describe("Machine", () => {
       expect(fn).toHaveBeenCalled();
     });
 
+    it("effects may return an additional effect that will be called after reactions", () => {
+      const output: unknown[] = [];
+      const machine = createMachine({
+        reactions: {
+          a: () => {
+            output.push("state-reaction");
+          },
+        },
+      })
+        .effects({
+          a: () => {
+            output.push("effect");
+            return () => {
+              output.push("returned-reaction");
+            };
+          },
+        })
+        .reactions((state, effectName) => [state.reactions[effectName]])
+        .build();
+      machine.actions.a();
+      expect(output).toEqual(["effect", "state-reaction", "returned-reaction"]);
+    });
+
     it("can receive state", () => {
       let receivedState: unknown;
       const machine = createReactionMachine((state) => {
@@ -76,15 +83,6 @@ describe("Machine", () => {
       const startState = machine.state;
       machine.actions.a();
       expect(receivedState).toEqual(startState);
-    });
-
-    it("can receive input", () => {
-      let receivedInput: number | undefined;
-      const machine = createReactionMachine((state, { input }) => {
-        receivedInput = input;
-      });
-      machine.actions.a(123);
-      expect(receivedInput).toBe(123);
     });
 
     it("can update state", () => {
@@ -109,7 +107,7 @@ describe("Machine", () => {
   describe("execution context", () => {
     it("state changes from actions are reflected in the context state draft", () => {
       const machine = createMachine({ value: "start" })
-        .actions({
+        .effects({
           change(state) {
             state.value = "changed";
           },
@@ -124,7 +122,7 @@ describe("Machine", () => {
 
     it("actions impact machine state once execution finishes", () => {
       const machine = createMachine({ count: 0 })
-        .actions({
+        .effects({
           increase(state) {
             state.count++;
           },
@@ -141,11 +139,90 @@ describe("Machine", () => {
       expect(machine.state.count).toBe(3);
     });
   });
+
+  it("can subscribe to state changes", () => {
+    const machine = createMachine({ count: 0 })
+      .effects({
+        increase(state) {
+          state.count++;
+        },
+      })
+      .build();
+
+    const fn = jest.fn();
+    machine.subscribe(fn);
+    machine.actions.increase();
+    expect(fn).toHaveBeenCalledWith(expect.objectContaining({ count: 1 }));
+  });
+
+  it("can unsubscribe from state changes", () => {
+    const machine = createMachine({ count: 0 })
+      .effects({
+        increase(state) {
+          state.count++;
+        },
+      })
+      .build();
+
+    const fn = jest.fn();
+    const unsub = machine.subscribe(fn);
+    machine.actions.increase();
+    unsub();
+    machine.actions.increase();
+
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it("can define a middleware", () => {
+    const machine = createMachine({ count: 0, trace: [] as unknown[] })
+      .effects({
+        increase(state, by: number) {
+          state.count += by;
+        },
+        decrease(state, by: number) {
+          state.count -= by;
+        },
+      })
+      .middleware((state, action) => {
+        state.trace.push(action);
+      })
+      .build();
+
+    machine.actions.increase(5);
+    machine.actions.decrease(3);
+    expect(machine.state.count).toBe(2);
+    expect(machine.state.trace).toEqual([
+      { name: "increase", payload: 5 },
+      { name: "decrease", payload: 3 },
+    ]);
+  });
+
+  it("can define multiple middlewares", () => {
+    const machine = createMachine({ trace: [] as unknown[] })
+      .effects({
+        foo() {},
+      })
+      .middleware((state) => state.trace.push("first"))
+      .middleware((state) => state.trace.push("second"))
+      .middleware((state) => state.trace.push("third"))
+      .build();
+
+    machine.actions.foo();
+    machine.actions.foo();
+    expect(machine.state.trace).toEqual([
+      "first",
+      "second",
+      "third",
+      "first",
+      "second",
+      "third",
+    ]);
+  });
 });
 
-function createActionMachine(fn: AnyMachineAction) {
+function createActionMachine(fn: MachineEffect) {
   return createMachine({ value: undefined as unknown })
-    .actions({
+    .effects({
       a(state, n?: number) {
         return fn(state, n);
       },
@@ -154,12 +231,12 @@ function createActionMachine(fn: AnyMachineAction) {
     .build();
 }
 
-function createReactionMachine(fn: AnyMachineReaction) {
+function createReactionMachine(fn: MachineEffect) {
   return createMachine({
     value: undefined as unknown,
     reactions: { a: [fn], b: [] },
   })
-    .actions({ a(state, n?: number) {}, b() {} })
+    .effects({ a(state, n?: number) {}, b() {} })
     .reactions((state, actionName) => state.reactions[actionName])
     .build();
 }
