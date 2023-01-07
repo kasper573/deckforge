@@ -9,10 +9,13 @@ import type { PropertyValueType } from "../../api/services/game/types";
 import type { ZodControlProps } from "./ZodControl";
 
 export type ZodPickerProps<T extends ZodType> = ZodControlProps<T> &
-  Omit<ZodDialogProps<T>["input"], keyof ZodControlProps<T>>;
+  Omit<ZodDialogProps<T>["input"], keyof ZodControlProps<T>> & {
+    disabled?: boolean;
+  };
 
 export function ZodPicker<T extends ZodType>({
   onChange,
+  disabled,
   ...dialogProps
 }: ZodPickerProps<T>) {
   const showDialog = useModal(ZodDialog);
@@ -26,7 +29,12 @@ export function ZodPicker<T extends ZodType>({
     <Stack direction="row" spacing={1} alignItems="center">
       <div>{describePropertyValueType(dialogProps.value)}</div>
       <div>
-        <IconButton edge="end" size="small" onClick={tryUpdateValue}>
+        <IconButton
+          disabled={disabled}
+          edge="end"
+          size="small"
+          onClick={tryUpdateValue}
+        >
           <Edit />
         </IconButton>
       </div>
@@ -34,7 +42,7 @@ export function ZodPicker<T extends ZodType>({
   );
 }
 
-export function describePropertyValueType<T extends PropertyValueType>(
+function describePropertyValueType<T extends PropertyValueType>(
   type: T
 ): string {
   if (typeof type === "string") {
