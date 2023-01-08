@@ -15,3 +15,19 @@ export function createJSONFile(
     type: "application/json",
   });
 }
+
+export function loadFile({ accept }: { accept?: string }) {
+  return new Promise<File | undefined>((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = false;
+    if (accept !== undefined) {
+      input.accept = accept;
+    }
+    input.onchange = () => {
+      const [file] = input.files ? Array.from(input.files) : [];
+      resolve(file);
+    };
+    input.click();
+  });
+}

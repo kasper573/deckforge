@@ -7,6 +7,7 @@ import type {
   Game,
   Property,
   Middleware,
+  GameDefinition,
 } from "../../../api/services/game/types";
 import {
   createEntityReducerFactory,
@@ -59,6 +60,11 @@ const editorSlice = createSlice({
     renameGame({ game }, { payload: newName }: PayloadAction<string>) {
       if (game) {
         game.name = newName;
+      }
+    },
+    overwriteGameDefinition(state, { payload }: PayloadAction<GameDefinition>) {
+      if (state.game) {
+        state.game.definition = payload;
       }
     },
     selectObject(state, { payload: newId }: PayloadAction<EditorObjectId>) {
