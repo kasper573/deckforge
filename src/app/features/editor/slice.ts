@@ -23,6 +23,7 @@ import { propertyValue } from "../../../api/services/game/types";
 import type {
   EditorObjectId,
   EditorState,
+  LogEntry,
   PanelId,
   PanelLayout,
 } from "./types";
@@ -43,6 +44,7 @@ const selectedObjectStorage = createZodStorage(
 const initialState: EditorState = {
   selectedObjectId: selectedObjectStorage.load(),
   panelLayout: panelStorage.load(defaultPanelLayout),
+  logs: [],
 };
 
 const entityReducers = createEntityReducerFactory<EditorState>();
@@ -66,6 +68,15 @@ const editorSlice = createSlice({
       if (state.game) {
         state.game.definition = payload;
       }
+    },
+    clearLogs(state) {
+      state.logs = [];
+    },
+    log(state, { payload: content }: PayloadAction<LogEntry["content"]>) {
+      state.logs.push({
+        id: createId(),
+        content,
+      });
     },
     selectObject(state, { payload: newId }: PayloadAction<EditorObjectId>) {
       state.selectedObjectId = newId;

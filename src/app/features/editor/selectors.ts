@@ -108,6 +108,8 @@ export const selectors = {
         ...property,
       })) ?? [],
 
+  logs: (state: EditorState) => state.logs,
+
   gameDefinition,
   runtimeDefinition,
   builtinDefinition: () => builtinDefinition,
