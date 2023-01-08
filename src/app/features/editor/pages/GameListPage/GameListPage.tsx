@@ -11,7 +11,10 @@ import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { Header } from "../../../layout/Header";
 import { Center } from "../../../../components/Center";
 import { LoadingPage } from "../../../common/LoadingPage";
-import { gameType } from "../../../../../api/services/game/types";
+import {
+  gameDefinitionType,
+  gameType,
+} from "../../../../../api/services/game/types";
 import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
@@ -29,8 +32,14 @@ export default function GameListPage() {
     if (!name) {
       return;
     }
+
+    const { default: definitionJson } = await import(
+      "../../../runtimes/react-1v1/default-react-1v1.json"
+    );
+    const definition = gameDefinitionType.parse(definitionJson);
+
     try {
-      const { gameId } = await createGame.mutateAsync({ name, definition: {} });
+      const { gameId } = await createGame.mutateAsync({ name, definition });
       history.push(router.build().game({ gameId }).$);
     } catch {}
   }

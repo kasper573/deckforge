@@ -1,0 +1,183 @@
+{
+  "decks": [
+    { "deckId": "f77da5b1-384b-4722-ad00-ec23d2f055b2", "name": "Magical" },
+    { "deckId": "4d49f9e3-be6a-4c63-9cc9-a800f031e297", "name": "Physical" }
+  ],
+  "cards": [
+    {
+      "cardId": "eab1bafa-d310-4cd1-afe4-78add05d1f25",
+      "code": "derive(({thisCardId}) => ({\r\n  playCard (state, {playerId, targetId, cardId}) {\r\n    const target = state.players.find(p => p.id === targetId);\r\n    const player = state.players.find(p => p.id === playerId);\r\n    const card = player.board.hand.find(c => c.id === cardId);\r\n    if (!card || card?.id !== thisCardId) {\r\n      return;\r\n    }\r\n    target.properties.health += card.properties.playerHealthOffset;\r\n  }\r\n}))",
+      "name": "Fire",
+      "deckId": "f77da5b1-384b-4722-ad00-ec23d2f055b2",
+      "propertyDefaults": {
+        "03b66d90-e3a4-40ca-aed0-b5aecb35612b": 2,
+        "0dc6f039-629e-4c9c-ab31-8e27b1998cec": 4,
+        "18b0930b-fafd-4ac6-a38a-f6ea12d34bba": -3
+      }
+    },
+    {
+      "cardId": "38bbee9b-531c-4c44-9f7a-f44173fb6c12",
+      "code": "derive(({thisCardId}) => ({\r\n  playCard (state, {playerId, cardId}) {\r\n    const player = state.players.find(p => p.id === playerId);\r\n    const card = player.board.hand.find(c => c.id === cardId);\r\n    if (!card || card?.id !== thisCardId) {\r\n      return;\r\n    }\r\n    player.properties.health += card.properties.playerHealthOffset;\r\n  }\r\n}))",
+      "name": "Heal",
+      "deckId": "f77da5b1-384b-4722-ad00-ec23d2f055b2",
+      "propertyDefaults": {
+        "03b66d90-e3a4-40ca-aed0-b5aecb35612b": 2,
+        "0dc6f039-629e-4c9c-ab31-8e27b1998cec": 2,
+        "18b0930b-fafd-4ac6-a38a-f6ea12d34bba": 3
+      }
+    },
+    {
+      "cardId": "0a1c3cd9-e137-48ac-9256-2902e2ac3b95",
+      "code": "",
+      "name": "Cast Magic Missile",
+      "deckId": "198747db-d4b6-4b86-9a07-272b0b6eb1f1",
+      "propertyDefaults": {}
+    },
+    {
+      "cardId": "6a4f8644-5555-435f-a3e2-eb4a8f3cfbc0",
+      "code": "derive(({thisCardId}) => ({\r\n  playCard (state, {playerId, targetId, cardId}) {\r\n    const target = state.players.find(p => p.id === targetId);\r\n    const player = state.players.find(p => p.id === playerId);\r\n    const card = player.board.hand.find(c => c.id === cardId);\r\n    if (!card || card?.id !== thisCardId) {\r\n      return;\r\n    }\r\n    target.properties.health += card.properties.playerHealthOffset;\r\n  }\r\n}))",
+      "name": "Attack",
+      "deckId": "4d49f9e3-be6a-4c63-9cc9-a800f031e297",
+      "propertyDefaults": {
+        "03b66d90-e3a4-40ca-aed0-b5aecb35612b": 1,
+        "0dc6f039-629e-4c9c-ab31-8e27b1998cec": 5,
+        "18b0930b-fafd-4ac6-a38a-f6ea12d34bba": -1
+      }
+    },
+    {
+      "cardId": "f696a71f-d43d-4c93-85df-6fffca0469f9",
+      "code": "derive(({thisCardId}) => ({\r\n  playCard (state, {playerId, cardId}) {\r\n    const player = state.players.find(p => p.id === playerId);\r\n    const card = player.board.hand.find(c => c.id === cardId);\r\n    if (!card || card?.id !== thisCardId) {\r\n      return;\r\n    }\r\n    player.properties.health += card.properties.playerHealthOffset;\r\n  }\r\n}))",
+      "name": "Bandages",
+      "deckId": "4d49f9e3-be6a-4c63-9cc9-a800f031e297",
+      "propertyDefaults": {
+        "03b66d90-e3a4-40ca-aed0-b5aecb35612b": 1,
+        "0dc6f039-629e-4c9c-ab31-8e27b1998cec": 5,
+        "18b0930b-fafd-4ac6-a38a-f6ea12d34bba": 1
+      }
+    }
+  ],
+  "properties": [
+    {
+      "entityId": "card",
+      "propertyId": "18b0930b-fafd-4ac6-a38a-f6ea12d34bba",
+      "name": "playerHealthOffset",
+      "type": "number"
+    },
+    {
+      "entityId": "player",
+      "propertyId": "6527b9bb-694d-4b83-ab47-62d3eecf1eda",
+      "name": "health",
+      "type": "number",
+      "defaultValue": 0
+    },
+    {
+      "entityId": "player",
+      "propertyId": "1cc508f6-f996-4549-8fed-0a16dee4bb5a",
+      "name": "healthMax",
+      "type": "number",
+      "defaultValue": 10
+    },
+    {
+      "entityId": "player",
+      "propertyId": "32047a30-6e9a-4ea6-80ba-47d563204bb5",
+      "name": "mana",
+      "type": "number",
+      "defaultValue": 0
+    },
+    {
+      "entityId": "player",
+      "propertyId": "848d140d-ce86-4ac7-8000-db663d830587",
+      "name": "manaMax",
+      "type": "number",
+      "defaultValue": 3
+    },
+    {
+      "entityId": "card",
+      "propertyId": "03b66d90-e3a4-40ca-aed0-b5aecb35612b",
+      "name": "manaCost",
+      "type": "number",
+      "defaultValue": 0
+    },
+    {
+      "entityId": "player",
+      "propertyId": "3180c9de-71aa-490a-87ec-540c40b9a215",
+      "name": "drawCount",
+      "type": "number",
+      "defaultValue": 3
+    },
+    {
+      "entityId": "card",
+      "propertyId": "0dc6f039-629e-4c9c-ab31-8e27b1998cec",
+      "name": "instanceCount",
+      "type": "number",
+      "defaultValue": 1
+    }
+  ],
+  "events": [
+    {
+      "eventId": "25ac9731-c46e-46a7-9a26-d1160df79d1c",
+      "name": "playCard",
+      "code": "derive(({actions}) => (state, payload) => {\r\n  const player = state.players.find((p) => p.id === payload.playerId);\r\n  const card = player.board.hand.find(c => c.id === payload.cardId);\r\n  player.properties.mana -= card.properties.manaCost;\r\n\r\n  return () => actions.discardCard(payload);\r\n})",
+      "inputType": {
+        "cardId": "string",
+        "playerId": "string",
+        "targetId": "string"
+      }
+    },
+    {
+      "eventId": "609ff0fe-2e89-4e44-b92b-d590ebb08648",
+      "name": "discardCard",
+      "code": "define((state, {playerId, cardId}) => {\r\n  const player = state.players.find((p) => p.id === playerId);\r\n  const {hand, discard} = player.board;\r\n  const card = hand.find(c => c.id === cardId);\r\n  hand.remove(card);\r\n  discard.add(card);\r\n})",
+      "inputType": { "cardId": "string", "playerId": "string" }
+    },
+    {
+      "eventId": "3e47ec18-44df-4f92-9c92-0b48615c5867",
+      "name": "startBattle",
+      "code": "derive(({actions, cloneCard}) => (state, {player1Deck, player2Deck}) => {\r\n  const [p1, p2] = state.players;\r\n  p1.deckId = player1Deck;\r\n  p2.deckId = player2Deck;\r\n\r\n  for (const player of state.players) {\r\n    const {board: {hand, discard, draw}, properties} = player;\r\n    const deck = state.decks.find(d => d.id === player.deckId);\r\n\r\n    properties.health = properties.healthMax;\r\n    \r\n    hand.clear();\r\n    discard.clear();\r\n    draw.clear();\r\n\r\n    deck.cards.forEach((card) => {\r\n      let count = card.properties.instanceCount;\r\n      while (count--) {\r\n        draw.add(cloneCard(card));\r\n      }\r\n    });\r\n\r\n    actions.reshuffle(player.id);\r\n  }\r\n\r\n  state.currentPlayerId = state.players[0].id;\r\n  state.status = { type: \"battle\" };\r\n  actions.startTurn();\r\n})\r\n",
+      "inputType": { "player1Deck": "string", "player2Deck": "string" },
+      "type": "event"
+    },
+    {
+      "eventId": "ed76e281-a474-408d-b196-793561b045ed",
+      "name": "drawCard",
+      "code": "derive(({actions}) => (state, playerId) => {\r\n  const player = state.players.find((p) => p.id === playerId);\r\n  const {draw, hand, discard} = player.board;\r\n  if (draw.size === 0 && discard.size > 0) {\r\n    actions.reshuffle(playerId);\r\n  }\r\n  const [card] = draw.take(1);\r\n  if (card) {\r\n    hand.add(card);\r\n  }\r\n})",
+      "inputType": "string"
+    },
+    {
+      "eventId": "8b13f02f-2373-44c9-8a1a-f063fed4bca7",
+      "name": "reshuffle",
+      "code": "derive(({random}) => (state, playerId) => {\r\n  const player = state.players.find(p => p.id === playerId);\r\n  const {discard, draw} = player.board;\r\n  discard.move(discard.size, draw);\r\n  draw.reset(randomized(draw));\r\n\r\n  function randomized (items) {\r\n    const left = [...items];\r\n    const rand = [];\r\n    while(left.length) {\r\n      const index = Math.round(random() * (left.length - 1));\r\n      rand.push(left[index]);\r\n      left.splice(index, 1);\r\n    }\r\n    return rand;\r\n  }\r\n});\r\n",
+      "inputType": "string"
+    },
+    {
+      "eventId": "2100b571-d5f9-4657-a285-9bf068c888fe",
+      "name": "nextTurn",
+      "code": "derive(({actions}) => (state) => {\r\n  const {players, currentPlayerId} = state;\r\n  const player = players.find(p => p.id === currentPlayerId);\r\n  const { discard, hand } = player.board;\r\n  hand.move(hand.size, discard);\r\n  \r\n  const index = players.findIndex(p => p.id === currentPlayerId);\r\n  const nextPlayerIndex = (index + 1) % state.players.length;\r\n  const nextPlayer = players[nextPlayerIndex];\r\n  state.currentPlayerId = nextPlayer.id;\r\n\r\n  actions.startTurn();\r\n})",
+      "inputType": "void"
+    },
+    {
+      "eventId": "548b0ded-dafe-4ecb-a5df-be04d75487f6",
+      "name": "startTurn",
+      "code": "derive(({actions}) => (state) => {\r\n  const player = state.players.find(p => p.id === state.currentPlayerId);\r\n  player.properties.mana = player.properties.manaMax;\r\n  let drawCount = player.properties.drawCount;\r\n  while (drawCount--) {\r\n    actions.drawCard(player.id);\r\n  }\r\n});",
+      "inputType": "void"
+    },
+    {
+      "eventId": "191a5a99-7679-477e-9c8d-0acfac816bc9",
+      "name": "restartGame",
+      "code": "define((state) => {\r\n  state.status = {type: \"idle\"};\r\n})",
+      "inputType": "void"
+    }
+  ],
+  "middlewares": [
+    {
+      "middlewareId": "6c0a965b-820d-42c0-8c2e-88df67f71710",
+      "name": "Check for winner",
+      "code": "define((state) => {\r\n  if (state.status.type === \"battle\") {\r\n    for (const player of state.players) {\r\n      if (player.properties.health <= 0) {\r\n        const otherPlayer = state.players.find(p => p !== player);\r\n        state.status = {type: \"result\", winner: otherPlayer.id};\r\n        break;\r\n      }\r\n    }\r\n  }\r\n})"
+    },
+    {
+      "middlewareId": "cfa77116-ac96-4047-b953-1c5fecdac746",
+      "name": "Clamp health and mana",
+      "code": "define((state) => {\r\n  for (const {properties} of state.players) {\r\n    properties.health = clamp(properties.health, 0, properties.healthMax);\r\n    properties.mana = clamp(properties.mana, 0, properties.manaMax);\r\n  }\r\n})\r\n\r\nfunction clamp(v, min, max) {\r\n  return Math.min(max, Math.max(v, min));\r\n}"
+    }
+  ]
+}
