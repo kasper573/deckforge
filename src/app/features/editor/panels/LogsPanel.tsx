@@ -3,6 +3,8 @@ import Tooltip from "@mui/material/Tooltip";
 import Yard from "@mui/icons-material/Yard";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
+import { styled } from "@mui/material/styles";
+import { ObjectInspector } from "react-inspector";
 import { Panel } from "../components/Panel";
 import { PanelControls } from "../components/PanelControls";
 import { useSelector } from "../store";
@@ -39,5 +41,43 @@ export function LogsPanel(props: PanelProps) {
 }
 
 function LogListItem({ entry }: { entry: LogEntry }) {
-  return <ListItem>{entry.content.join(" ")}</ListItem>;
+  return (
+    <ListItem>
+      {entry.content.map((value, index) => (
+        <LogValue key={index} value={value} />
+      ))}
+    </ListItem>
+  );
 }
+
+function LogValue({ value }: { value: unknown }) {
+  switch (typeof value) {
+    case "undefined":
+    case "number":
+    case "boolean":
+      return <Highlighted>{value}</Highlighted>;
+    case "object":
+      if (value === null) {
+        return <Highlighted>null</Highlighted>;
+      }
+      if (value instanceof Error) {
+        return <Normal>{String(value)}</Normal>;
+      }
+      return <ObjectInspector data={value} theme="chromeDark" />;
+    default:
+      return <Normal>{String(value)}</Normal>;
+  }
+}
+
+const Value = styled("span")`
+  & + & {
+    padding-left: 4px;
+  }
+`;
+
+const Highlighted = styled(Value)`
+  color: ${(p) => p.theme.palette.secondary.main};
+`;
+const Normal = styled(Value)`
+  color: ${(p) => p.theme.palette.text.secondary};
+`;
