@@ -4,6 +4,8 @@ import Container from "@mui/material/Container";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { Provider as ReduxProvider } from "react-redux";
+import Download from "@mui/icons-material/Download";
+import IconButton from "@mui/material/IconButton";
 import { selectors } from "../../selectors";
 import { useSelector } from "../../store";
 import { useActions } from "../../../../../lib/useActions";
@@ -16,6 +18,7 @@ import { router } from "../../../../router";
 import { pageMaxWidth } from "../../../layout/Page";
 import { gameType } from "../../../../../api/services/game/types";
 import { editorStore } from "../../store";
+import { createJSONFile, saveFile } from "../../../../../lib/fileIO";
 import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
 
 export default function EditorAppBarContent() {
@@ -44,6 +47,12 @@ function Content() {
     }
   }
 
+  async function downloadGameDefinition() {
+    if (game) {
+      saveFile(createJSONFile(game.definition, game.name + ".json"));
+    }
+  }
+
   return (
     <Stack direction="row" sx={{ display: "flex" }}>
       <Stack direction="row" spacing={2} alignItems="center">
@@ -64,16 +73,25 @@ function Content() {
             <Clickable onClick={promptRename}>{game?.name}</Clickable>
           </Tooltip>
           {game && (
-            <Tooltip title="Open public gameplay page">
-              <Clickable>
-                <LinkIconButton
-                  to={router.play().game({ gameId: game.gameId })}
-                  target="_blank"
-                >
-                  <Play />
-                </LinkIconButton>
-              </Clickable>
-            </Tooltip>
+            <>
+              <Tooltip title="Open public gameplay page">
+                <Clickable>
+                  <LinkIconButton
+                    to={router.play().game({ gameId: game.gameId })}
+                    target="_blank"
+                  >
+                    <Play />
+                  </LinkIconButton>
+                </Clickable>
+              </Tooltip>
+              <Tooltip title="Download game definition">
+                <Clickable>
+                  <IconButton onClick={downloadGameDefinition}>
+                    <Download />
+                  </IconButton>
+                </Clickable>
+              </Tooltip>
+            </>
           )}
         </Stack>
       </GameName>
