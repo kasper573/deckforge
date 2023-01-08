@@ -49,8 +49,8 @@ export function RuntimePanel(props: PanelProps) {
     }
   }, [compiled?.error, log]);
 
-  function onRuntimeError(error: unknown) {
-    log(["Runtime error", error]);
+  function onRuntimeRenderError(error: unknown) {
+    log(["Runtime render error", error]);
   }
 
   async function tryEditSeed() {
@@ -97,7 +97,7 @@ export function RuntimePanel(props: PanelProps) {
         (compiled?.runtime ? (
           <ErrorBoundary
             fallback={RuntimeErrorFallback}
-            onError={onRuntimeError}
+            onError={onRuntimeRenderError}
           >
             <GameRenderer runtime={compiled.runtime} />
           </ErrorBoundary>
