@@ -1,6 +1,5 @@
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import Yard from "@mui/icons-material/Yard";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import { styled } from "@mui/material/styles";
@@ -12,6 +11,8 @@ import { selectors } from "../selectors";
 import type { LogEntry } from "../types";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
+import { PanelEmptyState } from "../components/PanelEmptyState";
+import { Delete } from "../../../components/icons";
 import type { PanelProps } from "./definition";
 
 export function LogsPanel(props: PanelProps) {
@@ -24,18 +25,24 @@ export function LogsPanel(props: PanelProps) {
         <PanelControls>
           <Tooltip title="Clear logs">
             <IconButton size="small" onClick={() => clearLogs()}>
-              <Yard />
+              <Delete />
             </IconButton>
           </Tooltip>
         </PanelControls>
       }
       {...props}
     >
-      <List>
-        {logs.map((entry) => (
-          <LogListItem key={entry.id} entry={entry} />
-        ))}
-      </List>
+      {logs.length ? (
+        <List>
+          {logs.map((entry) => (
+            <LogListItem key={entry.id} entry={entry} />
+          ))}
+        </List>
+      ) : (
+        <PanelEmptyState>
+          Events and errors will be displayed here as they happen
+        </PanelEmptyState>
+      )}
     </Panel>
   );
 }
