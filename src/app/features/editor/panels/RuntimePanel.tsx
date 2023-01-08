@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import Yard from "@mui/icons-material/Yard";
 import { useSelector } from "../store";
 import { selectors } from "../selectors";
@@ -17,12 +17,15 @@ import { GameRenderer } from "../../runtimes/react-1v1/GameRenderer";
 import { ErrorBoundary } from "../../../ErrorBoundary";
 import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
+import { useActions } from "../../../../lib/useActions";
+import { editorActions } from "../actions";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
   const [manualResetCount, resetRuntime] = useReducer((c) => c + 1, 0);
   const gameDefinition = useSelector(selectors.gameDefinition);
   const runtimeDefinition = useSelector(selectors.runtimeDefinition);
+  const { log } = useActions(editorActions);
   const [seed, setSeed] = useState("");
   const prompt = useModal(PromptDialog);
 
@@ -39,6 +42,12 @@ export function RuntimePanel(props: PanelProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [gameDefinition, runtimeDefinition, manualResetCount, seed]
   );
+
+  useEffect(() => {
+    if (compiled?.error) {
+      log(["Compiler error", compiled.error]);
+    }
+  }, [compiled?.error, log]);
 
   async function tryEditSeed() {
     const newSeed = await prompt({
