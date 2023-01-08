@@ -22,7 +22,7 @@ function createMachineInstance<MC extends MachineContext>(
   state: MC["state"],
   effects: MachineEffects<MC>,
   selectReactions?: MachineEffectSelector<MC>,
-  middleware?: MachineMiddleware<MC>
+  middlewares: MachineMiddleware<MC>[] = []
 ): Machine<MC> {
   const subscriptions = new Set<(state: MC["state"]) => void>();
 
@@ -32,21 +32,19 @@ function createMachineInstance<MC extends MachineContext>(
     payload: MachineActionPayload<MC["actions"][ActionName]>
   ) {
     machine.execute((draft) => {
-      const handleEffect = effects[name];
+      const middlewareQueue = [
+        ...middlewares,
+        createEffectHandlerMiddleware(effects, selectReactions),
+      ];
 
-      const additionalReaction = handleEffect(draft, payload);
-      const reactions = selectReactions?.(draft, name);
-
-      if (reactions) {
-        for (const reaction of reactions) {
-          reaction(draft, payload);
+      function callNextMiddleware() {
+        const nextMiddleware = middlewareQueue.shift();
+        if (nextMiddleware) {
+          nextMiddleware(draft, { name, payload }, callNextMiddleware);
         }
       }
-      if (additionalReaction) {
-        additionalReaction(draft, payload);
-      }
 
-      middleware?.(draft, { name, payload });
+      callNextMiddleware();
     });
   }
 
@@ -96,6 +94,29 @@ function createMachineInstance<MC extends MachineContext>(
   return machine;
 }
 
+function createEffectHandlerMiddleware<MC extends MachineContext>(
+  effects: MachineEffects<MC>,
+  selectReactions?: MachineEffectSelector<MC>
+): MachineMiddleware<MC> {
+  return (draft, { name, payload }, next) => {
+    const handleEffect = effects[name];
+
+    const additionalReaction = handleEffect(draft, payload);
+    const reactions = selectReactions?.(draft, name);
+
+    if (reactions) {
+      for (const reaction of reactions) {
+        reaction(draft, payload);
+      }
+    }
+    if (additionalReaction) {
+      additionalReaction(draft, payload);
+    }
+
+    next();
+  };
+}
+
 export function createMachine<State>(state: State) {
   return new MachineBuilder(state, {}, () => undefined);
 }
@@ -107,9 +128,9 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
     private _reactions?: MachineEffectSelector<
       MachineContext<State, MachineActionsFor<Effects>>
     >,
-    private _middleware?: MachineMiddleware<
-      MachineContext<State, MachineActionsFor<Effects>>
-    >
+    private _middlewares: Array<
+      MachineMiddleware<MachineContext<State, MachineActionsFor<Effects>>>
+    > = []
   ) {}
 
   effects<Effects extends AnyMachineEffects<State>>(newEffects: Effects) {
@@ -125,7 +146,7 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
       this._state,
       this._effects,
       newReactions,
-      this._middleware
+      this._middlewares
     );
   }
 
@@ -138,29 +159,13 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
       this._state,
       this._effects,
       this._reactions,
-      combineMiddlewares(this._middleware, middleware)
+      [...this._middlewares, middleware]
     );
   }
 
   build() {
     return createMachineInstance<
       MachineContext<State, MachineActionsFor<Effects>>
-    >(this._state, this._effects, this._reactions, this._middleware);
+    >(this._state, this._effects, this._reactions, this._middlewares);
   }
-}
-
-function combineMiddlewares<MC extends MachineContext>(
-  a: MachineMiddleware<MC> | undefined,
-  b: MachineMiddleware<MC> | undefined
-): MachineMiddleware<MC> | undefined {
-  if (!a) {
-    return b;
-  }
-  if (!b) {
-    return a;
-  }
-  return (...args) => {
-    a(...args);
-    b(...args);
-  };
 }

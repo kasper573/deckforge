@@ -183,8 +183,9 @@ describe("Machine", () => {
           state.count -= by;
         },
       })
-      .middleware((state, action) => {
+      .middleware((state, action, next) => {
         state.trace.push(action);
+        next();
       })
       .build();
 
@@ -202,9 +203,18 @@ describe("Machine", () => {
       .effects({
         foo() {},
       })
-      .middleware((state) => state.trace.push("first"))
-      .middleware((state) => state.trace.push("second"))
-      .middleware((state) => state.trace.push("third"))
+      .middleware((state, action, next) => {
+        state.trace.push("first");
+        next();
+      })
+      .middleware((state, action, next) => {
+        state.trace.push("second");
+        next();
+      })
+      .middleware((state, action, next) => {
+        state.trace.push("third");
+        next();
+      })
       .build();
 
     machine.actions.foo();
@@ -217,6 +227,34 @@ describe("Machine", () => {
       "second",
       "third",
     ]);
+  });
+
+  it("can implement failsafe actions using middleware", () => {
+    const errors: unknown[] = [];
+    const error = new Error();
+    const machine = createMachine({ calls: [] as string[] })
+      .effects({
+        fail(state, payload?: number) {
+          throw error;
+          // noinspection UnreachableCodeJS
+          state.calls.push("fail");
+        },
+        succeed(state) {
+          state.calls.push("succeed");
+        },
+      })
+      .middleware((state, action, next) => {
+        try {
+          next();
+        } catch (error) {
+          errors.push({ action, error });
+        }
+      })
+      .build();
+    machine.actions.fail(5);
+    machine.actions.succeed();
+    expect(errors).toEqual([{ action: { name: "fail", payload: 5 }, error }]);
+    expect(machine.state.calls).toEqual(["succeed"]);
   });
 });
 
