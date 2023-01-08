@@ -37,6 +37,7 @@ export function RuntimePanel(props: PanelProps) {
         return compileGame<RuntimeGenerics>(runtimeDefinition, gameDefinition, {
           seed,
           middlewares: (defaults) => [
+            createEventLoggerMiddleware(log),
             createFailSafeMiddleware(log),
             ...defaults,
           ],
@@ -114,6 +115,15 @@ export function RuntimePanel(props: PanelProps) {
   );
 }
 
+function createEventLoggerMiddleware(
+  log: (args: unknown[]) => void
+): MachineMiddleware<MachineContext> {
+  return (state, action, next) => {
+    log(["Event: ", action.name, "(", action.payload, ")"]);
+    next();
+  };
+}
+
 function createFailSafeMiddleware(
   log: (args: unknown[]) => void
 ): MachineMiddleware<MachineContext> {
@@ -121,13 +131,7 @@ function createFailSafeMiddleware(
     try {
       next();
     } catch (error) {
-      log([
-        "Error while performing action",
-        action.name,
-        "with payload",
-        action.payload,
-        error,
-      ]);
+      log(["Error during event", action.name, "(", action.payload, ")", error]);
     }
   };
 }
