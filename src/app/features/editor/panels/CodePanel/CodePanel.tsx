@@ -46,9 +46,11 @@ export function CodePanel({ title, ...props }: PanelProps) {
       }
       toolbarControls={
         <PanelControls>
-          <Button size="small" onClick={() => showApiReference(typeDefs)}>
-            API Reference
-          </Button>
+          {typeDefs && (
+            <Button size="small" onClick={() => showApiReference(typeDefs)}>
+              API Reference
+            </Button>
+          )}
         </PanelControls>
       }
       {...props}
