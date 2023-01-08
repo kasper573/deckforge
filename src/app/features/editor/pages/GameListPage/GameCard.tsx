@@ -30,7 +30,7 @@ export function GameCard({
   const deleteGame = useToastProcedure(trpc.game.delete);
 
   return (
-    <CardLink to={router.build().game({ gameId })}>
+    <CardLink aria-label={name} to={router.build().game({ gameId })}>
       <CardActionArea component="div">
         <CardMedia component="img" height="140" image="/logo.webp" />
         <CardContent>
@@ -46,7 +46,11 @@ export function GameCard({
             <div>
               <MenuFor
                 trigger={({ open }) => (
-                  <IconButton edge="end" onClick={open}>
+                  <IconButton
+                    aria-label="More options"
+                    edge="end"
+                    onClick={open}
+                  >
                     <More />
                   </IconButton>
                 )}

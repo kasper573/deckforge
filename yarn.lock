@@ -3272,6 +3272,11 @@ cypress-dotenv-flow@1.2.2:
     dotenv-parse-variables "^0.2.3"
     lodash.clonedeep "^2.0.0"
 
+cypress-network-idle@^1.11.2:
+  version "1.11.2"
+  resolved "https://registry.yarnpkg.com/cypress-network-idle/-/cypress-network-idle-1.11.2.tgz#883f4d366f9e251e137a7a5bce5a5600a261b07d"
+  integrity sha512-0xOA1OMiecfJuZ9uyOv0UaU/57nLXrthRKCzNQNuNZcwgdrMt6f9/MwmTye4WbQbA2YaoeVmQbuIWUzZaoelfA==
+
 cypress@11.2.0:
   version "11.2.0"
   resolved "https://registry.yarnpkg.com/cypress/-/cypress-11.2.0.tgz#63edef8c387b687066c5493f6f0ad7b9ced4b2b7"
