@@ -288,6 +288,50 @@ derive(({thisCardId}) => ({
       winner: runtime!.state.players[0].id,
     });
   });
+
+  it("compiled middleware can opt out of next middleware", () => {
+    const gameDefinition: GameDefinition = {
+      middlewares: [
+        {
+          middlewareId: v4() as MiddlewareId,
+          name: "set to 1",
+          code: `define((state, action, next) => {
+            state.status = 1;
+            next();
+          })`,
+        },
+        {
+          middlewareId: v4() as MiddlewareId,
+          name: "add 2",
+          code: `define((state) => {
+            state.status += 2;
+          })`,
+        },
+        {
+          middlewareId: v4() as MiddlewareId,
+          name: "set to 0",
+          code: `define((state) => {
+            state.status = 0;
+          })`,
+        },
+      ],
+      properties: [],
+      events: [
+        {
+          eventId: v4() as EventId,
+          name: "foo",
+          code: ``,
+          inputType: "void",
+        },
+      ],
+      cards: [],
+      decks: [],
+    };
+    const runtimeDefinition = deriveRuntimeDefinition(gameDefinition);
+    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
+    runtime!.actions.foo();
+    expect(runtime!.state.status).toEqual(3);
+  });
 });
 
 function tryCompileGame<G extends RuntimeGenerics>(
