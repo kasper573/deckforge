@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import Yard from "@mui/icons-material/Yard";
 import { useSelector } from "../store";
 import { selectors } from "../selectors";
@@ -17,28 +17,45 @@ import { GameRenderer } from "../../runtimes/react-1v1/GameRenderer";
 import { ErrorBoundary } from "../../../ErrorBoundary";
 import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
+import { useActions } from "../../../../lib/useActions";
+import { editorActions } from "../actions";
+import type { MachineMiddleware } from "../../../../lib/machine/MachineAction";
+import type { MachineContext } from "../../../../lib/machine/MachineContext";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
   const [manualResetCount, resetRuntime] = useReducer((c) => c + 1, 0);
   const gameDefinition = useSelector(selectors.gameDefinition);
   const runtimeDefinition = useSelector(selectors.runtimeDefinition);
+  const { log } = useActions(editorActions);
   const [seed, setSeed] = useState("");
   const prompt = useModal(PromptDialog);
 
   const compiled = useMemo(
     () => {
       if (gameDefinition && runtimeDefinition) {
-        return compileGame<RuntimeGenerics>(
-          runtimeDefinition,
-          gameDefinition,
-          seed
-        );
+        return compileGame<RuntimeGenerics>(runtimeDefinition, gameDefinition, {
+          seed,
+          middlewares: (defaults) => [
+            createEventLoggerMiddleware(log),
+            createFailSafeMiddleware(log),
+            ...defaults,
+          ],
+        });
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [gameDefinition, runtimeDefinition, manualResetCount, seed]
+    [gameDefinition, runtimeDefinition, manualResetCount, seed, log]
   );
+
+  useEffect(() => {
+    if (compiled?.error) {
+      log(["Compiler error", compiled.error]);
+    }
+  }, [compiled?.error, log]);
+  function onRenderError(error: unknown) {
+    log(["Runtime render error", error]);
+  }
 
   async function tryEditSeed() {
     const newSeed = await prompt({
@@ -82,7 +99,10 @@ export function RuntimePanel(props: PanelProps) {
     >
       {compiled &&
         (compiled?.runtime ? (
-          <ErrorBoundary fallback={RuntimeErrorFallback}>
+          <ErrorBoundary
+            fallback={RuntimeErrorFallback}
+            onError={onRenderError}
+          >
             <GameRenderer runtime={compiled.runtime} />
           </ErrorBoundary>
         ) : (
@@ -93,6 +113,27 @@ export function RuntimePanel(props: PanelProps) {
         ))}
     </Panel>
   );
+}
+
+function createEventLoggerMiddleware(
+  log: (args: unknown[]) => void
+): MachineMiddleware<MachineContext> {
+  return (state, action, next) => {
+    log(["Event: ", action.name, "(", action.payload, ")"]);
+    next();
+  };
+}
+
+function createFailSafeMiddleware(
+  log: (args: unknown[]) => void
+): MachineMiddleware<MachineContext> {
+  return (state, action, next) => {
+    try {
+      next();
+    } catch (error) {
+      log(["Error during event", action.name, "(", action.payload, ")", error]);
+    }
+  };
 }
 
 function RuntimeErrorFallback({ error, resetErrorBoundary }: FallbackProps) {

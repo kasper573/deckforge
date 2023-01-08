@@ -134,8 +134,7 @@
       "eventId": "3e47ec18-44df-4f92-9c92-0b48615c5867",
       "name": "startBattle",
       "code": "derive(({actions, cloneCard}) => (state, {player1Deck, player2Deck}) => {\r\n  const [p1, p2] = state.players;\r\n  p1.deckId = player1Deck;\r\n  p2.deckId = player2Deck;\r\n\r\n  for (const player of state.players) {\r\n    const {board: {hand, discard, draw}, properties} = player;\r\n    const deck = state.decks.find(d => d.id === player.deckId);\r\n\r\n    properties.health = properties.healthMax;\r\n    \r\n    hand.clear();\r\n    discard.clear();\r\n    draw.clear();\r\n\r\n    deck.cards.forEach((card) => {\r\n      let count = card.properties.instanceCount;\r\n      while (count--) {\r\n        draw.add(cloneCard(card));\r\n      }\r\n    });\r\n\r\n    actions.reshuffle(player.id);\r\n  }\r\n\r\n  state.currentPlayerId = state.players[0].id;\r\n  state.status = { type: \"battle\" };\r\n  actions.startTurn();\r\n})\r\n",
-      "inputType": { "player1Deck": "string", "player2Deck": "string" },
-      "type": "event"
+      "inputType": { "player1Deck": "string", "player2Deck": "string" }
     },
     {
       "eventId": "ed76e281-a474-408d-b196-793561b045ed",
@@ -172,12 +171,14 @@
     {
       "middlewareId": "6c0a965b-820d-42c0-8c2e-88df67f71710",
       "name": "Check for winner",
-      "code": "define((state) => {\r\n  if (state.status.type === \"battle\") {\r\n    for (const player of state.players) {\r\n      if (player.properties.health <= 0) {\r\n        const otherPlayer = state.players.find(p => p !== player);\r\n        state.status = {type: \"result\", winner: otherPlayer.id};\r\n        break;\r\n      }\r\n    }\r\n  }\r\n})"
+      "code": "define((state, action, next) => {\r\n  if (state.status.type === \"battle\") {\r\n    for (const player of state.players) {\r\n      if (player.properties.health <= 0) {\r\n        const otherPlayer = state.players.find(p => p !== player);\r\n        state.status = {type: \"result\", winner: otherPlayer.id};\r\n        break;\r\n      }\r\n    }\r\n  }\r\n  next();\r\n})",
+      "type": "middleware"
     },
     {
       "middlewareId": "cfa77116-ac96-4047-b953-1c5fecdac746",
       "name": "Clamp health and mana",
-      "code": "define((state) => {\r\n  for (const {properties} of state.players) {\r\n    properties.health = clamp(properties.health, 0, properties.healthMax);\r\n    properties.mana = clamp(properties.mana, 0, properties.manaMax);\r\n  }\r\n})\r\n\r\nfunction clamp(v, min, max) {\r\n  return Math.min(max, Math.max(v, min));\r\n}"
+      "code": "define((state, action, next) => {\r\n  for (const {properties} of state.players) {\r\n    properties.health = clamp(properties.health, 0, properties.healthMax);\r\n    properties.mana = clamp(properties.mana, 0, properties.manaMax);\r\n  }\r\n  next();\r\n})\r\n\r\nfunction clamp(v, min, max) {\r\n  return Math.min(max, Math.max(v, min));\r\n}",
+      "type": "middleware"
     }
   ]
 }

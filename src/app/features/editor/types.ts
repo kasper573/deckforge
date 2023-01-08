@@ -47,6 +47,12 @@ export interface EditorState {
   game?: Game;
   selectedObjectId?: EditorObjectId;
   panelLayout?: PanelLayout;
+  logs: LogEntry[];
+}
+
+export interface LogEntry {
+  id: string;
+  content: unknown[];
 }
 
 export type PanelId = z.infer<typeof panelIdType>;
@@ -59,6 +65,7 @@ export const panelIdType = z.enum([
   "playerProperties",
   "inspector",
   "runtime",
+  "logs",
 ]);
 
 export type PanelLayout = MosaicNode<PanelId>;

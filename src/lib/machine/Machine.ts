@@ -11,77 +11,110 @@ import type { MachineMiddleware } from "./MachineAction";
 
 enableMapSet();
 
-export class Machine<MC extends MachineContext> {
-  readonly actions: MC["actions"];
-  private subscriptions = new Set<(state: MC["state"]) => void>();
+export interface Machine<MC extends MachineContext> {
+  readonly state: MC["state"];
+  actions: MC["actions"];
+  execute: (fn: (draft: MC["state"]) => void) => void;
+  subscribe: (fn: (state: MC["state"]) => void) => () => void;
+}
 
-  constructor(
-    public state: MC["state"],
-    private effects: MachineEffects<MC>,
-    private selectReactions?: MachineEffectSelector<MC>,
-    private middleware?: MachineMiddleware<MC>
+function createMachineInstance<MC extends MachineContext>(
+  state: MC["state"],
+  effects: MachineEffects<MC>,
+  selectReactions?: MachineEffectSelector<MC>,
+  middlewares: MachineMiddleware<MC>[] = []
+): Machine<MC> {
+  const subscriptions = new Set<(state: MC["state"]) => void>();
+
+  let currentDraft: MC["state"] | undefined;
+  function performAction<ActionName extends keyof MC["actions"]>(
+    name: ActionName,
+    payload: MachineActionPayload<MC["actions"][ActionName]>
   ) {
-    this.actions = new Proxy({} as MC["actions"], {
+    machine.execute((draft) => {
+      const middlewareQueue = [
+        ...middlewares,
+        createEffectHandlerMiddleware(effects, selectReactions),
+      ];
+
+      function callNextMiddleware() {
+        const nextMiddleware = middlewareQueue.shift();
+        if (nextMiddleware) {
+          nextMiddleware(draft, { name, payload }, callNextMiddleware);
+        }
+      }
+
+      callNextMiddleware();
+    });
+  }
+
+  const machine: Machine<MC> = {
+    get state() {
+      return state;
+    },
+
+    actions: new Proxy({} as MC["actions"], {
       get:
         (target, prop) =>
         <ActionName extends keyof MC["actions"]>(
           payload: MachineActionPayload<MC["actions"][ActionName]>
         ) =>
-          this.performAction(prop as ActionName, payload),
-    });
-  }
+          performAction(prop as ActionName, payload),
+    }),
 
-  private performAction<ActionName extends keyof MC["actions"]>(
-    name: ActionName,
-    payload: MachineActionPayload<MC["actions"][ActionName]>
-  ) {
-    this.execute((draft) => {
-      const handleEffect = this.effects[name];
+    execute(fn) {
+      if (currentDraft) {
+        fn(currentDraft);
+        return;
+      }
 
-      const additionalReaction = handleEffect(draft, payload);
-      const reactions = this.selectReactions?.(draft, name);
+      const previousState = state;
 
-      if (reactions) {
-        for (const reaction of reactions) {
-          reaction(draft, payload);
+      state = produce(state, (draft: MC["state"]) => {
+        currentDraft = draft;
+        fn(draft);
+        currentDraft = undefined;
+      });
+
+      if (previousState !== state) {
+        for (const fn of subscriptions) {
+          fn(state);
         }
       }
-      if (additionalReaction) {
-        additionalReaction(draft, payload);
+    },
+
+    subscribe(fn) {
+      subscriptions.add(fn);
+      return () => {
+        subscriptions.delete(fn);
+      };
+    },
+  };
+
+  return machine;
+}
+
+function createEffectHandlerMiddleware<MC extends MachineContext>(
+  effects: MachineEffects<MC>,
+  selectReactions?: MachineEffectSelector<MC>
+): MachineMiddleware<MC> {
+  return (draft, { name, payload }, next) => {
+    const handleEffect = effects[name];
+
+    const additionalReaction = handleEffect(draft, payload);
+    const reactions = selectReactions?.(draft, name);
+
+    if (reactions) {
+      for (const reaction of reactions) {
+        reaction(draft, payload);
       }
-
-      this.middleware?.(draft, { name, payload });
-    });
-  }
-
-  private currentDraft?: MC["state"];
-  execute(fn: (draft: MC["state"]) => void) {
-    if (this.currentDraft) {
-      fn(this.currentDraft);
-      return;
+    }
+    if (additionalReaction) {
+      additionalReaction(draft, payload);
     }
 
-    const previousState = this.state;
-
-    this.state = produce(this.state, (draft: MC["state"]) => {
-      this.currentDraft = draft;
-      fn(draft);
-      this.currentDraft = undefined;
-    });
-
-    if (previousState !== this.state) {
-      for (const fn of this.subscriptions) {
-        fn(this.state);
-      }
-    }
-  }
-
-  subscribe(fn: (state: MC["state"]) => void) {
-    this.subscriptions.add(fn);
-    return () => {
-      this.subscriptions.delete(fn);
-    };
-  }
+    next();
+  };
 }
 
 export function createMachine<State>(state: State) {
@@ -95,9 +128,9 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
     private _reactions?: MachineEffectSelector<
       MachineContext<State, MachineActionsFor<Effects>>
     >,
-    private _middleware?: MachineMiddleware<
-      MachineContext<State, MachineActionsFor<Effects>>
-    >
+    private _middlewares: Array<
+      MachineMiddleware<MachineContext<State, MachineActionsFor<Effects>>>
+    > = []
   ) {}
 
   effects<Effects extends AnyMachineEffects<State>>(newEffects: Effects) {
@@ -113,7 +146,7 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
       this._state,
       this._effects,
       newReactions,
-      this._middleware
+      this._middlewares
     );
   }
 
@@ -126,32 +159,13 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
       this._state,
       this._effects,
       this._reactions,
-      combineMiddlewares(this._middleware, middleware)
+      [...this._middlewares, middleware]
     );
   }
 
   build() {
-    return new Machine<MachineContext<State, MachineActionsFor<Effects>>>(
-      this._state,
-      this._effects,
-      this._reactions,
-      this._middleware
-    );
+    return createMachineInstance<
+      MachineContext<State, MachineActionsFor<Effects>>
+    >(this._state, this._effects, this._reactions, this._middlewares);
   }
-}
-
-function combineMiddlewares<MC extends MachineContext>(
-  a: MachineMiddleware<MC> | undefined,
-  b: MachineMiddleware<MC> | undefined
-): MachineMiddleware<MC> | undefined {
-  if (!a) {
-    return b;
-  }
-  if (!b) {
-    return a;
-  }
-  return (...args) => {
-    a(...args);
-    b(...args);
-  };
 }

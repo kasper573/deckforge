@@ -24,6 +24,7 @@ import type {
   RuntimePlayerId,
   RuntimeState,
   RuntimeScriptAPI,
+  RuntimeMiddleware,
 } from "./types";
 import { createPile } from "./apis/Pile";
 
@@ -45,7 +46,12 @@ export interface GameInitialState<G extends RuntimeGenerics> {
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
-  seed?: string
+  options?: {
+    seed?: string;
+    middlewares?: (
+      compiledMiddlewares: RuntimeMiddleware<G>[]
+    ) => RuntimeMiddleware<G>[];
+  }
 ): { runtime?: GameRuntime<G>; error?: unknown } {
   try {
     const cardProperties = gameDefinition.properties.filter(
@@ -53,7 +59,7 @@ export function compileGame<G extends RuntimeGenerics>(
     );
 
     const scriptAPI: RuntimeScriptAPI<G> = {
-      random: createRandomFn(seed),
+      random: createRandomFn(options?.seed),
       cloneCard,
       actions: new Proxy({} as typeof runtime.actions, {
         get: (target, propertyName) =>
@@ -113,8 +119,11 @@ export function compileGame<G extends RuntimeGenerics>(
       gameDefinition.properties
     );
 
+    const allMiddlewares =
+      options?.middlewares?.(compiledMiddlewares) ?? compiledMiddlewares;
+
     let builder = deriveMachine<G>(effects, initialState);
-    builder = compiledMiddlewares.reduce(
+    builder = allMiddlewares.reduce(
       (builder, next) => builder.middleware(next),
       builder
     );

@@ -95,10 +95,11 @@ export function defineRuntime<
   }) as unknown as RuntimeDefinition<G>["state"];
 
   const actionUnion = z.unknown();
+  const middlewareNext = z.function().args().returns(z.void());
 
   const middleware = z
     .function()
-    .args(state, actionUnion)
+    .args(state, actionUnion, middlewareNext)
     .returns(z.void()) as RuntimeDefinition<G>["middleware"];
 
   return {
