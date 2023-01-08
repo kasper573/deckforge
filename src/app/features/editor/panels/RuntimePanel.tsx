@@ -19,6 +19,7 @@ import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
+import { inferFailSafeMachine } from "../../../../lib/machine/inferFailSafeMachine";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
@@ -32,11 +33,18 @@ export function RuntimePanel(props: PanelProps) {
   const compiled = useMemo(
     () => {
       if (gameDefinition && runtimeDefinition) {
-        return compileGame<RuntimeGenerics>(
+        const { error, runtime } = compileGame<RuntimeGenerics>(
           runtimeDefinition,
           gameDefinition,
           seed
         );
+        if (runtime) {
+          return {
+            error,
+            runtime: inferFailSafeMachine(runtime),
+          };
+        }
+        return { error };
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,6 +56,20 @@ export function RuntimePanel(props: PanelProps) {
       log(["Compiler error", compiled.error]);
     }
   }, [compiled?.error, log]);
+
+  useEffect(
+    () =>
+      compiled?.runtime?.subscribeToErrors((action, error) =>
+        log([
+          "Error while performing action",
+          action.name,
+          "with payload",
+          action.payload,
+          error,
+        ])
+      ),
+    [compiled, log]
+  );
 
   function onRuntimeRenderError(error: unknown) {
     log(["Runtime render error", error]);
