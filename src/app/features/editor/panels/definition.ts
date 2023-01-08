@@ -8,6 +8,7 @@ import { InspectorPanel } from "./InspectorPanel/InspectorPanel";
 import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
 import { RuntimePanel } from "./RuntimePanel";
 import { MiddlewaresPanel } from "./MiddlewaresPanel";
+import { LogsPanel } from "./LogsPanel";
 
 export type PanelProps = { path: MosaicBranch[]; title: string };
 
@@ -27,6 +28,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     title: "Player Properties",
   },
   runtime: { component: RuntimePanel, title: "Runtime" },
+  logs: { component: LogsPanel, title: "Logs" },
   inspector: { component: InspectorPanel, title: "Inspector" },
 };
 
