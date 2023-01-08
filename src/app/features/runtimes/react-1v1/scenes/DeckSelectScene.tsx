@@ -21,6 +21,17 @@ export function DeckSelectScene() {
       player2Deck: player2Deck.id,
     });
   }
+
+  if (!decks.length) {
+    return (
+      <Center sx={{ textAlign: "center" }}>
+        No decks available
+        <br />
+        Cannot start game
+      </Center>
+    );
+  }
+
   return (
     <Center>
       <Paper sx={{ p: 3 }}>
