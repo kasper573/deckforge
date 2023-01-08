@@ -19,7 +19,8 @@ import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
-import { inferFailSafeMachine } from "../../../../lib/machine/inferFailSafeMachine";
+import type { MachineMiddleware } from "../../../../lib/machine/MachineAction";
+import type { MachineContext } from "../../../../lib/machine/MachineContext";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
@@ -33,22 +34,17 @@ export function RuntimePanel(props: PanelProps) {
   const compiled = useMemo(
     () => {
       if (gameDefinition && runtimeDefinition) {
-        const { error, runtime } = compileGame<RuntimeGenerics>(
-          runtimeDefinition,
-          gameDefinition,
-          seed
-        );
-        if (runtime) {
-          return {
-            error,
-            runtime: inferFailSafeMachine(runtime),
-          };
-        }
-        return { error };
+        return compileGame<RuntimeGenerics>(runtimeDefinition, gameDefinition, {
+          seed,
+          middlewares: (defaults) => [
+            createFailSafeMiddleware(log),
+            ...defaults,
+          ],
+        });
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [gameDefinition, runtimeDefinition, manualResetCount, seed]
+    [gameDefinition, runtimeDefinition, manualResetCount, seed, log]
   );
 
   useEffect(() => {
@@ -56,22 +52,7 @@ export function RuntimePanel(props: PanelProps) {
       log(["Compiler error", compiled.error]);
     }
   }, [compiled?.error, log]);
-
-  useEffect(
-    () =>
-      compiled?.runtime?.subscribeToErrors((action, error) =>
-        log([
-          "Error while performing action",
-          action.name,
-          "with payload",
-          action.payload,
-          error,
-        ])
-      ),
-    [compiled, log]
-  );
-
-  function onRuntimeRenderError(error: unknown) {
+  function onRenderError(error: unknown) {
     log(["Runtime render error", error]);
   }
 
@@ -119,7 +100,7 @@ export function RuntimePanel(props: PanelProps) {
         (compiled?.runtime ? (
           <ErrorBoundary
             fallback={RuntimeErrorFallback}
-            onError={onRuntimeRenderError}
+            onError={onRenderError}
           >
             <GameRenderer runtime={compiled.runtime} />
           </ErrorBoundary>
@@ -131,6 +112,24 @@ export function RuntimePanel(props: PanelProps) {
         ))}
     </Panel>
   );
+}
+
+function createFailSafeMiddleware(
+  log: (args: unknown[]) => void
+): MachineMiddleware<MachineContext> {
+  return (state, action, next) => {
+    try {
+      next();
+    } catch (error) {
+      log([
+        "Error while performing action",
+        action.name,
+        "with payload",
+        action.payload,
+        error,
+      ]);
+    }
+  };
 }
 
 function RuntimeErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
