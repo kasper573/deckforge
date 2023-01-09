@@ -15,6 +15,7 @@ const access = createAccessFactory({
 
 export const router = OptionsRouter(
   {
+    globalLoadingIndicator: true,
     appBar: {
       content: Logo as ComponentType,
       container: true,
@@ -64,6 +65,7 @@ export const router = OptionsRouter(
       (route) => ({
         game: route(":gameId", {
           options: {
+            globalLoadingIndicator: false,
             appBar: {
               container: false,
               content: lazy(

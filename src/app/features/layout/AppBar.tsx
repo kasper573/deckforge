@@ -18,7 +18,7 @@ export function AppBar({
   return (
     <>
       <MuiAppBar aria-label="header" position="fixed">
-        <Toolbar disableGutters>
+        <AppToolbar disableGutters>
           <Container maxWidth={container ? pageMaxWidth : false}>
             <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
               <Box sx={{ flex: 1 }}>{children}</Box>
@@ -27,9 +27,11 @@ export function AppBar({
               </div>
             </Stack>
           </Container>
-        </Toolbar>
+        </AppToolbar>
       </MuiAppBar>
-      <Toolbar />
+      <AppToolbar />
     </>
   );
 }
+
+export const AppToolbar = Toolbar;
