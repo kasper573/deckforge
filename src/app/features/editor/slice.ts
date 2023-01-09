@@ -4,7 +4,6 @@ import type {
   Event,
   Card,
   Deck,
-  Game,
   Property,
   Middleware,
   GameDefinition,
@@ -26,6 +25,7 @@ import type {
   LogEntry,
   PanelId,
   PanelLayout,
+  EditorGame,
 } from "./types";
 import { editorObjectIdType, panelLayoutType } from "./types";
 import { defaultPanelLayout } from "./panels/defaultPanelLayout";
@@ -55,7 +55,7 @@ const editorSlice = createSlice({
   reducers: {
     selectGame: (
       state,
-      { payload: newGame }: PayloadAction<Game | undefined>
+      { payload: newGame }: PayloadAction<EditorGame | undefined>
     ) => {
       state.game = newGame;
     },

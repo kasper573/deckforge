@@ -10,6 +10,7 @@ import type {
   MiddlewareId,
 } from "../../../api/services/game/types";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+import type { MakePartial } from "../../../lib/ts-extensions/MakePartial";
 
 export const editorObjectIdType = z
   .object({
@@ -43,8 +44,13 @@ export const editorObjectIdType = z
 
 export type EditorObjectId = z.infer<typeof editorObjectIdType>;
 
+export type EditorGame = MakePartial<
+  Pick<Game, "gameId" | "name" | "definition">,
+  "gameId"
+>;
+
 export interface EditorState {
-  game?: Game;
+  game?: EditorGame;
   selectedObjectId?: EditorObjectId;
   panelLayout?: PanelLayout;
   logs: LogEntry[];

@@ -116,17 +116,19 @@ function Content() {
           </Tooltip>
           {game && (
             <>
-              <Tooltip title="Open public gameplay page">
-                <Clickable>
-                  <LinkIconButton
-                    to={router.play().game({ gameId: game.gameId })}
-                    target="_blank"
-                    sx={{ ml: 1 }}
-                  >
-                    <Play />
-                  </LinkIconButton>
-                </Clickable>
-              </Tooltip>
+              {game.gameId && (
+                <Tooltip title="Open public gameplay page">
+                  <Clickable>
+                    <LinkIconButton
+                      to={router.play().game({ gameId: game.gameId })}
+                      target="_blank"
+                      sx={{ ml: 1 }}
+                    >
+                      <Play />
+                    </LinkIconButton>
+                  </Clickable>
+                </Tooltip>
+              )}
               <Tooltip title="Download game definition">
                 <Clickable>
                   <IconButton onClick={downloadGameDefinition}>

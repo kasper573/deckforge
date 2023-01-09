@@ -10,7 +10,6 @@ import {
   deckType,
   propertyType,
   middlewareType,
-  gameDefinitionType,
 } from "../../../api/services/game/types";
 import { useToastProcedure } from "../../hooks/useToastProcedure";
 import { trpc } from "../../trpc";
@@ -18,6 +17,7 @@ import { router } from "../../router";
 import { useAuth } from "../auth/store";
 import { editorActions } from "./actions";
 import type { EditorObjectId } from "./types";
+import { getDefaultGameDefinition } from "./getDefaultGameDefinition";
 
 export function useConfirmDelete() {
   const confirm = useModal(ConfirmDialog);
@@ -88,12 +88,6 @@ export function useCreateGame() {
   }
 
   async function createGameAndGotoEditor(name: string) {
-    const definition = gameDefinitionType.parse(
-      await import("../runtimes/react-1v1/default-react-1v1.json").then(
-        (m) => m.default
-      )
-    );
-
     if (!isAuthenticated) {
       // Go to the editor without a persisted game
       history.push(router.editor({ gameId: undefined }).$);
@@ -102,7 +96,10 @@ export function useCreateGame() {
 
     try {
       // Create the game for the current user and open the editor for that game
-      const { gameId } = await createGame.mutateAsync({ name, definition });
+      const { gameId } = await createGame.mutateAsync({
+        name,
+        definition: await getDefaultGameDefinition(),
+      });
       history.push(router.editor({ gameId }).$);
     } catch {}
   }
