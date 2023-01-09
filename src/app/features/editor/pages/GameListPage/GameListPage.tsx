@@ -10,7 +10,6 @@ import { trpc } from "../../../../trpc";
 import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { Header } from "../../../layout/Header";
 import { Center } from "../../../../components/Center";
-import { LoadingPage } from "../../../common/LoadingPage";
 import {
   gameDefinitionType,
   gameType,
@@ -47,7 +46,7 @@ export default function GameListPage() {
   // Creating a game will turn on the loading state indefinitely
   // Once mutation is done, we'll redirect to the game page
   if (createGame.isSuccess || createGame.isLoading) {
-    return <LoadingPage />;
+    throw new Promise(() => {});
   }
 
   return (
