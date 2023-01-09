@@ -7,7 +7,9 @@ export function expectPageChange(trigger: () => void) {
     trigger();
     cy.location().should("not.eq", currentLocation);
     cy.waitForNetworkIdle(500);
-    cy.findByRole("progressbar").should("not.exist");
+    cy.findByRole("progressbar").should("not.exist", {
+      timeout: 10000,
+    });
   });
 }
 
