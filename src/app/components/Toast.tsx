@@ -15,7 +15,16 @@ export function Toast({
   input: { variant = "success", content },
 }: ToastProps) {
   return (
-    <Snackbar open={open} autoHideDuration={6000} onClose={() => resolve()}>
+    <Snackbar
+      open={open}
+      autoHideDuration={6000}
+      onClick={() => resolve()}
+      onClose={(e, reason) => {
+        if (reason === "timeout") {
+          resolve();
+        }
+      }}
+    >
       <Alert severity={variant}>{content}</Alert>
     </Snackbar>
   );
