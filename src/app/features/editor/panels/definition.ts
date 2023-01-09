@@ -10,7 +10,11 @@ import { RuntimePanel } from "./RuntimePanel";
 import { MiddlewaresPanel } from "./MiddlewaresPanel";
 import { LogsPanel } from "./LogsPanel";
 
-export type PanelProps = { path: MosaicBranch[]; title: string };
+export interface PanelProps {
+  path: MosaicBranch[];
+  title: string;
+  draggable?: boolean;
+}
 
 export interface PanelDefinition {
   component: ComponentType<PanelProps>;

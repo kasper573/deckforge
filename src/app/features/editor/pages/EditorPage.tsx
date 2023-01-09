@@ -2,6 +2,10 @@ import "react-mosaic-component/react-mosaic-component.css";
 import type { MouseEvent } from "react";
 import { styled } from "@mui/material/styles";
 import { Provider as ReduxProvider } from "react-redux/es/exports";
+import useTheme from "@mui/material/styles/useTheme";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useMemo } from "react";
+import Box from "@mui/material/Box";
 import { StateSynchronizer } from "../StateSynchronizer";
 import { panelsDefinition } from "../panels/definition";
 import { PanelContainer } from "../components/PanelContainer";
@@ -11,31 +15,79 @@ import { useSelector } from "../store";
 import { selectors } from "../selectors";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { editorStore } from "../store";
+import type { PanelId } from "../types";
+import {
+  distributeNodesEvenly,
+  getKeyVisibilities,
+} from "../../../../lib/reactMosaicExtensions";
 
 export default function EditorPage() {
   return (
     <ReduxProvider store={editorStore}>
       <Root onContextMenu={disableUnhandledContextMenu}>
-        <EditorPanelContainer />
+        <ResponsiveEditorPanels />
         <StateSynchronizer />
       </Root>
     </ReduxProvider>
   );
 }
 
-function EditorPanelContainer() {
+function ResponsiveEditorPanels() {
+  const theme = useTheme();
+  const isSmallDevice = useMediaQuery(theme.breakpoints.down("sm"));
+  if (isSmallDevice) {
+    return <PanelsWithColumnLayout />;
+  }
+  return <PanelsWithUserLayout />;
+}
+
+function PanelsWithColumnLayout() {
+  const panelLayout = useSelector(selectors.panelLayout);
+
+  const visibleNodes = useMemo(() => {
+    const nodes = Object.keys(panelsDefinition) as PanelId[];
+    const visibilities = getKeyVisibilities(panelLayout);
+    return nodes.filter((key) => visibilities[key]);
+  }, [panelLayout]);
+
+  const columnLayout = useMemo(
+    () => distributeNodesEvenly("column", visibleNodes),
+    [visibleNodes]
+  );
+
+  return (
+    <Box
+      sx={{
+        position: "relative",
+        height: visibleNodes.length
+          ? // Due to the even distribution column layout, all panels will have the same height.
+            // So setting the entire panel container height relative to the number of panels
+            // allows us to evenly size all panels.
+            `calc(33vh * ${visibleNodes.length})`
+          : "75vh",
+      }}
+    >
+      <PanelContainer
+        value={columnLayout}
+        onChange={() => {}}
+        zeroStateView={zeroStateView}
+        renderTile={(panelId, path) => {
+          const { component: Panel, title } = panelsDefinition[panelId];
+          return <Panel path={path} title={title} draggable={false} />;
+        }}
+      />
+    </Box>
+  );
+}
+
+function PanelsWithUserLayout() {
   const panelLayout = useSelector(selectors.panelLayout);
   const { setPanelLayout } = useActions(editorActions);
   return (
     <PanelContainer
       value={panelLayout ?? null}
       onChange={setPanelLayout}
-      zeroStateView={
-        <PanelEmptyState>
-          All panels are closed. <br />
-          You can select panels from the menu in the app bar.
-        </PanelEmptyState>
-      }
+      zeroStateView={zeroStateView}
       renderTile={(panelId, path) => {
         const { component: Panel, title } = panelsDefinition[panelId];
         return <Panel path={path} title={title} />;
@@ -43,6 +95,13 @@ function EditorPanelContainer() {
     />
   );
 }
+
+const zeroStateView = (
+  <PanelEmptyState>
+    All panels are closed. <br />
+    You can select panels from the menu in the app bar.
+  </PanelEmptyState>
+);
 
 function disableUnhandledContextMenu<T>(e: MouseEvent<T>) {
   e.preventDefault();
