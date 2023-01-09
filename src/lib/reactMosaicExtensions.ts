@@ -58,6 +58,36 @@ export function getKeyVisibilities<T extends MosaicKey>(root?: MosaicNode<T>) {
   return visibilities;
 }
 
+export function evenDistributionLayout<Id extends MosaicKey>(
+  root: MosaicNode<Id> | undefined,
+  direction: "row" | "column",
+  order: Id[]
+): MosaicNode<Id> | null {
+  const visibilities = getKeyVisibilities(root);
+  const visibleNodes: MosaicNode<Id>[] = order.filter(
+    (node) => visibilities[node]
+  );
+
+  if (visibleNodes.length === 0) {
+    return null;
+  }
+
+  function join(
+    first: MosaicNode<Id>,
+    second: MosaicNode<Id>,
+    index: number
+  ): MosaicNode<Id> {
+    const descendants = visibleNodes.length - index;
+    return {
+      direction,
+      first: second,
+      second: first,
+      splitPercentage: 100 / descendants,
+    };
+  }
+  return visibleNodes.reduceRight(join);
+}
+
 export function addNodeBySplitting<T extends MosaicKey>(
   root: MosaicNode<T> | undefined,
   key: T
