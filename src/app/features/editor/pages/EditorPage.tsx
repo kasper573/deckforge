@@ -35,6 +35,7 @@ export default function EditorPage() {
           onLocalInstanceInitialized={() => {
             showToast({
               variant: "info",
+              duration: 12000,
               content: (
                 <>
                   You are not signed in and the game will only be saved on your
