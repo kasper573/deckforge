@@ -12,8 +12,11 @@ import { editorActions } from "./actions";
 
 export function StateSynchronizer() {
   const { selectGame } = useActions(editorActions);
-  const { gameId } = useRouteParams(router.build().game);
-  const { data: remoteGame } = trpc.game.read.useQuery(gameId);
+  const { gameId } = useRouteParams(router.editor);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const { data: remoteGame } = trpc.game.read.useQuery(gameId!, {
+    enabled: !!gameId,
+  });
   const [localGame] = useDebounce(useSelector(selectors.game), 1500);
   const { mutate: uploadGame } = useToastProcedure(trpc.game.update);
 
