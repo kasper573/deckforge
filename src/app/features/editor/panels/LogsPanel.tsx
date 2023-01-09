@@ -4,6 +4,7 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import { styled } from "@mui/material/styles";
 import { ObjectInspector } from "react-inspector";
+import { useLayoutEffect, useRef } from "react";
 import { Panel } from "../components/Panel";
 import { PanelControls } from "../components/PanelControls";
 import { useSelector } from "../store";
@@ -18,9 +19,17 @@ import type { PanelProps } from "./definition";
 export function LogsPanel(props: PanelProps) {
   const logs = useSelector(selectors.logs);
   const { clearLogs } = useActions(editorActions);
+  const paperRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (paperRef.current) {
+      paperRef.current.scrollTo(0, paperRef.current.scrollHeight);
+    }
+  }, [logs]);
 
   return (
     <Panel
+      paperRef={paperRef}
       toolbarControls={
         <PanelControls>
           <Tooltip title="Clear logs">

@@ -12,6 +12,7 @@ export interface PanelProps
       "sx" | "style" | "className" | "onContextMenu"
     > {
   title: ReactNode;
+  paperRef?: ComponentProps<typeof PanelPaper>["ref"];
 }
 
 export function Panel({
@@ -21,6 +22,7 @@ export function Panel({
   style,
   className,
   onContextMenu,
+  paperRef,
   toolbarControls = <PanelControls />,
   ...props
 }: PanelProps) {
@@ -30,7 +32,7 @@ export function Panel({
       toolbarControls={toolbarControls}
       {...props}
     >
-      <PanelPaper {...{ sx, style, className, onContextMenu }}>
+      <PanelPaper ref={paperRef} {...{ sx, style, className, onContextMenu }}>
         {children}
       </PanelPaper>
     </MosaicWindow>
