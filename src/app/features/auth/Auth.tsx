@@ -4,7 +4,7 @@ import { roleToAccessLevel } from "../../../api/services/user/types";
 import { useAuth } from "./store";
 
 type AuthPropsBase = {
-  children: ReactNode | (() => ReactNode);
+  children: ReactNode | AuthContentRenderer;
   fallback?: ReactNode;
 };
 
@@ -29,6 +29,15 @@ export function Auth({ children, fallback, ...props }: AuthProps) {
     allowAccess = access > roleToAccessLevel("Guest");
   }
 
-  const childrenFn = typeof children === "function" ? children : () => children;
-  return <>{allowAccess ? childrenFn() : fallback}</>;
+  const renderContent: AuthContentRenderer =
+    typeof children === "function"
+      ? children
+      : ({ allowAccess }) => (allowAccess ? children : fallback);
+
+  return <>{renderContent({ allowAccess, access })}</>;
 }
+
+type AuthContentRenderer = (props: {
+  allowAccess: boolean;
+  access: number;
+}) => ReactNode;

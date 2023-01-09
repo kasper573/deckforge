@@ -26,6 +26,7 @@ import { editorStore } from "../../store";
 import { createJSONFile, loadFile, saveFile } from "../../../../../lib/fileIO";
 import { AlertDialog } from "../../../../dialogs/AlertDialog";
 import { ConfirmDialog } from "../../../../dialogs/ConfirmDialog";
+import { Auth } from "../../../auth/Auth";
 import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
 
 export default function EditorAppBarContent() {
@@ -92,9 +93,16 @@ function Content() {
       <Stack direction="row" spacing={2} alignItems="center">
         <Tooltip title="Leave editor">
           <div>
-            <LinkIconButton edge="start" to={router.build()}>
-              <ExitToApp />
-            </LinkIconButton>
+            <Auth>
+              {({ access }) => (
+                <LinkIconButton
+                  edge="start"
+                  to={access ? router.user().games() : router.home()}
+                >
+                  <ExitToApp />
+                </LinkIconButton>
+              )}
+            </Auth>
           </div>
         </Tooltip>
         <div>
@@ -108,17 +116,19 @@ function Content() {
           </Tooltip>
           {game && (
             <>
-              <Tooltip title="Open public gameplay page">
-                <Clickable>
-                  <LinkIconButton
-                    to={router.play().game({ gameId: game.gameId })}
-                    target="_blank"
-                    sx={{ ml: 1 }}
-                  >
-                    <Play />
-                  </LinkIconButton>
-                </Clickable>
-              </Tooltip>
+              {game.gameId && (
+                <Tooltip title="Open public gameplay page">
+                  <Clickable>
+                    <LinkIconButton
+                      to={router.play().game({ gameId: game.gameId })}
+                      target="_blank"
+                      sx={{ ml: 1 }}
+                    >
+                      <Play />
+                    </LinkIconButton>
+                  </Clickable>
+                </Tooltip>
+              )}
               <Tooltip title="Download game definition">
                 <Clickable>
                   <IconButton onClick={downloadGameDefinition}>

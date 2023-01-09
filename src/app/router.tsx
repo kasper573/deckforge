@@ -1,12 +1,12 @@
 import { OptionsRouter, Redirect } from "react-typesafe-routes";
 import type { ComponentType } from "react";
 import { lazy } from "react";
-import { literalParser } from "../lib/literalParser";
+import { literalParser, optionalLiteralParser } from "../lib/literalParser";
 import type { GameId } from "../api/services/game/types";
 import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./features/auth/pages/NotPermittedPage";
 import { NotAuthenticatedPage } from "./features/auth/pages/NotAuthenticatedPage";
-import { Logo } from "./features/layout/Logo";
+import { DefaultAppBarContent } from "./features/common/DefaultAppBarContent";
 
 const access = createAccessFactory({
   NotPermittedPage,
@@ -17,7 +17,7 @@ export const router = OptionsRouter(
   {
     globalLoadingIndicator: true,
     appBar: {
-      content: Logo as ComponentType,
+      content: DefaultAppBarContent as ComponentType,
       container: true,
     },
   },
@@ -52,37 +52,30 @@ export const router = OptionsRouter(
           middleware: access(),
           component: lazy(() => import("./features/auth/pages/ProfilePage")),
         }),
-      })
-    ),
-    build: route(
-      "build",
-      {
-        middleware: access(),
-        component: lazy(
-          () => import("./features/editor/pages/GameListPage/GameListPage")
-        ),
-      },
-      (route) => ({
-        game: route(":gameId", {
-          options: {
-            globalLoadingIndicator: false,
-            appBar: {
-              container: false,
-              content: lazy(
-                () =>
-                  import(
-                    "./features/editor/components/AppBar/EditorAppBarContent"
-                  )
-              ),
-            },
-          },
-          component: lazy(() => import("./features/editor/pages/EditorPage")),
-          params: { gameId: literalParser<GameId>() },
+        games: route("games", {
+          middleware: access(),
+          component: lazy(
+            () => import("./features/editor/pages/GameListPage/GameListPage")
+          ),
         }),
       })
     ),
+    editor: route("editor/:gameId?", {
+      options: {
+        globalLoadingIndicator: false,
+        appBar: {
+          container: false,
+          content: lazy(
+            () =>
+              import("./features/editor/components/AppBar/EditorAppBarContent")
+          ),
+        },
+      },
+      component: lazy(() => import("./features/editor/pages/EditorPage")),
+      params: { gameId: optionalLiteralParser<GameId>() },
+    }),
   })
 );
 
 export const logoutRedirect = router.user().login();
-export const loginRedirect = router.build();
+export const loginRedirect = router.user().games();

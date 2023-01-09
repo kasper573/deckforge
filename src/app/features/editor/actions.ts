@@ -35,6 +35,8 @@ function renameObject(objectId: EditorObjectId, name: string): Action {
   }
 }
 
+async function createGame() {}
+
 export const editorActions = {
   ...actions,
   deleteObject,

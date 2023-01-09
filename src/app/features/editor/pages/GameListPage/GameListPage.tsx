@@ -1,26 +1,22 @@
 import Button from "@mui/material/Button";
-import { useHistory } from "react-router";
 import Card from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
-import { PromptDialog } from "../../../../dialogs/PromptDialog";
-import { useModal } from "../../../../../lib/useModal";
-import { router } from "../../../../router";
 import { Page } from "../../../layout/Page";
 import { trpc } from "../../../../trpc";
-import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { Header } from "../../../layout/Header";
 import { Center } from "../../../../components/Center";
-import {
-  gameDefinitionType,
-  gameType,
-} from "../../../../../api/services/game/types";
+
+import { useCreateGame } from "../../hooks";
+import { useModal } from "../../../../../lib/useModal";
+import { PromptDialog } from "../../../../dialogs/PromptDialog";
+import { gameType } from "../../../../../api/services/game/types";
 import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
-  const history = useHistory();
-  const games = trpc.game.list.useQuery({ offset: 0, limit: 10 });
-  const createGame = useToastProcedure(trpc.game.create);
   const prompt = useModal(PromptDialog);
+
+  const games = trpc.game.list.useQuery({ offset: 0, limit: 10 });
+  const createGame = useCreateGame();
 
   async function enterNameAndCreateGame() {
     const name = await prompt({
@@ -31,22 +27,7 @@ export default function GameListPage() {
     if (!name) {
       return;
     }
-
-    const { default: definitionJson } = await import(
-      "../../../runtimes/react-1v1/default-react-1v1.json"
-    );
-    const definition = gameDefinitionType.parse(definitionJson);
-
-    try {
-      const { gameId } = await createGame.mutateAsync({ name, definition });
-      history.push(router.build().game({ gameId }).$);
-    } catch {}
-  }
-
-  // Creating a game will turn on the loading state indefinitely
-  // Once mutation is done, we'll redirect to the game page
-  if (createGame.isSuccess || createGame.isLoading) {
-    throw new Promise(() => {});
+    createGame(name);
   }
 
   return (

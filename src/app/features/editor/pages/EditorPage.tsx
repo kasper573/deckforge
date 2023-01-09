@@ -20,13 +20,32 @@ import {
   distributeNodesEvenly,
   getKeyVisibilities,
 } from "../../../../lib/reactMosaicExtensions";
+import { Link } from "../../../components/Link";
+import { router } from "../../../router";
+import { useModal } from "../../../../lib/useModal";
+import { Toast } from "../../../components/Toast";
 
 export default function EditorPage() {
+  const showToast = useModal(Toast);
   return (
     <ReduxProvider store={editorStore}>
       <Root onContextMenu={disableUnhandledContextMenu}>
         <ResponsiveEditorPanels />
-        <StateSynchronizer />
+        <StateSynchronizer
+          onLocalInstanceInitialized={() => {
+            showToast({
+              variant: "info",
+              duration: 12000,
+              content: (
+                <>
+                  You are not signed in and the game will only be saved on your
+                  device. <Link to={router.user().login()}>Sign in</Link> to
+                  save your game to the cloud and enable publishing games.
+                </>
+              ),
+            });
+          }}
+        />
       </Root>
     </ReduxProvider>
   );

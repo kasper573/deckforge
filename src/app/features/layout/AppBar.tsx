@@ -1,4 +1,3 @@
-import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Container from "@mui/material/Container";
@@ -21,7 +20,9 @@ export function AppBar({
         <AppToolbar disableGutters>
           <Container maxWidth={container ? pageMaxWidth : false}>
             <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
-              <Box sx={{ flex: 1 }}>{children}</Box>
+              <Stack direction="row" sx={{ flex: 1 }}>
+                {children}
+              </Stack>
               <div>
                 <UserMenu edge="end" />
               </div>
