@@ -18,7 +18,9 @@ export interface PanelDefinition {
 }
 
 export const panelsDefinition: Record<PanelId, PanelDefinition> = {
+  runtime: { component: RuntimePanel, title: "Runtime" },
   code: { component: CodePanel, title: "Code" },
+  inspector: { component: InspectorPanel, title: "Inspector" },
   decks: { component: DecksPanel, title: "Decks" },
   events: { component: EventsPanel, title: "Events" },
   middlewares: { component: MiddlewaresPanel, title: "Middlewares" },
@@ -27,9 +29,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     component: PlayerPropertiesPanel,
     title: "Player Properties",
   },
-  runtime: { component: RuntimePanel, title: "Runtime" },
   logs: { component: LogsPanel, title: "Logs" },
-  inspector: { component: InspectorPanel, title: "Inspector" },
 };
 
 export const panelDefinitionList = Object.entries(panelsDefinition).map(
