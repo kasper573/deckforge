@@ -3,9 +3,9 @@ export function resetData(modelName?: string) {
 }
 
 export function expectPageChange(trigger: () => void) {
-  cy.location().then((currentLocation) => {
+  cy.url().then((currentUrl) => {
     trigger();
-    cy.location().should("not.eq", currentLocation);
+    cy.url().should("not.equal", currentUrl);
     cy.waitForNetworkIdle(500);
     cy.findByRole("progressbar").should("not.exist", {
       timeout: 10000,
