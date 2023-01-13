@@ -4,9 +4,9 @@ import { styled } from "@mui/material/styles";
 import { Provider as ReduxProvider } from "react-redux/es/exports";
 import useTheme from "@mui/material/styles/useTheme";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import Box from "@mui/material/Box";
-import { z } from "zod";
+import { useRouteParams } from "react-typesafe-routes";
 import { StateSynchronizer } from "../StateSynchronizer";
 import { panelsDefinition } from "../panels/definition";
 import { PanelContainer } from "../components/PanelContainer";
@@ -21,67 +21,18 @@ import {
   distributeNodesEvenly,
   getKeyVisibilities,
 } from "../../../../lib/reactMosaicExtensions";
-import { Link } from "../../../components/Link";
 import { router } from "../../../router";
-import { useModal } from "../../../../lib/useModal";
-import { Toast } from "../../../components/Toast";
-import { createZodStorage } from "../../../../lib/zod-extensions/zodStorage";
-import { ConfirmDialog } from "../../../dialogs/ConfirmDialog";
-
-const hasSeenIntroStorage = createZodStorage(
-  z.boolean().optional(),
-  "editor-has-seen-intro"
-);
+import { useEditorIntro } from "../hooks/useEditorIntro";
 
 export default function EditorPage() {
-  const showToast = useModal(Toast);
-  const confirm = useModal(ConfirmDialog);
-  const isEditingLocalInstanceRef = useRef(false);
-
-  useEffect(() => {
-    (async () => {
-      if (!hasSeenIntroStorage.load()) {
-        const shouldTakeTour = await confirm({
-          title: "Take tour?",
-          content: "Content",
-          confirmLabel: "Take tour",
-          cancelLabel: "No thanks",
-        });
-
-        hasSeenIntroStorage.save(true);
-
-        if (shouldTakeTour) {
-          startTour();
-        }
-      }
-
-      if (isEditingLocalInstanceRef.current) {
-        showToast({
-          variant: "info",
-          duration: 12000,
-          content: (
-            <>
-              You are not signed in and the game will only be saved on your
-              device. <Link to={router.user().login()}>Sign in</Link> to save
-              your game to the cloud and enable publishing games.
-            </>
-          ),
-        });
-      }
-    })();
-  }, [confirm, showToast]);
-
-  function startTour() {}
+  const { gameId } = useRouteParams(router.editor);
+  useEditorIntro(() => !gameId);
 
   return (
     <ReduxProvider store={editorStore}>
       <Root onContextMenu={disableUnhandledContextMenu}>
         <ResponsiveEditorPanels />
-        <StateSynchronizer
-          onLocalInstanceInitialized={() => {
-            isEditingLocalInstanceRef.current = true;
-          }}
-        />
+        <StateSynchronizer gameId={gameId} />
       </Root>
     </ReduxProvider>
   );

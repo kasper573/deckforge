@@ -1,26 +1,20 @@
-import { useRouteParams } from "react-typesafe-routes";
 import { useEffect } from "react";
 import { isEqual } from "lodash";
 import { useDebounce } from "use-debounce";
-import { router } from "../../router";
 import { trpc } from "../../trpc";
 import { useToastProcedure } from "../../hooks/useToastProcedure";
 import { useActions } from "../../../lib/useActions";
 import { useAsyncMemo } from "../../hooks/useAsyncMemo";
 import { createZodStorage } from "../../../lib/zod-extensions/zodStorage";
+import type { GameId } from "../../../api/services/game/types";
 import { useSelector } from "./store";
 import { selectors } from "./selectors";
 import { editorActions } from "./actions";
 import { getDefaultGameDefinition } from "./getDefaultGameDefinition";
 import { editorGameType } from "./types";
 
-export function StateSynchronizer({
-  onLocalInstanceInitialized,
-}: {
-  onLocalInstanceInitialized?: () => void;
-}) {
+export function StateSynchronizer({ gameId }: { gameId?: GameId }) {
   const { selectGame: setLocalGame } = useActions(editorActions);
-  const { gameId } = useRouteParams(router.editor);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { data: remoteGame } = trpc.game.read.useQuery(gameId!, {
     enabled: !!gameId,
@@ -35,7 +29,6 @@ export function StateSynchronizer({
       // Whenever the remote game changes, update the local game
       setLocalGame(remoteGame);
     } else if (defaultDefinition) {
-      onLocalInstanceInitialized?.();
       // When no remote game is available we will auto create a local game instance
       setLocalGame(
         localGameStorage.load() ?? {
