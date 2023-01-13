@@ -25,15 +25,14 @@ describe("game", () => {
         cy.findByLabelText(/game name/i).type(gameName);
         expectPageChange(() => cy.findByRole("form").submit());
       });
+      expectPageChange(gotoGameList);
     });
 
     it("and see it listed", () => {
-      gotoGameList();
       findGameCard(gameName).should("exist");
     });
 
     it("and then delete it", () => {
-      gotoGameList();
       findGameCard(gameName).within(() => {
         cy.findByRole("button", { name: /more options/i }).click();
       });
