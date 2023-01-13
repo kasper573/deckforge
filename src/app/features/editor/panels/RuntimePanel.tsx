@@ -4,6 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useEffect, useMemo, useReducer, useState } from "react";
 import Yard from "@mui/icons-material/Yard";
+import { styled } from "@mui/material/styles";
 import { useSelector } from "../store";
 import { selectors } from "../selectors";
 import { Panel } from "../components/Panel";
@@ -103,7 +104,7 @@ export function RuntimePanel(props: PanelProps) {
             fallback={RuntimeErrorFallback}
             onError={onRenderError}
           >
-            <GameRenderer runtime={compiled.runtime} />
+            <GameRendererWithBackground runtime={compiled.runtime} />
           </ErrorBoundary>
         ) : (
           <PanelEmptyState>
@@ -114,6 +115,10 @@ export function RuntimePanel(props: PanelProps) {
     </Panel>
   );
 }
+
+const GameRendererWithBackground = styled(GameRenderer)`
+  background: ${({ theme }) => theme.palette.secondary.dark};
+`;
 
 function createEventLoggerMiddleware(
   log: (args: unknown[]) => void
