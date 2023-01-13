@@ -15,16 +15,30 @@ export function useEditorIntro(isLocalInstance: () => boolean) {
     (async () => {
       if (!hasSeenIntroStorage.load()) {
         const shouldTakeTour = await confirm({
-          title: "Take tour?",
-          content: "Content",
-          confirmLabel: "Take tour",
-          cancelLabel: "No thanks",
+          title: "Welcome to the Editor",
+          content: (
+            <>
+              <p>
+                This garbage editor was coded in a month as a proof of concept
+                and is not easy to use. Unless you are a programmer and
+                intimately familiar with event driven programming and state
+                machines this editor will basically be useless to you :).
+              </p>
+              <p>
+                However, {`I've`} made a tour that will try to explain how the
+                editor works. <br />
+                Good luck!
+              </p>
+            </>
+          ),
+          confirmLabel: "Take the tour",
+          cancelLabel: "No thanks, I've got this",
         });
 
         hasSeenIntroStorage.save(true);
 
         if (shouldTakeTour) {
-          startTour();
+          await takeTour();
         }
       }
 
@@ -44,7 +58,7 @@ export function useEditorIntro(isLocalInstance: () => boolean) {
     })();
   });
 
-  function startTour() {
+  function takeTour() {
     console.log("start tour");
   }
 }
