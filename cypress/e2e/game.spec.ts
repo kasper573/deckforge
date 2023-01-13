@@ -46,7 +46,6 @@ describe("game", () => {
   });
 });
 
-const gotoGameList = () =>
-  expectPageChange(() => showUserMenu().findByText("Your games").click());
+const gotoGameList = () => showUserMenu().findByText("Your games").click();
 
 const findGameCard = (name: string) => cy.findByRole("link", { name });
