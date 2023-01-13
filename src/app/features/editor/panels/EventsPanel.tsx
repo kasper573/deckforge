@@ -7,7 +7,6 @@ import { useMenu } from "../../../hooks/useMenu";
 import { Tree } from "../../../components/Tree";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
-import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
 import { ObjectIcon } from "../components/ObjectIcon";
@@ -15,6 +14,8 @@ import { PropertyTypePicker } from "../../../controls/PropertyTypePicker";
 import type { Event } from "../../../../api/services/game/types";
 import type { RuntimeDefinition } from "../../compiler/types";
 import { defined } from "../../../../lib/ts-extensions/defined";
+import { useConfirmDelete } from "../hooks/useConfirmDelete";
+import { usePromptCreate, usePromptRename } from "../hooks/usePromptCrud";
 import type { PanelProps } from "./definition";
 
 export function EventsPanel(props: PanelProps) {

@@ -6,10 +6,10 @@ import { trpc } from "../../../../trpc";
 import { Header } from "../../../layout/Header";
 import { Center } from "../../../../components/Center";
 
-import { useCreateGame } from "../../hooks";
 import { useModal } from "../../../../../lib/useModal";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { gameType } from "../../../../../api/services/game/types";
+import { useCreateGame } from "../../hooks/useCreateGame";
 import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
