@@ -56,7 +56,6 @@ export function PropertiesPanel({
 }: PanelProps & {
   emptyMessage: ReactNode;
   entityId: EntityId;
-  title: string;
   properties: Array<Property & { objectId: EditorObjectId }>;
 }) {
   const runtimeDef = useSelector(selectors.builtinDefinition);

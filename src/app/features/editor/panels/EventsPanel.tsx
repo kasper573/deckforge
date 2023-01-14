@@ -35,7 +35,12 @@ export function EventsPanel(props: PanelProps) {
   ]);
 
   return (
-    <Panel sx={{ py: 1 }} onContextMenu={openContextMenu} {...props}>
+    <Panel
+      className="tour1"
+      sx={{ py: 1 }}
+      onContextMenu={openContextMenu}
+      {...props}
+    >
       <Tree
         selected={selectedObjectId}
         onSelectedChanged={selectObject}

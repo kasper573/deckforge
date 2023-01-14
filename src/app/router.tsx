@@ -71,7 +71,9 @@ export const router = OptionsRouter(
           ),
         },
       },
-      component: lazy(() => import("./features/editor/pages/EditorPage")),
+      component: lazy(
+        () => import("./features/editor/pages/EditorPage/EditorPage")
+      ),
       params: { gameId: optionalLiteralParser<GameId>() },
     }),
   })

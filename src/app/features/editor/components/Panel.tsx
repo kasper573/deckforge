@@ -32,16 +32,27 @@ export function Panel({
       toolbarControls={toolbarControls}
       {...props}
     >
-      <PanelPaper ref={paperRef} {...{ sx, style, className, onContextMenu }}>
+      <PanelPaper ref={paperRef} {...{ sx, style, onContextMenu }}>
         {children}
+        <Overlay className={className} />
       </PanelPaper>
     </MosaicWindow>
   );
 }
+
+const Overlay = styled("div")`
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+`;
 
 const PanelPaper = styled(Paper)`
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
+  position: relative;
 `;
