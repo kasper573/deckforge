@@ -11,7 +11,6 @@ import { useSelector } from "../store";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { selectors } from "../selectors";
-import { useConfirmDelete, usePromptCreate, usePromptRename } from "../hooks";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Panel } from "../components/Panel";
 import type { EntityId, Property } from "../../../../api/services/game/types";
@@ -21,6 +20,8 @@ import { HoverListItem } from "../../../components/HoverListItem";
 import { PropertyEditor } from "../../../controls/PropertyEditor";
 import { defined } from "../../../../lib/ts-extensions/defined";
 import type { RuntimeDefinition } from "../../compiler/types";
+import { useConfirmDelete } from "../hooks/useConfirmDelete";
+import { usePromptCreate, usePromptRename } from "../hooks/usePromptCrud";
 import type { PanelProps } from "./definition";
 
 export function CardPropertiesPanel(props: PanelProps) {
@@ -55,7 +56,6 @@ export function PropertiesPanel({
 }: PanelProps & {
   emptyMessage: ReactNode;
   entityId: EntityId;
-  title: string;
   properties: Array<Property & { objectId: EditorObjectId }>;
 }) {
   const runtimeDef = useSelector(selectors.builtinDefinition);

@@ -29,7 +29,7 @@ export function LogsPanel(props: PanelProps) {
 
   return (
     <Panel
-      paperRef={paperRef}
+      ref={paperRef}
       toolbarControls={
         <PanelControls>
           <Tooltip title="Clear logs">

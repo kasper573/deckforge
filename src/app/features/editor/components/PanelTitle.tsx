@@ -1,4 +1,5 @@
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import type { ReactNode } from "react";
 import type { EditorObjectId } from "../types";
 import { joinNodes } from "../../../../lib/joinNodes";
 import { ObjectIcon } from "./ObjectIcon";
@@ -8,7 +9,7 @@ export function PanelTitle({
   objectType,
   breadcrumbs,
 }: {
-  name: string;
+  name: ReactNode;
   objectType?: EditorObjectId["type"];
   breadcrumbs?: string[];
 }) {

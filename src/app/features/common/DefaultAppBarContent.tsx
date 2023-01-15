@@ -1,6 +1,6 @@
 import Button from "@mui/material/Button";
 import { Logo } from "../layout/Logo";
-import { useCreateGame } from "../editor/hooks";
+import { useCreateGame } from "../editor/hooks/useCreateGame";
 
 export function DefaultAppBarContent() {
   const createGame = useCreateGame();

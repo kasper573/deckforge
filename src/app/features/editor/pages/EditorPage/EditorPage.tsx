@@ -6,46 +6,35 @@ import useTheme from "@mui/material/styles/useTheme";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMemo } from "react";
 import Box from "@mui/material/Box";
-import { StateSynchronizer } from "../StateSynchronizer";
-import { panelsDefinition } from "../panels/definition";
-import { PanelContainer } from "../components/PanelContainer";
-import { useActions } from "../../../../lib/useActions";
-import { editorActions } from "../actions";
-import { useSelector } from "../store";
-import { selectors } from "../selectors";
-import { PanelEmptyState } from "../components/PanelEmptyState";
-import { editorStore } from "../store";
-import type { PanelId } from "../types";
+import { useRouteParams } from "react-typesafe-routes";
+import type { MosaicBranch } from "react-mosaic-component";
+import { StateSynchronizer } from "../../StateSynchronizer";
+import type { PanelProps } from "../../panels/definition";
+import { panelsDefinition } from "../../panels/definition";
+import { PanelContainer } from "../../components/PanelContainer";
+import { useActions } from "../../../../../lib/useActions";
+import { editorActions } from "../../actions";
+import { useSelector } from "../../store";
+import { selectors } from "../../selectors";
+import { PanelEmptyState } from "../../components/PanelEmptyState";
+import { editorStore } from "../../store";
+import type { PanelId } from "../../types";
 import {
   distributeNodesEvenly,
   getKeyVisibilities,
-} from "../../../../lib/reactMosaicExtensions";
-import { Link } from "../../../components/Link";
-import { router } from "../../../router";
-import { useModal } from "../../../../lib/useModal";
-import { Toast } from "../../../components/Toast";
+} from "../../../../../lib/reactMosaicExtensions";
+import { router } from "../../../../router";
+import { EditorIntro } from "./EditorIntro";
 
 export default function EditorPage() {
-  const showToast = useModal(Toast);
+  const { gameId } = useRouteParams(router.editor);
+
   return (
     <ReduxProvider store={editorStore}>
       <Root onContextMenu={disableUnhandledContextMenu}>
         <ResponsiveEditorPanels />
-        <StateSynchronizer
-          onLocalInstanceInitialized={() => {
-            showToast({
-              variant: "info",
-              duration: 12000,
-              content: (
-                <>
-                  You are not signed in and the game will only be saved on your
-                  device. <Link to={router.user().login()}>Sign in</Link> to
-                  save your game to the cloud and enable publishing games.
-                </>
-              ),
-            });
-          }}
-        />
+        <StateSynchronizer gameId={gameId} />
+        <EditorIntro isLocalInstance={!gameId} />
       </Root>
     </ReduxProvider>
   );
@@ -90,10 +79,9 @@ function PanelsWithColumnLayout() {
         value={columnLayout}
         onChange={() => {}}
         zeroStateView={zeroStateView}
-        renderTile={(panelId, path) => {
-          const { component: Panel, title } = panelsDefinition[panelId];
-          return <Panel path={path} title={title} draggable={false} />;
-        }}
+        renderTile={(panelId, path) => (
+          <PanelById panelId={panelId} path={path} draggable={false} />
+        )}
       />
     </Box>
   );
@@ -107,11 +95,21 @@ function PanelsWithUserLayout() {
       value={panelLayout ?? null}
       onChange={setPanelLayout}
       zeroStateView={zeroStateView}
-      renderTile={(panelId, path) => {
-        const { component: Panel, title } = panelsDefinition[panelId];
-        return <Panel path={path} title={title} />;
-      }}
+      renderTile={(panelId, path) => (
+        <PanelById panelId={panelId} path={path} />
+      )}
     />
+  );
+}
+
+function PanelById({
+  panelId,
+  path,
+  ...props
+}: { panelId: PanelId; path: MosaicBranch[] } & Partial<PanelProps>) {
+  const { component: Panel, title, tour } = panelsDefinition[panelId];
+  return (
+    <Panel path={path} title={title} className={tour?.className} {...props} />
   );
 }
 

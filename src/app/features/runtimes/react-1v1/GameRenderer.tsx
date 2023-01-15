@@ -20,7 +20,6 @@ export function GameRenderer({ runtime, ...viewportProps }: GameRendererProps) {
 }
 
 const Viewport = styled("div")`
-  background: skyblue;
   position: relative;
   user-select: none;
   flex: 1;
