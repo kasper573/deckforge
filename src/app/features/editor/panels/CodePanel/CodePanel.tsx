@@ -1,5 +1,5 @@
 import Button from "@mui/material/Button";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 
@@ -16,7 +16,10 @@ import { useModal } from "../../../../../lib/useModal";
 import type { PanelProps } from "../definition";
 import { ApiReferenceDialog } from "./ApiReferenceDialog";
 
-export function CodePanel({ title, ...props }: PanelProps) {
+export const CodePanel = memo(function CodePanel({
+  title,
+  ...props
+}: PanelProps) {
   const { objectSelector, typeDefs, update, error } = useEditorProps();
   const object = useSelector(objectSelector);
   const id = useSelector(selectors.selectedObject);
@@ -58,7 +61,7 @@ export function CodePanel({ title, ...props }: PanelProps) {
       {content}
     </Panel>
   );
-}
+});
 
 function useEditorProps(): {
   typeDefs?: CodeEditorTypeDefs;

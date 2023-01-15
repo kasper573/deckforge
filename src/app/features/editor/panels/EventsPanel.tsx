@@ -1,6 +1,7 @@
 import MenuItem from "@mui/material/MenuItem";
 import { ZodObject } from "zod";
 import Tooltip from "@mui/material/Tooltip";
+import { memo } from "react";
 import { useSelector } from "../store";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
@@ -18,7 +19,7 @@ import { useConfirmDelete } from "../hooks/useConfirmDelete";
 import { usePromptCreate, usePromptRename } from "../hooks/usePromptCrud";
 import type { PanelProps } from "./definition";
 
-export function EventsPanel(props: PanelProps) {
+export const EventsPanel = memo(function EventsPanel(props: PanelProps) {
   const events = useSelector(selectors.events);
   const builtinDef = useSelector(selectors.builtinDefinition);
   const confirmDelete = useConfirmDelete();
@@ -87,7 +88,7 @@ export function EventsPanel(props: PanelProps) {
       )}
     </Panel>
   );
-}
+});
 
 function isEventEditable(event: Event, builtinDef?: RuntimeDefinition) {
   const type = builtinDef?.actions;

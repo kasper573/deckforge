@@ -7,6 +7,7 @@ import Box from "@mui/material/Box";
 import type { ZodType } from "zod";
 import { ZodObject } from "zod";
 import Tooltip from "@mui/material/Tooltip";
+import { memo } from "react";
 import { useSelector } from "../store";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
@@ -48,7 +49,7 @@ export function PlayerPropertiesPanel(props: PanelProps) {
   );
 }
 
-export function PropertiesPanel({
+const PropertiesPanel = memo(function PropertiesPanel({
   entityId,
   properties,
   emptyMessage,
@@ -84,7 +85,7 @@ export function PropertiesPanel({
       )}
     </Panel>
   );
-}
+});
 
 function PropertyListItem({
   isEditable,
