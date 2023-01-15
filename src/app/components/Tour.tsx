@@ -8,9 +8,13 @@ import { styled } from "@mui/material/styles";
 // eslint-disable-next-line mui-path-imports/mui-path-imports
 import { Backdrop, Popper, Zoom } from "@mui/material";
 import { useMemo } from "react";
+import useTheme from "@mui/material/styles/useTheme";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import { useElementSelector } from "../hooks/useElementSelector";
 import { createFrameClipPath } from "../../lib/clipPath";
 import { useElementBounds } from "../hooks/useElementBounds";
+import { Close } from "./icons";
 
 export interface TourState {
   step: number;
@@ -32,6 +36,7 @@ export interface TourProps {
  * Material-ui skinned Joyride component
  */
 export function Tour({ steps, state, onChange }: TourProps) {
+  const theme = useTheme();
   const { step: stepIndex, active } = state;
   const isLastStep = stepIndex === steps.length - 1;
   const step = steps[stepIndex];
@@ -57,15 +62,25 @@ export function Tour({ steps, state, onChange }: TourProps) {
         anchorEl={virtualAnchor}
         placement="auto"
         transition
+        popperOptions={{
+          modifiers: [
+            {
+              name: "offset",
+              options: { offset: [0, parseInt(theme.spacing(2))] },
+            },
+          ],
+        }}
       >
         {({ TransitionProps }) => (
           <Zoom {...TransitionProps}>
             <Card>
+              <Tooltip title="End tour">
+                <DockedIconButton onClick={close}>
+                  <Close />
+                </DockedIconButton>
+              </Tooltip>
               <CardContent>{step.content}</CardContent>
               <CardActions sx={{ justifyContent: "flex-end" }}>
-                <Button color="primary" variant="text" onClick={close}>
-                  Close
-                </Button>
                 {stepIndex > 0 && (
                   <Button color="secondary" variant="text" onClick={back}>
                     Back
@@ -82,6 +97,12 @@ export function Tour({ steps, state, onChange }: TourProps) {
     </>
   );
 }
+
+const DockedIconButton = styled(IconButton)`
+  position: absolute;
+  top: 0;
+  right: 0;
+`;
 
 const TooltipRoot = styled("div")`
   max-width: 500px;
