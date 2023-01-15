@@ -35,14 +35,8 @@ export function EditorIntro({ isLocalInstance }: { isLocalInstance: boolean }) {
 
   const showIntro = useCallback(
     async function showIntro() {
-      if (!hasSeenIntroStorage.load()) {
-        const shouldTakeTour = await confirm(modals.intro);
-
-        hasSeenIntroStorage.save(true);
-
-        if (shouldTakeTour) {
-          await takeTour();
-        }
+      if (await confirm(modals.intro)) {
+        await takeTour();
       }
     },
     [confirm, takeTour]
@@ -57,11 +51,14 @@ export function EditorIntro({ isLocalInstance }: { isLocalInstance: boolean }) {
     });
   }, []);
 
-  useEffect(() => helpEvent.subscribe(takeTour), [takeTour]);
+  useEffect(() => helpEvent.subscribe(showIntro), [showIntro]);
 
   useEffect(() => {
     (async () => {
-      await showIntro();
+      if (!hasSeenIntroStorage.load()) {
+        await showIntro();
+      }
+      hasSeenIntroStorage.save(true);
 
       if (latest.current.isLocalInstance) {
         showToast(modals.localInstanceInfo);
