@@ -6,10 +6,10 @@ import type { ReactNode } from "react";
 import { styled } from "@mui/material/styles";
 
 // eslint-disable-next-line mui-path-imports/mui-path-imports
-import { Popper, Zoom } from "@mui/material";
+import { Backdrop, Popper, Zoom } from "@mui/material";
 import { useMemo } from "react";
 import { useElementSelector } from "../hooks/useElementSelector";
-import { ClippedBackdrop } from "./ClippedBackdrop";
+import { createFrameClipPath } from "../../lib/clipPath";
 
 export interface TourState {
   step: number;
@@ -40,10 +40,12 @@ export function Tour({ steps, state, onChange }: TourProps) {
   const close = () => onChange({ ...state, active: false });
   const next = () => onChange({ ...state, step: stepIndex + 1 });
   const back = () => onChange({ ...state, step: stepIndex - 1 });
-
   return (
     <>
-      <TooltipBackdrop clip={anchorBounds} open={active} />
+      <TooltipBackdrop
+        style={{ clipPath: createFrameClipPath(anchorBounds) }}
+        open={active}
+      />
       <Popper
         components={{ Root: TooltipRoot }}
         open={active}
@@ -81,6 +83,6 @@ const TooltipRoot = styled("div")`
   z-index: ${({ theme }) => theme.zIndex.tooltip};
 `;
 
-const TooltipBackdrop = styled(ClippedBackdrop)`
+const TooltipBackdrop = styled(Backdrop)`
   z-index: ${({ theme }) => theme.zIndex.drawer};
 `;
