@@ -109,11 +109,7 @@ function PanelById({
 }: { panelId: PanelId; path: MosaicBranch[] } & Partial<PanelProps>) {
   const { component: Panel, title, tour } = panelsDefinition[panelId];
   return (
-    <Panel
-      path={path}
-      title={<span className={tour?.className}>{title}</span>}
-      {...props}
-    />
+    <Panel path={path} title={title} className={tour?.className} {...props} />
   );
 }
 
