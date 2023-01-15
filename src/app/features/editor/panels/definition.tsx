@@ -16,7 +16,7 @@ import { LogsPanel } from "./LogsPanel";
 
 export interface PanelProps {
   path: MosaicBranch[];
-  title: ReactNode;
+  title: string;
   draggable?: boolean;
   className?: string;
 }
