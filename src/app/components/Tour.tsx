@@ -10,6 +10,7 @@ import { Backdrop, Popper, Zoom } from "@mui/material";
 import { useMemo } from "react";
 import { useElementSelector } from "../hooks/useElementSelector";
 import { createFrameClipPath } from "../../lib/clipPath";
+import { useElementBounds } from "../hooks/useElementBounds";
 
 export interface TourState {
   step: number;
@@ -35,21 +36,25 @@ export function Tour({ steps, state, onChange }: TourProps) {
   const isLastStep = stepIndex === steps.length - 1;
   const step = steps[stepIndex];
   const anchor = useElementSelector(`.${step.className}`);
-  const anchorBounds = useMemo(() => anchor?.getBoundingClientRect(), [anchor]);
+  const anchorBounds = useElementBounds(anchor);
+  const virtualAnchor = anchorBounds && {
+    getBoundingClientRect: () => anchorBounds,
+  };
+  const clipPath = useMemo(
+    () => createFrameClipPath(anchorBounds),
+    [anchorBounds]
+  );
 
   const close = () => onChange({ ...state, active: false });
   const next = () => onChange({ ...state, step: stepIndex + 1 });
   const back = () => onChange({ ...state, step: stepIndex - 1 });
   return (
     <>
-      <TooltipBackdrop
-        style={{ clipPath: createFrameClipPath(anchorBounds) }}
-        open={active}
-      />
+      <TooltipBackdrop style={{ clipPath }} open={active} />
       <Popper
         components={{ Root: TooltipRoot }}
         open={active}
-        anchorEl={anchor}
+        anchorEl={virtualAnchor}
         placement="auto"
         transition
       >
