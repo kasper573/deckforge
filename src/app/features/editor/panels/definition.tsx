@@ -4,6 +4,7 @@ import Link from "@mui/material/Link";
 import type { PanelId } from "../types";
 import { useModal } from "../../../../lib/useModal";
 import { AlertDialog } from "../../../dialogs/AlertDialog";
+import type { TourStep } from "../../../components/Tour";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel/CodePanel";
@@ -17,15 +18,13 @@ export interface PanelProps {
   path: MosaicBranch[];
   title: ReactNode;
   draggable?: boolean;
+  className?: string;
 }
 
 export interface PanelDefinition {
   component: ComponentType<PanelProps>;
   title: string;
-  tour?: {
-    className: string;
-    content: ReactNode;
-  };
+  tour?: TourStep;
 }
 
 export const panelsDefinition: Record<PanelId, PanelDefinition> = {

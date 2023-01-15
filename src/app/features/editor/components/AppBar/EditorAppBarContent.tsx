@@ -7,6 +7,7 @@ import { Provider as ReduxProvider } from "react-redux";
 import Download from "@mui/icons-material/Download";
 import IconButton from "@mui/material/IconButton";
 import Upload from "@mui/icons-material/Upload";
+import Button from "@mui/material/Button";
 import { selectors } from "../../selectors";
 import { useSelector } from "../../store";
 import { useActions } from "../../../../../lib/useActions";
@@ -27,6 +28,7 @@ import { createJSONFile, loadFile, saveFile } from "../../../../../lib/fileIO";
 import { AlertDialog } from "../../../../dialogs/AlertDialog";
 import { ConfirmDialog } from "../../../../dialogs/ConfirmDialog";
 import { Auth } from "../../../auth/Auth";
+import { createEventBus } from "../../../../../lib/createEventBus";
 import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
 
 export default function EditorAppBarContent() {
@@ -107,6 +109,7 @@ function Content() {
         </Tooltip>
         <div>
           <PanelVisibilityMenu />
+          <Button onClick={helpEvent.emit}>Help</Button>
         </div>
       </Stack>
       <GameName maxWidth={pageMaxWidth}>
@@ -150,6 +153,8 @@ function Content() {
     </Stack>
   );
 }
+
+export const helpEvent = createEventBus();
 
 const GameName = styled(Container)`
   display: flex;
