@@ -1,4 +1,4 @@
-import { expectPageChange, resetData } from "../support/actions/common";
+import { resetData } from "../support/actions/common";
 import type { TestUser } from "../support/actions/user";
 import { nextTestUser, register, showUserMenu } from "../support/actions/user";
 
@@ -23,9 +23,14 @@ describe("game", () => {
       cy.findByRole("button", { name: /create new game/i }).click();
       cy.findByRole("dialog").within(() => {
         cy.findByLabelText(/game name/i).type(gameName);
-        expectPageChange(() => cy.findByRole("form").submit());
+        cy.findByRole("form").submit();
       });
-      expectPageChange(gotoGameList);
+      cy.findByRole("dialog").within(() => {
+        cy.findByText(/welcome to the editor/i);
+        cy.findByRole("button", { name: /no thanks/i }).click();
+      });
+
+      gotoGameList();
     });
 
     it("and see it listed", () => {
