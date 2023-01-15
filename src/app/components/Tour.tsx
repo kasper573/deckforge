@@ -51,8 +51,10 @@ export function Tour({ steps, state, onChange }: TourProps) {
   );
 
   const close = () => onChange({ ...state, active: false });
-  const next = () => onChange({ ...state, step: stepIndex + 1 });
-  const back = () => onChange({ ...state, step: stepIndex - 1 });
+  const next = () =>
+    onChange({ ...state, step: (stepIndex + 1) % steps.length });
+  const back = () => onChange({ ...state, step: Math.max(0, stepIndex - 1) });
+
   return (
     <>
       <TooltipBackdrop style={{ clipPath }} open={active} />
@@ -86,7 +88,11 @@ export function Tour({ steps, state, onChange }: TourProps) {
                     Back
                   </Button>
                 )}
-                <Button color="primary" variant="text" onClick={next}>
+                <Button
+                  color="primary"
+                  variant="text"
+                  onClick={isLastStep ? close : next}
+                >
                   {isLastStep ? "Finish" : "Next"}
                 </Button>
               </CardActions>
