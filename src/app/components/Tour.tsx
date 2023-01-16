@@ -1,4 +1,3 @@
-import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
@@ -11,6 +10,7 @@ import { useEffect, useMemo } from "react";
 import useTheme from "@mui/material/styles/useTheme";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import Paper from "@mui/material/Paper";
 import { useElementSelector } from "../hooks/useElementSelector";
 import { createFrameClipPath } from "../../lib/clipPath";
 import { useElementBounds } from "../hooks/useElementBounds";
@@ -81,7 +81,7 @@ export function Tour({ steps, state, onChange }: TourProps) {
       >
         {({ TransitionProps }) => (
           <Zoom {...TransitionProps}>
-            <Card>
+            <TooltipCard elevation={4}>
               <Tooltip title="End tour">
                 <DockedIconButton onClick={close}>
                   <Close />
@@ -102,7 +102,7 @@ export function Tour({ steps, state, onChange }: TourProps) {
                   {isLastStep ? "Finish" : "Next"}
                 </Button>
               </CardActions>
-            </Card>
+            </TooltipCard>
           </Zoom>
         )}
       </Popper>
@@ -116,8 +116,11 @@ const DockedIconButton = styled(IconButton)`
   right: 0;
 `;
 
-const TooltipRoot = styled("div")`
+const TooltipCard = styled(Paper)`
   max-width: 500px;
+`;
+
+const TooltipRoot = styled("div")`
   z-index: ${({ theme }) => theme.zIndex.drawer - 1};
 `;
 
