@@ -13,7 +13,10 @@ export function createTheme() {
       MuiDialogContent: {
         styleOverrides: {
           root: {
-            overflowY: "visible",
+            overflowY: "auto",
+            // ~300 is roughly the total of app header/footer + dialog title/actions.
+            // Makes sure dialog doesn't cover the app header.
+            maxHeight: "calc(100vh - 300px)",
           },
         },
       },
