@@ -8,6 +8,7 @@ import { useMemo } from "react";
 import Box from "@mui/material/Box";
 import { useRouteParams } from "react-typesafe-routes";
 import type { MosaicBranch } from "react-mosaic-component";
+import GlobalStyles from "@mui/material/GlobalStyles";
 import { StateSynchronizer } from "../../StateSynchronizer";
 import type { PanelProps } from "../../panels/definition";
 import { panelsDefinition } from "../../panels/definition";
@@ -91,14 +92,17 @@ function PanelsWithUserLayout() {
   const panelLayout = useSelector(selectors.panelLayout);
   const { setPanelLayout } = useActions(editorActions);
   return (
-    <PanelContainer
-      value={panelLayout ?? null}
-      onChange={setPanelLayout}
-      zeroStateView={zeroStateView}
-      renderTile={(panelId, path) => (
-        <PanelById panelId={panelId} path={path} />
-      )}
-    />
+    <>
+      <GlobalStyles styles={{ body: { overflow: "hidden" } }} />
+      <PanelContainer
+        value={panelLayout ?? null}
+        onChange={setPanelLayout}
+        zeroStateView={zeroStateView}
+        renderTile={(panelId, path) => (
+          <PanelById panelId={panelId} path={path} />
+        )}
+      />
+    </>
   );
 }
 
