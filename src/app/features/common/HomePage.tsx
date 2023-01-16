@@ -1,10 +1,16 @@
-import { Page } from "../layout/Page";
-import { Header } from "../layout/Header";
+import { Redirect } from "react-typesafe-routes";
+import { router } from "../../router";
+import { useAuth } from "../auth/store";
 
 export default function HomePage() {
+  const { isAuthenticated } = useAuth();
   return (
-    <Page>
-      <Header>HomePage</Header>
-    </Page>
+    <Redirect
+      to={isAuthenticated ? router.user().games() : router.editor({})}
+    />
   );
 }
+
+// Remove this after implementing landing page
+// https://github.com/ksandin/deckforge/issues/58
+export const isLandingPageImplementedYet = false;

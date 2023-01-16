@@ -16,6 +16,7 @@ import { router } from "../../../../router";
 import { pageMaxWidth } from "../../../layout/Page";
 import { gameType } from "../../../../../api/services/game/types";
 import { Auth } from "../../../auth/Auth";
+import { isLandingPageImplementedYet } from "../../../common/HomePage";
 import { EditorMenu } from "./EditorMenu";
 
 export default function EditorAppBarContent() {
@@ -47,22 +48,26 @@ function Content() {
   return (
     <Stack direction="row" sx={{ display: "flex" }}>
       <Stack direction="row" spacing={2} alignItems="center">
-        <Tooltip title="Leave editor">
-          <div>
-            <Auth>
-              {({ access }) => (
-                <LinkIconButton
-                  edge="start"
-                  to={access ? router.user().games() : router.home()}
-                >
-                  <ExitToApp />
-                </LinkIconButton>
-              )}
-            </Auth>
-          </div>
-        </Tooltip>
+        {isLandingPageImplementedYet && (
+          <Tooltip title="Leave editor">
+            <div>
+              <Auth>
+                {({ access }) => (
+                  <LinkIconButton
+                    edge="start"
+                    to={access ? router.user().games() : router.home()}
+                  >
+                    <ExitToApp />
+                  </LinkIconButton>
+                )}
+              </Auth>
+            </div>
+          </Tooltip>
+        )}
         <div>
-          <EditorMenu />
+          <Box sx={{ ml: -1 }}>
+            <EditorMenu />
+          </Box>
         </div>
       </Stack>
       <GameName maxWidth={pageMaxWidth}>
