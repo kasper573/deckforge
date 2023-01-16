@@ -8,28 +8,17 @@ import type { JWTUser, LoginPayload } from "../../../api/services/user/types";
 
 const localStorageKey = "auth" as const;
 
-const store = createStore<{
+interface AuthState {
   token?: string;
   user?: JWTUser;
-  isAuthenticated: boolean;
-  update: (changes: { token?: string; user?: JWTUser }) => void;
-}>()(
-  persist(
-    (set) => ({
-      isAuthenticated: false,
-      update: (changes) =>
-        set((state) => {
-          const newState = { ...state, ...changes };
-          newState.isAuthenticated = !!newState.token && !!newState.user;
-          return newState;
-        }),
-    }),
-    { name: localStorageKey }
-  )
+}
+
+const store = createStore<AuthState>()(
+  persist((set) => ({}), { name: localStorageKey })
 );
 
 export function useAuth() {
-  const { token, user, isAuthenticated } = useStore(store);
+  const state = useStore(store);
   const history = useHistory();
   const {
     mutateAsync: loginMutateAsync,
@@ -42,9 +31,8 @@ export function useAuth() {
     { destination = loginRedirect }: { destination?: typeof loginRedirect } = {}
   ) {
     try {
-      const result = await loginMutateAsync(payload);
-      store.getState().update(result);
-      if (store.getState().isAuthenticated) {
+      store.setState(await loginMutateAsync(payload));
+      if (isAuthenticated(store.getState())) {
         history.push(destination.$);
       }
     } catch (e) {}
@@ -56,13 +44,14 @@ export function useAuth() {
   };
 
   return {
-    token,
-    user,
-    isAuthenticated,
+    ...state,
+    isAuthenticated: isAuthenticated(state),
     login: enhancedLoginMutation,
     logout: () => logout(history),
   };
 }
+
+const isAuthenticated = (state: AuthState) => !!(state.token && state.user);
 
 function logout(history: History) {
   resetAuthToken();
@@ -75,7 +64,7 @@ export function getAuthToken() {
 }
 
 export function resetAuthToken() {
-  store.getState().update({ token: undefined, user: undefined });
+  store.setState({ token: undefined, user: undefined });
 }
 
 export function setupAuthBehavior<State>({
