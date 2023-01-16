@@ -1,8 +1,8 @@
-import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 import ListItemButton from "@mui/material/ListItemButton";
+import type { MenuForProps } from "../../../../components/MenuFor";
 import { MenuFor } from "../../../../components/MenuFor";
 import { panelDefinitionList } from "../../panels/definition";
 import { useSelector } from "../../store";
@@ -11,7 +11,13 @@ import { editorActions } from "../../actions";
 import { useActions } from "../../../../../lib/useActions";
 import { defaultPanelLayout } from "../../panels/defaultPanelLayout";
 
-export function PanelVisibilityMenu() {
+export function PanelVisibilityMenu({
+  onClose,
+  trigger,
+}: {
+  onClose?: () => void;
+  trigger: MenuForProps["trigger"];
+}) {
   const visibilities = useSelector(selectors.panelVisibilities);
   const { setPanelVisibility, setPanelLayout } = useActions(editorActions);
 
@@ -30,8 +36,9 @@ export function PanelVisibilityMenu() {
   return (
     <MenuFor
       dontCloseOnSelect
-      trigger={({ open }) => <Button onClick={open}>Panels</Button>}
+      trigger={trigger}
       MenuListProps={{ sx: { pt: 0 } }}
+      onClose={onClose}
     >
       {[
         ...checkboxItems,

@@ -8,9 +8,9 @@ import { panelDefinitionList } from "../../panels/definition";
 import { defined } from "../../../../../lib/ts-extensions/defined";
 import type { TourState } from "../../../../components/Tour";
 import { Tour } from "../../../../components/Tour";
-import { helpEvent } from "../../components/AppBar/EditorAppBarContent";
 import { Link } from "../../../../components/Link";
 import { router } from "../../../../router";
+import { helpEvent } from "../../components/AppBar/EditorMenu";
 
 export function EditorIntro({ isLocalInstance }: { isLocalInstance: boolean }) {
   const tourResolverRef = useRef(() => {});

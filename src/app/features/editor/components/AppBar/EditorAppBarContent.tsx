@@ -4,12 +4,8 @@ import Container from "@mui/material/Container";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { Provider as ReduxProvider } from "react-redux";
-import Download from "@mui/icons-material/Download";
-import IconButton from "@mui/material/IconButton";
-import Upload from "@mui/icons-material/Upload";
-import Button from "@mui/material/Button";
 import { selectors } from "../../selectors";
-import { useSelector } from "../../store";
+import { editorStore, useSelector } from "../../store";
 import { useActions } from "../../../../../lib/useActions";
 import { editorActions } from "../../actions";
 import { ExitToApp, Play } from "../../../../components/icons";
@@ -18,18 +14,9 @@ import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { LinkIconButton } from "../../../../components/Link";
 import { router } from "../../../../router";
 import { pageMaxWidth } from "../../../layout/Page";
-import type { GameDefinition } from "../../../../../api/services/game/types";
-import {
-  gameDefinitionType,
-  gameType,
-} from "../../../../../api/services/game/types";
-import { editorStore } from "../../store";
-import { createJSONFile, loadFile, saveFile } from "../../../../../lib/fileIO";
-import { AlertDialog } from "../../../../dialogs/AlertDialog";
-import { ConfirmDialog } from "../../../../dialogs/ConfirmDialog";
+import { gameType } from "../../../../../api/services/game/types";
 import { Auth } from "../../../auth/Auth";
-import { createEventBus } from "../../../../../lib/createEventBus";
-import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
+import { EditorMenu } from "./EditorMenu";
 
 export default function EditorAppBarContent() {
   // Store must be provided since app bar is outside the editor page
@@ -43,9 +30,7 @@ export default function EditorAppBarContent() {
 function Content() {
   const prompt = useModal(PromptDialog);
   const game = useSelector(selectors.game);
-  const { renameGame, overwriteGameDefinition } = useActions(editorActions);
-  const alert = useModal(AlertDialog);
-  const confirm = useModal(ConfirmDialog);
+  const { renameGame } = useActions(editorActions);
 
   async function promptRename() {
     const newName = await prompt({
@@ -56,37 +41,6 @@ function Content() {
     });
     if (newName) {
       renameGame(newName);
-    }
-  }
-
-  function downloadGameDefinition() {
-    if (game) {
-      saveFile(createJSONFile(game.definition, game.name + ".json"));
-    }
-  }
-
-  async function loadGameDefinition() {
-    const file = await loadFile({ accept: "application/json" });
-    if (!file) {
-      return;
-    }
-
-    let newDefinition: GameDefinition;
-    try {
-      newDefinition = gameDefinitionType.parse(JSON.parse(await file.text()));
-    } catch (e) {
-      alert({ title: "Invalid game definition", content: String(e) });
-      return;
-    }
-
-    const shouldOverwrite = await confirm({
-      title: "Overwrite game definition?",
-      content:
-        "The current game definition will be lost forever. Are you sure you want to continue?",
-    });
-
-    if (shouldOverwrite) {
-      overwriteGameDefinition(newDefinition);
     }
   }
 
@@ -108,8 +62,7 @@ function Content() {
           </div>
         </Tooltip>
         <div>
-          <PanelVisibilityMenu />
-          <Button onClick={helpEvent.emit}>Help</Button>
+          <EditorMenu />
         </div>
       </Stack>
       <GameName maxWidth={pageMaxWidth}>
@@ -132,20 +85,6 @@ function Content() {
                   </Clickable>
                 </Tooltip>
               )}
-              <Tooltip title="Download game definition">
-                <Clickable>
-                  <IconButton onClick={downloadGameDefinition}>
-                    <Download />
-                  </IconButton>
-                </Clickable>
-              </Tooltip>
-              <Tooltip title="Load game definition">
-                <Clickable>
-                  <IconButton onClick={loadGameDefinition}>
-                    <Upload />
-                  </IconButton>
-                </Clickable>
-              </Tooltip>
             </>
           )}
         </Stack>
@@ -153,8 +92,6 @@ function Content() {
     </Stack>
   );
 }
-
-export const helpEvent = createEventBus();
 
 const GameName = styled(Container)`
   display: flex;
