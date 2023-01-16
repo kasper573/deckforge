@@ -63,16 +63,18 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       content: (
         <>
           <Typography paragraph>
-            The decks panel allows editing the decks and cards that should be
-            available in the game. Right click to add, remove or rename decks
-            and cards.
+            The decks panel contains all the decks and cards that will be
+            available in your game.
           </Typography>
-          <Typography>
+          <Typography paragraph>
             Selecting a card will allow you to edit its behavior in the code
-            panel. A cards code defines a record of{" "}
+            panel. The code for a card should define a record of{" "}
             <StateReducer>state reducers</StateReducer>, where the key is the
             name of an event to react to. This allows you to completely
             customize how the card should behave.
+          </Typography>
+          <Typography>
+            Right click to add, remove or rename decks and cards.
           </Typography>
         </>
       ),
@@ -123,12 +125,13 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       content: (
         <>
           <Typography paragraph>
-            The events panel allows you to add, remove and edit events.
+            Events are <StateReducer>state reducers</StateReducer> that
+            represent reusable game mechanics.
           </Typography>
           <Typography paragraph>
-            The code for an event is a <StateReducer />. The game runtime will
-            automatically trigger the right built-in events and the right time,
-            but you will also be able to trigger them manually from code.
+            The built-in game runtime will call predefined events at the right
+            time. But you can also invoke events from your own code, whether its
+            an event invoking another event, or a card invoking an event.
           </Typography>
           <Typography>Right click to add, remove or rename events.</Typography>
         </>
@@ -143,10 +146,15 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       content: (
         <>
           <Typography paragraph>
-            Middlewares are <StateReducer /> functions that run for all events.
-            They can be used to intercept and modify the game state. Middlewares
-            are applied in the order they are listed, and if a middleware does
-            not call its next function the middleware chain stops there.
+            Middlewares are <StateReducer /> functions that run each time any
+            event is invoked.
+          </Typography>
+
+          <Typography paragraph>
+            They have an additional parameter <code>next</code>, which is a
+            function that will call the next middleware. This allows you to
+            intercept and enhance the behavior of all events. Middlewares are
+            applied in the order they are listed.
           </Typography>
 
           <Typography>
@@ -211,7 +219,7 @@ function StateReducer({
               A state reducer is a function that will takes two parameters: The
               runtime state object, and a payload. The purpose is to use the
               payload to make mutations to the state object. Any mutations made
-              to will only be applied to the game state once the reducer has
+              will only be applied to the game state once the reducer has
               finished processing.
             </>
           ),
