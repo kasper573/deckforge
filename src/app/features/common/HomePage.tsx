@@ -7,6 +7,7 @@ export default function HomePage() {
   return (
     <Redirect
       to={isAuthenticated ? router.user().games() : router.editor({})}
+      push={false}
     />
   );
 }
