@@ -42,30 +42,6 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       ),
     },
   },
-  code: {
-    component: CodePanel,
-    title: "Code",
-    tour: {
-      className: "tour-code",
-      content: (
-        <>
-          <Typography paragraph>
-            The code panel allows you to edit the code for the currently
-            selected event, middleware or card.
-          </Typography>
-          <Typography paragraph>
-            Deck forge uses javascript, with type hints provided by typescript
-            types. Click the API Reference button to see definitions of all
-            types and functions available for the currently selected object.
-          </Typography>
-          <Typography>
-            In your code, call either the <code>define</code> or{" "}
-            <code>derive</code> functions to describe what your object does.
-          </Typography>
-        </>
-      ),
-    },
-  },
   inspector: {
     component: InspectorPanel,
     title: "Inspector",
@@ -98,6 +74,43 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
             name of an event to react to. This allows you to completely
             customize how the card should behave.
           </Typography>
+        </>
+      ),
+    },
+  },
+  code: {
+    component: CodePanel,
+    title: "Code",
+    tour: {
+      className: "tour-code",
+      content: (
+        <>
+          <Typography paragraph>
+            The code panel allows you to edit the code for the currently
+            selected event, middleware or card.
+          </Typography>
+          <Typography paragraph>
+            Deck forge uses javascript, with type hints provided by typescript
+            types. Click the API Reference button to see definitions of all
+            types and functions available for the currently selected object.
+          </Typography>
+          <Typography>
+            In your code, call either the <code>define</code> or{" "}
+            <code>derive</code> functions to describe what your object does.
+          </Typography>
+        </>
+      ),
+    },
+  },
+  logs: {
+    component: LogsPanel,
+    title: "Logs",
+    tour: {
+      className: "tour-logs",
+      content: (
+        <>
+          The logs panel shows compiler and runtime errors, and events as they
+          happen in the game runtime.
         </>
       ),
     },
@@ -175,19 +188,6 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
           <Typography>
             Right click to add, remove or rename properties.
           </Typography>
-        </>
-      ),
-    },
-  },
-  logs: {
-    component: LogsPanel,
-    title: "Logs",
-    tour: {
-      className: "tour-logs",
-      content: (
-        <>
-          The logs panel shows compiler and runtime errors, and events as they
-          happen in the game runtime.
         </>
       ),
     },
