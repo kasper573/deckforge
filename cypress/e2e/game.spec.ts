@@ -17,14 +17,10 @@ describe("game", () => {
   });
 
   describe("can create new game", () => {
-    const gameName = "Test game";
+    const gameName = "New game";
 
     beforeEach(() => {
-      cy.findByRole("button", { name: /create new game/i }).click();
-      cy.findByRole("dialog").within(() => {
-        cy.findByLabelText(/game name/i).type(gameName);
-        cy.findByRole("form").submit();
-      });
+      cy.findByRole("button", { name: /create game/i }).click();
       cy.findByRole("dialog").within(() => {
         cy.findByText(/welcome to the editor/i);
         cy.findByRole("button", { name: /no thanks/i }).click();
