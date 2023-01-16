@@ -7,7 +7,7 @@ import { styled } from "@mui/material/styles";
 
 // eslint-disable-next-line mui-path-imports/mui-path-imports
 import { Backdrop, Popper, Zoom } from "@mui/material";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import useTheme from "@mui/material/styles/useTheme";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
@@ -54,6 +54,12 @@ export function Tour({ steps, state, onChange }: TourProps) {
   const next = () =>
     onChange({ ...state, step: (stepIndex + 1) % steps.length });
   const back = () => onChange({ ...state, step: Math.max(0, stepIndex - 1) });
+
+  useEffect(() => {
+    if (active && anchor) {
+      anchor.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [anchor, active]);
 
   return (
     <>
