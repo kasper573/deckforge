@@ -118,9 +118,9 @@ const DockedIconButton = styled(IconButton)`
 
 const TooltipRoot = styled("div")`
   max-width: 500px;
-  z-index: ${({ theme }) => theme.zIndex.tooltip};
+  z-index: ${({ theme }) => theme.zIndex.drawer - 1};
 `;
 
 const TooltipBackdrop = styled(Backdrop)`
-  z-index: ${({ theme }) => theme.zIndex.drawer};
+  z-index: ${({ theme }) => theme.zIndex.appBar - 1};
 `;
