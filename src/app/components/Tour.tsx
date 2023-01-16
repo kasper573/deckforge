@@ -108,9 +108,7 @@ export function Tour({ steps, state, onChange }: TourProps) {
 }
 
 const DockedIconButton = styled(IconButton)`
-  position: absolute;
-  top: 0;
-  right: 0;
+  float: right;
 `;
 
 const TooltipCard = styled(Paper)`
