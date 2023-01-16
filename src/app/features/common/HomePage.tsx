@@ -1,17 +1,13 @@
-import { Redirect } from "react-typesafe-routes";
-import { router } from "../../router";
-import { useAuth } from "../auth/store";
+import Typography from "@mui/material/Typography";
+import { Page } from "../layout/Page";
+import { Center } from "../../components/Center";
 
 export default function HomePage() {
-  const { isAuthenticated } = useAuth();
   return (
-    <Redirect
-      to={isAuthenticated ? router.user().games() : router.editor({})}
-      push={false}
-    />
+    <Page>
+      <Center>
+        <Typography variant="h1">Deck Forge</Typography>
+      </Center>
+    </Page>
   );
 }
-
-// Remove this after implementing landing page
-// https://github.com/ksandin/deckforge/issues/58
-export const isLandingPageImplementedYet = false;
