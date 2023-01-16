@@ -1,6 +1,7 @@
 import type { ComponentType, ReactNode } from "react";
 import type { MosaicBranch } from "react-mosaic-component";
 import Link from "@mui/material/Link";
+import Typography from "@mui/material/Typography";
 import type { PanelId } from "../types";
 import { useModal } from "../../../../lib/useModal";
 import { AlertDialog } from "../../../dialogs/AlertDialog";
@@ -48,19 +49,19 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-code",
       content: (
         <>
-          <p>
+          <Typography paragraph>
             The code panel allows you to edit the code for the currently
             selected event, middleware or card.
-          </p>
-          <p>
+          </Typography>
+          <Typography paragraph>
             Deck forge uses javascript, with type hints provided by typescript
             types. Click the API Reference button to see definitions of all
             types and functions available for the currently selected object.
-          </p>
-          <p>
+          </Typography>
+          <Typography>
             In your code, call either the <code>define</code> or{" "}
             <code>derive</code> functions to describe what your object does.
-          </p>
+          </Typography>
         </>
       ),
     },
@@ -85,18 +86,18 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-decks",
       content: (
         <>
-          <p>
+          <Typography paragraph>
             The decks panel allows editing the decks and cards that should be
             available in the game. Right click to add, remove or rename decks
             and cards.
-          </p>
-          <p>
+          </Typography>
+          <Typography>
             Selecting a card will allow you to edit its behavior in the code
             panel. A cards code defines a record of{" "}
             <StateReducer>state reducers</StateReducer>, where the key is the
             name of an event to react to. This allows you to completely
             customize how the card should behave.
-          </p>
+          </Typography>
         </>
       ),
     },
@@ -108,13 +109,15 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-events",
       content: (
         <>
-          <p>The events panel allows you to add, remove and edit events.</p>
-          <p>
+          <Typography paragraph>
+            The events panel allows you to add, remove and edit events.
+          </Typography>
+          <Typography paragraph>
             The code for an event is a <StateReducer />. The game runtime will
             automatically trigger the right built-in events and the right time,
             but you will also be able to trigger them manually from code.
-          </p>
-          <p>Right click to add, remove or rename events.</p>
+          </Typography>
+          <Typography>Right click to add, remove or rename events.</Typography>
         </>
       ),
     },
@@ -126,14 +129,16 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-middlewares",
       content: (
         <>
-          <p>
+          <Typography paragraph>
             Middlewares are <StateReducer /> functions that run for all events.
             They can be used to intercept and modify the game state. Middlewares
             are applied in the order they are listed, and if a middleware does
             not call its next function the middleware chain stops there.
-          </p>
+          </Typography>
 
-          <p>Right click to add, remove or rename middlewares.</p>
+          <Typography>
+            Right click to add, remove or rename middlewares.
+          </Typography>
         </>
       ),
     },
@@ -145,11 +150,13 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-card-properties",
       content: (
         <>
-          <p>
+          <Typography paragraph>
             Card properties define what state exists on all cards. Each property
             has a name, type and default value.
-          </p>
-          <p>Right click to add, remove or rename properties.</p>
+          </Typography>
+          <Typography>
+            Right click to add, remove or rename properties.
+          </Typography>
         </>
       ),
     },
@@ -161,11 +168,13 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-player-properties",
       content: (
         <>
-          <p>
+          <Typography paragraph>
             Player properties define what state exists on all players. Each
             property has a name, type and default value.
-          </p>
-          <p>Right click to add, remove or rename properties.</p>
+          </Typography>
+          <Typography>
+            Right click to add, remove or rename properties.
+          </Typography>
         </>
       ),
     },
