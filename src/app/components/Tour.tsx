@@ -32,9 +32,6 @@ export interface TourProps {
   onChange: (state: TourState) => void;
 }
 
-/**
- * Material-ui skinned Joyride component
- */
 export function Tour({ steps, state, onChange }: TourProps) {
   const theme = useTheme();
   const { step: stepIndex, active } = state;
