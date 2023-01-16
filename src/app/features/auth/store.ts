@@ -26,14 +26,11 @@ export function useAuth() {
     ...loginMutationProps
   } = trpc.user.login.useMutation();
 
-  async function enhancedLogin(
-    payload: LoginPayload,
-    { destination = loginRedirect }: { destination?: typeof loginRedirect } = {}
-  ) {
+  async function enhancedLogin(payload: LoginPayload) {
     try {
       store.setState(await loginMutateAsync(payload));
       if (isAuthenticated(store.getState())) {
-        history.push(destination.$);
+        history.push(loginRedirect.$);
       }
     } catch (e) {}
   }
