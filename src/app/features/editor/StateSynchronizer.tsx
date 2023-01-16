@@ -11,6 +11,7 @@ import { useSelector } from "./store";
 import { selectors } from "./selectors";
 import { editorActions } from "./actions";
 import { getDefaultGameDefinition } from "./getDefaultGameDefinition";
+import type { EditorGame } from "./types";
 import { editorGameType } from "./types";
 
 export function StateSynchronizer({ gameId }: { gameId?: GameId }) {
@@ -41,24 +42,22 @@ export function StateSynchronizer({ gameId }: { gameId?: GameId }) {
   }, [gameId, defaultDefinition, remoteGame?.gameId]);
 
   useEffect(() => {
-    // Store in local storage
-    if (localGame) {
+    if (isLocalOnlyGame(localGame)) {
       localGameStorage.save(localGame);
-    }
-
-    // Upload to server
-    if (
-      localGame?.gameId && // Missing gameId means it's a local instance that cannot be uploaded
-      localGame.gameId === remoteGame?.gameId &&
+    } else if (
+      gameId &&
+      localGame?.gameId === gameId &&
       !isEqual(localGame, remoteGame)
     ) {
-      uploadGame({ ...localGame, gameId: localGame.gameId });
+      uploadGame({ ...localGame, gameId });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localGame]);
 
   return null;
 }
+
+const isLocalOnlyGame = (game?: EditorGame) => game && !game.gameId;
 
 const localGameStorage = createZodStorage(
   editorGameType.optional(),
