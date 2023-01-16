@@ -49,11 +49,13 @@ export const CodePanel = memo(function CodePanel({
       }
       toolbarControls={
         <PanelControls>
-          {typeDefs && (
-            <Button size="small" onClick={() => showApiReference(typeDefs)}>
-              API Reference
-            </Button>
-          )}
+          <Button
+            size="small"
+            disabled={!typeDefs}
+            onClick={() => showApiReference(typeDefs)}
+          >
+            API Reference
+          </Button>
         </PanelControls>
       }
       {...props}
