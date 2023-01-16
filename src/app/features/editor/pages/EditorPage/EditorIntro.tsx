@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
+import GlobalStyles from "@mui/material/GlobalStyles";
 import { createZodStorage } from "../../../../../lib/zod-extensions/zodStorage";
 import { useModal } from "../../../../../lib/useModal";
 import { Toast } from "../../../../components/Toast";
@@ -67,13 +68,26 @@ export function EditorIntro({ isLocalInstance }: { isLocalInstance: boolean }) {
   }, [showIntro, showToast]);
 
   return (
-    <Tour
-      steps={tourSteps}
-      state={tourState}
-      onChange={handleTourStateChange}
-    />
+    <>
+      {tourState.active && touchScrollDisabler}
+      <Tour
+        steps={tourSteps}
+        state={tourState}
+        onChange={handleTourStateChange}
+      />
+    </>
   );
 }
+
+const touchScrollDisabler = (
+  <GlobalStyles
+    styles={{
+      body: {
+        touchAction: "none",
+      },
+    }}
+  />
+);
 
 const tourSteps = defined(panelDefinitionList.map((panel) => panel.tour));
 
