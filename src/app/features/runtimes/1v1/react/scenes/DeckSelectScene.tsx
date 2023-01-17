@@ -6,7 +6,7 @@ import InputLabel from "@mui/material/InputLabel";
 import { useState } from "react";
 import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
-import { adapter } from "../definition";
+import { adapter } from "../../definition";
 import { Center } from "../../../../../components/Center";
 import type { RuntimeDeck, RuntimeGenerics } from "../../../../compiler/types";
 

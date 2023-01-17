@@ -2,10 +2,10 @@ import type { ComponentProps, ReactNode } from "react";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 
+import type { React1v1Types } from "../definition";
 import { PlayerStatus } from "./PlayerStatus";
 import { CardPile } from "./CardPile";
 import { PlayerHand } from "./PlayerHand";
-import type { React1v1Types } from "./definition";
 
 export function PlayerBoard({
   sx,

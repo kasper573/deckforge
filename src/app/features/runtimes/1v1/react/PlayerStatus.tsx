@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import type Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import type { React1v1Types } from "./definition";
+import type { React1v1Types } from "../definition";
 
 export const PlayerStatus = ({
   player,
