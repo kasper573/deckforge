@@ -6,7 +6,7 @@ import type { GameId } from "../api/services/game/types";
 import { createAccessFactory } from "./features/auth/access";
 import { NotPermittedPage } from "./features/auth/pages/NotPermittedPage";
 import { NotAuthenticatedPage } from "./features/auth/pages/NotAuthenticatedPage";
-import { DefaultAppBarContent } from "./features/common/DefaultAppBarContent";
+import { Logo } from "./features/layout/Logo";
 
 const access = createAccessFactory({
   NotPermittedPage,
@@ -17,7 +17,7 @@ export const router = OptionsRouter(
   {
     globalLoadingIndicator: true,
     appBar: {
-      content: DefaultAppBarContent as ComponentType,
+      content: Logo as ComponentType,
       container: true,
     },
   },
