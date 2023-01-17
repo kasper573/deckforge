@@ -13,7 +13,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Paper from "@mui/material/Paper";
 import { useElementSelector } from "../hooks/useElementSelector";
 import { createFrameClipPath } from "../../lib/clipPath";
-import { useElementBounds } from "../hooks/useElementBounds";
+import { useElementBounds } from "../../lib/useElementBounds";
 import { Close } from "./icons";
 
 export interface TourState {
