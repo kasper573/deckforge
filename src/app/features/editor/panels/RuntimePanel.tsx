@@ -14,7 +14,7 @@ import { PanelControls } from "../components/PanelControls";
 import { compileGame } from "../../compiler/compileGame";
 import { Reload } from "../../../components/icons";
 import type { RuntimeGenerics } from "../../compiler/types";
-import { GameRenderer } from "../../runtimes/1v1/react/GameRenderer";
+import { GameRenderer } from "../../runtimes/versus/react/GameRenderer";
 import { ErrorBoundary } from "../../../ErrorBoundary";
 import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";

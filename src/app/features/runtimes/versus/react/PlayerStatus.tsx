@@ -1,12 +1,12 @@
 import type { ComponentProps } from "react";
 import type Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import type { React1v1Types } from "../definition";
+import type { VersusTypes } from "../definition";
 
 export const PlayerStatus = ({
   player,
   ...props
-}: ComponentProps<typeof Box> & { player: React1v1Types["player"] }) => (
+}: ComponentProps<typeof Box> & { player: VersusTypes["player"] }) => (
   <Stack direction="row" spacing={2} sx={{ color: "black" }} {...props}>
     <span>
       HP: {player.properties.health}/{player.properties.healthMax}

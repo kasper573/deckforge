@@ -2,7 +2,7 @@ import { useRouteParams } from "react-typesafe-routes";
 import { useMemo } from "react";
 import { Page } from "../layout/Page";
 import { router } from "../../router";
-import { GameRenderer } from "../runtimes/1v1/react/GameRenderer";
+import { GameRenderer } from "../runtimes/versus/react/GameRenderer";
 import { compileGame } from "../compiler/compileGame";
 import type { RuntimeGenerics } from "../compiler/types";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";

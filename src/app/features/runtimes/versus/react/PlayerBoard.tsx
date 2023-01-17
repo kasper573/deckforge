@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 
-import type { React1v1Types } from "../definition";
+import type { VersusTypes } from "../definition";
 import { PlayerStatus } from "./PlayerStatus";
 import { CardPile } from "./CardPile";
 import { PlayerHand } from "./PlayerHand";
@@ -16,8 +16,8 @@ export function PlayerBoard({
   ...props
 }: ComponentProps<typeof Stack> & {
   placement: "top" | "bottom";
-  player: React1v1Types["player"];
-  opponent: React1v1Types["player"];
+  player: VersusTypes["player"];
+  opponent: VersusTypes["player"];
   children?: ReactNode;
 }) {
   return (
