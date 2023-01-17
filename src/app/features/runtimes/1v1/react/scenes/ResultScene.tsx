@@ -1,8 +1,8 @@
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import type { RuntimePlayerId } from "../../../compiler/types";
+import type { RuntimePlayerId } from "../../../../compiler/types";
 import { adapter } from "../definition";
-import { Center } from "../../../../components/Center";
+import { Center } from "../../../../../components/Center";
 
 export function ResultScene({ winner }: { winner: RuntimePlayerId }) {
   const players = adapter.useRuntimeState((state) => state.players);

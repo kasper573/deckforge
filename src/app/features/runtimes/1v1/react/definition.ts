@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { defineRuntime, runtimeEvent } from "../../compiler/defineRuntime";
-import { createReactAdapter } from "../../../../lib/machine/createReactAdapter";
-import type { inferFromZodShape } from "../../../../lib/zod-extensions/ZodShapeFor";
+import { defineRuntime, runtimeEvent } from "../../../compiler/defineRuntime";
+import { createReactAdapter } from "../../../../../lib/machine/createReactAdapter";
+import type { inferFromZodShape } from "../../../../../lib/zod-extensions/ZodShapeFor";
 import type {
   RuntimeGenericsFor,
   RuntimeMachineContext,
-} from "../../compiler/types";
-import { cardInstanceIdType } from "../../compiler/types";
+} from "../../../compiler/types";
+import { cardInstanceIdType } from "../../../compiler/types";
 
 export const builtinDefinition = defineRuntime({
   playerProperties: {

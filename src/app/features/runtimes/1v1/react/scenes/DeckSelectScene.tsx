@@ -7,8 +7,8 @@ import { useState } from "react";
 import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
 import { adapter } from "../definition";
-import { Center } from "../../../../components/Center";
-import type { RuntimeDeck, RuntimeGenerics } from "../../../compiler/types";
+import { Center } from "../../../../../components/Center";
+import type { RuntimeDeck, RuntimeGenerics } from "../../../../compiler/types";
 
 export function DeckSelectScene() {
   const { startBattle } = adapter.useRuntimeActions();

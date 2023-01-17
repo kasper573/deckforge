@@ -1,6 +1,6 @@
 import { styled } from "@mui/material/styles";
 import type { ComponentProps } from "react";
-import type { MakePartial } from "../../../../lib/ts-extensions/MakePartial";
+import type { MakePartial } from "../../../../../lib/ts-extensions/MakePartial";
 
 export type CardProps = MakePartial<ComponentProps<typeof Card>, "disabled">;
 

@@ -1,4 +1,4 @@
-import type { CardInstanceId } from "../../compiler/types";
+import type { CardInstanceId } from "../../../compiler/types";
 import type { React1v1Types } from "./definition";
 import { adapter } from "./definition";
 import { Card, CardCost } from "./Card";
