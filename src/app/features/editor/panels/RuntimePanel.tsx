@@ -14,7 +14,6 @@ import { PanelControls } from "../components/PanelControls";
 import { compileGame } from "../../compiler/compileGame";
 import { Reload } from "../../../components/icons";
 import type { RuntimeGenerics } from "../../compiler/types";
-import { GameRenderer } from "../../runtimes/versus/react/GameRenderer";
 import { ErrorBoundary } from "../../../ErrorBoundary";
 import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
@@ -22,6 +21,7 @@ import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import type { MachineMiddleware } from "../../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../../lib/machine/MachineContext";
+import { PixiGameRenderer } from "../../runtimes/versus/pixi/PixiRenderer";
 import type { PanelProps } from "./definition";
 
 export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
@@ -104,7 +104,7 @@ export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
             fallback={RuntimeErrorFallback}
             onError={onRenderError}
           >
-            <GameRendererWithBackground runtime={compiled.runtime} />
+            <DockedGameRenderer runtime={compiled.runtime} />
           </ErrorBoundary>
         ) : (
           <PanelEmptyState>
@@ -116,7 +116,9 @@ export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
   );
 });
 
-const GameRendererWithBackground = styled(GameRenderer)`
+const DockedGameRenderer = styled(PixiGameRenderer)`
+  width: 100%;
+  height: 100%;
   background: ${({ theme }) => theme.palette.secondary.dark};
 `;
 
