@@ -11,7 +11,7 @@ import { useMemo } from "react";
 import type { ModalProps } from "../../lib/useModal";
 import { useForm } from "../hooks/useForm";
 
-export type PromptDialogProps<T extends ZodString> = ModalProps<
+export type PromptDialogProps<T extends ZodString = ZodString> = ModalProps<
   string | undefined,
   {
     title: ReactNode;
@@ -21,6 +21,7 @@ export type PromptDialogProps<T extends ZodString> = ModalProps<
     submitLabel?: ReactNode;
     cancelLabel?: ReactNode;
     helperText?: ReactNode;
+    allowCancellation?: boolean;
   }
 >;
 
@@ -34,6 +35,7 @@ export function PromptDialog<T extends ZodString>({
     submitLabel = "Submit",
     cancelLabel = "Cancel",
     helperText,
+    allowCancellation = true,
   },
   resolve,
 }: PromptDialogProps<T>) {
@@ -55,7 +57,12 @@ export function PromptDialog<T extends ZodString>({
   }
 
   return (
-    <Dialog disableRestoreFocus fullWidth open={open} onClose={cancel}>
+    <Dialog
+      disableRestoreFocus
+      fullWidth
+      open={open}
+      onClose={allowCancellation ? cancel : undefined}
+    >
       <form name="prompt" onSubmit={form.handleSubmit(onSubmit)}>
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
@@ -70,7 +77,7 @@ export function PromptDialog<T extends ZodString>({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={cancel}>{cancelLabel}</Button>
+          {allowCancellation && <Button onClick={cancel}>{cancelLabel}</Button>}
           <Button type="submit" variant="contained">
             {submitLabel}
           </Button>
