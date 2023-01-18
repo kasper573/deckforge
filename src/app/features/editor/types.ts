@@ -7,9 +7,9 @@ import type {
   DeckId,
   PropertyId,
   MiddlewareId,
+  Game,
 } from "../../../api/services/game/types";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
-import { gameType } from "../../../api/services/game/types";
 
 export const editorObjectIdType = z
   .object({
@@ -43,13 +43,8 @@ export const editorObjectIdType = z
 
 export type EditorObjectId = z.infer<typeof editorObjectIdType>;
 
-export type EditorGame = z.infer<typeof editorGameType>;
-export const editorGameType = gameType
-  .pick({ name: true, definition: true })
-  .and(gameType.pick({ gameId: true }).partial());
-
 export interface EditorState {
-  game?: EditorGame;
+  game?: Game;
   selectedObjectId?: EditorObjectId;
   panelLayout?: PanelLayout;
   logs: LogEntry[];

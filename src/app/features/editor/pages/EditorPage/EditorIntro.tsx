@@ -14,18 +14,18 @@ import { Tour } from "../../../../components/Tour";
 import { Link } from "../../../../components/Link";
 import { router } from "../../../../router";
 import { helpEvent } from "../../components/AppBar/EditorMenu";
+import { useStore } from "../../store";
+import { isAuthenticated } from "../../../auth/store";
 
-export function EditorIntro({ isLocalInstance }: { isLocalInstance: boolean }) {
+export function EditorIntro() {
   const tourResolverRef = useRef(() => {});
   const showToast = useModal(Toast);
   const confirm = useModal(ConfirmDialog);
+  const store = useStore();
   const [tourState, setTourState] = useState<TourState>({
     step: 0,
     active: false,
   });
-
-  const latest = useRef({ isLocalInstance });
-  latest.current.isLocalInstance = isLocalInstance;
 
   const takeTour = useCallback(
     () =>
@@ -63,11 +63,11 @@ export function EditorIntro({ isLocalInstance }: { isLocalInstance: boolean }) {
       }
       hasSeenIntroStorage.save(true);
 
-      if (latest.current.isLocalInstance) {
+      if (!isAuthenticated()) {
         showToast(modals.localInstanceInfo);
       }
     })();
-  }, [showIntro, showToast]);
+  }, [showIntro, showToast, store]);
 
   return (
     <>

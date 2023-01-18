@@ -49,7 +49,7 @@ export function UserMenu(props?: IconButtonProps) {
           />
         </ListItem>
         <Divider sx={{ mb: 1 }} />
-        <LinkMenuItem to={router.user().games()}>Your games</LinkMenuItem>
+        <LinkMenuItem to={router.editor()}>Your games</LinkMenuItem>
         <LinkMenuItem to={router.user().profile()}>
           Account settings
         </LinkMenuItem>

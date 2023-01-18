@@ -10,7 +10,7 @@ export default function HomePage() {
       <Center sx={{ textAlign: "center" }}>
         <Typography variant="h1">Deck Forge</Typography>
 
-        <LinkButton sx={{ mt: 2 }} variant="outlined" to={router.editor({})}>
+        <LinkButton sx={{ mt: 2 }} variant="outlined" to={router.editor()}>
           Create your own card game
         </LinkButton>
       </Center>

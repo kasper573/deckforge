@@ -48,7 +48,8 @@ export function useAuth() {
   };
 }
 
-const isAuthenticated = (state: AuthState) => !!(state.token && state.user);
+export const isAuthenticated = (state: AuthState = store.getState()) =>
+  !!(state.token && state.user);
 
 function logout(history: History) {
   resetAuthToken();

@@ -30,7 +30,7 @@ export function GameCard({
   const deleteGame = useToastProcedure(trpc.game.delete);
 
   return (
-    <CardLink aria-label={name} to={router.editor({ gameId })}>
+    <CardLink aria-label={name} to={router.editor().edit({ gameId })}>
       <CardActionArea component="div">
         <CardMedia component="img" height="140" image="/logo.webp" />
         <CardContent>
