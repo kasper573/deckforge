@@ -6,15 +6,11 @@ import { useRouteParams } from "react-typesafe-routes";
 import { StateSynchronizer } from "../../utils/StateSynchronizer";
 import { editorStore } from "../../store";
 import { router } from "../../../../router";
-import { useAuth } from "../../../auth/store";
-import { useOfflineGameService } from "../../utils/OfflineGameService";
 import { EditorIntro } from "./EditorIntro";
 import { EditorPanelLayout } from "./EditorPanelLayout";
 
 export default function EditorPageWithRedux() {
-  const { isAuthenticated } = useAuth();
   const { gameId } = useRouteParams(router.editor().edit);
-  useOfflineGameService({ enabled: !isAuthenticated });
   return (
     <ReduxProvider store={editorStore}>
       <Root onContextMenu={disableUnhandledContextMenu}>
