@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useDebounce } from "use-debounce";
+import { isEqual } from "lodash";
 import { trpc } from "../../../trpc";
 import { useToastProcedure } from "../../../hooks/useToastProcedure";
 import { useActions } from "../../../../lib/useActions";
@@ -23,10 +24,14 @@ export function StateSynchronizer({ gameId }: { gameId: GameId }) {
   }, [gameId, remoteGame?.gameId, setLocalGame]);
 
   useEffect(() => {
-    if (localGame?.gameId === gameId) {
+    if (
+      localGame &&
+      localGame?.gameId === remoteGame?.gameId &&
+      !isEqual(localGame, remoteGame)
+    ) {
       uploadGame(localGame);
     }
-  }, [gameId, localGame, setLocalGame, uploadGame]);
+  }, [localGame, remoteGame, setLocalGame, uploadGame]);
 
   return null;
 }
