@@ -143,6 +143,7 @@ const modals = {
 };
 
 const hasSeenIntroStorage = createZodStorage(
-  z.boolean().optional(),
-  "editor-has-seen-intro"
+  z.boolean(),
+  "editor-has-seen-intro",
+  false
 );

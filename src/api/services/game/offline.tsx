@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { v4 } from "uuid";
+import produce from "immer";
 import { createZodStorage } from "../../../lib/zod-extensions/zodStorage";
 import type { LinkInterceptors } from "../../../lib/trpc-intercept";
 import type { Game, GameId } from "./types";
@@ -9,10 +10,11 @@ import type { GameService } from "./service";
 export function createOfflineGameService(): LinkInterceptors<GameService> {
   const storage = createZodStorage(
     z.map(gameIdType, gameType),
-    "local-game-definition"
+    "local-game-storage",
+    new Map()
   );
 
-  const map: Map<GameId, Game> = storage.load() ?? new Map();
+  const map = storage.load();
   const save = () => storage.save(map);
 
   return {
