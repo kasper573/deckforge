@@ -42,9 +42,12 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
       if (!game) {
         throw new Error("Game does not exist");
       }
-      Object.assign(game, input);
+      const updatedGame = produce(game, (draft) => {
+        Object.assign(draft, input);
+      });
+      map.set(updatedGame.gameId, updatedGame);
       save();
-      return game;
+      return updatedGame;
     },
     delete(input) {
       const deleted = map.delete(input);
