@@ -21,7 +21,6 @@ export type PromptDialogProps<T extends ZodString = ZodString> = ModalProps<
     submitLabel?: ReactNode;
     cancelLabel?: ReactNode;
     helperText?: ReactNode;
-    allowCancellation?: boolean;
   }
 >;
 
@@ -35,7 +34,6 @@ export function PromptDialog<T extends ZodString>({
     submitLabel = "Submit",
     cancelLabel = "Cancel",
     helperText,
-    allowCancellation = true,
   },
   resolve,
 }: PromptDialogProps<T>) {
@@ -57,12 +55,7 @@ export function PromptDialog<T extends ZodString>({
   }
 
   return (
-    <Dialog
-      disableRestoreFocus
-      fullWidth
-      open={open}
-      onClose={allowCancellation ? cancel : undefined}
-    >
+    <Dialog disableRestoreFocus fullWidth open={open} onClose={cancel}>
       <form name="prompt" onSubmit={form.handleSubmit(onSubmit)}>
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
@@ -77,7 +70,7 @@ export function PromptDialog<T extends ZodString>({
           />
         </DialogContent>
         <DialogActions>
-          {allowCancellation && <Button onClick={cancel}>{cancelLabel}</Button>}
+          <Button onClick={cancel}>{cancelLabel}</Button>
           <Button type="submit" variant="contained">
             {submitLabel}
           </Button>

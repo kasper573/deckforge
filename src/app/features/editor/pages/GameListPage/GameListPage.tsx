@@ -30,7 +30,6 @@ export default function GameListPage() {
       title: "Create game",
       label: "Game name",
       schema: gameType.shape.name,
-      allowCancellation: false,
     });
 
     if (!name) {
