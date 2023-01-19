@@ -134,9 +134,9 @@ const modals = {
     duration: 12000,
     content: (
       <>
-        You are not signed in and the game will only be saved on your device.{" "}
-        <Link to={router.user().login()}>Sign in</Link> to save your game to the
-        cloud and enable publishing games.
+        You are not signed in and the game will only be available on your
+        device. <Link to={router.user().login()}>Sign in</Link> to save your
+        game to the cloud and enable publishing games.
       </>
     ),
   },
