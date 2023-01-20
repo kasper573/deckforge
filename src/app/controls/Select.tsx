@@ -3,6 +3,7 @@ import InputLabel from "@mui/material/InputLabel";
 import MuiSelect from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import type { ComponentProps } from "react";
+import { forwardRef } from "react";
 
 export interface SelectProps<Option>
   extends Omit<
@@ -16,6 +17,7 @@ export interface SelectProps<Option>
   getOptionLabel: (option: Option) => string;
   getOptionValue: (option: Option) => string;
 }
+
 export function Select<Option>({
   label,
   value,
@@ -47,14 +49,14 @@ export function Select<Option>({
   );
 }
 
-export function SelectFormControl({
-  label,
-  ...props
-}: ComponentProps<typeof MuiSelect>) {
+export const SelectFormControl = forwardRef<
+  HTMLInputElement,
+  ComponentProps<typeof MuiSelect>
+>(function SelectFormControl({ label, style, className, sx, ...props }, ref) {
   return (
-    <FormControl>
+    <FormControl {...{ style, className, sx }}>
       {label && <InputLabel>{label}</InputLabel>}
-      <MuiSelect label={label} {...props} />
+      <MuiSelect ref={ref} label={label} {...props} />
     </FormControl>
   );
-}
+});

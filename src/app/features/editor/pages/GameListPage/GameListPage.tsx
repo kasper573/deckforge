@@ -4,20 +4,21 @@ import { useHistory } from "react-router";
 import Button from "@mui/material/Button";
 import { useStore } from "zustand";
 import { z } from "zod";
+import MenuItem from "@mui/material/MenuItem";
 import { Page } from "../../../layout/Page";
 import { trpc } from "../../../../trpc";
 import { Header } from "../../../layout/Header";
 import { Center } from "../../../../components/Center";
 
-import { router } from "../../../../router";
 import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { useModal } from "../../../../../lib/useModal";
 import { gameType } from "../../../../../api/services/game/types";
-import { getDefaultGameDefinition } from "../../getDefaultGameDefinition";
 import { authStore } from "../../../auth/store";
 import { shouldUseOfflineGameService } from "../../../../../api/services/game/offline";
 import { FormDialog } from "../../../../dialogs/FormDialog";
 import { DialogTextField } from "../../../../controls/DialogTextField";
+import { availableRuntimes } from "../../../runtimes";
+import { SelectFormControl } from "../../../../controls/Select";
 import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
@@ -36,12 +37,24 @@ export default function GameListPage() {
       title: "Create game",
       schema: z.object({
         name: gameType.shape.name,
-        type: z.string(),
+        type: z.enum(availableRuntimes),
       }),
       layout: (form) => (
         <>
           <DialogTextField label="Name" autoFocus {...form.register("name")} />
-          <DialogTextField label="Type" {...form.register("type")} />
+          <SelectFormControl
+            label="Type"
+            size="small"
+            defaultValue={availableRuntimes[0]}
+            sx={{ mt: 2 }}
+            {...form.register("type")}
+          >
+            {availableRuntimes.map((runtime) => (
+              <MenuItem key={runtime} value={runtime}>
+                {runtime}
+              </MenuItem>
+            ))}
+          </SelectFormControl>
         </>
       ),
     });
