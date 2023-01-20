@@ -19,6 +19,8 @@ import { FormDialog } from "../../../../dialogs/FormDialog";
 import { DialogTextField } from "../../../../controls/DialogTextField";
 import { availableRuntimes } from "../../../runtimes";
 import { SelectFormControl } from "../../../../controls/Select";
+import { getDefaultGameDefinition } from "../../getDefaultGameDefinition";
+import { router } from "../../../../router";
 import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
