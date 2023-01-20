@@ -7,9 +7,9 @@ const gameTypes = {
     import("./versus/defaultGameDefinition.json").then((m) => m.default),
 };
 
-export const gameTypeNames = Object.keys(gameTypes) as GameTypeName[];
+export const gameTypeNames = ["versus", "foo"] as const;
 
-export type GameTypeName = keyof typeof gameTypes;
+export type GameTypeName = typeof gameTypeNames[number];
 
 export async function loadDefaultGameDefinition(name: GameTypeName) {
   return gameTypes[name]().then(gameDefinitionType.parse);
