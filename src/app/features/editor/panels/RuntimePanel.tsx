@@ -21,7 +21,7 @@ import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import type { MachineMiddleware } from "../../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../../lib/machine/MachineContext";
-import { PixiGameRenderer } from "../../gameTypes/versus/pixi/PixiRenderer";
+import { PixiGameRenderer } from "../../gameTypes/versus/pixi/PixiVersusRenderer";
 import type { PanelProps } from "./definition";
 
 export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {

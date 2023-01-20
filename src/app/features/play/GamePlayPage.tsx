@@ -2,7 +2,7 @@ import { useRouteParams } from "react-typesafe-routes";
 import { useMemo } from "react";
 import { Page } from "../layout/Page";
 import { router } from "../../router";
-import { GameRenderer } from "../gameTypes/versus/react/GameRenderer";
+import { ReactVersusRenderer } from "../gameTypes/versus/react/ReactVersusRenderer";
 import { compileGame } from "../compiler/compileGame";
 import type { RuntimeGenerics } from "../compiler/types";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
@@ -27,7 +27,7 @@ export default function GamePlayPage() {
 
   return (
     <Page>
-      <GameRenderer runtime={compiled.runtime} />
+      <ReactVersusRenderer runtime={compiled.runtime} />
     </Page>
   );
 }
