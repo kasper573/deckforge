@@ -4,6 +4,18 @@ import MuiSelect from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import type { ComponentProps } from "react";
 
+export interface SelectProps<Option>
+  extends Omit<
+    ComponentProps<typeof MuiSelect>,
+    "value" | "defaultValue" | "onChange"
+  > {
+  value: Option;
+  defaultValue?: Option;
+  options: Option[];
+  onChange: (value: Option) => void;
+  getOptionLabel: (option: Option) => string;
+  getOptionValue: (option: Option) => string;
+}
 export function Select<Option>({
   label,
   value,
@@ -11,18 +23,13 @@ export function Select<Option>({
   onChange,
   getOptionValue,
   getOptionLabel,
-}: {
-  value: Option;
-  options: Option[];
-  onChange: (value: Option) => void;
-  getOptionLabel: (option: Option) => string;
-  getOptionValue: (option: Option) => string;
-} & Omit<ComponentProps<typeof MuiSelect>, "value" | "onChange">) {
+}: SelectProps<Option>) {
   return (
     <FormControl>
       <InputLabel>{label}</InputLabel>
       <MuiSelect
         value={getOptionValue(value)}
+        defaultValue={getOptionValue(value)}
         label={label}
         onChange={(e) => {
           const newOption = options.find(
