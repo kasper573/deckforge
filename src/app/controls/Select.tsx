@@ -25,27 +25,36 @@ export function Select<Option>({
   getOptionLabel,
 }: SelectProps<Option>) {
   return (
+    <SelectFormControl
+      value={getOptionValue(value)}
+      defaultValue={getOptionValue(value)}
+      label={label}
+      onChange={(e) => {
+        const newOption = options.find(
+          (option) => getOptionValue(option) === e.target.value
+        );
+        if (newOption) {
+          onChange(newOption);
+        }
+      }}
+    >
+      {options.map((option, index) => (
+        <MenuItem key={index} value={getOptionValue(option)}>
+          {getOptionLabel(option)}
+        </MenuItem>
+      ))}
+    </SelectFormControl>
+  );
+}
+
+export function SelectFormControl({
+  label,
+  ...props
+}: ComponentProps<typeof MuiSelect>) {
+  return (
     <FormControl>
-      <InputLabel>{label}</InputLabel>
-      <MuiSelect
-        value={getOptionValue(value)}
-        defaultValue={getOptionValue(value)}
-        label={label}
-        onChange={(e) => {
-          const newOption = options.find(
-            (option) => getOptionValue(option) === e.target.value
-          );
-          if (newOption) {
-            onChange(newOption);
-          }
-        }}
-      >
-        {options.map((option, index) => (
-          <MenuItem key={index} value={getOptionValue(option)}>
-            {getOptionLabel(option)}
-          </MenuItem>
-        ))}
-      </MuiSelect>
+      {label && <InputLabel>{label}</InputLabel>}
+      <MuiSelect label={label} {...props} />
     </FormControl>
   );
 }
