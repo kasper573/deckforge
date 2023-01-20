@@ -17,10 +17,7 @@ import { authStore } from "../../../auth/store";
 import { shouldUseOfflineGameService } from "../../../../../api/services/game/offline";
 import { FormDialog } from "../../../../dialogs/FormDialog";
 import { DialogTextField } from "../../../../controls/DialogTextField";
-import {
-  availableRuntimes,
-  loadDefaultGameDefinition,
-} from "../../../runtimes";
+import { gameTypeNames, loadDefaultGameDefinition } from "../../../gameTypes";
 import { SelectFormControl } from "../../../../controls/Select";
 import { router } from "../../../../router";
 import { GameCard } from "./GameCard";
@@ -41,7 +38,7 @@ export default function GameListPage() {
       title: "Create game",
       schema: z.object({
         name: gameType.shape.name,
-        type: z.enum(availableRuntimes),
+        type: z.enum(gameTypeNames),
       }),
       layout: (form) => (
         <>
@@ -49,11 +46,11 @@ export default function GameListPage() {
           <SelectFormControl
             label="Type"
             size="small"
-            defaultValue={availableRuntimes[0]}
+            defaultValue={gameTypeNames[0]}
             sx={{ mt: 2 }}
             {...form.register("type")}
           >
-            {availableRuntimes.map((runtime) => (
+            {gameTypeNames.map((runtime) => (
               <MenuItem key={runtime} value={runtime}>
                 {runtime}
               </MenuItem>

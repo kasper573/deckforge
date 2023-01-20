@@ -10,7 +10,7 @@ import type {
 import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
 import { compileEditorApi } from "../compiler/compileEditorApi";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
-import { builtinDefinition } from "../runtimes/versus/definition";
+import { builtinDefinition } from "../gameTypes/versus/definition";
 import type { EditorObjectId, EditorState } from "./types";
 
 const gameDefinition = (state: EditorState) => state.game?.definition;
