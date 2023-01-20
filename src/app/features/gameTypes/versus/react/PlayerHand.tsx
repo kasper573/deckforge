@@ -1,6 +1,6 @@
 import type { CardInstanceId } from "../../../compiler/types";
-import type { VersusTypes } from "../definition";
-import { adapter } from "../definition";
+import type { VersusTypes } from "../runtimeDefinition";
+import { adapter } from "../runtimeDefinition";
 import { Card, CardCost } from "./Card";
 
 export function PlayerHand({

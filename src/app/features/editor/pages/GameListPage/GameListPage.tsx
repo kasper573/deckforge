@@ -12,14 +12,17 @@ import { Center } from "../../../../components/Center";
 
 import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { useModal } from "../../../../../lib/useModal";
-import { gameType } from "../../../../../api/services/game/types";
+import {
+  gameType,
+  gameTypeIdType,
+} from "../../../../../api/services/game/types";
 import { authStore } from "../../../auth/store";
 import { shouldUseOfflineGameService } from "../../../../../api/services/game/offline";
 import { FormDialog } from "../../../../dialogs/FormDialog";
 import { DialogTextField } from "../../../../controls/DialogTextField";
-import { gameTypeNames, loadDefaultGameDefinition } from "../../../gameTypes";
 import { SelectFormControl } from "../../../../controls/Select";
 import { router } from "../../../../router";
+import { gameTypeList, gameTypes } from "../../../gameTypes";
 import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
@@ -34,11 +37,11 @@ export default function GameListPage() {
   }
 
   async function createGameAndGotoEditor() {
-    const res = await prompt({
+    const promptResult = await prompt({
       title: "Create game",
       schema: z.object({
         name: gameType.shape.name,
-        type: z.enum(gameTypeNames),
+        typeId: gameTypeIdType,
       }),
       layout: (form) => (
         <>
@@ -46,13 +49,13 @@ export default function GameListPage() {
           <SelectFormControl
             label="Type"
             size="small"
-            defaultValue={gameTypeNames[0]}
+            defaultValue={gameTypeList[0].id}
             sx={{ mt: 2 }}
-            {...form.register("type")}
+            {...form.register("typeId")}
           >
-            {gameTypeNames.map((runtime) => (
-              <MenuItem key={runtime} value={runtime}>
-                {runtime}
+            {gameTypeList.map(({ id, name }) => (
+              <MenuItem key={id} value={id}>
+                {name}
               </MenuItem>
             ))}
           </SelectFormControl>
@@ -60,15 +63,17 @@ export default function GameListPage() {
       ),
     });
 
-    if (res.type === "cancel") {
+    if (promptResult.type === "cancel") {
       return;
     }
 
-    const definition = await loadDefaultGameDefinition(res.value.type);
+    const selectedGameType = gameTypes[promptResult.value.typeId];
     const { gameId } = await createGame.mutateAsync({
-      name: res.value.name,
-      definition,
+      name: promptResult.value.name,
+      definition: selectedGameType.defaultGameDefinition,
+      type: selectedGameType.id,
     });
+
     history.push(router.editor().edit({ gameId }).$);
   }
 

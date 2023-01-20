@@ -1,4 +1,4 @@
-import { adapter } from "../../definition";
+import { adapter } from "../../runtimeDefinition";
 import { DeckSelectScene } from "./DeckSelectScene";
 import { BattleScene } from "./BattleScene";
 import { ResultScene } from "./ResultScene";

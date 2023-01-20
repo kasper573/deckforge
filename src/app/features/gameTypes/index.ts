@@ -1,16 +1,12 @@
-import { gameDefinitionType } from "../../../api/services/game/types";
+import type { GameType, GameTypeId } from "../../../api/services/game/types";
+import { reactVersus } from "./versus/react/gameType";
+import { pixiVersus } from "./versus/pixi/gameType";
 
-const gameTypes = {
-  versus: () =>
-    import("./versus/defaultGameDefinition.json").then((m) => m.default),
-  foo: () =>
-    import("./versus/defaultGameDefinition.json").then((m) => m.default),
-};
-
-export const gameTypeNames = ["versus", "foo"] as const;
-
-export type GameTypeName = typeof gameTypeNames[number];
-
-export async function loadDefaultGameDefinition(name: GameTypeName) {
-  return gameTypes[name]().then(gameDefinitionType.parse);
-}
+export const gameTypeList: GameType[] = [reactVersus, pixiVersus];
+export const gameTypes = gameTypeList.reduce(
+  (record, type) => ({
+    ...record,
+    [type.id]: type,
+  }),
+  {} as Record<GameTypeId, GameType>
+);

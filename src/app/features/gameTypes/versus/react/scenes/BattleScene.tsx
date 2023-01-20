@@ -1,6 +1,6 @@
 import Button from "@mui/material/Button";
 import { styled } from "@mui/material/styles";
-import { adapter } from "../../definition";
+import { adapter } from "../../runtimeDefinition";
 import { PlayerBoard } from "../PlayerBoard";
 
 export function BattleScene() {

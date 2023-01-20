@@ -14,7 +14,7 @@ export function createGameService() {
   return t.router({
     create: t.procedure
       .use(access())
-      .input(gameType.pick({ name: true, definition: true }))
+      .input(gameType.pick({ name: true, definition: true, type: true }))
       .output(gameType)
       .mutation(async ({ input: { definition, ...rest }, ctx }) => {
         const game = await ctx.db.game.create({

@@ -2,7 +2,7 @@ import { Sprite, useTick } from "@inlet/react-pixi";
 import type { ComponentProps } from "react";
 import { useState } from "react";
 import type { GameRuntime } from "../../../compiler/compileGame";
-import type { VersusGenerics } from "../definition";
+import type { VersusGenerics } from "../runtimeDefinition";
 import { ResponsiveStage } from "./ResponsiveStage";
 
 export interface PixiGameRendererProps

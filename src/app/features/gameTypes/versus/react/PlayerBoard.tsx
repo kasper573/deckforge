@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 
-import type { VersusTypes } from "../definition";
+import type { VersusTypes } from "../runtimeDefinition";
 import { PlayerStatus } from "./PlayerStatus";
 import { CardPile } from "./CardPile";
 import { PlayerHand } from "./PlayerHand";

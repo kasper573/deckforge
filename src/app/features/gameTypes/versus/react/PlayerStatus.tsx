@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import type Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import type { VersusTypes } from "../definition";
+import type { VersusTypes } from "../runtimeDefinition";
 
 export const PlayerStatus = ({
   player,
