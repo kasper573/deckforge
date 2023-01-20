@@ -22,6 +22,10 @@ describe("game", () => {
     beforeEach(() => {
       cy.findByRole("button", { name: /create game/i }).click();
       cy.findByRole("dialog").within(() => {
+        cy.findByLabelText(/name/i).type(gameName);
+        cy.findByRole("form").submit();
+      });
+      cy.findByRole("dialog").within(() => {
         cy.findByText(/welcome to deck forge/i);
         cy.findByRole("button", { name: /no thanks/i }).click();
       });
