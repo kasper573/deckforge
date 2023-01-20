@@ -17,9 +17,11 @@ import { authStore } from "../../../auth/store";
 import { shouldUseOfflineGameService } from "../../../../../api/services/game/offline";
 import { FormDialog } from "../../../../dialogs/FormDialog";
 import { DialogTextField } from "../../../../controls/DialogTextField";
-import { availableRuntimes } from "../../../runtimes";
+import {
+  availableRuntimes,
+  loadDefaultGameDefinition,
+} from "../../../runtimes";
 import { SelectFormControl } from "../../../../controls/Select";
-import { getDefaultGameDefinition } from "../../getDefaultGameDefinition";
 import { router } from "../../../../router";
 import { GameCard } from "./GameCard";
 
@@ -65,7 +67,7 @@ export default function GameListPage() {
       return;
     }
 
-    const definition = await getDefaultGameDefinition();
+    const definition = await loadDefaultGameDefinition(res.value.type);
     const { gameId } = await createGame.mutateAsync({
       name: res.value.name,
       definition,
