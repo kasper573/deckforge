@@ -8,7 +8,6 @@ import type {
   TypeOfShape,
 } from "../../../lib/zod-extensions/createTypeSerializer";
 import { createSerializableType } from "../../../lib/zod-extensions/createTypeSerializer";
-import type { RuntimeDefinition } from "../../../app/features/compiler/types";
 
 export type GameId = NominalString<"GameId">;
 export const gameIdType = zodNominalString<GameId>();
@@ -122,10 +121,3 @@ export const gameType = z.object({
   definition: gameDefinitionType,
   ownerId: z.string(),
 });
-
-export interface GameType {
-  id: GameTypeId;
-  name: string;
-  defaultGameDefinition: GameDefinition;
-  runtimeDefinition: RuntimeDefinition;
-}
