@@ -68,9 +68,10 @@ export default function GameListPage() {
     }
 
     const selectedGameType = gameTypes[promptResult.value.typeId];
+    const { defaultGameDefinition } = await selectedGameType.load();
     const { gameId } = await createGame.mutateAsync({
       name: promptResult.value.name,
-      definition: selectedGameType.defaultGameDefinition,
+      definition: defaultGameDefinition,
       type: selectedGameType.id,
     });
 

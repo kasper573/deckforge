@@ -1,15 +1,25 @@
 import type { GameTypeId } from "../../../../../api/services/game/types";
-import { gameDefinitionType } from "../../../../../api/services/game/types";
-import defaultGameDefinitionJson from "../defaultGameDefinition.json";
 import type { VersusGenerics } from "../runtimeDefinition";
-import { reactVersusDefinition } from "../runtimeDefinition";
 import type { GameType } from "../../GameType";
-import { PixiGameRenderer } from "./PixiVersusRenderer";
+import { gameDefinitionType } from "../../../../../api/services/game/types";
 
 export const pixiVersus: GameType<VersusGenerics> = {
   id: "pixi-versus" as GameTypeId,
   name: "Pixi Versus",
-  defaultGameDefinition: gameDefinitionType.parse(defaultGameDefinitionJson),
-  runtimeDefinition: reactVersusDefinition,
-  renderer: PixiGameRenderer,
+  async load() {
+    const [
+      { default: defaultGameDefinition },
+      { reactVersusDefinition: runtimeDefinition },
+      { PixiGameRenderer: renderer },
+    ] = await Promise.all([
+      import("../defaultGameDefinition.json"),
+      import("../runtimeDefinition"),
+      import("./PixiVersusRenderer"),
+    ]);
+    return {
+      defaultGameDefinition: gameDefinitionType.parse(defaultGameDefinition),
+      runtimeDefinition,
+      renderer,
+    };
+  },
 };
