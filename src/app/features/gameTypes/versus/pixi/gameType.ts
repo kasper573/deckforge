@@ -10,7 +10,7 @@ export const pixiVersus: GameType<VersusGenerics> = {
     const [
       { default: defaultGameDefinition },
       { reactVersusDefinition: runtimeDefinition },
-      { PixiGameRenderer: renderer },
+      { PixiVersusRenderer: renderer },
     ] = await Promise.all([
       import("../defaultGameDefinition.json"),
       import("../runtimeDefinition"),

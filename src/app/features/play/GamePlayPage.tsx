@@ -2,11 +2,11 @@ import { useRouteParams } from "react-typesafe-routes";
 import { useMemo } from "react";
 import { Page } from "../layout/Page";
 import { router } from "../../router";
-import { ReactVersusRenderer } from "../gameTypes/versus/react/ReactVersusRenderer";
 import { compileGame } from "../compiler/compileGame";
 import type { RuntimeGenerics } from "../compiler/types";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import { trpc } from "../../trpc";
+import { LazyGameRenderer } from "../gameTypes/LazyGameRenderer";
 
 export default function GamePlayPage() {
   const { gameId } = useRouteParams(router.play().game);
@@ -27,7 +27,13 @@ export default function GamePlayPage() {
 
   return (
     <Page>
-      <ReactVersusRenderer runtime={compiled.runtime} />
+      {game && (
+        <LazyGameRenderer
+          type={game.type}
+          runtime={compiled.runtime}
+          style={{ width: "100%", height: "100%" }}
+        />
+      )}
     </Page>
   );
 }

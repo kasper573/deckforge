@@ -4,7 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { memo, useEffect, useMemo, useReducer, useState } from "react";
 import Yard from "@mui/icons-material/Yard";
-import { styled } from "@mui/material/styles";
+import useTheme from "@mui/material/styles/useTheme";
 import { useSelector } from "../store";
 import { selectors } from "../selectors";
 import { Panel } from "../components/Panel";
@@ -21,11 +21,13 @@ import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import type { MachineMiddleware } from "../../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../../lib/machine/MachineContext";
-import { PixiGameRenderer } from "../../gameTypes/versus/pixi/PixiVersusRenderer";
+import { LazyGameRenderer } from "../../gameTypes/LazyGameRenderer";
 import type { PanelProps } from "./definition";
 
 export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
+  const theme = useTheme();
   const [manualResetCount, resetRuntime] = useReducer((c) => c + 1, 0);
+  const gameType = useSelector(selectors.gameType);
   const gameDefinition = useSelector(selectors.gameDefinition);
   const runtimeDefinition = useSelector(selectors.runtimeDefinition);
   const { log } = useActions(editorActions);
@@ -104,7 +106,19 @@ export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
             fallback={RuntimeErrorFallback}
             onError={onRenderError}
           >
-            <DockedGameRenderer runtime={compiled.runtime} />
+            {gameType ? (
+              <LazyGameRenderer
+                type={gameType}
+                runtime={compiled.runtime}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: theme.palette.secondary.dark,
+                }}
+              />
+            ) : (
+              <PanelEmptyState>Game type missing</PanelEmptyState>
+            )}
           </ErrorBoundary>
         ) : (
           <PanelEmptyState>
@@ -115,12 +129,6 @@ export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
     </Panel>
   );
 });
-
-const DockedGameRenderer = styled(PixiGameRenderer)`
-  width: 100%;
-  height: 100%;
-  background: ${({ theme }) => theme.palette.secondary.dark};
-`;
 
 function createEventLoggerMiddleware(
   log: (args: unknown[]) => void

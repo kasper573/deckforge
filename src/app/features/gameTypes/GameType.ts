@@ -18,12 +18,9 @@ export interface HeavyGameTypeData<
 > {
   defaultGameDefinition: GameDefinition;
   runtimeDefinition: RuntimeDefinition<G>;
-  renderer: GameRenderer<G>;
+  renderer: ComponentType<GameRendererProps<G>>;
 }
 
-export type GameRenderer<G extends RuntimeGenerics> = ComponentType<
-  { runtime: GameRuntime<G> } & Pick<
-    HTMLAttributes<HTMLElement>,
-    "className" | "style"
-  >
->;
+export type GameRendererProps<G extends RuntimeGenerics> = {
+  runtime: GameRuntime<G>;
+} & Pick<HTMLAttributes<HTMLElement>, "className" | "style">;

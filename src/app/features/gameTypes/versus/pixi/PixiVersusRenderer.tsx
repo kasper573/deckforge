@@ -10,7 +10,7 @@ export interface PixiGameRendererProps
   runtime: GameRuntime<VersusGenerics>;
 }
 
-export function PixiGameRenderer({
+export function PixiVersusRenderer({
   runtime,
   options,
   ...props

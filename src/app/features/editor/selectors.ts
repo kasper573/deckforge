@@ -45,6 +45,7 @@ export const selectors = {
     }
   },
   game: (state: EditorState) => state.game,
+  gameType: (state: EditorState) => state.game?.type,
   decks: (state: EditorState) => state.game?.definition.decks ?? [],
   decksAndCards: (state: EditorState) => {
     if (!state.game) {
