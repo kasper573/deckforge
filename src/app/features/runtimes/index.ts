@@ -1,14 +1,18 @@
 import { gameDefinitionType } from "../../../api/services/game/types";
 
-export type RuntimeName = typeof availableRuntimes[number];
-
-export const availableRuntimes = ["versus"] as const;
-
 export async function loadDefaultGameDefinition(name: RuntimeName) {
-  return loaders[name]().then(gameDefinitionType.parse);
+  return defaultGameDefinitionLoaders[name]().then(gameDefinitionType.parse);
 }
 
-const loaders: Record<RuntimeName, () => Promise<unknown>> = {
+const defaultGameDefinitionLoaders = {
   versus: () =>
     import("./versus/defaultGameDefinition.json").then((m) => m.default),
+  foo: () =>
+    import("./versus/defaultGameDefinition.json").then((m) => m.default),
 };
+
+export const availableRuntimes = Object.keys(
+  defaultGameDefinitionLoaders
+) as RuntimeName[];
+
+export type RuntimeName = keyof typeof defaultGameDefinitionLoaders;
