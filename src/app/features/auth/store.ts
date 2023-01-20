@@ -8,17 +8,17 @@ import type { JWTUser, LoginPayload } from "../../../api/services/user/types";
 
 const localStorageKey = "auth" as const;
 
-interface AuthState {
+export interface AuthState {
   token?: string;
   user?: JWTUser;
 }
 
-const store = createStore<AuthState>()(
+export const authStore = createStore<AuthState>()(
   persist((set) => ({}), { name: localStorageKey })
 );
 
 export function useAuth() {
-  const state = useStore(store);
+  const state = useStore(authStore);
   const history = useHistory();
   const {
     mutateAsync: loginMutateAsync,
@@ -28,8 +28,8 @@ export function useAuth() {
 
   async function enhancedLogin(payload: LoginPayload) {
     try {
-      store.setState(await loginMutateAsync(payload));
-      if (isAuthenticated(store.getState())) {
+      authStore.setState(await loginMutateAsync(payload));
+      if (isAuthenticated(authStore.getState())) {
         history.push(loginRedirect.$);
       }
     } catch (e) {}
@@ -48,7 +48,7 @@ export function useAuth() {
   };
 }
 
-export const isAuthenticated = (state: AuthState = store.getState()) =>
+export const isAuthenticated = (state: AuthState = authStore.getState()) =>
   !!(state.token && state.user);
 
 function logout(history: History) {
@@ -58,11 +58,11 @@ function logout(history: History) {
 }
 
 export function getAuthToken() {
-  return store.getState().token;
+  return authStore.getState().token;
 }
 
 export function resetAuthToken() {
-  store.setState({ token: undefined, user: undefined });
+  authStore.setState({ token: undefined, user: undefined });
 }
 
 export function setupAuthBehavior<State>({
@@ -74,7 +74,7 @@ export function setupAuthBehavior<State>({
   onTokenChanged?: () => void;
   interval?: number;
 }) {
-  const getToken = () => store.getState().token;
+  const getToken = () => authStore.getState().token;
 
   // Logout when token expires
   const intervalId = setInterval(() => {
@@ -85,7 +85,7 @@ export function setupAuthBehavior<State>({
   }, interval);
 
   let prevToken = getToken();
-  const unsubscribe = store.subscribe(() => {
+  const unsubscribe = authStore.subscribe(() => {
     const newToken = getToken();
     if (newToken !== prevToken) {
       prevToken = newToken;

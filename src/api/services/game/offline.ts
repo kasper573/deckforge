@@ -3,6 +3,7 @@ import { v4 } from "uuid";
 import produce from "immer";
 import { createZodStorage } from "../../../lib/zod-extensions/zodStorage";
 import type { LinkInterceptors } from "../../../lib/trpc-intercept";
+import { authStore, isAuthenticated } from "../../../app/features/auth/store";
 import type { Game, GameId } from "./types";
 import { gameIdType, gameType } from "./types";
 import type { GameService } from "./service";
@@ -63,3 +64,6 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
     },
   };
 }
+
+export const shouldUseOfflineGameService = (authState = authStore.getState()) =>
+  !isAuthenticated(authState);

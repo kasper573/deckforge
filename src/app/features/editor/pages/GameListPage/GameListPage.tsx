@@ -2,6 +2,7 @@ import Card from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { useHistory } from "react-router";
 import Button from "@mui/material/Button";
+import { useStore } from "zustand";
 import { Page } from "../../../layout/Page";
 import { trpc } from "../../../../trpc";
 import { Header } from "../../../layout/Header";
@@ -13,6 +14,8 @@ import { useModal } from "../../../../../lib/useModal";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { gameType } from "../../../../../api/services/game/types";
 import { getDefaultGameDefinition } from "../../getDefaultGameDefinition";
+import { authStore } from "../../../auth/store";
+import { shouldUseOfflineGameService } from "../../../../../api/services/game/offline";
 import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
@@ -20,6 +23,7 @@ export default function GameListPage() {
   const history = useHistory();
   const createGame = useToastProcedure(trpc.game.create);
   const prompt = useModal(PromptDialog);
+  const isLocalDeviceData = shouldUseOfflineGameService(useStore(authStore));
 
   if (createGame.isSuccess || createGame.isLoading) {
     throw new Promise(() => {}); // Trigger suspense
@@ -43,7 +47,9 @@ export default function GameListPage() {
 
   return (
     <Page>
-      <Header>Your games</Header>
+      <Header>
+        {isLocalDeviceData ? "Games on this device" : "Your games"}
+      </Header>
 
       <CardGrid>
         <Card sx={{ position: "relative", minHeight: 252 }}>

@@ -1,12 +1,15 @@
 import ReactDOM from "react-dom/client";
 import { createBrowserHistory } from "history";
-import { createOfflineGameService } from "../api/services/game/offline";
+import {
+  createOfflineGameService,
+  shouldUseOfflineGameService,
+} from "../api/services/game/offline";
 import { App } from "./App";
 import { createQueryClient, createTRPCClient } from "./trpc";
 import { createTheme } from "./theme";
 import {
+  authStore,
   getAuthToken,
-  isAuthenticated,
   resetAuthToken,
   setupAuthBehavior,
 } from "./features/auth/store";
@@ -22,15 +25,19 @@ if (env.analyticsId) {
   }
 }
 
+const theme = createTheme();
+const history = createBrowserHistory();
 const offlineGameService = createOfflineGameService();
 const queryClient = createQueryClient({ onBadToken: resetAuthToken });
 const trpcClient = createTRPCClient({
   getAuthToken,
-  interceptors: () =>
-    !isAuthenticated() ? { game: offlineGameService } : undefined,
+  interceptors: () => ({
+    game: shouldUseOfflineGameService(authStore.getState())
+      ? offlineGameService
+      : undefined,
+  }),
 });
-const history = createBrowserHistory();
-const theme = createTheme();
+
 setupAuthBehavior({ history });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
