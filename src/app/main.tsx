@@ -38,7 +38,14 @@ const trpcClient = createTRPCClient({
   }),
 });
 
-setupAuthBehavior({ history });
+setupAuthBehavior({
+  history,
+  onTokenChanged() {
+    // Clearing cache on auth change avoids showing data from an offline service
+    // briefly after signing in and getting access to the remote service, and vice versa.
+    queryClient.clear();
+  },
+});
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <App
