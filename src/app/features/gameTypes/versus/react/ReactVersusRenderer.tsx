@@ -9,7 +9,7 @@ export interface GameRendererProps extends ComponentProps<typeof Viewport> {
   runtime: GameRuntime<VersusGenerics>;
 }
 
-export function ReactVersusRenderer({
+export default function ReactVersusRenderer({
   runtime,
   ...viewportProps
 }: GameRendererProps) {
