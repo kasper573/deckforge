@@ -1,9 +1,9 @@
-import TextField from "@mui/material/TextField";
 import type { ReactNode } from "react";
 import type { ZodString } from "zod";
 import { z } from "zod";
 import { useMemo } from "react";
 import type { ModalProps } from "../../lib/useModal";
+import { DialogTextField } from "../controls/DialogTextField";
 import { FormDialog } from "./FormDialog";
 
 export type PromptDialogProps<T extends ZodString = ZodString> = ModalProps<
@@ -45,13 +45,10 @@ export function PromptDialog<T extends ZodString>({
         schema: valueSchema,
         defaultValues: { value: defaultValue },
         layout: (form) => (
-          <TextField
+          <DialogTextField
             label={label}
             helperText={helperText}
-            margin="dense"
-            fullWidth
             autoFocus
-            variant="standard"
             {...form.register("value")}
           />
         ),

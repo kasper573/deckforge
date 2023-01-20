@@ -3,6 +3,7 @@ import { styled } from "@mui/material/styles";
 import { useHistory } from "react-router";
 import Button from "@mui/material/Button";
 import { useStore } from "zustand";
+import { z } from "zod";
 import { Page } from "../../../layout/Page";
 import { trpc } from "../../../../trpc";
 import { Header } from "../../../layout/Header";
@@ -11,18 +12,19 @@ import { Center } from "../../../../components/Center";
 import { router } from "../../../../router";
 import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { useModal } from "../../../../../lib/useModal";
-import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { gameType } from "../../../../../api/services/game/types";
 import { getDefaultGameDefinition } from "../../getDefaultGameDefinition";
 import { authStore } from "../../../auth/store";
 import { shouldUseOfflineGameService } from "../../../../../api/services/game/offline";
+import { FormDialog } from "../../../../dialogs/FormDialog";
+import { DialogTextField } from "../../../../controls/DialogTextField";
 import { GameCard } from "./GameCard";
 
 export default function GameListPage() {
   const games = trpc.game.list.useQuery({ offset: 0, limit: 10 });
   const history = useHistory();
   const createGame = useToastProcedure(trpc.game.create);
-  const prompt = useModal(PromptDialog);
+  const prompt = useModal(FormDialog);
   const isLocalDeviceData = shouldUseOfflineGameService(useStore(authStore));
 
   if (createGame.isSuccess || createGame.isLoading) {
@@ -30,18 +32,29 @@ export default function GameListPage() {
   }
 
   async function createGameAndGotoEditor() {
-    const name = await prompt({
+    const res = await prompt({
       title: "Create game",
-      label: "Game name",
-      schema: gameType.shape.name,
+      schema: z.object({
+        name: gameType.shape.name,
+        type: z.string(),
+      }),
+      layout: (form) => (
+        <>
+          <DialogTextField label="Name" autoFocus {...form.register("name")} />
+          <DialogTextField label="Type" {...form.register("type")} />
+        </>
+      ),
     });
 
-    if (!name) {
+    if (res.type === "cancel") {
       return;
     }
 
     const definition = await getDefaultGameDefinition();
-    const { gameId } = await createGame.mutateAsync({ name, definition });
+    const { gameId } = await createGame.mutateAsync({
+      name: res.value.name,
+      definition,
+    });
     history.push(router.editor().edit({ gameId }).$);
   }
 
