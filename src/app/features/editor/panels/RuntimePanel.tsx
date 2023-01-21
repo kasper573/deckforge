@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { Suspense, useEffect, useMemo, useReducer, useState } from "react";
 import Yard from "@mui/icons-material/Yard";
 import useTheme from "@mui/material/styles/useTheme";
 import { useSelector } from "../store";
@@ -22,6 +22,8 @@ import { editorActions } from "../actions";
 import type { MachineMiddleware } from "../../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../../lib/machine/MachineContext";
 import { GameRenderer } from "../../compiler/GameRenderer";
+import { Center } from "../../../components/Center";
+import { LoadingIndicator } from "../../../components/LoadingIndicator";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
@@ -107,15 +109,23 @@ export function RuntimePanel(props: PanelProps) {
             onError={onRenderError}
           >
             {gameType ? (
-              <GameRenderer
-                type={gameType}
-                runtime={compiled.runtime}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  background: theme.palette.secondary.dark,
-                }}
-              />
+              <Suspense
+                fallback={
+                  <Center>
+                    <LoadingIndicator />
+                  </Center>
+                }
+              >
+                <GameRenderer
+                  type={gameType}
+                  runtime={compiled.runtime}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    background: theme.palette.secondary.dark,
+                  }}
+                />
+              </Suspense>
             ) : (
               <PanelEmptyState>Game type missing</PanelEmptyState>
             )}
