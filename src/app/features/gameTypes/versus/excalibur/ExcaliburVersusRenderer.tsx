@@ -19,6 +19,7 @@ export default function ExcaliburVersusRenderer({
 function createGame(...[engineProps]: ConstructorParameters<typeof Engine>) {
   const game = new Engine({
     ...engineProps,
+    backgroundColor: Color.Transparent,
     pointerScope: Input.PointerScope.Canvas,
   });
 
