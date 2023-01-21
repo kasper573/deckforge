@@ -18,15 +18,23 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
   const map = storage.load();
   const save = () => storage.save(map);
 
-  function gameExists(byName: string) {
+  function gameExists(byName?: string) {
     return [...map.values()].find((game) => game.name === byName);
   }
 
-  function assertNoGameExists(byName: string, exception?: Game) {
+  function assertNoGameExists(byName?: string, exception?: Game) {
     const existing = gameExists(byName);
     if (existing && existing !== exception) {
       throw new Error(`A game with this name already exists`);
     }
+  }
+
+  function assertGame(byId: GameId) {
+    const game = map.get(byId);
+    if (!game) {
+      throw new Error(`Game not found`);
+    }
+    return game;
   }
 
   return {
@@ -45,32 +53,19 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
       return game;
     },
     read(input) {
-      const game = map.get(input);
-      if (!game) {
-        throw new Error("Game does not exist");
-      }
-      return game;
+      return assertGame(input);
     },
     update(input) {
-      const game = map.get(input.gameId);
-      if (!game) {
-        throw new Error("Game does not exist");
-      }
-      if (input.name) {
-        assertNoGameExists(input.name, game);
-      }
-      const updatedGame = produce(game, (draft) => {
-        Object.assign(draft, input);
-      });
-      map.set(updatedGame.gameId, updatedGame);
+      let game = assertGame(input.gameId);
+      assertNoGameExists(input.name, game);
+      game = produce(game, (draft) => Object.assign(draft, input));
+      map.set(game.gameId, game);
       save();
-      return updatedGame;
+      return game;
     },
     delete(input) {
-      const deleted = map.delete(input);
-      if (!deleted) {
-        throw new Error("Game does not exist");
-      }
+      assertGame(input);
+      map.delete(input);
       save();
     },
     list(input) {
