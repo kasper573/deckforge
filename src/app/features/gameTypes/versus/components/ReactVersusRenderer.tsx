@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import type { GameRuntime } from "../../../compiler/compileGame";
 import type { VersusGenerics } from "../runtimeDefinition";
 import { adapter } from "../runtimeDefinition";
-import { Scenes } from "./scenes";
+import { Scenes } from "../scenes";
 
 export interface GameRendererProps extends ComponentProps<typeof Viewport> {
   runtime: GameRuntime<VersusGenerics>;

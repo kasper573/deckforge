@@ -1,8 +1,8 @@
 import { Actor, CollisionType, Color, Engine, Input, vec } from "excalibur";
 import type { ComponentProps } from "react";
-import type { GameRuntime } from "../../../compiler/compileGame";
-import type { VersusGenerics } from "../runtimeDefinition";
-import ExcaliburRenderer from "../../../../../lib/ExcaliburRenderer";
+import type { GameRuntime } from "../../compiler/compileGame";
+import type { VersusGenerics } from "../versus/runtimeDefinition";
+import ExcaliburRenderer from "../../../../lib/ExcaliburRenderer";
 
 export interface ExcaliburGameRendererProps
   extends Omit<ComponentProps<typeof ExcaliburRenderer>, "engine"> {
