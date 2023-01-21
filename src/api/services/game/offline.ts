@@ -18,8 +18,21 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
   const map = storage.load();
   const save = () => storage.save(map);
 
+  function gameExists(byName: string) {
+    return [...map.values()].find((game) => game.name === byName);
+  }
+
+  function assertNoGameExists(byName: string, exception?: Game) {
+    const existing = gameExists(byName);
+    if (existing && existing !== exception) {
+      throw new Error(`A game with this name already exists`);
+    }
+  }
+
   return {
     create(input) {
+      assertNoGameExists(input.name);
+
       const gameId = v4() as GameId;
       const game: Game = {
         ...input,
@@ -42,6 +55,9 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
       const game = map.get(input.gameId);
       if (!game) {
         throw new Error("Game does not exist");
+      }
+      if (input.name) {
+        assertNoGameExists(input.name, game);
       }
       const updatedGame = produce(game, (draft) => {
         Object.assign(draft, input);
