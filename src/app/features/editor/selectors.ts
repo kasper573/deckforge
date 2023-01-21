@@ -10,7 +10,7 @@ import type {
 import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
 import { compileEditorApi } from "../compiler/compileEditorApi";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
-import { versusDefinition } from "../gameTypes/versus/runtimeDefinition";
+import { gameTypes } from "../gameTypes";
 import type { EditorObjectId, EditorState } from "./types";
 
 const gameDefinition = (state: EditorState) => state.game?.definition;
@@ -113,6 +113,7 @@ export const selectors = {
 
   gameDefinition,
   runtimeDefinition,
-  builtinDefinition: () => versusDefinition,
+  builtinDefinition: (state: EditorState) =>
+    state.game ? gameTypes[state.game?.type].runtimeDefinition : undefined,
   editorApi,
 };
