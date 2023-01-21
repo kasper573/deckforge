@@ -1,6 +1,5 @@
-import { useEffect } from "react";
-import { useDebounce } from "use-debounce";
 import { isEqual } from "lodash";
+import { useDebounce } from "use-debounce";
 import { trpc } from "../../../trpc";
 import { useToastProcedure } from "../../../hooks/useToastProcedure";
 import { useActions } from "../../../../lib/useActions";
@@ -8,30 +7,26 @@ import type { GameId } from "../../../../api/services/game/types";
 import { useSelector } from "../store";
 import { selectors } from "../selectors";
 import { editorActions } from "../actions";
+import { useReaction } from "../../../../lib/useReaction";
 
 export function StateSynchronizer({ gameId }: { gameId: GameId }) {
+  const localGame = useSelector(selectors.game);
+  const [debouncedLocalGame] = useDebounce(localGame, 1500);
   const { selectGame: setLocalGame } = useActions(editorActions);
-  const [localGame] = useDebounce(useSelector(selectors.game), 1500);
-
-  const { mutate: uploadGame } = useToastProcedure(trpc.game.update);
   const { data: remoteGame } = trpc.game.read.useQuery(gameId);
+  const { mutate: upload } = useToastProcedure(trpc.game.update);
 
-  useEffect(() => {
+  useReaction(() => {
     if (remoteGame?.gameId === gameId) {
       setLocalGame(remoteGame);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, remoteGame?.gameId, setLocalGame]);
+  }, [gameId, remoteGame]);
 
-  useEffect(() => {
-    if (
-      localGame &&
-      localGame?.gameId === remoteGame?.gameId &&
-      !isEqual(localGame, remoteGame)
-    ) {
-      uploadGame(localGame);
+  useReaction(() => {
+    if (debouncedLocalGame && !isEqual(debouncedLocalGame, remoteGame)) {
+      upload(debouncedLocalGame);
     }
-  }, [localGame, remoteGame, setLocalGame, uploadGame]);
+  }, [debouncedLocalGame]);
 
   return null;
 }
