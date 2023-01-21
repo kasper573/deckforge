@@ -29,5 +29,6 @@ model Game {
   ownerId    String
   owner      User     @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
   definition Json // Type marshalled in service
+
   @@unique([name, ownerId], name: "unique_name_per_owner")
 }
