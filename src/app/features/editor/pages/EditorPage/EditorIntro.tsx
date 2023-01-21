@@ -104,16 +104,6 @@ const modals = {
         </Typography>
         <Divider sx={{ my: 2 }} />
         <Typography paragraph>
-          The engine currently only supports a single game mode: 1v1 turn based
-          and mana/health based combat.
-        </Typography>
-        <Typography>
-          However, the system is designed to be extensible, so if I get around
-          to implementing new game modes you will be able to pick from a
-          supported list of game modes when you create new games.
-        </Typography>
-        <Divider sx={{ my: 2 }} />
-        <Typography paragraph>
           Deck Forge is a proof of concept and is not particularly intuitive.
           Unless you are a programmer and intimately familiar with event driven
           programming and state machines this editor will basically be useless
