@@ -124,7 +124,7 @@ function createGame(...[engineProps]: ConstructorParameters<typeof Engine>) {
   });
 
   ball.on("exitviewport", () => {
-    alert("You lose!");
+    //alert("You lose!");
   });
 
   return game;
