@@ -1,5 +1,4 @@
 import MenuItem from "@mui/material/MenuItem";
-import { memo } from "react";
 import { useSelector } from "../store";
 import { useActions } from "../../../../lib/useActions";
 import { useMenu } from "../../../hooks/useMenu";
@@ -13,9 +12,7 @@ import { useConfirmDelete } from "../hooks/useConfirmDelete";
 import { usePromptCreate, usePromptRename } from "../hooks/usePromptCrud";
 import type { PanelProps } from "./definition";
 
-export const MiddlewaresPanel = memo(function MiddlewaresPanel(
-  props: PanelProps
-) {
+export function MiddlewaresPanel(props: PanelProps) {
   const middlewares = useSelector(selectors.middlewares);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
@@ -56,4 +53,4 @@ export const MiddlewaresPanel = memo(function MiddlewaresPanel(
       )}
     </Panel>
   );
-});
+}

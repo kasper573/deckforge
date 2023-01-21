@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { memo, useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import Yard from "@mui/icons-material/Yard";
 import useTheme from "@mui/material/styles/useTheme";
 import { useSelector } from "../store";
@@ -24,7 +24,7 @@ import type { MachineContext } from "../../../../lib/machine/MachineContext";
 import { GameRenderer } from "../../compiler/GameRenderer";
 import type { PanelProps } from "./definition";
 
-export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
+export function RuntimePanel(props: PanelProps) {
   const theme = useTheme();
   const [manualResetCount, resetRuntime] = useReducer((c) => c + 1, 0);
   const gameType = useSelector(selectors.gameType);
@@ -128,7 +128,7 @@ export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
         ))}
     </Panel>
   );
-});
+}
 
 function createEventLoggerMiddleware(
   log: (args: unknown[]) => void

@@ -2,6 +2,8 @@ import type { ComponentType, ReactNode } from "react";
 import type { MosaicBranch } from "react-mosaic-component";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
+import { memo } from "react";
+import { isEqual } from "lodash";
 import type { PanelId } from "../types";
 import { useModal } from "../../../../lib/useModal";
 import { AlertDialog } from "../../../dialogs/AlertDialog";
@@ -30,7 +32,7 @@ export interface PanelDefinition {
 
 export const panelsDefinition: Record<PanelId, PanelDefinition> = {
   runtime: {
-    component: RuntimePanel,
+    component: memo(RuntimePanel, isEqual),
     title: "Runtime",
     tour: {
       className: "tour-runtime",
@@ -43,7 +45,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     },
   },
   inspector: {
-    component: InspectorPanel,
+    component: memo(InspectorPanel, isEqual),
     title: "Inspector",
     tour: {
       className: "tour-inspector",
@@ -56,7 +58,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     },
   },
   decks: {
-    component: DecksPanel,
+    component: memo(DecksPanel, isEqual),
     title: "Decks",
     tour: {
       className: "tour-decks",
@@ -81,7 +83,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     },
   },
   code: {
-    component: CodePanel,
+    component: memo(CodePanel, isEqual),
     title: "Code",
     tour: {
       className: "tour-code",
@@ -105,7 +107,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     },
   },
   logs: {
-    component: LogsPanel,
+    component: memo(LogsPanel, isEqual),
     title: "Logs",
     tour: {
       className: "tour-logs",
@@ -118,7 +120,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     },
   },
   events: {
-    component: EventsPanel,
+    component: memo(EventsPanel, isEqual),
     title: "Events",
     tour: {
       className: "tour-events",
@@ -139,7 +141,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     },
   },
   middlewares: {
-    component: MiddlewaresPanel,
+    component: memo(MiddlewaresPanel, isEqual),
     title: "Middlewares",
     tour: {
       className: "tour-middlewares",
@@ -165,7 +167,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     },
   },
   cardProperties: {
-    component: CardPropertiesPanel,
+    component: memo(CardPropertiesPanel, isEqual),
     title: "Card Properties",
     tour: {
       className: "tour-card-properties",
@@ -183,7 +185,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
     },
   },
   playerProperties: {
-    component: PlayerPropertiesPanel,
+    component: memo(PlayerPropertiesPanel, isEqual),
     title: "Player Properties",
     tour: {
       className: "tour-player-properties",

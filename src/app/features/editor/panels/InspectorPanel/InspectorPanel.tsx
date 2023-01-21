@@ -1,4 +1,3 @@
-import { memo } from "react";
 import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 import type { CardId } from "../../../../../api/services/game/types";
@@ -12,10 +11,7 @@ import { panelsDefinition } from "../definition";
 import { PanelTitle } from "../../components/PanelTitle";
 import { PropertyDefaultsEditor } from "./PropertyValueEditor";
 
-export const InspectorPanel = memo(function InspectorPanel({
-  title,
-  ...props
-}: PanelProps) {
+export function InspectorPanel({ title, ...props }: PanelProps) {
   const selectedObjectId = useSelector(selectors.selectedObject);
   const id = useSelector(selectors.selectedObject);
   const breadcrumbs = useSelector(selectors.selectedObjectBreadcrumbs);
@@ -39,7 +35,7 @@ export const InspectorPanel = memo(function InspectorPanel({
       )}
     </Panel>
   );
-});
+}
 
 function ObjectInspector({ id }: { id: EditorObjectId }) {
   switch (id.type) {
