@@ -15,6 +15,8 @@ import { authStore } from "../../../auth/store";
 import { shouldUseOfflineGameService } from "../../../../../api/services/game/offline";
 import { router } from "../../../../router";
 import { gameTypes } from "../../../gameTypes";
+import { PromptDialog } from "../../../../dialogs/PromptDialog";
+import { gameType } from "../../../../../api/services/game/types";
 import { GameCard } from "./GameCard";
 import { SelectGameTypeDialog } from "./SelectGameTypeDialog";
 
@@ -23,6 +25,7 @@ export default function GameListPage() {
   const history = useHistory();
   const createGame = useToastProcedure(trpc.game.create);
   const selectGameType = useModal(SelectGameTypeDialog);
+  const prompt = useModal(PromptDialog);
   const isLocalDeviceData = shouldUseOfflineGameService(useStore(authStore));
 
   if (createGame.isSuccess || createGame.isLoading) {
@@ -31,18 +34,22 @@ export default function GameListPage() {
 
   async function createGameAndGotoEditor() {
     const gameTypeId = await selectGameType();
-    if (!gameTypeId) {
+    const selectedGameType = gameTypeId ? gameTypes.get(gameTypeId) : undefined;
+    if (!selectedGameType) {
       return;
     }
 
-    const selectedGameType = gameTypes.get(gameTypeId);
-    if (!selectedGameType) {
-      // This should really never happen, but throwing for type safety
-      throw new Error("Could not find game type");
+    const name = await prompt({
+      title: "Enter game name",
+      label: "Name",
+      schema: gameType.shape.name,
+    });
+    if (!name) {
+      return;
     }
 
     const { gameId } = await createGame.mutateAsync({
-      name: "New game",
+      name,
       definition: selectedGameType.defaultGameDefinition,
       type: selectedGameType.id,
     });
