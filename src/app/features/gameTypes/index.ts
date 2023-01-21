@@ -5,9 +5,6 @@ import type { GameType } from "./GameType";
 
 export const gameTypeList: GameType[] = [reactVersus, excaliburVersus];
 export const gameTypes = gameTypeList.reduce(
-  (record, type) => ({
-    ...record,
-    [type.id]: type,
-  }),
-  {} as Record<GameTypeId, GameType>
+  (map, type) => map.set(type.id, type),
+  new Map<GameTypeId, GameType>()
 );

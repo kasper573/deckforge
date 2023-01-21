@@ -114,6 +114,6 @@ export const selectors = {
   gameDefinition,
   runtimeDefinition,
   builtinDefinition: (state: EditorState) =>
-    state.game ? gameTypes[state.game?.type].runtimeDefinition : undefined,
+    state.game ? gameTypes.get(state.game.type)?.runtimeDefinition : undefined,
   editorApi,
 };

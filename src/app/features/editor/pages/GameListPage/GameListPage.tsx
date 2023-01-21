@@ -67,7 +67,12 @@ export default function GameListPage() {
       return;
     }
 
-    const selectedGameType = gameTypes[promptResult.value.typeId];
+    const selectedGameType = gameTypes.get(promptResult.value.typeId);
+    if (!selectedGameType) {
+      // This should really never happen, but throwing for type safety
+      throw new Error("Could not find game type");
+    }
+
     const { gameId } = await createGame.mutateAsync({
       name: promptResult.value.name,
       definition: selectedGameType.defaultGameDefinition,
