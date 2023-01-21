@@ -1,13 +1,13 @@
 import type { ComponentProps, ReactNode } from "react";
 import { Suspense } from "react";
-import type { RuntimeGenerics } from "../compiler/types";
 import type { GameTypeId } from "../../../api/services/game/types";
 import { LoadingIndicator } from "../../components/LoadingIndicator";
 import { Center } from "../../components/Center";
-import type { GameRendererProps } from "./GameType";
-import { gameTypes } from "./index";
+import type { GameRendererProps } from "../gameTypes/GameType";
+import { gameTypes } from "../gameTypes";
+import type { RuntimeGenerics } from "./types";
 
-export function LazyGameRenderer<G extends RuntimeGenerics>({
+export function GameRenderer<G extends RuntimeGenerics>({
   type,
   loader = (
     <Center>

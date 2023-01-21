@@ -6,7 +6,7 @@ import { compileGame } from "../compiler/compileGame";
 import type { RuntimeGenerics } from "../compiler/types";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import { trpc } from "../../trpc";
-import { LazyGameRenderer } from "../gameTypes/LazyGameRenderer";
+import { GameRenderer } from "../compiler/GameRenderer";
 
 export default function GamePlayPage() {
   const { gameId } = useRouteParams(router.play().game);
@@ -28,7 +28,7 @@ export default function GamePlayPage() {
   return (
     <Page>
       {game && (
-        <LazyGameRenderer
+        <GameRenderer
           type={game.type}
           runtime={compiled.runtime}
           style={{ width: "100%", height: "100%" }}

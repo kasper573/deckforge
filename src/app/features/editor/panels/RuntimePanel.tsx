@@ -21,7 +21,7 @@ import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import type { MachineMiddleware } from "../../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../../lib/machine/MachineContext";
-import { LazyGameRenderer } from "../../gameTypes/LazyGameRenderer";
+import { GameRenderer } from "../../compiler/GameRenderer";
 import type { PanelProps } from "./definition";
 
 export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
@@ -107,7 +107,7 @@ export const RuntimePanel = memo(function RuntimePanel(props: PanelProps) {
             onError={onRenderError}
           >
             {gameType ? (
-              <LazyGameRenderer
+              <GameRenderer
                 type={gameType}
                 runtime={compiled.runtime}
                 style={{
