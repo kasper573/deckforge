@@ -6,10 +6,10 @@ import { gameDefinitionType } from "../../../../api/services/game/types";
 import defaultGameDefinitionJson from "../versus/defaultGameDefinition.json";
 import { versusDefinition } from "../versus/runtimeDefinition";
 
-export const excaliburVersus: GameType<VersusGenerics> = {
+export const gameTypeDemo: GameType<VersusGenerics> = {
   id: "game-type-demo" as GameTypeId,
   name: "Different game type demonstration",
-  renderer: lazy(() => import("./ExcaliburVersusRenderer")),
+  renderer: lazy(() => import("./Renderer")),
   defaultGameDefinition: gameDefinitionType.parse(defaultGameDefinitionJson),
   runtimeDefinition: versusDefinition,
 };

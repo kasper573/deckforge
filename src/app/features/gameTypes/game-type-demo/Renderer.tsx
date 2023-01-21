@@ -9,7 +9,7 @@ export interface ExcaliburGameRendererProps
   runtime: GameRuntime<VersusGenerics>;
 }
 
-export default function ExcaliburVersusRenderer({
+export default function Renderer({
   runtime,
   ...props
 }: ExcaliburGameRendererProps) {
