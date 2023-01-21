@@ -10,7 +10,7 @@ import type { GameRuntime } from "../compiler/compileGame";
 export interface GameType<G extends RuntimeGenerics = RuntimeGenerics> {
   id: GameTypeId;
   name: string;
-  description?: ReactNode;
+  description: ReactNode;
   defaultGameDefinition: GameDefinition;
   runtimeDefinition: RuntimeDefinition<G>;
   renderer: ComponentType<GameRendererProps<G>>;

@@ -8,7 +8,9 @@ import { runtimeDefinition } from "./runtimeDefinition";
 
 export const gameTypeDemo: GameType<DemoGenerics> = {
   id: "game-type-demo" as GameTypeId,
-  name: "Different game type demonstration",
+  name: "Empty game",
+  description:
+    "An empty game. Pointless except as proof of concept that deck forge supports multiple game types.",
   renderer: lazy(() => import("./Renderer")),
   defaultGameDefinition: gameDefinitionType.parse(defaultGameDefinitionJson),
   runtimeDefinition,

@@ -9,6 +9,7 @@ import { versusDefinition } from "./runtimeDefinition";
 export const reactVersus: GameType<VersusGenerics> = {
   id: "react-versus" as GameTypeId,
   name: "1 vs 1",
+  description: "1v1 turn based and mana/health based combat.",
   renderer: lazy(() => import("./components/ReactVersusRenderer")),
   defaultGameDefinition: gameDefinitionType.parse(defaultGameDefinitionJson),
   runtimeDefinition: versusDefinition,
