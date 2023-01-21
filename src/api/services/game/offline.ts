@@ -55,6 +55,7 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
       if (!deleted) {
         throw new Error("Game does not exist");
       }
+      save();
     },
     list(input) {
       return {
