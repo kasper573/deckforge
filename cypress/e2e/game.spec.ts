@@ -21,6 +21,7 @@ describe("game", () => {
 
     beforeEach(() => {
       cy.findByRole("button", { name: /create game/i }).click();
+      cy.findByRole("dialog").within(() => cy.findByRole(/1 vs 1/i).click());
       cy.findByRole("dialog").within(() => {
         cy.findByLabelText(/name/i).type(gameName);
         cy.findByRole("form").submit();
