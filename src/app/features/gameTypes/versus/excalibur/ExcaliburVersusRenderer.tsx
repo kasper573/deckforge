@@ -1,11 +1,11 @@
 import { Actor, CollisionType, Color, Engine, Input, vec } from "excalibur";
-import type { HTMLAttributes } from "react";
-import { useEffect, useRef } from "react";
+import type { ComponentProps } from "react";
 import type { GameRuntime } from "../../../compiler/compileGame";
 import type { VersusGenerics } from "../runtimeDefinition";
+import ExcaliburRenderer from "../../../../../lib/ExcaliburRenderer";
 
 export interface ExcaliburGameRendererProps
-  extends HTMLAttributes<HTMLCanvasElement> {
+  extends Omit<ComponentProps<typeof ExcaliburRenderer>, "engine"> {
   runtime: GameRuntime<VersusGenerics>;
 }
 
@@ -13,23 +13,12 @@ export default function ExcaliburVersusRenderer({
   runtime,
   ...props
 }: ExcaliburGameRendererProps) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  useEffect(() => {
-    if (!canvasRef.current) {
-      return;
-    }
-    const game = createGame(canvasRef.current);
-    game.start();
-    return () => game.stop();
-  });
-  return <canvas ref={canvasRef} {...props} />;
+  return <ExcaliburRenderer engine={createGame} {...props} />;
 }
 
-function createGame(canvasElement: HTMLCanvasElement) {
+function createGame(...[engineProps]: ConstructorParameters<typeof Engine>) {
   const game = new Engine({
-    width: 800,
-    height: 600,
-    canvasElement,
+    ...engineProps,
     pointerScope: Input.PointerScope.Canvas,
   });
 
