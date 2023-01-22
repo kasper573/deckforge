@@ -32,15 +32,14 @@ import { defaultPanelLayout } from "./panels/defaultPanelLayout";
 import { selectors } from "./selectors";
 
 const panelStorage = createZodStorage(
-  panelLayoutType.optional(),
+  panelLayoutType,
   "panel-layout",
   defaultPanelLayout
 );
 
 const selectedObjectStorage = createZodStorage(
-  editorObjectIdType.optional(),
-  "selected-object",
-  undefined
+  editorObjectIdType,
+  "selected-object"
 );
 
 const initialState: EditorState = {
