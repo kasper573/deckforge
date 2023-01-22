@@ -10,7 +10,7 @@ import type {
 import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
 import { compileEditorApi } from "../compiler/compileEditorApi";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
-import { builtinDefinition } from "../runtimes/react-1v1/definition";
+import { gameTypes } from "../gameTypes";
 import type { EditorObjectId, EditorState } from "./types";
 
 const gameDefinition = (state: EditorState) => state.game?.definition;
@@ -45,6 +45,7 @@ export const selectors = {
     }
   },
   game: (state: EditorState) => state.game,
+  gameType: (state: EditorState) => state.game?.type,
   decks: (state: EditorState) => state.game?.definition.decks ?? [],
   decksAndCards: (state: EditorState) => {
     if (!state.game) {
@@ -112,6 +113,7 @@ export const selectors = {
 
   gameDefinition,
   runtimeDefinition,
-  builtinDefinition: () => builtinDefinition,
+  builtinDefinition: (state: EditorState) =>
+    state.game ? gameTypes.get(state.game.type)?.runtimeDefinition : undefined,
   editorApi,
 };

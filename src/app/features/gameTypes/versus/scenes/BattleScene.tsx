@@ -1,7 +1,7 @@
 import Button from "@mui/material/Button";
 import { styled } from "@mui/material/styles";
-import { adapter } from "../definition";
-import { PlayerBoard } from "../PlayerBoard";
+import { adapter } from "../runtimeDefinition";
+import { PlayerBoard } from "../components/PlayerBoard";
 
 export function BattleScene() {
   const [player1, player2] = adapter.useRuntimeState((state) => state.players);

@@ -2,11 +2,11 @@ import { useRouteParams } from "react-typesafe-routes";
 import { useMemo } from "react";
 import { Page } from "../layout/Page";
 import { router } from "../../router";
-import { GameRenderer } from "../runtimes/react-1v1/GameRenderer";
 import { compileGame } from "../compiler/compileGame";
 import type { RuntimeGenerics } from "../compiler/types";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import { trpc } from "../../trpc";
+import { GameRenderer } from "../compiler/GameRenderer";
 
 export default function GamePlayPage() {
   const { gameId } = useRouteParams(router.play().game);
@@ -27,7 +27,13 @@ export default function GamePlayPage() {
 
   return (
     <Page>
-      <GameRenderer runtime={compiled.runtime} />
+      {game && (
+        <GameRenderer
+          type={game.type}
+          runtime={compiled.runtime}
+          style={{ width: "100%", height: "100%" }}
+        />
+      )}
     </Page>
   );
 }

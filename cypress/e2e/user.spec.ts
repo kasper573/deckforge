@@ -86,6 +86,8 @@ describe("two different users", () => {
     signIn(user1.name, user1.password);
     assertSignedIn(user1.name);
     signOut();
+
+    cy.visit("/");
     signIn(user2.name, user2.password);
     assertSignedIn(user2.name);
   });
@@ -96,6 +98,8 @@ describe("two different users", () => {
     gotoProfile();
     assertProfile({ email: user1.email });
     signOut();
+
+    cy.visit("/");
     signIn(user2.name, user2.password);
     gotoProfile();
     assertProfile({ email: user2.email });

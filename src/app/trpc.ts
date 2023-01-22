@@ -5,6 +5,8 @@ import superjson from "superjson";
 import { QueryClient } from "@tanstack/react-query";
 import type { ApiRouter } from "../api/router";
 import { isBadTokenError } from "../api/services/user/constants";
+import type { LinkInterceptorsDefinition } from "../lib/trpc-intercept";
+import { interceptedLink } from "../lib/trpc-intercept";
 import { env } from "./env";
 
 export const CANCEL_INVALIDATE = Symbol("CANCEL_INVALIDATE");
@@ -25,7 +27,7 @@ export const trpc = createTRPCReact<ApiRouter>({
   },
 });
 
-export function createQueryClient(onBadToken?: () => void) {
+export function createQueryClient({ onBadToken }: { onBadToken?: () => void }) {
   return new QueryClient({
     defaultOptions: {
       queries: {
@@ -48,7 +50,13 @@ export function createQueryClient(onBadToken?: () => void) {
   }
 }
 
-export function createTRPCClient(getAuthToken: () => string | undefined) {
+export function createTRPCClient({
+  getAuthToken,
+  interceptors,
+}: {
+  getAuthToken: () => string | undefined;
+  interceptors?: LinkInterceptorsDefinition<ApiRouter>;
+}) {
   return trpc.createClient({
     transformer: superjson,
     links: [
@@ -59,18 +67,21 @@ export function createTRPCClient(getAuthToken: () => string | undefined) {
           error: console.error,
         },
       }),
-      httpBatchLink({
-        url: getApiBaseUrl(),
-        headers() {
-          const token = getAuthToken();
-          return token ? { Authorization: `Bearer ${token}` } : {};
-        },
-      }),
+      interceptedLink(
+        httpBatchLink({
+          url: getApiBaseUrl(),
+          headers() {
+            const token = getAuthToken();
+            return token ? { Authorization: `Bearer ${token}` } : {};
+          },
+        }),
+        interceptors
+      ),
     ],
   });
 }
 
-function getApiBaseUrl() {
+export function getApiBaseUrl() {
   const isNon80 = (env.apiPort ?? 80) !== 80;
   return `//${window.location.hostname}${isNon80 ? `:${env.apiPort}` : ""}/api`;
 }

@@ -7,9 +7,9 @@ import type {
   DeckId,
   PropertyId,
   MiddlewareId,
+  Game,
 } from "../../../api/services/game/types";
 import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
-import { gameType } from "../../../api/services/game/types";
 
 export const editorObjectIdType = z
   .object({
@@ -43,13 +43,8 @@ export const editorObjectIdType = z
 
 export type EditorObjectId = z.infer<typeof editorObjectIdType>;
 
-export type EditorGame = z.infer<typeof editorGameType>;
-export const editorGameType = gameType
-  .pick({ name: true, definition: true })
-  .and(gameType.pick({ gameId: true }).partial());
-
 export interface EditorState {
-  game?: EditorGame;
+  game?: Game;
   selectedObjectId?: EditorObjectId;
   panelLayout?: PanelLayout;
   logs: LogEntry[];
@@ -79,6 +74,13 @@ export const panelLayoutType: ZodType<PanelLayout> = panelIdType.or(
     direction: z.enum(["row", "column"]),
     first: z.lazy(() => panelLayoutType),
     second: z.lazy(() => panelLayoutType),
-    splitPercentage: z.number().optional(),
+    splitPercentage: z
+      .number()
+      .nullish()
+      // Have to transform nulls to undefined because react-mosaic-component
+      // has poor type definitions and in fact uses nulls in runtime
+      .transform((v) => (v === null ? undefined : v)) as ZodType<
+      number | undefined
+    >,
   })
 );

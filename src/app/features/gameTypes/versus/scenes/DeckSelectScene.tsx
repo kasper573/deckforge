@@ -1,14 +1,11 @@
 import Button from "@mui/material/Button";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
 import { useState } from "react";
 import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
-import { adapter } from "../definition";
+import { adapter } from "../runtimeDefinition";
 import { Center } from "../../../../components/Center";
 import type { RuntimeDeck, RuntimeGenerics } from "../../../compiler/types";
+import { Select } from "../../../../controls/Select";
 
 export function DeckSelectScene() {
   const { startBattle } = adapter.useRuntimeActions();
@@ -75,24 +72,13 @@ function DeckSelector<G extends RuntimeGenerics>({
   onChange: (value: RuntimeDeck<G>) => void;
 }) {
   return (
-    <FormControl>
-      <InputLabel>{label}</InputLabel>
-      <Select
-        value={value.id}
-        label={label}
-        onChange={(e) => {
-          const newDeck = options.find((d) => d.id === e.target.value);
-          if (newDeck) {
-            onChange(newDeck);
-          }
-        }}
-      >
-        {options.map((deck) => (
-          <MenuItem key={deck.id} value={deck.id}>
-            {deck.name}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+    <Select
+      label={label}
+      value={value}
+      onChange={onChange}
+      options={options}
+      getOptionLabel={(deck) => deck.name}
+      getOptionValue={(deck) => deck.id}
+    />
   );
 }

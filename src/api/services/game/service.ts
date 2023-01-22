@@ -5,6 +5,7 @@ import { t } from "../../trpc";
 import { access } from "../../middlewares/access";
 import { createFilterType, createResultType } from "../../utils/search";
 import { UserFacingError } from "../../utils/UserFacingError";
+import { isUniqueConstraintError } from "../../utils/isUniqueConstraintError";
 import type { Game } from "./types";
 import { gameType } from "./types";
 
@@ -14,17 +15,24 @@ export function createGameService() {
   return t.router({
     create: t.procedure
       .use(access())
-      .input(gameType.pick({ name: true, definition: true }))
+      .input(gameType.pick({ name: true, definition: true, type: true }))
       .output(gameType)
       .mutation(async ({ input: { definition, ...rest }, ctx }) => {
-        const game = await ctx.db.game.create({
-          data: {
-            ...rest,
-            ownerId: ctx.user.userId,
-            definition: definition as Prisma.JsonObject,
-          },
-        });
-        return game as unknown as Game;
+        try {
+          const game = await ctx.db.game.create({
+            data: {
+              ...rest,
+              ownerId: ctx.user.userId,
+              definition: definition as Prisma.JsonObject,
+            },
+          });
+          return game as unknown as Game;
+        } catch (e) {
+          if (isUniqueConstraintError(e)) {
+            throw new UserFacingError("A game with this name already exists");
+          }
+          throw e;
+        }
       }),
     read: t.procedure
       .input(gameType.shape.gameId)
@@ -45,13 +53,19 @@ export function createGameService() {
       )
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
       .mutation(async ({ input: { gameId, definition, ...data }, ctx }) => {
-        await ctx.db.game.update({
-          where: { gameId },
-          data: {
-            ...data,
-            definition: definition as Prisma.JsonObject,
-          },
-        });
+        try {
+          await ctx.db.game.update({
+            where: { gameId },
+            data: {
+              ...data,
+              definition: definition as Prisma.JsonObject,
+            },
+          });
+        } catch (e) {
+          if (isUniqueConstraintError(e)) {
+            throw new UserFacingError("A game with this name already exists");
+          }
+        }
       }),
     delete: t.procedure
       .input(gameType.shape.gameId)

@@ -4,7 +4,7 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import { styled } from "@mui/material/styles";
 import { ObjectInspector } from "react-inspector";
-import { memo, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { Panel } from "../components/Panel";
 import { PanelControls } from "../components/PanelControls";
 import { useSelector } from "../store";
@@ -16,7 +16,7 @@ import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Delete } from "../../../components/icons";
 import type { PanelProps } from "./definition";
 
-export const LogsPanel = memo(function LogsPanel(props: PanelProps) {
+export function LogsPanel(props: PanelProps) {
   const logs = useSelector(selectors.logs);
   const { clearLogs } = useActions(editorActions);
   const paperRef = useRef<HTMLDivElement>(null);
@@ -54,7 +54,7 @@ export const LogsPanel = memo(function LogsPanel(props: PanelProps) {
       )}
     </Panel>
   );
-});
+}
 
 function LogListItem({ entry }: { entry: LogEntry }) {
   return (

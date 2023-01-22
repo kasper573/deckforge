@@ -1,15 +1,15 @@
 import { styled } from "@mui/material/styles";
 import type { ComponentProps } from "react";
 import type { GameRuntime } from "../../compiler/compileGame";
-import type { React1v1Generics } from "./definition";
-import { adapter } from "./definition";
+import type { VersusGenerics } from "./runtimeDefinition";
+import { adapter } from "./runtimeDefinition";
 import { Scenes } from "./scenes";
 
-export interface GameRendererProps extends ComponentProps<typeof Viewport> {
-  runtime: GameRuntime<React1v1Generics>;
+export interface RendererProps extends ComponentProps<typeof Viewport> {
+  runtime: GameRuntime<VersusGenerics>;
 }
 
-export function GameRenderer({ runtime, ...viewportProps }: GameRendererProps) {
+export default function Renderer({ runtime, ...viewportProps }: RendererProps) {
   return (
     <adapter.RuntimeProvider value={runtime}>
       <Viewport {...viewportProps}>

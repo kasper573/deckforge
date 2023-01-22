@@ -109,10 +109,14 @@ export const gameDefinitionType = z.object({
   middlewares: z.array(middlewareType).default([]),
 });
 
+export type GameTypeId = NominalString<"GameTypeId">;
+export const gameTypeIdType = zodNominalString<GameTypeId>();
+
 export type Game = z.infer<typeof gameType>;
 export const gameType = z.object({
   gameId: gameIdType,
   updatedAt: z.date(),
+  type: gameTypeIdType,
   name: z.string().min(1).max(32),
   definition: gameDefinitionType,
   ownerId: z.string(),

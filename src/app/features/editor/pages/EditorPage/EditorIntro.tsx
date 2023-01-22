@@ -14,18 +14,18 @@ import { Tour } from "../../../../components/Tour";
 import { Link } from "../../../../components/Link";
 import { router } from "../../../../router";
 import { helpEvent } from "../../components/AppBar/EditorMenu";
+import { useStore } from "../../store";
+import { isAuthenticated } from "../../../auth/store";
 
-export function EditorIntro({ isLocalInstance }: { isLocalInstance: boolean }) {
+export function EditorIntro() {
   const tourResolverRef = useRef(() => {});
   const showToast = useModal(Toast);
   const confirm = useModal(ConfirmDialog);
+  const store = useStore();
   const [tourState, setTourState] = useState<TourState>({
     step: 0,
     active: false,
   });
-
-  const latest = useRef({ isLocalInstance });
-  latest.current.isLocalInstance = isLocalInstance;
 
   const takeTour = useCallback(
     () =>
@@ -63,11 +63,11 @@ export function EditorIntro({ isLocalInstance }: { isLocalInstance: boolean }) {
       }
       hasSeenIntroStorage.save(true);
 
-      if (latest.current.isLocalInstance) {
+      if (!isAuthenticated()) {
         showToast(modals.localInstanceInfo);
       }
     })();
-  }, [showIntro, showToast]);
+  }, [showIntro, showToast, store]);
 
   return (
     <>
@@ -104,16 +104,6 @@ const modals = {
         </Typography>
         <Divider sx={{ my: 2 }} />
         <Typography paragraph>
-          The engine currently only supports a single game mode: 1v1 turn based
-          and mana/health based combat.
-        </Typography>
-        <Typography>
-          However, the system is designed to be extensible, so if I get around
-          to implementing new game modes you will be able to pick from a
-          supported list of game modes when you create new games.
-        </Typography>
-        <Divider sx={{ my: 2 }} />
-        <Typography paragraph>
           Deck Forge is a proof of concept and is not particularly intuitive.
           Unless you are a programmer and intimately familiar with event driven
           programming and state machines this editor will basically be useless
@@ -134,15 +124,16 @@ const modals = {
     duration: 12000,
     content: (
       <>
-        You are not signed in and the game will only be saved on your device.{" "}
-        <Link to={router.user().login()}>Sign in</Link> to save your game to the
-        cloud and enable publishing games.
+        You are not signed in and the game will only be available on your
+        device. <Link to={router.user().login()}>Sign in</Link> to save your
+        game to the cloud and enable publishing games.
       </>
     ),
   },
 };
 
 const hasSeenIntroStorage = createZodStorage(
-  z.boolean().optional(),
-  "editor-has-seen-intro"
+  z.boolean(),
+  "editor-has-seen-intro",
+  false
 );

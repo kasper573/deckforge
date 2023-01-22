@@ -1,7 +1,7 @@
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import type { RuntimePlayerId } from "../../../compiler/types";
-import { adapter } from "../definition";
+import { adapter } from "../runtimeDefinition";
 import { Center } from "../../../../components/Center";
 
 export function ResultScene({ winner }: { winner: RuntimePlayerId }) {

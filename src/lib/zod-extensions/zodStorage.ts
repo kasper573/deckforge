@@ -1,25 +1,23 @@
 import type { z, ZodType } from "zod";
+import superjson from "superjson";
 
 export function createZodStorage<T extends ZodType>(
   schema: T,
-  localStorageKey: string
+  localStorageKey: string,
+  fallbackValue: z.infer<T>
 ) {
   function save(value: z.infer<T>) {
-    localStorage.setItem(localStorageKey, JSON.stringify(value));
+    localStorage.setItem(localStorageKey, superjson.stringify(value));
   }
 
-  function load(emptyValue?: z.infer<T>): z.infer<T> | undefined {
+  function load(): z.infer<T> {
     try {
-      const jsonString = localStorage.getItem(localStorageKey);
-      if (jsonString === null) {
-        return emptyValue;
-      }
-      const json =
-        jsonString === "undefined" || jsonString === null
-          ? undefined
-          : JSON.parse(jsonString);
-      return schema.parse(json);
-    } catch {}
+      return schema.parse(
+        superjson.parse(localStorage.getItem(localStorageKey) ?? "undefined")
+      );
+    } catch {
+      return fallbackValue;
+    }
   }
 
   return { save, load };

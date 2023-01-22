@@ -1,6 +1,6 @@
-import type { CardInstanceId } from "../../compiler/types";
-import type { React1v1Types } from "./definition";
-import { adapter } from "./definition";
+import type { CardInstanceId } from "../../../compiler/types";
+import type { VersusTypes } from "../runtimeDefinition";
+import { adapter } from "../runtimeDefinition";
 import { Card, CardCost } from "./Card";
 
 export function PlayerHand({
@@ -8,9 +8,9 @@ export function PlayerHand({
   player,
   target,
 }: {
-  player: React1v1Types["player"];
-  cards: React1v1Types["cardPile"];
-  target: React1v1Types["player"];
+  player: VersusTypes["player"];
+  cards: VersusTypes["cardPile"];
+  target: VersusTypes["player"];
 }) {
   const actions = adapter.useRuntimeActions();
   const playCard = (cardId: CardInstanceId) =>

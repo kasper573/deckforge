@@ -8,7 +8,7 @@ import type {
 } from "../../compiler/types";
 import { cardInstanceIdType } from "../../compiler/types";
 
-export const builtinDefinition = defineRuntime({
+export const versusDefinition = defineRuntime({
   playerProperties: {
     health: z.number(),
     healthMax: z.number(),
@@ -39,9 +39,9 @@ export const builtinDefinition = defineRuntime({
   },
 });
 
-export type React1v1Definition = typeof builtinDefinition;
-export type React1v1Generics = RuntimeGenericsFor<React1v1Definition>;
-export type React1v1Types = inferFromZodShape<React1v1Definition>;
-export type React1v1MachineContext = RuntimeMachineContext<React1v1Generics>;
+export type VersusDefinition = typeof versusDefinition;
+export type VersusGenerics = RuntimeGenericsFor<VersusDefinition>;
+export type VersusTypes = inferFromZodShape<VersusDefinition>;
+export type VersusMachineContext = RuntimeMachineContext<VersusGenerics>;
 
-export const adapter = createReactAdapter<React1v1MachineContext>();
+export const adapter = createReactAdapter<VersusMachineContext>();

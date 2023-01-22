@@ -1,29 +1,84 @@
+import Card from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
-import Typography from "@mui/material/Typography";
+import { useHistory } from "react-router";
+import Button from "@mui/material/Button";
+import { useStore } from "zustand";
 import { Page } from "../../../layout/Page";
 import { trpc } from "../../../../trpc";
 import { Header } from "../../../layout/Header";
 import { Center } from "../../../../components/Center";
 
+import { useToastProcedure } from "../../../../hooks/useToastProcedure";
+import { useModal } from "../../../../../lib/useModal";
+
+import { authStore } from "../../../auth/store";
+import { router } from "../../../../router";
+import { gameTypes } from "../../../gameTypes";
+import { PromptDialog } from "../../../../dialogs/PromptDialog";
+import { gameType } from "../../../../../api/services/game/types";
+import { shouldUseOfflineGameService } from "../../utils/shouldUseOfflineGameService";
 import { GameCard } from "./GameCard";
+import { SelectGameTypeDialog } from "./SelectGameTypeDialog";
 
 export default function GameListPage() {
   const games = trpc.game.list.useQuery({ offset: 0, limit: 10 });
+  const history = useHistory();
+  const createGame = useToastProcedure(trpc.game.create);
+  const selectGameType = useModal(SelectGameTypeDialog);
+  const prompt = useModal(PromptDialog);
+  const isLocalDeviceData = shouldUseOfflineGameService(useStore(authStore));
+
+  if (createGame.isSuccess || createGame.isLoading) {
+    throw new Promise(() => {}); // Trigger suspense
+  }
+
+  async function createGameAndGotoEditor() {
+    const gameTypeId = await selectGameType();
+    const selectedGameType = gameTypeId ? gameTypes.get(gameTypeId) : undefined;
+    if (!selectedGameType) {
+      return;
+    }
+
+    const name = await prompt({
+      title: "Enter game name",
+      label: "Name",
+      schema: gameType.shape.name,
+    });
+    if (!name) {
+      return;
+    }
+
+    const { gameId } = await createGame.mutateAsync({
+      name,
+      definition: selectedGameType.defaultGameDefinition,
+      type: selectedGameType.id,
+    });
+
+    history.push(router.editor().edit({ gameId }).$);
+  }
 
   return (
     <Page>
-      <Header>Your games</Header>
-      {games.data?.total === 0 ? (
-        <Center>
-          <Typography paragraph>You have no games yet</Typography>
-        </Center>
-      ) : (
-        <CardGrid>
-          {games.data?.entities.map((game) => (
-            <GameCard key={game.gameId} {...game} />
-          ))}
-        </CardGrid>
-      )}
+      <Header>
+        {isLocalDeviceData ? "Games on this device" : "Your games"}
+      </Header>
+
+      <CardGrid>
+        <Card sx={{ position: "relative", minHeight: 252 }}>
+          <Center>
+            <Button
+              variant="contained"
+              sx={{ whiteSpace: "nowrap" }}
+              onClick={createGameAndGotoEditor}
+            >
+              Create game
+            </Button>
+          </Center>
+        </Card>
+        {games.data?.entities.map((game) => (
+          <GameCard key={game.gameId} {...game} />
+        ))}
+      </CardGrid>
     </Page>
   );
 }

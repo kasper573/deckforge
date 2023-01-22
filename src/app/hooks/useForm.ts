@@ -13,6 +13,8 @@ import type { ApiRouter } from "../../api/router";
 import { zodTypeAtPath } from "../../lib/zod-extensions/zodTypeAtPath";
 import { normalizeType } from "../../lib/zod-extensions/zodNormalize";
 
+export type UseFormResult<T extends ZodType> = ReturnType<typeof useForm<T>>;
+
 /**
  * zod + tRPC + mui specific composition of react-hook-form
  */

@@ -17,20 +17,23 @@ import { router } from "../../../../router";
 import { MenuFor } from "../../../../components/MenuFor";
 import { More } from "../../../../components/icons";
 import { describeTime } from "../../../common/describeTime";
+import { gameTypes } from "../../../gameTypes";
 import { gameType } from "../../../../../api/services/game/types";
 
 export function GameCard({
   gameId,
   name,
+  type: gameTypeId,
   updatedAt,
-}: Pick<Game, "gameId" | "name" | "updatedAt">) {
+}: Pick<Game, "gameId" | "name" | "updatedAt" | "type">) {
   const confirm = useModal(ConfirmDialog);
   const prompt = useModal(PromptDialog);
   const updateGame = useToastProcedure(trpc.game.update);
   const deleteGame = useToastProcedure(trpc.game.delete);
+  const type = gameTypes.get(gameTypeId);
 
   return (
-    <CardLink aria-label={name} to={router.editor({ gameId })}>
+    <CardLink aria-label={name} to={router.editor().edit({ gameId })}>
       <CardActionArea component="div">
         <CardMedia component="img" height="140" image="/logo.webp" />
         <CardContent>
@@ -87,6 +90,7 @@ export function GameCard({
               </MenuFor>
             </div>
           </Stack>
+          <Typography>{type ? type.name : "Unknown game type"}</Typography>
         </CardContent>
         <CardActions sx={{ p: 2, pt: 0 }}>
           Last changed {describeTime(updatedAt)}

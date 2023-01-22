@@ -7,6 +7,7 @@ import type {
   Property,
   Middleware,
   GameDefinition,
+  Game,
 } from "../../../api/services/game/types";
 import {
   createEntityReducerFactory,
@@ -25,7 +26,6 @@ import type {
   LogEntry,
   PanelId,
   PanelLayout,
-  EditorGame,
 } from "./types";
 import { editorObjectIdType, panelLayoutType } from "./types";
 import { defaultPanelLayout } from "./panels/defaultPanelLayout";
@@ -33,17 +33,19 @@ import { selectors } from "./selectors";
 
 const panelStorage = createZodStorage(
   panelLayoutType.optional(),
-  "panel-layout"
+  "panel-layout",
+  defaultPanelLayout
 );
 
 const selectedObjectStorage = createZodStorage(
   editorObjectIdType.optional(),
-  "selected-object"
+  "selected-object",
+  undefined
 );
 
 const initialState: EditorState = {
   selectedObjectId: selectedObjectStorage.load(),
-  panelLayout: panelStorage.load(defaultPanelLayout),
+  panelLayout: panelStorage.load(),
   logs: [],
 };
 
@@ -55,7 +57,7 @@ const editorSlice = createSlice({
   reducers: {
     selectGame: (
       state,
-      { payload: newGame }: PayloadAction<EditorGame | undefined>
+      { payload: newGame }: PayloadAction<Game | undefined>
     ) => {
       state.game = newGame;
     },

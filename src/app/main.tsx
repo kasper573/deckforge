@@ -1,5 +1,7 @@
 import ReactDOM from "react-dom/client";
 import { createBrowserHistory } from "history";
+import { createOfflineGameService } from "../api/services/game/offline";
+import { shouldUseOfflineGameService } from "./features/editor/utils/shouldUseOfflineGameService";
 import { App } from "./App";
 import { createQueryClient, createTRPCClient } from "./trpc";
 import { createTheme } from "./theme";
@@ -20,11 +22,25 @@ if (env.analyticsId) {
   }
 }
 
-const queryClient = createQueryClient(resetAuthToken);
-const trpcClient = createTRPCClient(getAuthToken);
-const history = createBrowserHistory();
 const theme = createTheme();
-setupAuthBehavior({ history });
+const history = createBrowserHistory();
+const offlineGameService = createOfflineGameService();
+const queryClient = createQueryClient({ onBadToken: resetAuthToken });
+const trpcClient = createTRPCClient({
+  getAuthToken,
+  interceptors: () => ({
+    game: shouldUseOfflineGameService() ? offlineGameService : undefined,
+  }),
+});
+
+setupAuthBehavior({
+  history,
+  onTokenChanged() {
+    // Clearing cache on auth change avoids showing data from an offline service
+    // briefly after signing in and getting access to the remote service, and vice versa.
+    queryClient.clear();
+  },
+});
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <App

@@ -1,17 +1,12 @@
-import Button from "@mui/material/Button";
-import DialogActions from "@mui/material/DialogActions";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import TextField from "@mui/material/TextField";
 import type { ReactNode } from "react";
-import Dialog from "@mui/material/Dialog";
 import type { ZodString } from "zod";
 import { z } from "zod";
 import { useMemo } from "react";
 import type { ModalProps } from "../../lib/useModal";
-import { useForm } from "../hooks/useForm";
+import { DialogTextField } from "../controls/DialogTextField";
+import { FormDialog } from "./FormDialog";
 
-export type PromptDialogProps<T extends ZodString> = ModalProps<
+export type PromptDialogProps<T extends ZodString = ZodString> = ModalProps<
   string | undefined,
   {
     title: ReactNode;
@@ -25,7 +20,6 @@ export type PromptDialogProps<T extends ZodString> = ModalProps<
 >;
 
 export function PromptDialog<T extends ZodString>({
-  open,
   input: {
     title,
     schema: fieldSchema,
@@ -36,46 +30,37 @@ export function PromptDialog<T extends ZodString>({
     helperText,
   },
   resolve,
+  ...rest
 }: PromptDialogProps<T>) {
-  const formSchema = useMemo(
+  const valueSchema = useMemo(
     () => z.object({ value: fieldSchema ?? z.string() }),
     [fieldSchema]
   );
-
-  const form = useForm(formSchema, { defaultValues: { value: defaultValue } });
-
-  function cancel() {
-    form.reset();
-    resolve(undefined);
-  }
-
-  function onSubmit({ value }: { value: z.infer<T> }) {
-    resolve(value);
-    form.reset();
-  }
-
   return (
-    <Dialog disableRestoreFocus fullWidth open={open} onClose={cancel}>
-      <form name="prompt" onSubmit={form.handleSubmit(onSubmit)}>
-        <DialogTitle>{title}</DialogTitle>
-        <DialogContent>
-          <TextField
+    <FormDialog
+      input={{
+        cancelLabel,
+        submitLabel,
+        title,
+        schema: valueSchema,
+        defaultValues: { value: defaultValue },
+        layout: (form) => (
+          <DialogTextField
             label={label}
             helperText={helperText}
-            margin="dense"
-            fullWidth
             autoFocus
-            variant="standard"
             {...form.register("value")}
           />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={cancel}>{cancelLabel}</Button>
-          <Button type="submit" variant="contained">
-            {submitLabel}
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+        ),
+      }}
+      resolve={(result) => {
+        if (result.type === "submit") {
+          resolve(result.value.value);
+        } else {
+          resolve(undefined);
+        }
+      }}
+      {...rest}
+    />
   );
 }
