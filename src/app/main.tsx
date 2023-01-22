@@ -1,14 +1,11 @@
 import ReactDOM from "react-dom/client";
 import { createBrowserHistory } from "history";
-import {
-  createOfflineGameService,
-  shouldUseOfflineGameService,
-} from "../api/services/game/offline";
+import { createOfflineGameService } from "../api/services/game/offline";
+import { shouldUseOfflineGameService } from "./features/editor/utils/shouldUseOfflineGameService";
 import { App } from "./App";
 import { createQueryClient, createTRPCClient } from "./trpc";
 import { createTheme } from "./theme";
 import {
-  authStore,
   getAuthToken,
   resetAuthToken,
   setupAuthBehavior,
@@ -32,9 +29,7 @@ const queryClient = createQueryClient({ onBadToken: resetAuthToken });
 const trpcClient = createTRPCClient({
   getAuthToken,
   interceptors: () => ({
-    game: shouldUseOfflineGameService(authStore.getState())
-      ? offlineGameService
-      : undefined,
+    game: shouldUseOfflineGameService() ? offlineGameService : undefined,
   }),
 });
 

@@ -12,11 +12,11 @@ import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { useModal } from "../../../../../lib/useModal";
 
 import { authStore } from "../../../auth/store";
-import { shouldUseOfflineGameService } from "../../../../../api/services/game/offline";
 import { router } from "../../../../router";
 import { gameTypes } from "../../../gameTypes";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { gameType } from "../../../../../api/services/game/types";
+import { shouldUseOfflineGameService } from "../../utils/shouldUseOfflineGameService";
 import { GameCard } from "./GameCard";
 import { SelectGameTypeDialog } from "./SelectGameTypeDialog";
 
