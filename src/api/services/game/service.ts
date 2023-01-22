@@ -36,7 +36,6 @@ export function createGameService() {
       }),
     read: t.procedure
       .input(gameType.shape.gameId)
-      .use((opts) => assertGameAccess(opts, opts.input))
       .output(gameType)
       .query(async ({ input: gameId, ctx }) => {
         const game = await ctx.db.game.findUnique({ where: { gameId } });
