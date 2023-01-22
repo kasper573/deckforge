@@ -1,34 +1,14 @@
-import type { Server } from "http";
 import { initTRPC } from "@trpc/server";
 import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
-import express from "express";
-import * as trpcExpress from "@trpc/server/adapters/express";
 import { z } from "zod";
-import type {
-  LinkInterceptors,
-  LinkInterceptorsDefinition,
-} from "./trpc-intercept";
+import type { LinkInterceptors } from "./trpc-intercept";
 import { interceptedLink } from "./trpc-intercept";
 
 const t = initTRPC.create();
 
 describe("trpc-intercept", () => {
-  let server: Server;
-  let client: ReturnType<typeof createClient>;
-
-  beforeEach(async () => {
-    const hopefullyFreePort = 2635;
-    const deps = createClientAndInterceptor();
-    client = deps.client;
-
-    await new Promise<void>((resolve) => {
-      server = deps.serverApp.listen(hopefullyFreePort, resolve);
-    });
-  });
-
-  afterEach(() => server.close());
-
   it("intercepts client procedure calls", async () => {
+    const client = createClient();
     let count = await client.counter.count.query();
     expect(count).toBe(0);
 
@@ -38,10 +18,9 @@ describe("trpc-intercept", () => {
   });
 });
 
-function createClientAndInterceptor() {
+function createClient() {
   const relativeApiPath = "/api";
   const apiBaseUrl = `http://localhost${relativeApiPath}`;
-  const api = createApi(5);
 
   let interceptorCount = 0;
   const interceptors: LinkInterceptors<Api> = {
@@ -55,10 +34,14 @@ function createClientAndInterceptor() {
     },
   };
 
-  const serverApp = createServerApp(api, relativeApiPath);
-  const client = createClient(apiBaseUrl, interceptors);
-
-  return { client, serverApp };
+  return createTRPCProxyClient<Api>({
+    links: [
+      interceptedLink(
+        httpBatchLink({ url: apiBaseUrl, fetch: fakeFetch }),
+        interceptors
+      ),
+    ],
+  });
 }
 
 function createApi(initialCount: number) {
@@ -74,26 +57,6 @@ function createApi(initialCount: number) {
           count += amount;
         }),
     }),
-  });
-}
-
-function createServerApp(router: Api, relativeApiPath: string) {
-  const app = express();
-  app.use(
-    relativeApiPath,
-    trpcExpress.createExpressMiddleware({ router: router })
-  );
-  return app;
-}
-
-function createClient(
-  url: string,
-  interceptors?: LinkInterceptorsDefinition<Api>
-) {
-  return createTRPCProxyClient<Api>({
-    links: [
-      interceptedLink(httpBatchLink({ url, fetch: fakeFetch }), interceptors),
-    ],
   });
 }
 
