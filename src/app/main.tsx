@@ -29,7 +29,7 @@ const queryClient = createQueryClient({ onBadToken: resetAuthToken });
 const trpcClient = createTRPCClient({
   getAuthToken,
   interceptors: () => ({
-    game: shouldUseOfflineGameService() ? offlineGameService : undefined,
+    game: shouldUseOfflineGameService(history) ? offlineGameService : undefined,
   }),
 });
 

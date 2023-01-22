@@ -2,7 +2,6 @@ import Card from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { useHistory } from "react-router";
 import Button from "@mui/material/Button";
-import { useStore } from "zustand";
 import { Page } from "../../../layout/Page";
 import { trpc } from "../../../../trpc";
 import { Header } from "../../../layout/Header";
@@ -11,12 +10,11 @@ import { Center } from "../../../../components/Center";
 import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { useModal } from "../../../../../lib/useModal";
 
-import { authStore } from "../../../auth/store";
 import { router } from "../../../../router";
 import { gameTypes } from "../../../gameTypes";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { gameType } from "../../../../../api/services/game/types";
-import { shouldUseOfflineGameService } from "../../utils/shouldUseOfflineGameService";
+import { useOfflineGameServiceState } from "../../utils/shouldUseOfflineGameService";
 import { GameCard } from "./GameCard";
 import { SelectGameTypeDialog } from "./SelectGameTypeDialog";
 
@@ -26,7 +24,7 @@ export default function GameListPage() {
   const createGame = useToastProcedure(trpc.game.create);
   const selectGameType = useModal(SelectGameTypeDialog);
   const prompt = useModal(PromptDialog);
-  const isLocalDeviceData = shouldUseOfflineGameService(useStore(authStore));
+  const isLocalDeviceData = useOfflineGameServiceState();
 
   if (createGame.isSuccess || createGame.isLoading) {
     throw new Promise(() => {}); // Trigger suspense
