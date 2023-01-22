@@ -15,6 +15,7 @@ import { LinkIconButton } from "../../../../components/Link";
 import { router } from "../../../../router";
 import { pageMaxWidth } from "../../../layout/Page";
 import { gameType } from "../../../../../api/services/game/types";
+import { useOfflineGameServiceState } from "../../utils/shouldUseOfflineGameService";
 import { EditorMenu } from "./EditorMenu";
 
 export default function EditorAppBarContent() {
@@ -30,6 +31,7 @@ function Content() {
   const prompt = useModal(PromptDialog);
   const game = useSelector(selectors.game);
   const { renameGame } = useActions(editorActions);
+  const isLocalDeviceData = useOfflineGameServiceState();
 
   async function promptRename() {
     const newName = await prompt({
@@ -64,22 +66,18 @@ function Content() {
           <Tooltip title="Rename game">
             <Clickable onClick={promptRename}>{game?.name}</Clickable>
           </Tooltip>
-          {game && (
-            <>
-              {game.gameId && (
-                <Tooltip title="Open public gameplay page">
-                  <Clickable>
-                    <LinkIconButton
-                      to={router.play().game({ gameId: game.gameId })}
-                      target="_blank"
-                      sx={{ ml: 1 }}
-                    >
-                      <Play />
-                    </LinkIconButton>
-                  </Clickable>
-                </Tooltip>
-              )}
-            </>
+          {game && !isLocalDeviceData && (
+            <Tooltip title="Open public gameplay page">
+              <Clickable>
+                <LinkIconButton
+                  to={router.play().game({ gameId: game.gameId })}
+                  target="_blank"
+                  sx={{ ml: 1 }}
+                >
+                  <Play />
+                </LinkIconButton>
+              </Clickable>
+            </Tooltip>
           )}
         </Stack>
       </GameName>
