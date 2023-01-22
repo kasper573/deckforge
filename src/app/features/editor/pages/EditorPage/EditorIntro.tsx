@@ -14,14 +14,14 @@ import { Tour } from "../../../../components/Tour";
 import { Link } from "../../../../components/Link";
 import { router } from "../../../../router";
 import { helpEvent } from "../../components/AppBar/EditorMenu";
-import { useStore } from "../../store";
-import { isAuthenticated } from "../../../auth/store";
+import { useOfflineGameServiceState } from "../../utils/shouldUseOfflineGameService";
+import { useReaction } from "../../../../../lib/useReaction";
 
 export function EditorIntro() {
   const tourResolverRef = useRef(() => {});
   const showToast = useModal(Toast);
   const confirm = useModal(ConfirmDialog);
-  const store = useStore();
+  const isLocalDeviceData = useOfflineGameServiceState();
   const [tourState, setTourState] = useState<TourState>({
     step: 0,
     active: false,
@@ -56,18 +56,16 @@ export function EditorIntro() {
 
   useEffect(() => helpEvent.subscribe(showIntro), [showIntro]);
 
-  useEffect(() => {
-    (async () => {
-      if (!hasSeenIntroStorage.load()) {
-        await showIntro();
-      }
-      hasSeenIntroStorage.save(true);
+  useReaction(async () => {
+    if (!hasSeenIntroStorage.load()) {
+      await showIntro();
+    }
+    hasSeenIntroStorage.save(true);
 
-      if (!isAuthenticated()) {
-        showToast(modals.localInstanceInfo);
-      }
-    })();
-  }, [showIntro, showToast, store]);
+    if (isLocalDeviceData) {
+      showToast(modals.localInstanceInfo);
+    }
+  }, []);
 
   return (
     <>
