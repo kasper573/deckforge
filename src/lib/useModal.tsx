@@ -67,6 +67,7 @@ interface Modal<Output, Input> extends ExposedModalState<Input> {
   component: ModalComponent<Output, Input>;
   promise?: Promise<Output>;
   resolver?: (output: Output) => void;
+  hasInput?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,6 +121,7 @@ const store = createStore<ModalStore>()(
         modal.open = true;
         modal.promise = promise;
         modal.resolver = resolver as typeof modal.resolver;
+        modal.hasInput = true;
       });
       return promise;
     },
@@ -154,7 +156,7 @@ function nextId() {
 export function ModalOutlet() {
   const { modals, resolveModal } = useStore(store);
   const modalsWithInput = useMemo(
-    () => Array.from(modals.values()).filter((m) => m.open),
+    () => Array.from(modals.values()).filter((m) => m.hasInput),
     [modals]
   );
   return (
