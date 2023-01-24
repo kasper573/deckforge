@@ -19,7 +19,7 @@ import { ApiReferenceDialog } from "./ApiReferenceDialog";
 export function CodePanel({ title, ...props }: PanelProps) {
   const { objectSelector, typeDefs, update, error } = useEditorProps();
   const object = useSelector(objectSelector);
-  const id = useSelector(selectors.selectedObject);
+  const id = useSelector(selectors.selectedObjectId);
   const idAsKey = useMemo(() => JSON.stringify(id), [id]);
   const breadcrumbs = useSelector(selectors.selectedObjectBreadcrumbs);
   const showApiReference = useModal(ApiReferenceDialog);
@@ -68,7 +68,7 @@ function useEditorProps(): {
   update: (code: string) => void;
   error?: string;
 } {
-  const id = useSelector(selectors.selectedObject);
+  const id = useSelector(selectors.selectedObjectId);
   const actions = useActions(editorActions);
   const editorApi = useSelector(selectors.editorApi);
   const events = useSelector(selectors.events);

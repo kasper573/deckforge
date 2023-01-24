@@ -17,9 +17,8 @@ export function MiddlewaresPanel(props: PanelProps) {
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
-  const { createMiddleware, updateMiddleware, selectObject } =
-    useActions(editorActions);
-  const selectedObjectId = useSelector(selectors.selectedObject);
+  const { createMiddleware, selectObject } = useActions(editorActions);
+  const selectedObjectId = useSelector(selectors.selectedObjectId);
 
   const promptCreateMiddleware = () =>
     promptCreate("middleware", (name) => createMiddleware({ name }));

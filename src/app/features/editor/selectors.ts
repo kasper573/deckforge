@@ -27,7 +27,7 @@ export const selectors = {
   panelLayout: (state: EditorState) => state.panelLayout,
   panelVisibilities: (state: EditorState) =>
     getKeyVisibilities(state.panelLayout),
-  selectedObject: (state: EditorState) => state.selectedObjectId,
+  selectedObjectId: (state: EditorState) => state.selectedObjectId,
   selectedObjectBreadcrumbs(state: EditorState): string[] | undefined {
     const { selectedObjectId: id } = state;
     if (!id) {

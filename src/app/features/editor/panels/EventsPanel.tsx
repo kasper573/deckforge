@@ -25,7 +25,7 @@ export function EventsPanel(props: PanelProps) {
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
   const { createEvent, updateEvent, selectObject } = useActions(editorActions);
-  const selectedObjectId = useSelector(selectors.selectedObject);
+  const selectedObjectId = useSelector(selectors.selectedObjectId);
 
   const promptCreateEvent = () =>
     promptCreate("event", (name) => createEvent({ name }));

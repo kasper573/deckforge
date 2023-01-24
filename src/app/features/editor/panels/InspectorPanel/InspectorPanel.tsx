@@ -12,8 +12,8 @@ import { PanelTitle } from "../../components/PanelTitle";
 import { PropertyDefaultsEditor } from "./PropertyValueEditor";
 
 export function InspectorPanel({ title, ...props }: PanelProps) {
-  const selectedObjectId = useSelector(selectors.selectedObject);
-  const id = useSelector(selectors.selectedObject);
+  const selectedObjectId = useSelector(selectors.selectedObjectId);
+  const id = useSelector(selectors.selectedObjectId);
   const breadcrumbs = useSelector(selectors.selectedObjectBreadcrumbs);
   return (
     <Panel
