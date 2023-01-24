@@ -1,5 +1,6 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
+import produce from "immer";
 import type {
   Event,
   Card,
@@ -224,17 +225,33 @@ export const reducer: typeof editorSlice.reducer = (
   state = editorSlice.getInitialState(),
   action
 ) => {
-  const currentState = state;
-  const updatedState = editorSlice.reducer(state, action);
+  const previousState = state;
 
-  if (updatedState.selectedObjectId !== currentState.selectedObjectId) {
-    selectedObjectStorage.save(updatedState.selectedObjectId);
-  }
-  if (updatedState.panelLayout !== currentState.panelLayout) {
-    panelStorage.save(updatedState.panelLayout);
+  const fallbackObjectId = selectors.adjacentSelectedObject(state);
+
+  let newState = editorSlice.reducer(state, action);
+
+  // Ensure that the selected object still exists, fall back to the adjacent one
+  // (this can happen on deletes, or when local storage selection contains old data)
+  if (
+    newState.game &&
+    !selectors.objectById(newState.selectedObjectId)(newState)
+  ) {
+    const fallbackExist = selectors.objectById(fallbackObjectId)(newState);
+    newState = produce(newState, (draft) => {
+      draft.selectedObjectId = fallbackExist ? fallbackObjectId : undefined;
+    });
   }
 
-  return updatedState;
+  // Persist layout and selection changes in local storage
+  if (newState.selectedObjectId !== previousState.selectedObjectId) {
+    selectedObjectStorage.save(newState.selectedObjectId);
+  }
+  if (newState.panelLayout !== previousState.panelLayout) {
+    panelStorage.save(newState.panelLayout);
+  }
+
+  return newState;
 };
 
 export const noUndoActionList: Array<keyof typeof actions> = [];
