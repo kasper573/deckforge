@@ -15,4 +15,4 @@ export const shouldUseOfflineGameService = (
 ) => isOnEditorPage(history) && !isAuthenticated(authState);
 
 const isOnEditorPage = (history: History) =>
-  createPath(history.location).startsWith(router.editor().$);
+  createPath(history.location).startsWith(router.editor({}).$);

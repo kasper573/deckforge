@@ -1,4 +1,4 @@
-import { OptionsRouter, Redirect } from "react-typesafe-routes";
+import { booleanParser, OptionsRouter, Redirect } from "react-typesafe-routes";
 import type { ComponentType } from "react";
 import { lazy } from "react";
 import { literalParser } from "../lib/literalParser";
@@ -55,8 +55,9 @@ export const router = OptionsRouter(
       })
     ),
     editor: route(
-      "editor",
+      "editor&:create?",
       {
+        params: { create: booleanParser },
         component: lazy(
           () => import("./features/editor/pages/GameListPage/GameListPage")
         ),
@@ -86,4 +87,4 @@ export const router = OptionsRouter(
 );
 
 export const logoutRedirect = router.user().login();
-export const loginRedirect = router.editor();
+export const loginRedirect = router.editor({});

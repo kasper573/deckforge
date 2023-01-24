@@ -10,7 +10,7 @@ import { EditorIntro } from "./EditorIntro";
 import { EditorPanelLayout } from "./EditorPanelLayout";
 
 export default function EditorPageWithRedux() {
-  const { gameId } = useRouteParams(router.editor().edit);
+  const { gameId } = useRouteParams(router.editor({}).edit);
   return (
     <ReduxProvider store={editorStore}>
       <Root onContextMenu={disableUnhandledContextMenu}>

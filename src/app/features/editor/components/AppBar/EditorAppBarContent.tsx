@@ -50,7 +50,7 @@ function Content() {
       <Stack direction="row" spacing={2} alignItems="center">
         <Tooltip title="Leave editor">
           <div>
-            <LinkIconButton edge="start" to={router.editor()}>
+            <LinkIconButton edge="start" to={router.editor({})}>
               <ExitToApp />
             </LinkIconButton>
           </div>

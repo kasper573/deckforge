@@ -2,6 +2,7 @@ import Card from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { useHistory } from "react-router";
 import Button from "@mui/material/Button";
+import { useRouteParams } from "react-typesafe-routes";
 import { Page } from "../../../layout/Page";
 import { trpc } from "../../../../trpc";
 import { Header } from "../../../layout/Header";
@@ -15,10 +16,12 @@ import { gameTypes } from "../../../gameTypes";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { gameType } from "../../../../../api/services/game/types";
 import { useOfflineGameServiceState } from "../../utils/shouldUseOfflineGameService";
+import { useReaction } from "../../../../../lib/useReaction";
 import { GameCard } from "./GameCard";
 import { SelectGameTypeDialog } from "./SelectGameTypeDialog";
 
 export default function GameListPage() {
+  const { create } = useRouteParams(router.editor);
   const games = trpc.game.list.useQuery({ offset: 0, limit: 10 });
   const history = useHistory();
   const createGame = useToastProcedure(trpc.game.create);
@@ -29,6 +32,12 @@ export default function GameListPage() {
   if (createGame.isSuccess || createGame.isLoading) {
     throw new Promise(() => {}); // Trigger suspense
   }
+
+  useReaction(() => {
+    if (create) {
+      createGameAndGotoEditor();
+    }
+  }, [create]);
 
   async function createGameAndGotoEditor() {
     const gameTypeId = await selectGameType();
@@ -52,7 +61,7 @@ export default function GameListPage() {
       type: selectedGameType.id,
     });
 
-    history.push(router.editor().edit({ gameId }).$);
+    history.push(router.editor({}).edit({ gameId }).$);
   }
 
   return (
