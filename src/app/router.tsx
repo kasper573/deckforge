@@ -83,6 +83,9 @@ export const router = OptionsRouter(
         }),
       })
     ),
+    notFound: route("*", {
+      component: lazy(() => import("./features/common/NotFoundPage")),
+    }),
   })
 );
 
