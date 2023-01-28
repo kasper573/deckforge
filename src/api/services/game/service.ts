@@ -10,29 +10,43 @@ import { gameType } from "./types";
 
 export type GameService = ReturnType<typeof createGameService>;
 
-export function createGameService() {
+export function createGameService({
+  maxGamesPerUser,
+}: {
+  maxGamesPerUser: number;
+}) {
   return t.router({
     create: t.procedure
       .use(access())
       .input(gameType.pick({ name: true, definition: true, type: true }))
       .output(gameType)
-      .mutation(async ({ input: { definition, ...rest }, ctx }) => {
-        try {
-          const game = await ctx.db.game.create({
-            data: {
-              ...rest,
-              ownerId: ctx.user.userId,
-              definition: definition as Prisma.JsonObject,
-            },
+      .mutation(
+        async ({ input: { definition, ...rest }, ctx: { db, user } }) => {
+          const count = await db.game.count({
+            where: { ownerId: user.userId },
           });
-          return game as unknown as Game;
-        } catch (e) {
-          if (isUniqueConstraintError(e)) {
-            throw new UserFacingError("A game with this name already exists");
+          if (count >= maxGamesPerUser) {
+            throw new UserFacingError(
+              `You can not have more than ${maxGamesPerUser} games per account`
+            );
           }
-          throw e;
+          try {
+            const game = await db.game.create({
+              data: {
+                ...rest,
+                ownerId: user.userId,
+                definition: definition as Prisma.JsonObject,
+              },
+            });
+            return game as unknown as Game;
+          } catch (e) {
+            if (isUniqueConstraintError(e)) {
+              throw new UserFacingError("A game with this name already exists");
+            }
+            throw e;
+          }
         }
-      }),
+      ),
     read: t.procedure
       .input(gameType.shape.gameId)
       .output(gameType)

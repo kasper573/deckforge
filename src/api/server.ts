@@ -12,7 +12,7 @@ export function createServer() {
   const db = createDatabaseClient();
   const auth = createAuthenticator();
   const router = createApiRouter({
-    game: createGameService(),
+    game: createGameService(env),
     user: createUserService(auth),
   });
 
