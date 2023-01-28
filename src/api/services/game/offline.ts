@@ -67,11 +67,8 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
       map.delete(input);
       save();
     },
-    list(input) {
-      return {
-        total: map.size,
-        entities: Array.from(map.values()),
-      };
+    list() {
+      return Array.from(map.values());
     },
   };
 }

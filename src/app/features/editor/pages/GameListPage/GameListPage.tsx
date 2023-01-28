@@ -22,7 +22,7 @@ import { SelectGameTypeDialog } from "./SelectGameTypeDialog";
 
 export default function GameListPage() {
   const { create } = useRouteParams(router.editor);
-  const games = trpc.game.list.useQuery({ offset: 0, limit: 10 });
+  const games = trpc.game.list.useQuery();
   const history = useHistory();
   const createGame = useToastProcedure(trpc.game.create);
   const selectGameType = useModal(SelectGameTypeDialog);
@@ -82,7 +82,7 @@ export default function GameListPage() {
             </Button>
           </Center>
         </Card>
-        {games.data?.entities.map((game) => (
+        {games.data?.map((game) => (
           <GameCard key={game.gameId} {...game} />
         ))}
       </CardGrid>

@@ -3,7 +3,6 @@ import type { Prisma } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { access } from "../../middlewares/access";
-import { createFilterType, createResultType } from "../../utils/search";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { isUniqueConstraintError } from "../../utils/isUniqueConstraintError";
 import type { Game } from "./types";
@@ -73,19 +72,11 @@ export function createGameService() {
         await ctx.db.game.delete({ where: { gameId } });
       }),
     list: t.procedure
-      .input(createFilterType(z.unknown().optional()))
       .use(access())
-      .output(createResultType(gameType.omit({ definition: true })))
-      .query(async ({ input: { offset, limit }, ctx: { db, user } }) => {
-        const [total, entities] = await Promise.all([
-          db.game.count({ where: { ownerId: user.userId } }),
-          db.game.findMany({
-            take: limit,
-            skip: offset,
-            where: { ownerId: user.userId },
-          }),
-        ]);
-        return { total, entities: entities as unknown as Game[] };
+      .output(z.array(gameType.omit({ definition: true })))
+      .query(async ({ ctx: { db, user } }) => {
+        const games = db.game.findMany({ where: { ownerId: user.userId } });
+        return games as unknown as Game[];
       }),
   });
 }
