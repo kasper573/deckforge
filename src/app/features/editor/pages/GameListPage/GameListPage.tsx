@@ -29,15 +29,15 @@ export default function GameListPage() {
   const prompt = useModal(PromptDialog);
   const isLocalDeviceData = useOfflineGameServiceState();
 
-  if (createGame.isSuccess || createGame.isLoading) {
-    throw new Promise(() => {}); // Trigger suspense
-  }
-
   useReaction(() => {
     if (create) {
       createGameAndGotoEditor();
     }
   }, [create]);
+
+  if (createGame.isSuccess) {
+    throw new Promise(() => {}); // Trigger suspense
+  }
 
   async function createGameAndGotoEditor() {
     const gameTypeId = await selectGameType();
@@ -55,13 +55,20 @@ export default function GameListPage() {
       return;
     }
 
-    const { gameId } = await createGame.mutateAsync({
-      name,
-      definition: selectedGameType.defaultGameDefinition,
-      type: selectedGameType.id,
-    });
+    let game;
+    try {
+      game = await createGame.mutateAsync({
+        name,
+        definition: selectedGameType.defaultGameDefinition,
+        type: selectedGameType.id,
+      });
+    } catch (err) {
+      console.log("Failed to create game", err);
+      return;
+    }
 
-    history.push(router.editor({}).edit({ gameId }).$);
+    console.log("Created game", game);
+    history.push(router.editor({}).edit({ gameId: game.gameId }).$);
   }
 
   return (
