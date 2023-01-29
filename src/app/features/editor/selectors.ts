@@ -73,6 +73,7 @@ function getObjectIdProperty<T extends EditorObjectId>(id: T) {
 }
 
 export const selectors = {
+  syncState: (state: EditorState) => state.syncState,
   panelLayout: (state: EditorState) => state.panelLayout,
   panelVisibilities: (state: EditorState) =>
     getKeyVisibilities(state.panelLayout),
