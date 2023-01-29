@@ -32,6 +32,7 @@ function Content() {
   const game = useSelector(selectors.game);
   const { renameGame } = useActions(editorActions);
   const isLocalDeviceData = useOfflineGameServiceState();
+  const isGameSlugDirty = useSelector(selectors.syncState) !== "synced";
 
   async function promptRename() {
     const newName = await prompt({
@@ -67,11 +68,18 @@ function Content() {
             <Clickable onClick={promptRename}>{game?.name}</Clickable>
           </Tooltip>
           {game && !isLocalDeviceData && (
-            <Tooltip title="Open public gameplay page">
+            <Tooltip
+              title={
+                isGameSlugDirty
+                  ? "Game is being published, please wait"
+                  : "Open public gameplay page"
+              }
+            >
               <Clickable>
                 <LinkIconButton
-                  to={router.play().game({ gameId: game.gameId })}
-                  target="_blank"
+                  disabled={isGameSlugDirty}
+                  aria-label="Open public gameplay page"
+                  to={router.play({ slug: game.slug })}
                   sx={{ ml: 1 }}
                 >
                   <Play />

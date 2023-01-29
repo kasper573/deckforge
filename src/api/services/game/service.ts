@@ -5,8 +5,10 @@ import { t } from "../../trpc";
 import { access } from "../../middlewares/access";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { isUniqueConstraintError } from "../../utils/isUniqueConstraintError";
+import type { DatabaseClient } from "../../db";
 import type { Game } from "./types";
 import { gameType } from "./types";
+import { gameSlug } from "./slug";
 
 export type GameService = ReturnType<typeof createGameService>;
 
@@ -30,12 +32,14 @@ export function createGameService({
               `You can not have more than ${maxGamesPerUser} games per account`
             );
           }
+
           try {
             const game = await db.game.create({
               data: {
                 ...rest,
                 ownerId: user.userId,
                 definition: definition as Prisma.JsonObject,
+                slug: await resolveGameSlug(db, user.userId, rest.name),
               },
             });
             return game as unknown as Game;
@@ -48,10 +52,27 @@ export function createGameService({
         }
       ),
     read: t.procedure
-      .input(gameType.shape.gameId)
+      .input(
+        z.discriminatedUnion("type", [
+          z.object({
+            type: z.literal("gameId"),
+            gameId: gameType.shape.gameId,
+          }),
+          z.object({
+            type: z.literal("slug"),
+            slug: gameType.shape.slug,
+          }),
+        ])
+      )
       .output(gameType)
-      .query(async ({ input: gameId, ctx }) => {
-        const game = await ctx.db.game.findUnique({ where: { gameId } });
+      .query(async ({ input, ctx }) => {
+        const game = await ctx.db.game.findUnique({
+          where:
+            input.type === "gameId"
+              ? { gameId: input.gameId }
+              : { slug: input.slug },
+        });
+
         if (!game) {
           throw new UserFacingError("Game not found");
         }
@@ -64,21 +85,29 @@ export function createGameService({
           .and(gameType.pick({ name: true, definition: true }).partial())
       )
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
-      .mutation(async ({ input: { gameId, definition, ...data }, ctx }) => {
-        try {
-          await ctx.db.game.update({
-            where: { gameId },
-            data: {
-              ...data,
-              definition: definition as Prisma.JsonObject,
-            },
-          });
-        } catch (e) {
-          if (isUniqueConstraintError(e)) {
-            throw new UserFacingError("A game with this name already exists");
+      .mutation(
+        async ({
+          input: { gameId, definition, ...data },
+          ctx: { db, user },
+        }) => {
+          try {
+            await db.game.update({
+              where: { gameId },
+              data: {
+                ...data,
+                definition: definition as Prisma.JsonObject,
+                slug: data.name
+                  ? await resolveGameSlug(db, user.userId, data.name)
+                  : undefined,
+              },
+            });
+          } catch (e) {
+            if (isUniqueConstraintError(e)) {
+              throw new UserFacingError("A game with this name already exists");
+            }
           }
         }
-      }),
+      ),
     delete: t.procedure
       .input(gameType.shape.gameId)
       .use((opts) => assertGameAccess(opts, opts.input))
@@ -95,6 +124,19 @@ export function createGameService({
   });
 }
 
+async function resolveGameSlug(
+  db: DatabaseClient,
+  userId: string,
+  gameName: string
+) {
+  const { name: ownerName } = await db.user.findUniqueOrThrow({
+    where: { userId },
+    select: { name: true },
+  });
+
+  return gameSlug(ownerName, gameName);
+}
+
 export async function assertGameAccess<Input>(
   { ctx, next }: MiddlewareOptions,
   gameId?: Game["gameId"]
@@ -109,5 +151,5 @@ export async function assertGameAccess<Input>(
   if (!ctx.user || game?.ownerId !== ctx.user.userId) {
     throw new UserFacingError("You do not have access to this game");
   }
-  return next({ ctx: { auth: ctx.user } });
+  return next({ ctx: { user: ctx.user } });
 }

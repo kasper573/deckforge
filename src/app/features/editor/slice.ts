@@ -24,6 +24,7 @@ import { propertyValue } from "../../../api/services/game/types";
 import type {
   EditorObjectId,
   EditorState,
+  EditorSyncState,
   LogEntry,
   PanelId,
   PanelLayout,
@@ -44,6 +45,7 @@ const selectedObjectStorage = createZodStorage(
 );
 
 const initialState: EditorState = {
+  syncState: "dirty",
   selectedObjectId: selectedObjectStorage.load(),
   panelLayout: panelStorage.load(),
   logs: [],
@@ -55,6 +57,9 @@ const editorSlice = createSlice({
   name: "editor",
   initialState,
   reducers: {
+    setSyncState(state, { payload }: PayloadAction<EditorSyncState>) {
+      state.syncState = payload;
+    },
     selectGame: (
       state,
       { payload: newGame }: PayloadAction<Game | undefined>
