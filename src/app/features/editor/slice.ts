@@ -138,6 +138,14 @@ const editorSlice = createSlice({
         ...payload,
       });
     },
+    deleteDeck({ game }, { payload: id }: PayloadAction<Deck["deckId"]>) {
+      if (!game) {
+        return;
+      }
+      const { definition } = game;
+      definition.decks = definition.decks.filter((deck) => deck.deckId !== id);
+      definition.cards = definition.cards.filter((card) => card.deckId !== id);
+    },
     createCard(
       state,
       {
