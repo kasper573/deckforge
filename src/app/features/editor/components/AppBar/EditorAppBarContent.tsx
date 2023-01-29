@@ -32,7 +32,9 @@ function Content() {
   const game = useSelector(selectors.game);
   const { renameGame } = useActions(editorActions);
   const isLocalDeviceData = useOfflineGameServiceState();
-  const isGameSlugDirty = useSelector(selectors.syncState) !== "synced";
+  const isGameSlugDirty = useSelector(
+    selectors.isSyncState("dirty", "uploading")
+  );
 
   async function promptRename() {
     const newName = await prompt({
