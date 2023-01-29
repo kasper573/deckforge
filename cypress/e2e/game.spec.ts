@@ -42,7 +42,7 @@ describe("game", () => {
       findGameCard(gameName).should("exist");
     });
 
-    it.only("and rename it", () => {
+    it("and rename it", () => {
       showGameOptions(gameName);
       cy.findByRole("menuitem", { name: /rename/i }).click();
       cy.findByRole("dialog").within(() => {
