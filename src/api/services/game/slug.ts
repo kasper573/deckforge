@@ -1,4 +1,4 @@
 import slugify from "slugify";
 
-export const gameSlug = (gameName: string) =>
-  slugify(gameName, { lower: true });
+export const gameSlug = (ownerName: string, gameName: string) =>
+  slugify(`${ownerName}-${gameName}`, { lower: true });

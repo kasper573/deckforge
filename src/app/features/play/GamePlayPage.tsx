@@ -9,8 +9,8 @@ import { trpc } from "../../trpc";
 import { GameRenderer } from "../compiler/GameRenderer";
 
 export default function GamePlayPage() {
-  const { gameId } = useRouteParams(router.play().game);
-  const { data: game } = trpc.game.read.useQuery({ type: "gameId", gameId });
+  const { slug } = useRouteParams(router.play);
+  const { data: game } = trpc.game.read.useQuery({ type: "slug", slug });
 
   const compiled = useMemo(() => {
     if (game) {

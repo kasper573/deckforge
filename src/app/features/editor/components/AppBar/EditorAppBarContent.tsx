@@ -70,7 +70,7 @@ function Content() {
             <Tooltip title="Open public gameplay page">
               <Clickable>
                 <LinkIconButton
-                  to={router.play().game({ gameId: game.gameId })}
+                  to={router.play({ slug: game.slug })}
                   target="_blank"
                   sx={{ ml: 1 }}
                 >

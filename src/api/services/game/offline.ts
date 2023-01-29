@@ -49,7 +49,7 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
       const game: Game = {
         ...input,
         gameId,
-        slug: gameSlug(input.name),
+        slug: gameSlug("local", input.name),
         updatedAt: new Date(),
         ownerId: "offline",
       };

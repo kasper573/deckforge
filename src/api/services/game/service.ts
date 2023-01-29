@@ -1,11 +1,11 @@
 import { z } from "zod";
-import type { Prisma, Game as PrismaGame } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { access } from "../../middlewares/access";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { isUniqueConstraintError } from "../../utils/isUniqueConstraintError";
-import { userType } from "../user/types";
+import type { DatabaseClient } from "../../db";
 import type { Game } from "./types";
 import { gameType } from "./types";
 import { gameSlug } from "./slug";
@@ -39,7 +39,7 @@ export function createGameService({
                 ...rest,
                 ownerId: user.userId,
                 definition: definition as Prisma.JsonObject,
-                slug: gameSlug(rest.name),
+                slug: await resolveGameSlug(db, user.userId, rest.name),
               },
             });
             return game as unknown as Game;
@@ -60,32 +60,20 @@ export function createGameService({
           }),
           z.object({
             type: z.literal("slug"),
-            owner: userType.shape.name,
             slug: gameType.shape.slug,
           }),
         ])
       )
       .output(gameType)
       .query(async ({ input, ctx }) => {
-        let game: PrismaGame;
-        try {
-          switch (input.type) {
-            case "gameId":
-              game = await ctx.db.game.findUniqueOrThrow({
-                where: { gameId: input.gameId },
-              });
-              break;
-            case "slug":
-              const { userId } = await ctx.db.user.findUniqueOrThrow({
-                where: { name: input.owner },
-                select: { userId: true },
-              });
-              game = await ctx.db.game.findFirstOrThrow({
-                where: { slug: input.slug, ownerId: userId },
-              });
-              break;
-          }
-        } catch {
+        const game = await ctx.db.game.findUnique({
+          where:
+            input.type === "gameId"
+              ? { gameId: input.gameId }
+              : { slug: input.slug },
+        });
+
+        if (!game) {
           throw new UserFacingError("Game not found");
         }
         return game as unknown as Game;
@@ -97,22 +85,29 @@ export function createGameService({
           .and(gameType.pick({ name: true, definition: true }).partial())
       )
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
-      .mutation(async ({ input: { gameId, definition, ...data }, ctx }) => {
-        try {
-          await ctx.db.game.update({
-            where: { gameId },
-            data: {
-              ...data,
-              definition: definition as Prisma.JsonObject,
-              slug: data.name !== undefined ? gameSlug(data.name) : undefined,
-            },
-          });
-        } catch (e) {
-          if (isUniqueConstraintError(e)) {
-            throw new UserFacingError("A game with this name already exists");
+      .mutation(
+        async ({
+          input: { gameId, definition, ...data },
+          ctx: { db, user },
+        }) => {
+          try {
+            await db.game.update({
+              where: { gameId },
+              data: {
+                ...data,
+                definition: definition as Prisma.JsonObject,
+                slug: data.name
+                  ? await resolveGameSlug(db, user.userId, data.name)
+                  : undefined,
+              },
+            });
+          } catch (e) {
+            if (isUniqueConstraintError(e)) {
+              throw new UserFacingError("A game with this name already exists");
+            }
           }
         }
-      }),
+      ),
     delete: t.procedure
       .input(gameType.shape.gameId)
       .use((opts) => assertGameAccess(opts, opts.input))
@@ -129,6 +124,19 @@ export function createGameService({
   });
 }
 
+async function resolveGameSlug(
+  db: DatabaseClient,
+  userId: string,
+  gameName: string
+) {
+  const { name: ownerName } = await db.user.findUniqueOrThrow({
+    where: { userId },
+    select: { name: true },
+  });
+
+  return gameSlug(ownerName, gameName);
+}
+
 export async function assertGameAccess<Input>(
   { ctx, next }: MiddlewareOptions,
   gameId?: Game["gameId"]
@@ -143,5 +151,5 @@ export async function assertGameAccess<Input>(
   if (!ctx.user || game?.ownerId !== ctx.user.userId) {
     throw new UserFacingError("You do not have access to this game");
   }
-  return next({ ctx: { auth: ctx.user } });
+  return next({ ctx: { user: ctx.user } });
 }
