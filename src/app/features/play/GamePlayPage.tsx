@@ -10,7 +10,7 @@ import { GameRenderer } from "../compiler/GameRenderer";
 
 export default function GamePlayPage() {
   const { gameId } = useRouteParams(router.play().game);
-  const { data: game } = trpc.game.read.useQuery(gameId);
+  const { data: game } = trpc.game.read.useQuery({ type: "gameId", gameId });
 
   const compiled = useMemo(() => {
     if (game) {

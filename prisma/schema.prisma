@@ -27,6 +27,7 @@ model Game {
   name       String
   type       String
   ownerId    String
+  slug       String
   owner      User     @relation(fields: [ownerId], references: [userId], onDelete: Cascade)
   definition Json // Type marshalled in service
 

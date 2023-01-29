@@ -118,6 +118,7 @@ export const gameType = z.object({
   updatedAt: z.date(),
   type: gameTypeIdType,
   name: z.string().min(1).max(32),
+  slug: z.string(),
   definition: gameDefinitionType,
   ownerId: z.string(),
 });

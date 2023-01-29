@@ -1,12 +1,14 @@
 import { z } from "zod";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Game as PrismaGame } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { access } from "../../middlewares/access";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { isUniqueConstraintError } from "../../utils/isUniqueConstraintError";
+import { userType } from "../user/types";
 import type { Game } from "./types";
 import { gameType } from "./types";
+import { gameSlug } from "./slug";
 
 export type GameService = ReturnType<typeof createGameService>;
 
@@ -30,12 +32,14 @@ export function createGameService({
               `You can not have more than ${maxGamesPerUser} games per account`
             );
           }
+
           try {
             const game = await db.game.create({
               data: {
                 ...rest,
                 ownerId: user.userId,
                 definition: definition as Prisma.JsonObject,
+                slug: gameSlug(rest.name),
               },
             });
             return game as unknown as Game;
@@ -48,11 +52,40 @@ export function createGameService({
         }
       ),
     read: t.procedure
-      .input(gameType.shape.gameId)
+      .input(
+        z.discriminatedUnion("type", [
+          z.object({
+            type: z.literal("gameId"),
+            gameId: gameType.shape.gameId,
+          }),
+          z.object({
+            type: z.literal("slug"),
+            owner: userType.shape.name,
+            slug: gameType.shape.slug,
+          }),
+        ])
+      )
       .output(gameType)
-      .query(async ({ input: gameId, ctx }) => {
-        const game = await ctx.db.game.findUnique({ where: { gameId } });
-        if (!game) {
+      .query(async ({ input, ctx }) => {
+        let game: PrismaGame;
+        try {
+          switch (input.type) {
+            case "gameId":
+              game = await ctx.db.game.findUniqueOrThrow({
+                where: { gameId: input.gameId },
+              });
+              break;
+            case "slug":
+              const { userId } = await ctx.db.user.findUniqueOrThrow({
+                where: { name: input.owner },
+                select: { userId: true },
+              });
+              game = await ctx.db.game.findFirstOrThrow({
+                where: { slug: input.slug, ownerId: userId },
+              });
+              break;
+          }
+        } catch {
           throw new UserFacingError("Game not found");
         }
         return game as unknown as Game;
@@ -71,6 +104,7 @@ export function createGameService({
             data: {
               ...data,
               definition: definition as Prisma.JsonObject,
+              slug: data.name !== undefined ? gameSlug(data.name) : undefined,
             },
           });
         } catch (e) {

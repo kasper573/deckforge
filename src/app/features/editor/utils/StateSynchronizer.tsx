@@ -13,9 +13,12 @@ import { useReaction } from "../../../../lib/useReaction";
 export function StateSynchronizer({ gameId }: { gameId: GameId }) {
   const localGame = useSelector(selectors.game);
   const [debouncedLocalGame] = useDebounce(localGame, 1500);
-  const { selectGame: setLocalGame } = useActions(editorActions);
-  const { data: remoteGame } = trpc.game.read.useQuery(gameId);
   const { mutate: upload } = useToastProcedure(trpc.game.update);
+  const { selectGame: setLocalGame } = useActions(editorActions);
+  const { data: remoteGame } = trpc.game.read.useQuery({
+    type: "gameId",
+    gameId,
+  });
 
   // Update local game when remote game changes
   useReaction(() => {
