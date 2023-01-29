@@ -1,12 +1,14 @@
 import type { ReactNode } from "react";
-import type { ZodString } from "zod";
+import type { ZodString, ZodEffects } from "zod";
 import { z } from "zod";
 import { useMemo } from "react";
 import type { ModalProps } from "../../lib/useModal";
 import { DialogTextField } from "../controls/DialogTextField";
 import { FormDialog } from "./FormDialog";
 
-export type PromptDialogProps<T extends ZodString = ZodString> = ModalProps<
+type StringLike = ZodString | ZodEffects<ZodString>;
+
+export type PromptDialogProps<T extends StringLike = ZodString> = ModalProps<
   string | undefined,
   {
     title: ReactNode;
@@ -19,7 +21,7 @@ export type PromptDialogProps<T extends ZodString = ZodString> = ModalProps<
   }
 >;
 
-export function PromptDialog<T extends ZodString>({
+export function PromptDialog<T extends StringLike>({
   input: {
     title,
     schema: fieldSchema,
@@ -33,7 +35,7 @@ export function PromptDialog<T extends ZodString>({
   ...rest
 }: PromptDialogProps<T>) {
   const valueSchema = useMemo(
-    () => z.object({ value: fieldSchema ?? z.string() }),
+    () => z.object({ value: (fieldSchema ?? z.string()) as ZodString }),
     [fieldSchema]
   );
   return (
