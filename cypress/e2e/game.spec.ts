@@ -43,14 +43,18 @@ describe("game", () => {
     });
 
     it("and then delete it", () => {
-      findGameCard(gameName).within(() => {
-        cy.findByRole("button", { name: /more options/i }).click();
-      });
+      showGameOptions(gameName);
       cy.findByRole("menuitem", { name: /delete/i }).click();
       cy.findByRole("dialog").within(() =>
         cy.findByRole("button", { name: /yes/i }).click()
       );
       findGameCard(gameName).should("not.exist");
+    });
+
+    it("and visit its gameplay page", () => {
+      showGameOptions(gameName);
+      expectRedirect(() => cy.findByRole("link", { name: /play/i }).click());
+      cy.findByText(/game not found/i).should("not.exist");
     });
   });
 });
@@ -58,3 +62,8 @@ describe("game", () => {
 const gotoGameList = () => showUserMenu().findByText("Your games").click();
 
 const findGameCard = (name: string) => cy.findByRole("link", { name });
+
+const showGameOptions = (gameName: string) =>
+  findGameCard(gameName).within(() => {
+    cy.findByRole("button", { name: /more options/i }).click();
+  });
