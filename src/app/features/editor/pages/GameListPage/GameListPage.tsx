@@ -63,11 +63,9 @@ export default function GameListPage() {
         type: selectedGameType.id,
       });
     } catch (err) {
-      console.log("Failed to create game", err);
       return;
     }
 
-    console.log("Created game", game);
     history.push(router.editor({}).edit({ gameId: game.gameId }).$);
   }
 

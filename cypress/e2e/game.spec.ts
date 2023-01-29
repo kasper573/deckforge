@@ -1,4 +1,4 @@
-import { resetData } from "../support/actions/common";
+import { expectRedirect, resetData } from "../support/actions/common";
 import type { TestUser } from "../support/actions/user";
 import { nextTestUser, register, showUserMenu } from "../support/actions/user";
 
@@ -22,10 +22,14 @@ describe("game", () => {
     beforeEach(() => {
       cy.findByRole("button", { name: /create game/i }).click();
       cy.findByRole("dialog").within(() => cy.findByText(/1 vs 1/i).click());
-      cy.findByRole("dialog").within(() => {
-        cy.findByLabelText(/name/i).type(gameName);
-        cy.findByRole("form").submit();
+
+      expectRedirect(() => {
+        cy.findByRole("dialog").within(() => {
+          cy.findByLabelText(/name/i).type(gameName);
+          cy.findByRole("form").submit();
+        });
       });
+
       cy.findByRole("dialog").within(() => {
         cy.findByText(/welcome to deck forge/i);
         cy.findByRole("button", { name: /no thanks/i }).click();
