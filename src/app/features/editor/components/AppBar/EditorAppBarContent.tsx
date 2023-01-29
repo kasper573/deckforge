@@ -70,8 +70,8 @@ function Content() {
             <Tooltip title="Open public gameplay page">
               <Clickable>
                 <LinkIconButton
+                  aria-label="Open public gameplay page"
                   to={router.play({ slug: game.slug })}
-                  target="_blank"
                   sx={{ ml: 1 }}
                 >
                   <Play />

@@ -43,7 +43,7 @@ describe("game", () => {
     });
 
     it("and rename it", () => {
-      renameGame(gameName, "Renamed");
+      pageActions.list.renameGame(gameName, "Renamed");
     });
 
     it("and then delete it", () => {
@@ -56,15 +56,23 @@ describe("game", () => {
     });
 
     it("and visit its gameplay page", () => {
-      gotoGamePlayPage(gameName);
+      pageActions.list.gotoGamePlay(gameName);
     });
 
     it("rename it and then visit its gameplay page", () => {
-      renameGame(gameName, "Renamed");
-      gotoGamePlayPage("Renamed");
+      pageActions.list.renameGame(gameName, "Renamed");
+      pageActions.list.gotoGamePlay("Renamed");
+    });
+
+    it("rename it inside the editor and then visit its gameplay page", () => {
+      gotoEditor(gameName);
+      pageActions.editor.renameGame("Renamed");
+      pageActions.editor.gotoGamePlay();
     });
   });
 });
+
+const gotoEditor = (gameName: string) => findGameCard(gameName).click();
 
 const gotoGameList = () => showUserMenu().findByText("Your games").click();
 
@@ -75,18 +83,38 @@ const showGameOptions = (gameName: string) =>
     cy.findByRole("button", { name: /more options/i }).click();
   });
 
-const renameGame = (gameName: string, newName: string) => {
-  showGameOptions(gameName);
-  cy.findByRole("menuitem", { name: /rename/i }).click();
+const expectValidGamePlayPage = () =>
+  cy.findByText(/game not found/i).should("not.exist");
+
+function submitNewNameDialog(newName: string) {
   cy.findByRole("dialog").within(() => {
     cy.findByLabelText(/name/i).clear().type(newName);
     cy.findByRole("form").submit();
   });
-  findGameCard(newName).should("exist");
-};
+}
 
-const gotoGamePlayPage = (gameName: string) => {
-  showGameOptions(gameName);
-  expectRedirect(() => cy.findByRole("link", { name: /play/i }).click());
-  cy.findByText(/game not found/i).should("not.exist");
+const pageActions = {
+  list: {
+    renameGame(gameName: string, newName: string) {
+      showGameOptions(gameName);
+      cy.findByRole("menuitem", { name: /rename/i }).click();
+      submitNewNameDialog(newName);
+      findGameCard(newName).should("exist");
+    },
+    gotoGamePlay(gameName: string) {
+      showGameOptions(gameName);
+      expectRedirect(() => cy.findByRole("link", { name: /play/i }).click());
+      expectValidGamePlayPage();
+    },
+  },
+  editor: {
+    renameGame(newName: string) {
+      cy.findByLabelText(/rename game/i).click();
+      submitNewNameDialog(newName);
+    },
+    gotoGamePlay() {
+      cy.findByRole("link", { name: /gameplay page/i }).click();
+      expectValidGamePlayPage();
+    },
+  },
 };
