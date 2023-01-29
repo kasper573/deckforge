@@ -31,6 +31,7 @@ export default function GameListPage() {
 
   useReaction(() => {
     if (create) {
+      history.replace(router.editor({}).$);
       createGameAndGotoEditor();
     }
   }, [create]);
@@ -67,6 +68,7 @@ export default function GameListPage() {
     }
 
     history.push(router.editor({}).edit({ gameId: game.gameId }).$);
+    return true;
   }
 
   return (
