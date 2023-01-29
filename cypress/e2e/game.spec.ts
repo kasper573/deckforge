@@ -42,6 +42,16 @@ describe("game", () => {
       findGameCard(gameName).should("exist");
     });
 
+    it.only("and rename it", () => {
+      showGameOptions(gameName);
+      cy.findByRole("menuitem", { name: /rename/i }).click();
+      cy.findByRole("dialog").within(() => {
+        cy.findByLabelText(/name/i).clear().type("Renamed");
+        cy.findByRole("form").submit();
+      });
+      findGameCard("Renamed").should("exist");
+    });
+
     it("and then delete it", () => {
       showGameOptions(gameName);
       cy.findByRole("menuitem", { name: /delete/i }).click();
