@@ -4,6 +4,7 @@ import Container from "@mui/material/Container";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { Provider as ReduxProvider } from "react-redux";
+import { useDebounce } from "use-debounce";
 import { selectors } from "../../selectors";
 import { editorStore, useSelector } from "../../store";
 import { useActions } from "../../../../../lib/useActions";
@@ -32,9 +33,7 @@ function Content() {
   const game = useSelector(selectors.game);
   const { renameGame } = useActions(editorActions);
   const isLocalDeviceData = useOfflineGameServiceState();
-  const isGameSlugDirty = useSelector(
-    selectors.isSyncState("dirty", "uploading")
-  );
+  const isGameSlugReliable = useIsGameSlugReliable();
 
   async function promptRename() {
     const newName = await prompt({
@@ -72,14 +71,14 @@ function Content() {
           {game && !isLocalDeviceData && (
             <Tooltip
               title={
-                isGameSlugDirty
-                  ? "Game is being published, please wait"
-                  : "Open public gameplay page"
+                isGameSlugReliable
+                  ? "Open public gameplay page"
+                  : "Game is being published, please wait"
               }
             >
               <Clickable>
                 <LinkIconButton
-                  disabled={isGameSlugDirty}
+                  disabled={!isGameSlugReliable}
                   aria-label="Open public gameplay page"
                   to={router.play({ slug: game.slug })}
                   sx={{ ml: 1 }}
@@ -93,6 +92,13 @@ function Content() {
       </GameName>
     </Stack>
   );
+}
+
+function useIsGameSlugReliable() {
+  const isSynced = useSelector(selectors.isSyncState("synced", "downloading"));
+  const [debouncedIsSynced] = useDebounce(isSynced, 250);
+  const hasStabilized = isSynced === debouncedIsSynced;
+  return isSynced && hasStabilized;
 }
 
 const GameName = styled(Container)`
