@@ -84,6 +84,7 @@ export function createGameService({
           .pick({ gameId: true })
           .and(gameType.pick({ name: true, definition: true }).partial())
       )
+      .output(gameType)
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
       .mutation(
         async ({
@@ -91,7 +92,7 @@ export function createGameService({
           ctx: { db, user },
         }) => {
           try {
-            await db.game.update({
+            const game = await db.game.update({
               where: { gameId },
               data: {
                 ...data,
@@ -101,10 +102,12 @@ export function createGameService({
                   : undefined,
               },
             });
+            return game as unknown as Game;
           } catch (e) {
             if (isUniqueConstraintError(e)) {
               throw new UserFacingError("A game with this name already exists");
             }
+            throw e;
           }
         }
       ),

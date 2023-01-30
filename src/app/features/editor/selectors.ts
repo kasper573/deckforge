@@ -13,7 +13,7 @@ import { compileEditorApi } from "../compiler/compileEditorApi";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import { gameTypes } from "../gameTypes";
 import { adjacent } from "../../../lib/adjacent";
-import type { EditorObjectId, EditorState } from "./types";
+import type { EditorObjectId, EditorState, EditorSyncState } from "./types";
 
 const gameDefinition = (state: EditorState) => state.game?.definition;
 
@@ -73,6 +73,10 @@ function getObjectIdProperty<T extends EditorObjectId>(id: T) {
 }
 
 export const selectors = {
+  isSyncState:
+    (...oneOf: EditorSyncState[]) =>
+    (state: EditorState) =>
+      oneOf.includes(state.syncState),
   syncState: (state: EditorState) => state.syncState,
   panelLayout: (state: EditorState) => state.panelLayout,
   panelVisibilities: (state: EditorState) =>
