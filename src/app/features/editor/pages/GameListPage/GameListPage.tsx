@@ -2,7 +2,7 @@ import Card from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import { useHistory } from "react-router";
 import Button from "@mui/material/Button";
-import { useStore } from "zustand";
+import { useRouteParams } from "react-typesafe-routes";
 import { Page } from "../../../layout/Page";
 import { trpc } from "../../../../trpc";
 import { Header } from "../../../layout/Header";
@@ -11,24 +11,32 @@ import { Center } from "../../../../components/Center";
 import { useToastProcedure } from "../../../../hooks/useToastProcedure";
 import { useModal } from "../../../../../lib/useModal";
 
-import { authStore } from "../../../auth/store";
 import { router } from "../../../../router";
 import { gameTypes } from "../../../gameTypes";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { gameType } from "../../../../../api/services/game/types";
-import { shouldUseOfflineGameService } from "../../utils/shouldUseOfflineGameService";
+import { useOfflineGameServiceState } from "../../utils/shouldUseOfflineGameService";
+import { useReaction } from "../../../../../lib/useReaction";
 import { GameCard } from "./GameCard";
 import { SelectGameTypeDialog } from "./SelectGameTypeDialog";
 
 export default function GameListPage() {
-  const games = trpc.game.list.useQuery({ offset: 0, limit: 10 });
+  const { create } = useRouteParams(router.editor);
+  const games = trpc.game.list.useQuery();
   const history = useHistory();
   const createGame = useToastProcedure(trpc.game.create);
   const selectGameType = useModal(SelectGameTypeDialog);
   const prompt = useModal(PromptDialog);
-  const isLocalDeviceData = shouldUseOfflineGameService(useStore(authStore));
+  const isLocalDeviceData = useOfflineGameServiceState();
 
-  if (createGame.isSuccess || createGame.isLoading) {
+  useReaction(() => {
+    if (create) {
+      history.replace(router.editor({}).$);
+      createGameAndGotoEditor();
+    }
+  }, [create]);
+
+  if (createGame.isSuccess) {
     throw new Promise(() => {}); // Trigger suspense
   }
 
@@ -48,13 +56,19 @@ export default function GameListPage() {
       return;
     }
 
-    const { gameId } = await createGame.mutateAsync({
-      name,
-      definition: selectedGameType.defaultGameDefinition,
-      type: selectedGameType.id,
-    });
+    let game;
+    try {
+      game = await createGame.mutateAsync({
+        name,
+        definition: selectedGameType.defaultGameDefinition,
+        type: selectedGameType.id,
+      });
+    } catch (err) {
+      return;
+    }
 
-    history.push(router.editor().edit({ gameId }).$);
+    history.push(router.editor({}).edit({ gameId: game.gameId }).$);
+    return true;
   }
 
   return (
@@ -75,7 +89,7 @@ export default function GameListPage() {
             </Button>
           </Center>
         </Card>
-        {games.data?.entities.map((game) => (
+        {games.data?.map((game) => (
           <GameCard key={game.gameId} {...game} />
         ))}
       </CardGrid>

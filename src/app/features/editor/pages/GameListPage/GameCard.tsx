@@ -23,9 +23,10 @@ import { gameType } from "../../../../../api/services/game/types";
 export function GameCard({
   gameId,
   name,
+  slug,
   type: gameTypeId,
   updatedAt,
-}: Pick<Game, "gameId" | "name" | "updatedAt" | "type">) {
+}: Pick<Game, "gameId" | "name" | "updatedAt" | "slug" | "type">) {
   const confirm = useModal(ConfirmDialog);
   const prompt = useModal(PromptDialog);
   const updateGame = useToastProcedure(trpc.game.update);
@@ -33,7 +34,7 @@ export function GameCard({
   const type = gameTypes.get(gameTypeId);
 
   return (
-    <CardLink aria-label={name} to={router.editor().edit({ gameId })}>
+    <CardLink aria-label={name} to={router.editor({}).edit({ gameId })}>
       <CardActionArea component="div">
         <CardMedia component="img" height="140" image="/logo.webp" />
         <CardContent>
@@ -58,9 +59,7 @@ export function GameCard({
                   </IconButton>
                 )}
               >
-                <LinkMenuItem to={router.play().game({ gameId })}>
-                  Play
-                </LinkMenuItem>
+                <LinkMenuItem to={router.play({ slug })}>Play</LinkMenuItem>
                 <MenuItem
                   onClick={() =>
                     prompt({

@@ -1,10 +1,10 @@
 import { Page } from "../layout/Page";
-import { Header } from "../layout/Header";
+import { Center } from "../../components/Center";
 
 export default function NotFoundPage() {
   return (
     <Page>
-      <Header>Page not found</Header>
+      <Center>Page not found</Center>
     </Page>
   );
 }

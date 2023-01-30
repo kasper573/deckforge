@@ -3,43 +3,76 @@ import type { Prisma } from "@prisma/client";
 import type { MiddlewareOptions } from "../../trpc";
 import { t } from "../../trpc";
 import { access } from "../../middlewares/access";
-import { createFilterType, createResultType } from "../../utils/search";
 import { UserFacingError } from "../../utils/UserFacingError";
 import { isUniqueConstraintError } from "../../utils/isUniqueConstraintError";
+import type { DatabaseClient } from "../../db";
 import type { Game } from "./types";
 import { gameType } from "./types";
+import { gameSlug } from "./slug";
 
 export type GameService = ReturnType<typeof createGameService>;
 
-export function createGameService() {
+export function createGameService({
+  maxGamesPerUser,
+}: {
+  maxGamesPerUser: number;
+}) {
   return t.router({
     create: t.procedure
       .use(access())
       .input(gameType.pick({ name: true, definition: true, type: true }))
       .output(gameType)
-      .mutation(async ({ input: { definition, ...rest }, ctx }) => {
-        try {
-          const game = await ctx.db.game.create({
-            data: {
-              ...rest,
-              ownerId: ctx.user.userId,
-              definition: definition as Prisma.JsonObject,
-            },
+      .mutation(
+        async ({ input: { definition, ...rest }, ctx: { db, user } }) => {
+          const count = await db.game.count({
+            where: { ownerId: user.userId },
           });
-          return game as unknown as Game;
-        } catch (e) {
-          if (isUniqueConstraintError(e)) {
-            throw new UserFacingError("A game with this name already exists");
+          if (count >= maxGamesPerUser) {
+            throw new UserFacingError(
+              `You can not have more than ${maxGamesPerUser} games per account`
+            );
           }
-          throw e;
+
+          try {
+            const game = await db.game.create({
+              data: {
+                ...rest,
+                ownerId: user.userId,
+                definition: definition as Prisma.JsonObject,
+                slug: await resolveGameSlug(db, user.userId, rest.name),
+              },
+            });
+            return game as unknown as Game;
+          } catch (e) {
+            if (isUniqueConstraintError(e)) {
+              throw new UserFacingError("A game with this name already exists");
+            }
+            throw e;
+          }
         }
-      }),
+      ),
     read: t.procedure
-      .input(gameType.shape.gameId)
-      .use((opts) => assertGameAccess(opts, opts.input))
+      .input(
+        z.discriminatedUnion("type", [
+          z.object({
+            type: z.literal("gameId"),
+            gameId: gameType.shape.gameId,
+          }),
+          z.object({
+            type: z.literal("slug"),
+            slug: gameType.shape.slug,
+          }),
+        ])
+      )
       .output(gameType)
-      .query(async ({ input: gameId, ctx }) => {
-        const game = await ctx.db.game.findUnique({ where: { gameId } });
+      .query(async ({ input, ctx }) => {
+        const game = await ctx.db.game.findUnique({
+          where:
+            input.type === "gameId"
+              ? { gameId: input.gameId }
+              : { slug: input.slug },
+        });
+
         if (!game) {
           throw new UserFacingError("Game not found");
         }
@@ -51,22 +84,33 @@ export function createGameService() {
           .pick({ gameId: true })
           .and(gameType.pick({ name: true, definition: true }).partial())
       )
+      .output(gameType)
       .use((opts) => assertGameAccess(opts, opts.input.gameId))
-      .mutation(async ({ input: { gameId, definition, ...data }, ctx }) => {
-        try {
-          await ctx.db.game.update({
-            where: { gameId },
-            data: {
-              ...data,
-              definition: definition as Prisma.JsonObject,
-            },
-          });
-        } catch (e) {
-          if (isUniqueConstraintError(e)) {
-            throw new UserFacingError("A game with this name already exists");
+      .mutation(
+        async ({
+          input: { gameId, definition, ...data },
+          ctx: { db, user },
+        }) => {
+          try {
+            const game = await db.game.update({
+              where: { gameId },
+              data: {
+                ...data,
+                definition: definition as Prisma.JsonObject,
+                slug: data.name
+                  ? await resolveGameSlug(db, user.userId, data.name)
+                  : undefined,
+              },
+            });
+            return game as unknown as Game;
+          } catch (e) {
+            if (isUniqueConstraintError(e)) {
+              throw new UserFacingError("A game with this name already exists");
+            }
+            throw e;
           }
         }
-      }),
+      ),
     delete: t.procedure
       .input(gameType.shape.gameId)
       .use((opts) => assertGameAccess(opts, opts.input))
@@ -74,21 +118,26 @@ export function createGameService() {
         await ctx.db.game.delete({ where: { gameId } });
       }),
     list: t.procedure
-      .input(createFilterType(z.unknown().optional()))
       .use(access())
-      .output(createResultType(gameType.omit({ definition: true })))
-      .query(async ({ input: { offset, limit }, ctx: { db, user } }) => {
-        const [total, entities] = await Promise.all([
-          db.game.count({ where: { ownerId: user.userId } }),
-          db.game.findMany({
-            take: limit,
-            skip: offset,
-            where: { ownerId: user.userId },
-          }),
-        ]);
-        return { total, entities: entities as unknown as Game[] };
+      .output(z.array(gameType.omit({ definition: true })))
+      .query(async ({ ctx: { db, user } }) => {
+        const games = db.game.findMany({ where: { ownerId: user.userId } });
+        return games as unknown as Game[];
       }),
   });
+}
+
+async function resolveGameSlug(
+  db: DatabaseClient,
+  userId: string,
+  gameName: string
+) {
+  const { name: ownerName } = await db.user.findUniqueOrThrow({
+    where: { userId },
+    select: { name: true },
+  });
+
+  return gameSlug(ownerName, gameName);
 }
 
 export async function assertGameAccess<Input>(
@@ -105,5 +154,5 @@ export async function assertGameAccess<Input>(
   if (!ctx.user || game?.ownerId !== ctx.user.userId) {
     throw new UserFacingError("You do not have access to this game");
   }
-  return next({ ctx: { auth: ctx.user } });
+  return next({ ctx: { user: ctx.user } });
 }

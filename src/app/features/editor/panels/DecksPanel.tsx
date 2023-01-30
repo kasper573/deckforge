@@ -19,7 +19,7 @@ export function DecksPanel(props: PanelProps) {
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
   const { createDeck, createCard, selectObject } = useActions(editorActions);
-  const selectedObjectId = useSelector(selectors.selectedObject);
+  const selectedObjectId = useSelector(selectors.selectedObjectId);
 
   const promptCreateCard = (deckId: DeckId) =>
     promptCreate("card", (name) => createCard({ name, deckId }));

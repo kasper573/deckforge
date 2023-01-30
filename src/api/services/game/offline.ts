@@ -6,6 +6,7 @@ import type { LinkInterceptors } from "../../../lib/trpc-intercept";
 import type { Game, GameId } from "./types";
 import { gameIdType, gameType } from "./types";
 import type { GameService } from "./service";
+import { gameSlug } from "./slug";
 
 export function createOfflineGameService(): LinkInterceptors<GameService> {
   const storage = createZodStorage(
@@ -28,8 +29,12 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
     }
   }
 
-  function assertGame(byId: GameId) {
-    const game = map.get(byId);
+  function assertGame(search: GameId | { slug: string }) {
+    const game =
+      typeof search === "object" && "slug" in search
+        ? [...map.values()].find((game) => game.slug === search.slug)
+        : map.get(search);
+
     if (!game) {
       throw new Error(`Game not found`);
     }
@@ -44,6 +49,7 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
       const game: Game = {
         ...input,
         gameId,
+        slug: gameSlug("local", input.name),
         updatedAt: new Date(),
         ownerId: "offline",
       };
@@ -52,7 +58,12 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
       return game;
     },
     read(input) {
-      return assertGame(input);
+      switch (input.type) {
+        case "gameId":
+          return assertGame(input.gameId);
+        case "slug":
+          return assertGame({ slug: input.slug });
+      }
     },
     update(input) {
       let game = assertGame(input.gameId);
@@ -67,11 +78,8 @@ export function createOfflineGameService(): LinkInterceptors<GameService> {
       map.delete(input);
       save();
     },
-    list(input) {
-      return {
-        total: map.size,
-        entities: Array.from(map.values()),
-      };
+    list() {
+      return Array.from(map.values());
     },
   };
 }

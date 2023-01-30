@@ -54,6 +54,7 @@ export function useToastMutation<Input, Response>(
           showToast({ variant: "error", content: message });
         }
       }
+      throw e;
     }
   };
 }

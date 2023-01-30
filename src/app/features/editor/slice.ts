@@ -1,5 +1,6 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
+import produce from "immer";
 import type {
   Event,
   Card,
@@ -23,6 +24,7 @@ import { propertyValue } from "../../../api/services/game/types";
 import type {
   EditorObjectId,
   EditorState,
+  EditorSyncState,
   LogEntry,
   PanelId,
   PanelLayout,
@@ -32,18 +34,18 @@ import { defaultPanelLayout } from "./panels/defaultPanelLayout";
 import { selectors } from "./selectors";
 
 const panelStorage = createZodStorage(
-  panelLayoutType.optional(),
+  panelLayoutType,
   "panel-layout",
   defaultPanelLayout
 );
 
 const selectedObjectStorage = createZodStorage(
-  editorObjectIdType.optional(),
-  "selected-object",
-  undefined
+  editorObjectIdType,
+  "selected-object"
 );
 
 const initialState: EditorState = {
+  syncState: "dirty",
   selectedObjectId: selectedObjectStorage.load(),
   panelLayout: panelStorage.load(),
   logs: [],
@@ -55,6 +57,9 @@ const editorSlice = createSlice({
   name: "editor",
   initialState,
   reducers: {
+    setSyncState(state, { payload }: PayloadAction<EditorSyncState>) {
+      state.syncState = payload;
+    },
     selectGame: (
       state,
       { payload: newGame }: PayloadAction<Game | undefined>
@@ -137,6 +142,14 @@ const editorSlice = createSlice({
         name: "New Deck",
         ...payload,
       });
+    },
+    deleteDeck({ game }, { payload: id }: PayloadAction<Deck["deckId"]>) {
+      if (!game) {
+        return;
+      }
+      const { definition } = game;
+      definition.decks = definition.decks.filter((deck) => deck.deckId !== id);
+      definition.cards = definition.cards.filter((card) => card.deckId !== id);
     },
     createCard(
       state,
@@ -225,17 +238,33 @@ export const reducer: typeof editorSlice.reducer = (
   state = editorSlice.getInitialState(),
   action
 ) => {
-  const currentState = state;
-  const updatedState = editorSlice.reducer(state, action);
+  const previousState = state;
 
-  if (updatedState.selectedObjectId !== currentState.selectedObjectId) {
-    selectedObjectStorage.save(updatedState.selectedObjectId);
-  }
-  if (updatedState.panelLayout !== currentState.panelLayout) {
-    panelStorage.save(updatedState.panelLayout);
+  const fallbackObjectId = selectors.adjacentSelectedObject(state);
+
+  let newState = editorSlice.reducer(state, action);
+
+  // Ensure that the selected object still exists, fall back to the adjacent one
+  // (this can happen on deletes, or when local storage selection contains old data)
+  if (
+    newState.game &&
+    !selectors.objectById(newState.selectedObjectId)(newState)
+  ) {
+    const fallbackExist = selectors.objectById(fallbackObjectId)(newState);
+    newState = produce(newState, (draft) => {
+      draft.selectedObjectId = fallbackExist ? fallbackObjectId : undefined;
+    });
   }
 
-  return updatedState;
+  // Persist layout and selection changes in local storage
+  if (newState.selectedObjectId !== previousState.selectedObjectId) {
+    selectedObjectStorage.save(newState.selectedObjectId);
+  }
+  if (newState.panelLayout !== previousState.panelLayout) {
+    panelStorage.save(newState.panelLayout);
+  }
+
+  return newState;
 };
 
 export const noUndoActionList: Array<keyof typeof actions> = [];

@@ -4,6 +4,7 @@ import Container from "@mui/material/Container";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { Provider as ReduxProvider } from "react-redux";
+import { useDebounce } from "use-debounce";
 import { selectors } from "../../selectors";
 import { editorStore, useSelector } from "../../store";
 import { useActions } from "../../../../../lib/useActions";
@@ -15,6 +16,7 @@ import { LinkIconButton } from "../../../../components/Link";
 import { router } from "../../../../router";
 import { pageMaxWidth } from "../../../layout/Page";
 import { gameType } from "../../../../../api/services/game/types";
+import { useOfflineGameServiceState } from "../../utils/shouldUseOfflineGameService";
 import { EditorMenu } from "./EditorMenu";
 
 export default function EditorAppBarContent() {
@@ -30,6 +32,8 @@ function Content() {
   const prompt = useModal(PromptDialog);
   const game = useSelector(selectors.game);
   const { renameGame } = useActions(editorActions);
+  const isLocalDeviceData = useOfflineGameServiceState();
+  const isGameSlugReliable = useIsGameSlugReliable();
 
   async function promptRename() {
     const newName = await prompt({
@@ -48,7 +52,7 @@ function Content() {
       <Stack direction="row" spacing={2} alignItems="center">
         <Tooltip title="Leave editor">
           <div>
-            <LinkIconButton edge="start" to={router.editor()}>
+            <LinkIconButton edge="start" to={router.editor({})}>
               <ExitToApp />
             </LinkIconButton>
           </div>
@@ -64,27 +68,37 @@ function Content() {
           <Tooltip title="Rename game">
             <Clickable onClick={promptRename}>{game?.name}</Clickable>
           </Tooltip>
-          {game && (
-            <>
-              {game.gameId && (
-                <Tooltip title="Open public gameplay page">
-                  <Clickable>
-                    <LinkIconButton
-                      to={router.play().game({ gameId: game.gameId })}
-                      target="_blank"
-                      sx={{ ml: 1 }}
-                    >
-                      <Play />
-                    </LinkIconButton>
-                  </Clickable>
-                </Tooltip>
-              )}
-            </>
+          {game && !isLocalDeviceData && (
+            <Tooltip
+              title={
+                isGameSlugReliable
+                  ? "Open public gameplay page"
+                  : "Game is being published, please wait"
+              }
+            >
+              <Clickable>
+                <LinkIconButton
+                  disabled={!isGameSlugReliable}
+                  aria-label="Open public gameplay page"
+                  to={router.play({ slug: game.slug })}
+                  sx={{ ml: 1 }}
+                >
+                  <Play />
+                </LinkIconButton>
+              </Clickable>
+            </Tooltip>
           )}
         </Stack>
       </GameName>
     </Stack>
   );
+}
+
+function useIsGameSlugReliable() {
+  const isSynced = useSelector(selectors.isSyncState("synced", "downloading"));
+  const [debouncedIsSynced] = useDebounce(isSynced, 250);
+  const hasStabilized = isSynced === debouncedIsSynced;
+  return isSynced && hasStabilized;
 }
 
 const GameName = styled(Container)`

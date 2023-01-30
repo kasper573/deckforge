@@ -43,8 +43,11 @@ export const editorObjectIdType = z
 
 export type EditorObjectId = z.infer<typeof editorObjectIdType>;
 
+export type EditorSyncState = "synced" | "dirty" | "uploading" | "downloading";
+
 export interface EditorState {
   game?: Game;
+  syncState: EditorSyncState;
   selectedObjectId?: EditorObjectId;
   panelLayout?: PanelLayout;
   logs: LogEntry[];

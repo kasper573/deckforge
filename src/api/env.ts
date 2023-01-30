@@ -13,6 +13,7 @@ const schema = z.object({
   databaseLogs: z.array(databaseLogType).default([]),
   serverLogs: z.array(serverLogType).default([]),
   exposeInternalErrors: zodBooleanish.default(false),
+  maxGamesPerUser: zodNumeric.default("10"),
   jwtSecret: z.string(),
   seed: z
     .object({
@@ -34,6 +35,7 @@ const adminUser = {
 const hasAdminUser = Object.values(adminUser).filter(Boolean).length > 0;
 
 export const env = schema.parse({
+  maxGamesPerUser: process.env.MAX_GAMES_PER_USER,
   databaseLogs: process.env.DATABASE_LOGS?.split(","),
   serverLogs: process.env.SERVER_LOGS?.split(","),
   apiPort: process.env.VITE_API_PORT,

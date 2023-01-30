@@ -1,4 +1,9 @@
-import { OptionsRouter, Redirect } from "react-typesafe-routes";
+import {
+  booleanParser,
+  OptionsRouter,
+  Redirect,
+  stringParser,
+} from "react-typesafe-routes";
 import type { ComponentType } from "react";
 import { lazy } from "react";
 import { literalParser } from "../lib/literalParser";
@@ -26,18 +31,10 @@ export const router = OptionsRouter(
       exact: true,
       component: lazy(() => import("./features/common/HomePage")),
     }),
-    play: route(
-      "play",
-      { component: lazy(() => import("./features/play/GameBrowsePage")) },
-      (route) => ({
-        game: route(":gameId", {
-          component: lazy(() => import("./features/play/GamePlayPage")),
-          params: {
-            gameId: literalParser<GameId>(),
-          },
-        }),
-      })
-    ),
+    play: route("play/:slug", {
+      component: lazy(() => import("./features/play/GamePlayPage")),
+      params: { slug: stringParser },
+    }),
     user: route(
       "user",
       { component: () => <Redirect to={router.user().profile()} /> },
@@ -55,8 +52,9 @@ export const router = OptionsRouter(
       })
     ),
     editor: route(
-      "editor",
+      "editor&:create?",
       {
+        params: { create: booleanParser },
         component: lazy(
           () => import("./features/editor/pages/GameListPage/GameListPage")
         ),
@@ -82,8 +80,11 @@ export const router = OptionsRouter(
         }),
       })
     ),
+    notFound: route("*", {
+      component: lazy(() => import("./features/common/NotFoundPage")),
+    }),
   })
 );
 
 export const logoutRedirect = router.user().login();
-export const loginRedirect = router.editor();
+export const loginRedirect = router.editor({});

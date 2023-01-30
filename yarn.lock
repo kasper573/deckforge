@@ -1183,21 +1183,21 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@swc-node/core@^1.9.1", "@swc-node/core@^1.9.2":
+"@swc-node/core@^1.9.2":
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/@swc-node/core/-/core-1.9.2.tgz#9c126ace9c71acd8ad301b3823bde7925d8a58ab"
   integrity sha512-tInCla6NO1HEQwhIc/K7PCOu4X3ppqw5xYNEMD7i41SyRuH7yp3u8x7x2cqeAD+6IAhJ5jKDPv2QRLPz7Xt3EA==
 
-"@swc-node/jest@1.5.5":
-  version "1.5.5"
-  resolved "https://registry.yarnpkg.com/@swc-node/jest/-/jest-1.5.5.tgz#c3de6b0076bf84310c35995dfe449cf633436da3"
-  integrity sha512-DUf0XMk5xuwt4x+BiZ++KlPxa0H9lvjhFdXU2c8lsu+UztGRUAUtI5nhNTqjS9PXw0zzf3gEFP7M8hNUo52YhQ==
+"@swc-node/jest@1.5.6":
+  version "1.5.6"
+  resolved "https://registry.yarnpkg.com/@swc-node/jest/-/jest-1.5.6.tgz#4e9ac87c7e5d6f0f49d3f8cc0b0521374021c461"
+  integrity sha512-znW8hxrvEyuaPhkAUBn+zCY53WnE0WKNb1jPNSW+QwBOwQz7wdQn/nTRTojeFyqmGxlJNgxyVVKMx+n9xnrq8Q==
   dependencies:
     "@node-rs/xxhash" "^1.2.1"
-    "@swc-node/core" "^1.9.1"
-    "@swc-node/register" "^1.5.4"
+    "@swc-node/core" "^1.9.2"
+    "@swc-node/register" "^1.5.5"
 
-"@swc-node/register@^1.5.4":
+"@swc-node/register@^1.5.5":
   version "1.5.5"
   resolved "https://registry.yarnpkg.com/@swc-node/register/-/register-1.5.5.tgz#0c9c6b8ea969b7ee2280e176debd1fde89986c06"
   integrity sha512-SNpbRG8EOXShk3YAnC4suAVovYQ7oFOFdCVBA3J8hkO5qy0WHPVnlnMojTYI+8UT1CrfQ1QSUySaAARRvEdwjg==
@@ -1282,6 +1282,13 @@
     "@swc/core-win32-arm64-msvc" "1.3.18"
     "@swc/core-win32-ia32-msvc" "1.3.18"
     "@swc/core-win32-x64-msvc" "1.3.18"
+
+"@swc/helpers@0.4.14":
+  version "0.4.14"
+  resolved "https://registry.yarnpkg.com/@swc/helpers/-/helpers-0.4.14.tgz#1352ac6d95e3617ccb7c1498ff019654f1e12a74"
+  integrity sha512-4C7nX/dvpzB7za4Ql9K81xK3HPxCpHMgwTZVyf+9JQ6VUbn9jjZVN7/Nkdz/Ugzs2CSjqnL/UPXroiVBVHUWUw==
+  dependencies:
+    tslib "^2.4.0"
 
 "@tanstack/query-core@4.18.0":
   version "4.18.0"
@@ -7251,6 +7258,11 @@ slice-ansi@^4.0.0:
     ansi-styles "^4.0.0"
     astral-regex "^2.0.0"
     is-fullwidth-code-point "^3.0.0"
+
+slugify@1.6.5:
+  version "1.6.5"
+  resolved "https://registry.yarnpkg.com/slugify/-/slugify-1.6.5.tgz#c8f5c072bf2135b80703589b39a3d41451fbe8c8"
+  integrity sha512-8mo9bslnBO3tr5PEVFzMPIWwWnipGS0xVbYf65zxDqfNwmzYn1LpiKNrR6DlClusuvo+hDHd1zKpmfAe83NQSQ==
 
 source-map-js@^1.0.2:
   version "1.0.2"
