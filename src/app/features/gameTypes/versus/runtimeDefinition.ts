@@ -14,7 +14,7 @@ export const gameStatusType = z.union([
   z.object({ type: z.literal("result"), winner: runtimePlayerIdType }),
 ]);
 
-export const versusDefinition = defineRuntime({
+export const runtimeDefinition = defineRuntime({
   playerProperties: {
     health: z.number(),
     healthMax: z.number(),
@@ -63,7 +63,7 @@ export const versusDefinition = defineRuntime({
 
 export type VersusGameStatus = z.infer<typeof gameStatusType>;
 
-export type VersusDefinition = typeof versusDefinition;
+export type VersusDefinition = typeof runtimeDefinition;
 export type VersusGenerics = RuntimeGenericsFor<VersusDefinition>;
 export type VersusTypes = inferFromZodShape<VersusDefinition>;
 export type VersusMachineContext = RuntimeMachineContext<VersusGenerics>;

@@ -60,7 +60,7 @@ export default function GameListPage() {
     try {
       game = await createGame.mutateAsync({
         name,
-        definition: selectedGameType.defaultGameDefinition,
+        definition: await selectedGameType.defaultGameDefinition(),
         type: selectedGameType.id,
       });
     } catch (err) {
