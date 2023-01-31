@@ -11,7 +11,7 @@ export function getObjectIdProperty<T extends EditorObjectId>(id: T) {
 export function selectedList(
   state: EditorState,
   type = state.selectedObjectId?.type
-) {
+): object[] | undefined {
   switch (type) {
     case "event":
       return state.game?.definition.events;
@@ -31,10 +31,14 @@ export function objectById(id?: EditorObjectId) {
     }
     const list = selectedList(state, id.type);
     if (list) {
-      const prop = getObjectIdProperty(id);
-      return (list as object[]).find((o) => o[prop] === id[prop]);
+      return list.find(createObjectByIdPredicate(id));
     }
   };
+}
+
+export function createObjectByIdPredicate(id: EditorObjectId) {
+  const prop = getObjectIdProperty(id);
+  return (a: object): boolean => a[prop] === id[prop];
 }
 
 export function adjacentSelectedObject(

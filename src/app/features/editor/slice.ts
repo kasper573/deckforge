@@ -1,5 +1,5 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, original } from "@reduxjs/toolkit";
 import produce from "immer";
 import type {
   Event,
@@ -32,6 +32,7 @@ import type {
 import { editorObjectIdType, panelLayoutType } from "./types";
 import { defaultPanelLayout } from "./panels/defaultPanelLayout";
 import { selectors } from "./selectors";
+import { createObjectByIdPredicate, selectedList } from "./utils/lists";
 
 const panelStorage = createZodStorage(
   panelLayoutType,
@@ -206,6 +207,31 @@ const editorSlice = createSlice({
         code: "",
         ...payload,
       });
+    },
+    swapObjects(
+      state,
+      { payload: [id1, id2] }: PayloadAction<[EditorObjectId, EditorObjectId]>
+    ) {
+      if (!state.game) {
+        return;
+      }
+      if (id1.type !== id2.type) {
+        throw new Error("Cannot swap objects of different types");
+      }
+
+      const list = selectedList(state, id1.type);
+      const originalList = original(list);
+      if (!list || !originalList) {
+        return;
+      }
+
+      const idx1 = originalList.findIndex(createObjectByIdPredicate(id1));
+      const idx2 = originalList.findIndex(createObjectByIdPredicate(id2));
+      if (idx1 !== -1 && idx2 !== -1) {
+        const swap = originalList[idx1];
+        list[idx1] = originalList[idx2];
+        list[idx2] = swap;
+      }
     },
     createProperty(
       state,
