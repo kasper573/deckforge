@@ -22,7 +22,6 @@ import type {
   RuntimeMachineContext,
   RuntimePlayer,
   RuntimePlayerId,
-  RuntimeState,
   RuntimeScriptAPI,
   RuntimeMiddleware,
 } from "./types";
@@ -56,6 +55,9 @@ export function compileGame<G extends RuntimeGenerics>(
   try {
     const cardProperties = gameDefinition.properties.filter(
       (p) => p.entityId === "card"
+    );
+    const playerProperties = gameDefinition.properties.filter(
+      (p) => p.entityId === "player"
     );
 
     const scriptAPI: RuntimeScriptAPI<G> = {
@@ -114,10 +116,27 @@ export function compileGame<G extends RuntimeGenerics>(
       })
     );
 
-    const initialState = createDefaultInitialState(
+    function createPlayer(): RuntimePlayer<G> {
+      const properties = namedPropertyDefaults(
+        playerProperties
+      ) as RuntimePlayer<G>["properties"];
+
+      return {
+        id: v4() as RuntimePlayerId,
+        deckId: decks[0]?.id,
+        properties,
+        board: {
+          draw: createPile(),
+          discard: createPile(),
+          hand: createPile(),
+        },
+      };
+    }
+
+    const initialState = runtimeDefinition.createInitialState({
       decks,
-      gameDefinition.properties
-    );
+      createPlayer,
+    });
 
     const allMiddlewares =
       options?.middlewares?.(compiledMiddlewares) ?? compiledMiddlewares;
@@ -133,37 +152,6 @@ export function compileGame<G extends RuntimeGenerics>(
   } catch (error) {
     return { error };
   }
-}
-
-function createDefaultInitialState<G extends RuntimeGenerics>(
-  decks: RuntimeDeck<G>[],
-  propertyDefinitions: Property[]
-): RuntimeState<G> {
-  const properties = namedPropertyDefaults(
-    propertyDefinitions.filter((p) => p.entityId === "player")
-  ) as RuntimePlayer<G>["properties"];
-
-  function createDefaultPlayer(): RuntimePlayer<G> {
-    return {
-      id: v4() as RuntimePlayerId,
-      deckId: decks[0]?.id,
-      properties,
-      board: {
-        draw: createPile(),
-        discard: createPile(),
-        hand: createPile(),
-      },
-    };
-  }
-
-  const p1 = createDefaultPlayer();
-  const p2 = createDefaultPlayer();
-  return {
-    decks,
-    status: { type: "idle" },
-    players: [p1, p2],
-    currentPlayerId: p1.id,
-  };
 }
 
 function compileCard<G extends RuntimeGenerics>(

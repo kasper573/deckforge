@@ -4,7 +4,7 @@ import { BattleScene } from "./BattleScene";
 import { ResultScene } from "./ResultScene";
 
 export function Scenes() {
-  const status = adapter.useRuntimeState((state) => state.status);
+  const status = adapter.useRuntimeState((state) => state.properties.status);
   switch (status.type) {
     case "idle":
       return <DeckSelectScene />;

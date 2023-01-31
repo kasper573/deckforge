@@ -11,7 +11,7 @@ export interface GameType<G extends RuntimeGenerics = RuntimeGenerics> {
   id: GameTypeId;
   name: string;
   description: ReactNode;
-  defaultGameDefinition: GameDefinition;
+  defaultGameDefinition: () => Promise<GameDefinition>;
   runtimeDefinition: RuntimeDefinition<G>;
   renderer: ComponentType<GameRendererProps<G>>;
 }

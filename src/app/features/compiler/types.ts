@@ -1,5 +1,4 @@
 import type { ZodObject, ZodType } from "zod";
-import { z } from "zod";
 import type {
   MachineActions,
   MachineEffects,
@@ -49,27 +48,21 @@ export interface RuntimeGenerics<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   CardProps extends PropRecord = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Actions extends MachineActions = any
+  Actions extends MachineActions = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  GlobalProps extends PropRecord = any
 > {
+  globalProps: GlobalProps;
   playerProps: PlayerProps;
   cardProps: CardProps;
   actions: Actions;
 }
 
-export const runtimeStatusType = z.union([
-  z.object({ type: z.literal("idle") }),
-  z.object({ type: z.literal("battle") }),
-  z.object({ type: z.literal("result"), winner: runtimePlayerIdType }),
-]);
-
-export type RuntimeStatus = z.infer<typeof runtimeStatusType>;
-
-export interface RuntimeState<G extends RuntimeGenerics> {
+export type RuntimeState<G extends RuntimeGenerics> = {
   decks: RuntimeDeck<G>[];
-  players: [RuntimePlayer<G>, RuntimePlayer<G>];
-  status: RuntimeStatus;
-  currentPlayerId: RuntimePlayerId;
-}
+  players: RuntimePlayer<G>[];
+  properties: G["globalProps"];
+};
 
 export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<
   RuntimeMachineContext<G>
@@ -78,8 +71,8 @@ export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<
 export interface RuntimeDefinition<
   G extends RuntimeGenerics = RuntimeGenerics
 > {
+  globals: ZodObject<ZodShapeFor<G["globalProps"]>>;
   state: ZodType<RuntimeState<G>>;
-  status: typeof runtimeStatusType;
   deck: ZodType<RuntimeDeck<G>>;
   card: ZodObject<ZodShapeFor<RuntimeCard<G>>>;
   cardPile: ZodType<Pile<RuntimeCard<G>>>;
@@ -87,7 +80,13 @@ export interface RuntimeDefinition<
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
   actions: ZodType<G["actions"]>;
   middleware: ZodType<RuntimeMiddleware<G>>;
+  createInitialState: RuntimeStateFactory<G>;
 }
+
+export type RuntimeStateFactory<G extends RuntimeGenerics> = (options: {
+  decks: RuntimeDeck<G>[];
+  createPlayer: () => RuntimePlayer<G>;
+}) => RuntimeState<G>;
 
 export type PropRecord = Record<string, unknown>;
 

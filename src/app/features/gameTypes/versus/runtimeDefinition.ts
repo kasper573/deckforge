@@ -6,9 +6,15 @@ import type {
   RuntimeGenericsFor,
   RuntimeMachineContext,
 } from "../../compiler/types";
-import { cardInstanceIdType } from "../../compiler/types";
+import { cardInstanceIdType, runtimePlayerIdType } from "../../compiler/types";
 
-export const versusDefinition = defineRuntime({
+export const gameStatusType = z.union([
+  z.object({ type: z.literal("idle") }),
+  z.object({ type: z.literal("battle") }),
+  z.object({ type: z.literal("result"), winner: runtimePlayerIdType }),
+]);
+
+export const runtimeDefinition = defineRuntime({
   playerProperties: {
     health: z.number(),
     healthMax: z.number(),
@@ -18,6 +24,10 @@ export const versusDefinition = defineRuntime({
   cardProperties: {
     manaCost: z.number(),
   },
+  globalProperties: ({ playerId }) => ({
+    status: gameStatusType,
+    currentPlayerId: playerId,
+  }),
   actions: ({ playerId, deckId }) => {
     const cardPayload = z.object({
       playerId,
@@ -37,9 +47,23 @@ export const versusDefinition = defineRuntime({
       discardCard: runtimeEvent(cardPayload),
     };
   },
+  initialState: ({ decks, createPlayer }) => {
+    const p1 = createPlayer();
+    const p2 = createPlayer();
+    return {
+      players: [p1, p2],
+      decks,
+      properties: {
+        status: { type: "idle" as const },
+        currentPlayerId: p1.id,
+      },
+    };
+  },
 });
 
-export type VersusDefinition = typeof versusDefinition;
+export type VersusGameStatus = z.infer<typeof gameStatusType>;
+
+export type VersusDefinition = typeof runtimeDefinition;
 export type VersusGenerics = RuntimeGenericsFor<VersusDefinition>;
 export type VersusTypes = inferFromZodShape<VersusDefinition>;
 export type VersusMachineContext = RuntimeMachineContext<VersusGenerics>;
