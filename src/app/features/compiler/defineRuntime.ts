@@ -23,28 +23,44 @@ import type {
   RuntimePlayerId,
   RuntimeState,
   RuntimeScriptAPI,
+  RuntimeStateFactory,
 } from "./types";
-import { runtimeStatusType } from "./types";
 import { zodPile } from "./apis/Pile";
 
 export function defineRuntime<
+  GlobalPropTypeDefs extends ZodRawShape,
   PlayerProps extends PropRecord,
   CardProps extends PropRecord,
   ActionTypeDefs extends ZodRawShape
 >({
+  globalProperties: createGlobalProperties,
   playerProperties,
   cardProperties,
   actions: createActionsShape,
+  initialState: createInitialState,
 }: {
+  globalProperties: (types: {
+    playerId: ZodType<RuntimePlayerId>;
+    deckId: ZodType<DeckId>;
+  }) => GlobalPropTypeDefs;
   playerProperties: ZodShapeFor<PlayerProps>;
   cardProperties: ZodShapeFor<CardProps>;
   actions: (types: {
     playerId: ZodType<RuntimePlayerId>;
     deckId: ZodType<DeckId>;
   }) => ActionTypeDefs;
+  initialState: RuntimeStateFactory<
+    RuntimeGenerics<
+      PlayerProps,
+      CardProps,
+      z.objectInputType<ActionTypeDefs, ZodTypeAny>,
+      z.objectInputType<GlobalPropTypeDefs, ZodTypeAny>
+    >
+  >;
 }) {
   type Actions = z.objectInputType<ActionTypeDefs, ZodTypeAny>;
-  type G = RuntimeGenerics<PlayerProps, CardProps, Actions>;
+  type GlobalProps = z.objectInputType<GlobalPropTypeDefs, ZodTypeAny>;
+  type G = RuntimeGenerics<PlayerProps, CardProps, Actions, GlobalProps>;
 
   const playerId = zodNominalString<RuntimePlayerId>();
   const deckId = cardDefinitionType.shape.deckId;
@@ -74,7 +90,7 @@ export function defineRuntime<
     cards: z.array(card),
   }) as unknown as RuntimeDefinition<G>["deck"];
 
-  const cardPile = zodPile(card);
+  const cardPile = zodPile(card) as unknown as RuntimeDefinition<G>["cardPile"];
 
   const player = z.object({
     id: playerId,
@@ -87,11 +103,14 @@ export function defineRuntime<
     }),
   }) as unknown as RuntimeDefinition<G>["player"];
 
+  const globals = z.object(
+    createGlobalProperties({ playerId, deckId })
+  ) as unknown as RuntimeDefinition<G>["globals"];
+
   const state = z.object({
     decks: z.array(deck),
     players: z.tuple([player, player]),
-    status: runtimeStatusType,
-    currentPlayerId: playerId,
+    properties: globals,
   }) as unknown as RuntimeDefinition<G>["state"];
 
   const actionUnion = z.unknown();
@@ -102,8 +121,8 @@ export function defineRuntime<
     .args(state, actionUnion, middlewareNext)
     .returns(z.void()) as RuntimeDefinition<G>["middleware"];
 
-  return {
-    status: runtimeStatusType,
+  const definition: RuntimeDefinition<G> = {
+    globals,
     deck,
     card,
     cardPile,
@@ -112,19 +131,47 @@ export function defineRuntime<
     effects,
     actions,
     middleware,
-  } as RuntimeDefinition<G>;
+    createInitialState,
+  };
+
+  return definition;
 }
 
-export function deriveRuntimeDefinition({
+export function deriveRuntimeDefinitionParts({
   properties,
   events,
 }: Game["definition"]) {
   const playerPropertyList = properties.filter((p) => p.entityId === "player");
   const cardPropertyList = properties.filter((p) => p.entityId === "card");
-  return defineRuntime({
+  return {
     playerProperties: propertiesToZodShape(playerPropertyList),
     cardProperties: propertiesToZodShape(cardPropertyList),
     actions: () => eventsToZodShape(events),
+  };
+}
+
+export function deriveRuntimeDefinition<Base extends RuntimeDefinition>(
+  gameDefinition: Game["definition"],
+  baseDefinition?: Base
+) {
+  const commonProps = deriveRuntimeDefinitionParts(gameDefinition);
+
+  if (baseDefinition) {
+    return defineRuntime({
+      ...commonProps,
+      globalProperties: () => baseDefinition.globals.shape,
+      initialState: baseDefinition?.createInitialState,
+    });
+  }
+
+  return defineRuntime({
+    ...commonProps,
+    globalProperties: () => ({}),
+    initialState: () => ({
+      players: [],
+      decks: [],
+      properties: {},
+    }),
   });
 }
 

@@ -17,8 +17,14 @@ import type { EditorObjectId, EditorState, EditorSyncState } from "./types";
 
 const gameDefinition = (state: EditorState) => state.game?.definition;
 
-const runtimeDefinition = createSelector(gameDefinition, (def) =>
-  def ? deriveRuntimeDefinition(def) : undefined
+const builtinDefinition = (state: EditorState) =>
+  state.game ? gameTypes.get(state.game.type)?.runtimeDefinition : undefined;
+
+const runtimeDefinition = createSelector(
+  gameDefinition,
+  builtinDefinition,
+  (game, builtin) =>
+    game && builtin ? deriveRuntimeDefinition(game, builtin) : undefined
 );
 
 const editorApi = createSelector(runtimeDefinition, (def) =>
@@ -170,7 +176,6 @@ export const selectors = {
 
   gameDefinition,
   runtimeDefinition,
-  builtinDefinition: (state: EditorState) =>
-    state.game ? gameTypes.get(state.game.type)?.runtimeDefinition : undefined,
+  builtinDefinition,
   editorApi,
 };

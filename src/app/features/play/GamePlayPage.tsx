@@ -3,10 +3,10 @@ import { useMemo } from "react";
 import { Page } from "../layout/Page";
 import { router } from "../../router";
 import { compileGame } from "../compiler/compileGame";
-import type { RuntimeGenerics } from "../compiler/types";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import { trpc } from "../../trpc";
 import { GameRenderer } from "../compiler/GameRenderer";
+import { gameTypes } from "../gameTypes";
 
 export default function GamePlayPage() {
   const { slug } = useRouteParams(router.play);
@@ -14,10 +14,13 @@ export default function GamePlayPage() {
 
   const compiled = useMemo(() => {
     if (game) {
-      return compileGame<RuntimeGenerics>(
-        deriveRuntimeDefinition(game.definition),
-        game.definition
-      );
+      const baseDefinition = gameTypes.get(game.type)?.runtimeDefinition;
+      if (baseDefinition) {
+        return compileGame(
+          deriveRuntimeDefinition(game.definition, baseDefinition),
+          game.definition
+        );
+      }
     }
   }, [game]);
 

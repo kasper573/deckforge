@@ -9,6 +9,12 @@ export const runtimeDefinition = defineRuntime({
   playerProperties: {},
   cardProperties: {},
   actions: () => ({}),
+  globalProperties: () => ({}),
+  initialState: () => ({
+    players: [],
+    decks: [],
+    properties: {},
+  }),
 });
 
 export type DemoDefinition = typeof runtimeDefinition;
