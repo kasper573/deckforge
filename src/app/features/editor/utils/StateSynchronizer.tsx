@@ -1,7 +1,7 @@
-import { isEqual } from "lodash";
+import { isEqual, omit } from "lodash";
 import { useDebounce } from "use-debounce";
 import { useEffect } from "react";
-import { trpc } from "../../../trpc";
+import { CANCEL_INVALIDATE, trpc } from "../../../trpc";
 import { useActions } from "../../../../lib/useActions";
 import type { Game, GameId } from "../../../../api/services/game/types";
 import { useSelector } from "../store";
@@ -13,10 +13,15 @@ import { useToastProcedure } from "../../../hooks/useToastProcedure";
 
 export function StateSynchronizer({ gameId }: { gameId: GameId }) {
   const localGame = useSelector(selectors.game);
-  const [debouncedLocalGame, debounceControls] = useDebounce(localGame, 1500);
+  const [debouncedLocalGame] = useDebounce(localGame, 1500);
   const { mutate: upload, isLoading: isUploading } = useToastProcedure(
     trpc.game.update,
-    { success: handleRemoteGameChange }
+    {
+      onSuccess(game) {
+        handleRemoteGameChange(keepDefinition(localGame, game));
+        return CANCEL_INVALIDATE;
+      },
+    }
   );
   const { selectGame: setLocalGame, setSyncState } = useActions(editorActions);
   const { data: remoteGame, isFetching: isDownloading } =
@@ -25,10 +30,9 @@ export function StateSynchronizer({ gameId }: { gameId: GameId }) {
       { onSuccess: handleRemoteGameChange }
     );
 
-  function handleRemoteGameChange(remoteGame: Game) {
-    if (remoteGame?.gameId === gameId && !isEqual(remoteGame, localGame)) {
-      setLocalGame(remoteGame);
-      setTimeout(() => debounceControls.flush(), 0);
+  function handleRemoteGameChange(game: Game) {
+    if (game.gameId === gameId && isSignificantlyDifferent(game, localGame)) {
+      setLocalGame(game);
     }
   }
 
@@ -44,7 +48,10 @@ export function StateSynchronizer({ gameId }: { gameId: GameId }) {
 
   // Update remote game when local game changes
   useReaction(() => {
-    if (debouncedLocalGame && !isEqual(debouncedLocalGame, remoteGame)) {
+    if (
+      debouncedLocalGame &&
+      isSignificantlyDifferent(debouncedLocalGame, remoteGame)
+    ) {
       upload(debouncedLocalGame);
     }
   }, [debouncedLocalGame]);
@@ -58,6 +65,18 @@ export function StateSynchronizer({ gameId }: { gameId: GameId }) {
   );
 
   return null;
+}
+
+function isSignificantlyDifferent(a?: Game, b?: Game) {
+  return !isEqual(significantGameProps(a), significantGameProps(b));
+}
+
+function significantGameProps(game?: Game) {
+  return game ? omit(game, "updatedAt") : undefined;
+}
+
+function keepDefinition(keep: Game | undefined, rest: Game) {
+  return { ...rest, definition: keep?.definition ?? rest.definition };
 }
 
 function deriveSyncState(args: {

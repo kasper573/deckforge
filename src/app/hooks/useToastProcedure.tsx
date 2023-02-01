@@ -1,5 +1,4 @@
 import { TRPCClientError } from "@trpc/client";
-import type { inferProcedureOutput } from "@trpc/server";
 import type { ReactNode } from "react";
 import { useModal } from "../../lib/useModal";
 import { Toast } from "../components/Toast";
@@ -7,22 +6,26 @@ import type { ApiRouter } from "../../api/router";
 import type { AnyFormMutation } from "./useForm";
 
 export interface UseToastMutationOptions<Response> {
+  toastParsers?: ToastResponseParsers<Response>;
+}
+
+export interface ToastResponseParsers<Response> {
   success?: (response: Response) => ReactNode | undefined | void;
   error?: (error: TRPCClientError<ApiRouter>) => ReactNode | undefined | void;
 }
 
-type ReactMutationProcedureLike<Input, Response> = {
-  useMutation: () => AnyFormMutation<Input, Response>;
+type ReactMutationProcedureLike<Input, Response, ProcedureOptions> = {
+  useMutation: (options?: ProcedureOptions) => AnyFormMutation<Input, Response>;
 };
 
-export function useToastProcedure<Input, Response>(
-  procedure: ReactMutationProcedureLike<Input, Response>,
-  options?: UseToastMutationOptions<inferProcedureOutput<Response>>
+export function useToastProcedure<Input, Response, ProcedureOptions>(
+  procedure: ReactMutationProcedureLike<Input, Response, ProcedureOptions>,
+  options?: ProcedureOptions & UseToastMutationOptions<Response>
 ) {
-  const { mutateAsync, mutate, ...rest } = procedure.useMutation();
+  const { mutateAsync, mutate, ...rest } = procedure.useMutation(options);
   const mutateAsyncWithToast = useToastMutation<Input, Response>(
     mutateAsync,
-    options
+    options?.toastParsers
   );
   return {
     ...rest,
@@ -36,7 +39,7 @@ export function useToastMutation<Input, Response>(
   {
     success = defaultSuccessParser,
     error = defaultErrorParser,
-  }: UseToastMutationOptions<Response> = {}
+  }: ToastResponseParsers<Response> = {}
 ) {
   const showToast = useModal(Toast);
   return async function mutateAsyncWithToastUI(input: Input) {
