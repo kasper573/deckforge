@@ -217,14 +217,30 @@ const editorSlice = createSlice({
       if (!state.game) {
         return;
       }
+
+      if (movedObjectId.type === "card" && targetObjectId.type === "deck") {
+        const { cards, decks } = state.game.definition;
+        const card = cards.find((c) => c.cardId === movedObjectId.cardId);
+        const deck = decks.find((d) => d.deckId === targetObjectId.deckId);
+        if (!card || !deck) {
+          throw new Error("Unknown card or deck");
+        }
+        card.deckId = deck.deckId;
+        return;
+      }
+
       if (movedObjectId.type !== targetObjectId.type) {
-        throw new Error("Cannot swap objects of different types");
+        throw new Error(
+          "Cannot move an object to a target of a different type"
+        );
       }
 
       const list = selectedList(state, movedObjectId.type);
       const originalList = original(list);
       if (!list || !originalList) {
-        return;
+        throw new Error(
+          `Object type "${movedObjectId.type}" does not support moving`
+        );
       }
 
       const idx1 = originalList.findIndex(
@@ -233,10 +249,12 @@ const editorSlice = createSlice({
       const idx2 = originalList.findIndex(
         createObjectByIdPredicate(targetObjectId)
       );
-      if (idx1 !== -1 && idx2 !== -1) {
-        const [moved] = list.splice(idx1, 1);
-        list.splice(idx2, 0, moved);
+      if (idx1 === -1 || idx2 === -1) {
+        throw new Error("Could not find target or object to move");
       }
+
+      const [moved] = list.splice(idx1, 1);
+      list.splice(idx2, 0, moved);
     },
     createProperty(
       state,
