@@ -6,7 +6,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
-import { createEventBus } from "../../../../../lib/createEventBus";
 import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 import { useActions } from "../../../../../lib/useActions";
@@ -20,6 +19,7 @@ import { gameDefinitionType } from "../../../../../api/services/game/types";
 import { MenuFor } from "../../../../components/MenuFor";
 import { concatFunctions } from "../../../../../lib/ts-extensions/concatFunctions";
 import { Menu as MenuIcon } from "../../../../components/icons";
+import { showEditorHelp } from "../../pages/EditorPage/events";
 import { PanelVisibilityMenu } from "./PanelVisibilityMenu";
 
 export function EditorMenu() {
@@ -81,7 +81,9 @@ export function EditorMenu() {
       onClose={close}
       trigger={({ open }) => <Option onClick={open}>Panels</Option>}
     />,
-    <Option onClick={concatFunctions(close, helpEvent.emit)}>Help</Option>,
+    <Option onClick={concatFunctions(close, () => showEditorHelp.emit())}>
+      Help
+    </Option>,
   ];
 
   const optionElements = options.map((option, i) =>
@@ -103,5 +105,3 @@ export function EditorMenu() {
 
   return <>{optionElements}</>;
 }
-
-export const helpEvent = createEventBus();

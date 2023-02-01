@@ -13,9 +13,10 @@ import type { TourState } from "../../../../components/Tour";
 import { Tour } from "../../../../components/Tour";
 import { Link } from "../../../../components/Link";
 import { router } from "../../../../router";
-import { helpEvent } from "../../components/AppBar/EditorMenu";
 import { useOfflineGameServiceState } from "../../utils/shouldUseOfflineGameService";
 import { useReaction } from "../../../../../lib/useReaction";
+import type { PanelId } from "../../types";
+import { showEditorHelp } from "./events";
 
 export function EditorIntro() {
   const tourResolverRef = useRef(() => {});
@@ -28,18 +29,19 @@ export function EditorIntro() {
   });
 
   const takeTour = useCallback(
-    () =>
+    (startAt?: PanelId) =>
       new Promise<void>((resolve) => {
         tourResolverRef.current = resolve;
-        setTourState((state) => ({ ...state, step: 0, active: true }));
+        const step = startAt !== undefined ? panelTourIndex(startAt) : 0;
+        setTourState((state) => ({ ...state, step, active: true }));
       }),
     []
   );
 
-  const showIntro = useCallback(
-    async function showIntro() {
-      if (await confirm(modals.intro)) {
-        await takeTour();
+  const showHelp = useCallback(
+    async (skipToPanel?: PanelId) => {
+      if (skipToPanel ? true : await confirm(modals.intro)) {
+        await takeTour(skipToPanel);
       }
     },
     [confirm, takeTour]
@@ -54,11 +56,11 @@ export function EditorIntro() {
     });
   }, []);
 
-  useEffect(() => helpEvent.subscribe(showIntro), [showIntro]);
+  useEffect(() => showEditorHelp.subscribe(showHelp), [showHelp]);
 
   useReaction(async () => {
     if (!hasSeenIntroStorage.load()) {
-      await showIntro();
+      await showHelp();
     }
     hasSeenIntroStorage.save(true);
 
@@ -90,6 +92,12 @@ const touchScrollDisabler = (
 );
 
 const tourSteps = defined(panelDefinitionList.map((panel) => panel.tour));
+const panelTourIndex = (panelId: PanelId) =>
+  tourSteps.findIndex((tour) =>
+    panelDefinitionList.find(
+      (panel) => panel.id === panelId && panel.tour === tour
+    )
+  );
 
 const modals = {
   intro: {
