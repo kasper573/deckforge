@@ -208,29 +208,34 @@ const editorSlice = createSlice({
         ...payload,
       });
     },
-    swapObjects(
+    moveObject(
       state,
-      { payload: [id1, id2] }: PayloadAction<[EditorObjectId, EditorObjectId]>
+      {
+        payload: [movedObjectId, targetObjectId],
+      }: PayloadAction<[EditorObjectId, EditorObjectId]>
     ) {
       if (!state.game) {
         return;
       }
-      if (id1.type !== id2.type) {
+      if (movedObjectId.type !== targetObjectId.type) {
         throw new Error("Cannot swap objects of different types");
       }
 
-      const list = selectedList(state, id1.type);
+      const list = selectedList(state, movedObjectId.type);
       const originalList = original(list);
       if (!list || !originalList) {
         return;
       }
 
-      const idx1 = originalList.findIndex(createObjectByIdPredicate(id1));
-      const idx2 = originalList.findIndex(createObjectByIdPredicate(id2));
+      const idx1 = originalList.findIndex(
+        createObjectByIdPredicate(movedObjectId)
+      );
+      const idx2 = originalList.findIndex(
+        createObjectByIdPredicate(targetObjectId)
+      );
       if (idx1 !== -1 && idx2 !== -1) {
-        const swap = originalList[idx1];
-        list[idx1] = originalList[idx2];
-        list[idx2] = swap;
+        const [moved] = list.splice(idx1, 1);
+        list.splice(idx2, 0, moved);
       }
     },
     createProperty(
