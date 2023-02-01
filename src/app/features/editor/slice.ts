@@ -32,7 +32,7 @@ import type {
 import { editorObjectIdType, panelLayoutType } from "./types";
 import { defaultPanelLayout } from "./panels/defaultPanelLayout";
 import { selectors } from "./selectors";
-import { createObjectByIdPredicate, selectedList } from "./utils/lists";
+import { createObjectByIdPredicate, selectedList } from "./utils/objectUtils";
 
 const panelStorage = createZodStorage(
   panelLayoutType,

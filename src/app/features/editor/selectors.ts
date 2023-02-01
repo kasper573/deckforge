@@ -16,7 +16,7 @@ import {
   adjacentSelectedObject,
   objectById,
   selectedList,
-} from "./utils/lists";
+} from "./utils/objectUtils";
 
 const gameDefinition = (state: EditorState) => state.game?.definition;
 
