@@ -28,36 +28,12 @@ import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
   const theme = useTheme();
-  const [manualResetCount, resetRuntime] = useReducer((c) => c + 1, 0);
-  const gameType = useSelector(selectors.gameType);
-  const gameDefinition = useSelector(selectors.gameDefinition);
-  const runtimeDefinition = useSelector(selectors.runtimeDefinition);
   const { log } = useActions(editorActions);
-  const [seed, setSeed] = useState("");
   const prompt = useModal(PromptDialog);
+  const [seed, setSeed] = useState("");
+  const gameType = useSelector(selectors.gameType);
+  const [compiled, resetRuntime] = useCompilation(seed, log);
 
-  const compiled = useMemo(
-    () => {
-      if (gameDefinition && runtimeDefinition) {
-        return compileGame<RuntimeGenerics>(runtimeDefinition, gameDefinition, {
-          seed,
-          middlewares: (defaults) => [
-            createEventLoggerMiddleware(log),
-            createFailSafeMiddleware(log),
-            ...defaults,
-          ],
-        });
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [gameDefinition, runtimeDefinition, manualResetCount, seed, log]
-  );
-
-  useEffect(() => {
-    if (compiled?.error) {
-      log(["Compiler error", compiled.error]);
-    }
-  }, [compiled?.error, log]);
   function onRenderError(error: unknown) {
     log(["Runtime render error", error]);
   }
@@ -138,6 +114,36 @@ export function RuntimePanel(props: PanelProps) {
         ))}
     </Panel>
   );
+}
+
+function useCompilation(seed: string, log: (args: unknown[]) => void) {
+  const [manualResetCount, forceRecompile] = useReducer((c) => c + 1, 0);
+  const gameDefinition = useSelector(selectors.gameDefinition);
+  const runtimeDefinition = useSelector(selectors.runtimeDefinition);
+
+  const compiled = useMemo(
+    () => {
+      if (gameDefinition && runtimeDefinition) {
+        return compileGame<RuntimeGenerics>(runtimeDefinition, gameDefinition, {
+          seed,
+          middlewares: (defaults) => [
+            createEventLoggerMiddleware(log),
+            createFailSafeMiddleware(log),
+            ...defaults,
+          ],
+        });
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [gameDefinition, runtimeDefinition, manualResetCount, seed, log]
+  );
+
+  useEffect(() => {
+    if (compiled?.error) {
+      log(["Compiler error", compiled.error]);
+    }
+  }, [compiled?.error, log]);
+  return [compiled, forceRecompile] as const;
 }
 
 function createEventLoggerMiddleware(
