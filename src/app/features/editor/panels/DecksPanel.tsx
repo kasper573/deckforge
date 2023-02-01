@@ -18,7 +18,8 @@ export function DecksPanel(props: PanelProps) {
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
-  const { createDeck, createCard, selectObject } = useActions(editorActions);
+  const { createDeck, createCard, selectObject, moveObject } =
+    useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObjectId);
 
   const promptCreateCard = (deckId: DeckId) =>
@@ -35,6 +36,7 @@ export function DecksPanel(props: PanelProps) {
       <Tree
         selected={selectedObjectId}
         onSelectedChanged={selectObject}
+        onItemMoved={moveObject}
         items={decks.map((deck) => ({
           nodeId: deck.objectId,
           label: deck.name,
