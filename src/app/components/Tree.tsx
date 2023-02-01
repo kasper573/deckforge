@@ -75,9 +75,8 @@ export function TreeItem<Id>({
   const serializedNodeId = useMemo(() => serializeId(nodeId), [nodeId]);
   const movableProps = useMovable({
     enabled: isMoveEnabled,
-    data: serializedNodeId,
-    onMove: (movedNodeId) =>
-      onItemMoved?.([deserializeId(movedNodeId), nodeId]),
+    data: nodeId,
+    onMove: (movedNodeId) => onItemMoved?.([movedNodeId, nodeId]),
   });
 
   return (
