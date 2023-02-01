@@ -24,7 +24,8 @@ export function EventsPanel(props: PanelProps) {
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
-  const { createEvent, updateEvent, selectObject } = useActions(editorActions);
+  const { createEvent, updateEvent, selectObject, moveObject } =
+    useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObjectId);
 
   const promptCreateEvent = () =>
@@ -44,6 +45,7 @@ export function EventsPanel(props: PanelProps) {
       <Tree
         selected={selectedObjectId}
         onSelectedChanged={selectObject}
+        onItemMoved={moveObject}
         items={events.map((event) => {
           const isEditable = isEventEditable(event, builtinDef);
           return {

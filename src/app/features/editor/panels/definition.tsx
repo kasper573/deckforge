@@ -155,8 +155,12 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
           <Typography paragraph>
             They have an additional parameter <code>next</code>, which is a
             function that will call the next middleware. This allows you to
-            intercept and enhance the behavior of all events. Middlewares are
-            applied in the order they are listed.
+            intercept and enhance the behavior of all events.
+          </Typography>
+
+          <Typography paragraph>
+            Middlewares are applied in the order they are listed. Drag and drop
+            to re-order middlewares.
           </Typography>
 
           <Typography>

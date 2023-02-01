@@ -22,6 +22,7 @@ import { defined } from "../../../../lib/ts-extensions/defined";
 import type { RuntimeDefinition } from "../../compiler/types";
 import { useConfirmDelete } from "../hooks/useConfirmDelete";
 import { usePromptCreate, usePromptRename } from "../hooks/usePromptCrud";
+import { useMovable } from "../../../hooks/useMovable";
 import type { PanelProps } from "./definition";
 
 export function CardPropertiesPanel(props: PanelProps) {
@@ -90,9 +91,14 @@ function PropertyListItem({
   isEditable,
   ...property
 }: Property & { objectId: EditorObjectId; isEditable: boolean }) {
-  const { updateProperty } = useActions(editorActions);
+  const { updateProperty, moveObject } = useActions(editorActions);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
+  const movableProps = useMovable({
+    enabled: true,
+    data: property.objectId,
+    onMove: (movedNodeId) => moveObject([movedNodeId, property.objectId]),
+  });
 
   const openContextMenu = useMenu(
     defined([
@@ -106,7 +112,11 @@ function PropertyListItem({
   );
 
   return (
-    <HoverListItem sx={{ py: 0 }} onContextMenu={openContextMenu}>
+    <HoverListItem
+      sx={{ py: 0 }}
+      onContextMenu={openContextMenu}
+      {...movableProps}
+    >
       <Stack
         direction="row"
         alignItems="center"

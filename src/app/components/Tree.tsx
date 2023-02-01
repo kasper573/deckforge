@@ -8,16 +8,23 @@ import { isEqual } from "lodash";
 import Stack from "@mui/material/Stack";
 import type { UseMenuItems } from "../hooks/useMenu";
 import { useMenu } from "../hooks/useMenu";
+import { useMovable } from "../hooks/useMovable";
+import { useDraggableMuiTreeItemRef } from "../hooks/useDraggableMuiTreeItemRef";
 
-export interface TreeProps<Id> {
+export interface TreeProps<Id> extends CascadingTreeProps<Id> {
   selected?: Id;
   onSelectedChanged: (id: Id) => void;
   items: TreeItemProps<Id>[];
 }
 
+export interface CascadingTreeProps<Id> {
+  onItemMoved?: (ids: [Id, Id]) => void;
+}
+
 export function Tree<Id>({
   items,
   selected,
+  onItemMoved,
   onSelectedChanged,
 }: TreeProps<Id>) {
   const serializedSelected = useMemo(() => serializeId(selected), [selected]);
@@ -35,16 +42,17 @@ export function Tree<Id>({
       defaultExpandIcon={<ChevronRightIcon />}
       sx={{ userSelect: "none" }}
     >
-      {renderItems(items)}
+      {renderItems(items, { onItemMoved })}
     </TreeView>
   );
 }
 
 export interface TreeItemProps<Id>
   extends Pick<
-    ComponentProps<typeof MuiTreeItem>,
-    "onDoubleClick" | "icon" | "label"
-  > {
+      ComponentProps<typeof MuiTreeItem>,
+      "onDoubleClick" | "icon" | "label"
+    >,
+    CascadingTreeProps<Id> {
   nodeId: Id;
   contextMenu?: UseMenuItems;
   children?: TreeItemProps<Id>[];
@@ -56,14 +64,24 @@ export function TreeItem<Id>({
   nodeId,
   children,
   onDoubleClick,
+  onItemMoved,
   label,
   action,
   ...props
 }: TreeItemProps<Id>) {
+  const isMoveEnabled = !!onItemMoved;
+  const ref = useDraggableMuiTreeItemRef(isMoveEnabled);
   const openContextMenu = useMenu(contextMenu);
   const serializedNodeId = useMemo(() => serializeId(nodeId), [nodeId]);
+  const movableProps = useMovable({
+    enabled: isMoveEnabled,
+    data: nodeId,
+    onMove: (movedNodeId) => onItemMoved?.([movedNodeId, nodeId]),
+  });
+
   return (
     <MuiTreeItem
+      ref={ref}
       nodeId={serializedNodeId}
       onContextMenu={openContextMenu}
       onDoubleClick={(e) => {
@@ -75,6 +93,7 @@ export function TreeItem<Id>({
           direction="row"
           justifyContent="space-between"
           alignItems="center"
+          {...movableProps}
         >
           {label}
           {action}
@@ -82,7 +101,7 @@ export function TreeItem<Id>({
       }
       {...props}
     >
-      {renderItems(children)}
+      {renderItems(children, { onItemMoved })}
     </MuiTreeItem>
   );
 }
@@ -107,8 +126,13 @@ function pathTo<Id>(
   return [];
 }
 
-function renderItems<Id>(items?: TreeItemProps<Id>[]) {
-  return items?.map((props, index) => <TreeItem key={index} {...props} />);
+function renderItems<Id>(
+  items?: TreeItemProps<Id>[],
+  cascadingProps?: CascadingTreeProps<Id>
+) {
+  return items?.map((props, index) => (
+    <TreeItem key={index} {...props} {...cascadingProps} />
+  ));
 }
 
 export function serializeId<Id>(nodeId?: Id) {
