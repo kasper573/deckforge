@@ -25,7 +25,7 @@ export function moveObject(
   }
 
   if (movedObjectId.type !== targetObjectId.type) {
-    throw new Error("Cannot move an object to a target of a different type");
+    return; // Ignore attempts to move objects to different list types
   }
 
   const list = selectedList(state, movedObjectId.type);
