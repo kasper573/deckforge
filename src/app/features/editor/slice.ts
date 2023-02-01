@@ -1,6 +1,5 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
-import produce from "immer";
 import type {
   Card,
   Deck,
@@ -16,7 +15,6 @@ import {
   createId,
 } from "../../../lib/createEntityReducers";
 import type { MakePartial } from "../../../lib/ts-extensions/MakePartial";
-import { createZodStorage } from "../../../lib/zod-extensions/zodStorage";
 import {
   addNodeBySplitting,
   removeNodeByKey,
@@ -29,21 +27,11 @@ import type {
   PanelId,
   PanelLayout,
 } from "./types";
-import { editorObjectIdType, panelLayoutType } from "./types";
 import { defaultPanelLayout } from "./panels/defaultPanelLayout";
 import { selectors } from "./selectors";
 import { moveObject } from "./reducers/moveObject";
-
-const panelStorage = createZodStorage(
-  panelLayoutType,
-  "panel-layout",
-  defaultPanelLayout
-);
-
-const selectedObjectStorage = createZodStorage(
-  editorObjectIdType,
-  "selected-object"
-);
+import { panelStorage, selectedObjectStorage } from "./localStorage";
+import { createPostProcessReducer } from "./reducers/createPostProcessReducer";
 
 const initialState: EditorState = {
   syncState: "dirty",
@@ -236,38 +224,10 @@ const editorSlice = createSlice({
 
 export const { actions, getInitialState } = editorSlice;
 
-export const reducer: typeof editorSlice.reducer = (
-  state = editorSlice.getInitialState(),
-  action
-) => {
-  const previousState = state;
-
-  const fallbackObjectId = selectors.adjacentSelectedObject(state);
-
-  let newState = editorSlice.reducer(state, action);
-
-  // Ensure that the selected object still exists, fall back to the adjacent one
-  // (this can happen on deletes, or when local storage selection contains old data)
-  if (
-    newState.game &&
-    !selectors.objectById(newState.selectedObjectId)(newState)
-  ) {
-    const fallbackExist = selectors.objectById(fallbackObjectId)(newState);
-    newState = produce(newState, (draft) => {
-      draft.selectedObjectId = fallbackExist ? fallbackObjectId : undefined;
-    });
-  }
-
-  // Persist layout and selection changes in local storage
-  if (newState.selectedObjectId !== previousState.selectedObjectId) {
-    selectedObjectStorage.save(newState.selectedObjectId);
-  }
-  if (newState.panelLayout !== previousState.panelLayout) {
-    panelStorage.save(newState.panelLayout);
-  }
-
-  return newState;
-};
+export const reducer = createPostProcessReducer(
+  editorSlice.reducer,
+  editorSlice.getInitialState()
+);
 
 export const noUndoActionList: Array<keyof typeof actions> = [];
 
