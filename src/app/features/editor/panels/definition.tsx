@@ -222,7 +222,7 @@ function StateReducer({
           title: "State reducer",
           content: (
             <>
-              A state reducer is a function that will takes two parameters: The
+              A state reducer is a function that takes two parameters: The
               runtime state object, and a payload. The purpose is to use the
               payload to make mutations to the state object. Any mutations made
               will only be applied to the game state once the reducer has
