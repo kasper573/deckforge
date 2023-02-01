@@ -1,6 +1,7 @@
 import type { DragEvent } from "react";
+import superjson from "superjson";
 
-export function useMovable<Data extends string>({
+export function useMovable<Data>({
   data,
   onMove,
   enabled,
@@ -10,12 +11,12 @@ export function useMovable<Data extends string>({
   enabled: boolean;
 }) {
   function onDragStart(e: DragEvent) {
-    e.dataTransfer?.setData("text/plain", data);
+    e.dataTransfer?.setData("text/plain", superjson.stringify(data));
   }
 
   function onDrop(e: DragEvent) {
     if (e.dataTransfer) {
-      onMove(e.dataTransfer.getData("text/plain") as Data);
+      onMove(superjson.parse(e.dataTransfer.getData("text/plain")) as Data);
     }
   }
 

@@ -21,6 +21,8 @@ export function selectedList(
       return state.game?.definition.cards;
     case "deck":
       return state.game?.definition.decks;
+    case "property":
+      return state.game?.definition.properties;
   }
 }
 

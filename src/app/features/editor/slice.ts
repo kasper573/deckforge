@@ -236,19 +236,18 @@ const editorSlice = createSlice({
       }
 
       const list = selectedList(state, movedObjectId.type);
-      const originalList = original(list);
-      if (!list || !originalList) {
+      if (!list) {
         throw new Error(
           `Object type "${movedObjectId.type}" does not support moving`
         );
       }
 
-      const idx1 = originalList.findIndex(
-        createObjectByIdPredicate(movedObjectId)
-      );
-      const idx2 = originalList.findIndex(
-        createObjectByIdPredicate(targetObjectId)
-      );
+      const idx1 =
+        original(list)?.findIndex(createObjectByIdPredicate(movedObjectId)) ??
+        -1;
+      const idx2 =
+        original(list)?.findIndex(createObjectByIdPredicate(targetObjectId)) ??
+        -1;
       if (idx1 === -1 || idx2 === -1) {
         throw new Error("Could not find target or object to move");
       }
