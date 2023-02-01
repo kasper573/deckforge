@@ -17,7 +17,8 @@ export function MiddlewaresPanel(props: PanelProps) {
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
-  const { createMiddleware, selectObject } = useActions(editorActions);
+  const { createMiddleware, swapObjects, selectObject } =
+    useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObjectId);
 
   const promptCreateMiddleware = () =>
@@ -32,6 +33,7 @@ export function MiddlewaresPanel(props: PanelProps) {
       <Tree
         selected={selectedObjectId}
         onSelectedChanged={selectObject}
+        onItemMoved={swapObjects}
         items={middlewares.map((middleware) => ({
           nodeId: middleware.objectId,
           label: middleware.name,
