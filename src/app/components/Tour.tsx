@@ -111,7 +111,7 @@ export function Tour({ steps, state, onChange }: TourProps) {
                   variant="text"
                   onClick={isLastStep ? close : next}
                 >
-                  {isLastStep ? "Finish" : "Next"}
+                  {isLastStep ? "End tour" : "Next"}
                 </Button>
               </CardActions>
             </TooltipCard>
