@@ -4,27 +4,36 @@ import { useMemo } from "react";
 import uniqolor from "uniqolor";
 import Rand from "rand-seed";
 import Box from "@mui/material/Box";
+import { isEqual } from "lodash";
 import { InspectorDialog } from "../../../dialogs/InspectorDialog";
 import { isLogIdentifier } from "../types";
 import type { LogEntry } from "../types";
 import { createModalId, useModal } from "../../../../lib/useModal";
 
 export function LogList({ entries = [] }: { entries?: LogEntry[] }) {
+  const collapsed = useMemo(() => collapsedLogEntries(entries), [entries]);
   return (
     <Box sx={{ p: 1 }}>
-      {entries.map((entry) => (
-        <LogListItem key={entry.id} entry={entry} />
+      {collapsed.map(({ entry, count }) => (
+        <LogListItem key={entry.id} entry={entry} count={count} />
       ))}
     </Box>
   );
 }
 
-export function LogListItem({ entry }: { entry: LogEntry }) {
+export function LogListItem({
+  entry,
+  count,
+}: {
+  entry: LogEntry;
+  count: number;
+}) {
   return (
     <div>
       {entry.content.map((value, index) => (
         <LogValue key={index} value={value} />
       ))}
+      {count > 1 && <Highlighted>x{count}</Highlighted>}
     </div>
   );
 }
@@ -108,7 +117,7 @@ function ObjectValue({
 const sharedInspectorDialogId = createModalId();
 
 const Value = styled("span")`
-  &:not(:first-child) {
+  &:not(:first-of-type) {
     padding-left: 4px;
   }
 `;
@@ -131,4 +140,17 @@ function seededUniqueColor(value: unknown) {
   const input = rng.next();
   const { color } = uniqolor(input);
   return color;
+}
+
+function collapsedLogEntries(entries: LogEntry[]) {
+  const identical: Array<{ entry: LogEntry; count: number }> = [];
+  for (const entry of entries) {
+    const prev = identical[identical.length - 1];
+    if (prev && isEqual(prev.entry.content, entry.content)) {
+      prev.count++;
+    } else {
+      identical.push({ entry, count: 1 });
+    }
+  }
+  return identical;
 }
