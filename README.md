@@ -2,8 +2,6 @@
 
 [deckforge.io](https://deckforge.io) is a service for creating and sharing deck builder games.
 
-> Deck Forge is currently in development. The site is open but not stable and will undergo heavy changes and database resets. Use at your own risk.
-
 ## Stack
 
 - UI: [Vite](https://vitejs.dev/) + [React](https://reactjs.org/) + [MUI](https://mui.com/), hosted on [Vercel](https://vercel.com/)
