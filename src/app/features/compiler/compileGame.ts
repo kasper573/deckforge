@@ -51,7 +51,7 @@ export function compileGame<G extends RuntimeGenerics>(
       compiledMiddlewares: RuntimeMiddleware<G>[]
     ) => RuntimeMiddleware<G>[];
   }
-): { runtime?: GameRuntime<G>; error?: unknown } {
+): { runtime?: GameRuntime<G>; errors?: unknown[] } {
   try {
     const cardProperties = gameDefinition.properties.filter(
       (p) => p.entityId === "card"
@@ -87,7 +87,8 @@ export function compileGame<G extends RuntimeGenerics>(
 
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {
       effects[name as keyof typeof effects] = describedCompile(
-        `Event ("${name}")`,
+        "Event",
+        name,
         code,
         {
           type: runtimeDefinition.effects.shape[name],
@@ -113,7 +114,7 @@ export function compileGame<G extends RuntimeGenerics>(
     }
 
     const compiledMiddlewares = gameDefinition.middlewares.map((middleware) =>
-      describedCompile(`Middleware ("${middleware.name}")`, middleware.code, {
+      describedCompile("Middleware", middleware.name, middleware.code, {
         type: runtimeDefinition.middleware,
         scriptAPI,
         initialValue: () => {},
@@ -154,7 +155,10 @@ export function compileGame<G extends RuntimeGenerics>(
     const runtime = builder.build();
     return { runtime };
   } catch (error) {
-    return { error };
+    if (Array.isArray(error)) {
+      return { errors: error };
+    }
+    return { errors: [error] };
   }
 }
 
@@ -172,7 +176,7 @@ function compileCard<G extends RuntimeGenerics>(
     typeId: cardId,
     name: name,
     properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
-    effects: describedCompile(`Card ("${name}")`, code, {
+    effects: describedCompile("Card", name, code, {
       type: options.runtimeDefinition.card.shape.effects,
       scriptAPI: { ...options.scriptAPI, thisCardId: id },
       initialValue: {},
@@ -185,12 +189,13 @@ type CompileResult<T extends ZodType> =
   | { type: "error"; error: unknown };
 
 function describedCompile<T extends ZodType, G extends RuntimeGenerics>(
-  description: string,
+  kind: string,
+  name: string,
   ...args: Parameters<typeof compile<T, G>>
 ) {
   const result = compile(...args);
   if (result.type === "error") {
-    throw `${description} ${result.error}`;
+    throw [kind, `(${name})`, result.error];
   }
   return result.value;
 }

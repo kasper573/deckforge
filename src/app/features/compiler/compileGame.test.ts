@@ -31,8 +31,8 @@ describe("compileGame", () => {
       decks: [],
     };
     const runtimeDefinition = defineTestRuntime(gameDefinition);
-    const { error, runtime } = compileGame(runtimeDefinition, gameDefinition);
-    expect(error).toBeUndefined();
+    const { errors, runtime } = compileGame(runtimeDefinition, gameDefinition);
+    expect(errors).toBeUndefined();
     expect(runtime).toBeDefined();
   });
 
@@ -339,9 +339,9 @@ derive(({thisCardId}) => ({
 function tryCompileGame<G extends RuntimeGenerics>(
   ...args: Parameters<typeof compileGame<G>>
 ) {
-  const { runtime, error } = compileGame<G>(...args);
-  if (error) {
-    throw error;
+  const { runtime, errors } = compileGame<G>(...args);
+  if (errors) {
+    throw new Error(errors.join(", "));
   }
   return runtime!;
 }

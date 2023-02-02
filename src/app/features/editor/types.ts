@@ -55,8 +55,29 @@ export interface EditorState {
 
 export interface LogEntry {
   id: string;
-  content: unknown[];
+  content: LogContent[];
 }
+
+export const logIdentifierSymbol = Symbol("logIdentifier");
+export const logIdentifier = (
+  value: LogValue,
+  options: Pick<LogIdentifier, "name" | "color"> = {}
+): LogIdentifier => ({
+  [logIdentifierSymbol]: true,
+  value,
+  ...options,
+});
+
+export type LogValue = unknown;
+export type LogIdentifier = {
+  [logIdentifierSymbol]: true;
+  value: LogValue;
+  name?: string;
+  color?: string;
+};
+export type LogContent = LogValue | LogIdentifier;
+export const isLogIdentifier = (value: unknown): value is LogIdentifier =>
+  typeof value === "object" && value !== null && logIdentifierSymbol in value;
 
 export type PanelId = z.infer<typeof panelIdType>;
 export const panelIdType = z.enum([

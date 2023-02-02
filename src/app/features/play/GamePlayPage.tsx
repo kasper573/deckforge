@@ -24,8 +24,10 @@ export default function GamePlayPage() {
     }
   }, [game]);
 
-  if (!compiled || compiled?.error || !compiled.runtime) {
-    throw compiled?.error ?? new Error("Could not compile game");
+  if (!compiled || compiled?.errors || !compiled.runtime) {
+    throw new Error(
+      compiled?.errors ? compiled.errors.join(", ") : "Could not compile game"
+    );
   }
 
   return (

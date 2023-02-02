@@ -24,6 +24,8 @@ import type { MachineContext } from "../../../../lib/machine/MachineContext";
 import { GameRenderer } from "../../compiler/GameRenderer";
 import { Center } from "../../../components/Center";
 import { LoadingIndicator } from "../../../components/LoadingIndicator";
+import type { LogContent } from "../types";
+import { logIdentifier } from "../types";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
@@ -33,9 +35,10 @@ export function RuntimePanel(props: PanelProps) {
   const [seed, setSeed] = useState("");
   const gameType = useSelector(selectors.gameType);
   const [compiled, resetRuntime] = useCompilation(seed, log);
+  const hasErrors = !!compiled?.errors?.length;
 
   function onRenderError(error: unknown) {
-    log(["Runtime render error: ", error]);
+    log([logIdentifier("[RuntimeError]"), error]);
   }
 
   async function tryEditSeed() {
@@ -57,17 +60,13 @@ export function RuntimePanel(props: PanelProps) {
       toolbarControls={
         <PanelControls>
           <Tooltip title="Customize seed">
-            <IconButton
-              disabled={!!compiled?.error}
-              size="small"
-              onClick={tryEditSeed}
-            >
+            <IconButton disabled={hasErrors} size="small" onClick={tryEditSeed}>
               <Yard />
             </IconButton>
           </Tooltip>
           <Tooltip title="Reset runtime">
             <IconButton
-              disabled={!!compiled?.error}
+              disabled={hasErrors}
               size="small"
               onClick={resetRuntime}
             >
@@ -109,14 +108,13 @@ export function RuntimePanel(props: PanelProps) {
         ) : (
           <PanelEmptyState>
             <Typography variant="h5">Compiler error</Typography>
-            <Typography sx={{ my: 1 }}>{`${compiled.error}`}</Typography>
           </PanelEmptyState>
         ))}
     </Panel>
   );
 }
 
-function useCompilation(seed: string, log: (args: unknown[]) => void) {
+function useCompilation(seed: string, log: (args: LogContent[]) => void) {
   const [manualResetCount, forceRecompile] = useReducer((c) => c + 1, 0);
   const gameDefinition = useSelector(selectors.gameDefinition);
   const runtimeDefinition = useSelector(selectors.runtimeDefinition);
@@ -139,10 +137,15 @@ function useCompilation(seed: string, log: (args: unknown[]) => void) {
   );
 
   useEffect(() => {
-    if (compiled?.error) {
-      log(["Compiler error: ", compiled.error]);
+    if (compiled?.errors) {
+      log([
+        logIdentifier("[CompilerError]", { color: colors.error }),
+        ...compiled.errors.map((e) =>
+          typeof e === "string" ? logIdentifier(e) : e
+        ),
+      ]);
     }
-  }, [compiled?.error, log]);
+  }, [compiled?.errors, log]);
   return [compiled, forceRecompile] as const;
 }
 
@@ -150,7 +153,13 @@ function createEventLoggerMiddleware(
   log: (args: unknown[]) => void
 ): MachineMiddleware<MachineContext> {
   return (state, action, next) => {
-    log(["Event: ", action.name, "(", action.payload, ")"]);
+    log([
+      logIdentifier("[Event]", { color: colors.info }),
+      logIdentifier(action.name),
+      "(",
+      logIdentifier(action.payload, { name: "input" }),
+      ")",
+    ]);
     next();
   };
 }
@@ -162,7 +171,11 @@ function createFailSafeMiddleware(
     try {
       next();
     } catch (error) {
-      log(["Event error: ", action.name, "(", action.payload, ")", error]);
+      log([
+        logIdentifier("[EventError]", { color: colors.error }),
+        logIdentifier(action.name),
+        error,
+      ]);
     }
   };
 }
@@ -176,3 +189,9 @@ function RuntimeErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
     </PanelEmptyState>
   );
 }
+
+const colors = {
+  error: "tomato",
+  warning: "orange",
+  info: "lightblue",
+};
