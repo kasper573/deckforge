@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { Suspense, useEffect, useMemo, useReducer, useState } from "react";
+import { Suspense, useMemo, useReducer, useState } from "react";
 import Yard from "@mui/icons-material/Yard";
 import useTheme from "@mui/material/styles/useTheme";
 import { useSelector } from "../store";
@@ -26,6 +26,7 @@ import { Center } from "../../../components/Center";
 import { LoadingIndicator } from "../../../components/LoadingIndicator";
 import type { LogContent } from "../types";
 import { logIdentifier } from "../types";
+import { useReaction } from "../../../../lib/useReaction";
 import type { PanelProps } from "./definition";
 
 export function RuntimePanel(props: PanelProps) {
@@ -52,6 +53,7 @@ export function RuntimePanel(props: PanelProps) {
 
     if (newSeed) {
       setSeed(newSeed);
+      log(["Seed changed to: " + newSeed]);
     }
   }
 
@@ -115,7 +117,7 @@ export function RuntimePanel(props: PanelProps) {
 }
 
 function useCompilation(seed: string, log: (args: LogContent[]) => void) {
-  const [manualResetCount, forceRecompile] = useReducer((c) => c + 1, 0);
+  const [resetCount, increaseResetCount] = useReducer((c) => c + 1, 0);
   const gameDefinition = useSelector(selectors.gameDefinition);
   const runtimeDefinition = useSelector(selectors.runtimeDefinition);
 
@@ -133,17 +135,25 @@ function useCompilation(seed: string, log: (args: LogContent[]) => void) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [gameDefinition, runtimeDefinition, manualResetCount, seed, log]
+    [gameDefinition, runtimeDefinition, resetCount, seed, log]
   );
 
-  useEffect(() => {
+  useReaction(() => {
     if (compiled?.errors) {
       log([
         logIdentifier("[Compiler Error]", { color: colors.error }),
         ...compiled.errors,
       ]);
+    } else {
+      log(["Game compiled successfully"]);
     }
-  }, [compiled?.errors, log]);
+  }, [compiled]);
+
+  function forceRecompile() {
+    log(["Runtime was reset manually"]);
+    increaseResetCount();
+  }
+
   return [compiled, forceRecompile] as const;
 }
 
