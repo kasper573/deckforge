@@ -5,6 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { Suspense, useMemo, useReducer, useState } from "react";
 import Yard from "@mui/icons-material/Yard";
 import useTheme from "@mui/material/styles/useTheme";
+import { useDebounce } from "use-debounce";
 import { useSelector } from "../store";
 import { selectors } from "../selectors";
 import { Panel } from "../components/Panel";
@@ -13,7 +14,6 @@ import { PanelEmptyState } from "../components/PanelEmptyState";
 import { PanelControls } from "../components/PanelControls";
 import { compileGame } from "../../compiler/compileGame";
 import { Reload } from "../../../components/icons";
-import type { RuntimeGenerics } from "../../compiler/types";
 import { ErrorBoundary } from "../../../ErrorBoundary";
 import { useModal } from "../../../../lib/useModal";
 import { PromptDialog } from "../../../dialogs/PromptDialog";
@@ -35,7 +35,7 @@ export function RuntimePanel(props: PanelProps) {
   const prompt = useModal(PromptDialog);
   const [seed, setSeed] = useState("");
   const gameType = useSelector(selectors.gameType);
-  const [compiled, resetRuntime] = useCompilation(seed, log);
+  const [compiled, recompile] = useCompilation(seed, log);
   const hasErrors = !!compiled?.errors?.length;
 
   function onRenderError(error: unknown) {
@@ -67,11 +67,7 @@ export function RuntimePanel(props: PanelProps) {
             </IconButton>
           </Tooltip>
           <Tooltip title="Reset runtime">
-            <IconButton
-              disabled={hasErrors}
-              size="small"
-              onClick={resetRuntime}
-            >
+            <IconButton disabled={hasErrors} size="small" onClick={recompile}>
               <Reload />
             </IconButton>
           </Tooltip>
@@ -118,25 +114,21 @@ export function RuntimePanel(props: PanelProps) {
 
 function useCompilation(seed: string, log: (args: LogContent[]) => void) {
   const [resetCount, increaseResetCount] = useReducer((c) => c + 1, 0);
-  const gameDefinition = useSelector(selectors.gameDefinition);
-  const runtimeDefinition = useSelector(selectors.runtimeDefinition);
-
-  const compiled = useMemo(
-    () => {
-      if (gameDefinition && runtimeDefinition) {
-        return compileGame<RuntimeGenerics>(runtimeDefinition, gameDefinition, {
-          seed,
-          middlewares: (defaults) => [
-            createEventLoggerMiddleware(log),
-            createFailSafeMiddleware(log),
-            ...defaults,
-          ],
-        });
-      }
-    },
+  const definitions = useDebouncedDefinitions();
+  const compiled = useMemo(() => {
+    const [game, runtime] = definitions;
+    if (game && runtime) {
+      return compileGame(runtime, game, {
+        seed,
+        middlewares: (defaults) => [
+          createEventLoggerMiddleware(log),
+          createFailSafeMiddleware(log),
+          ...defaults,
+        ],
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [gameDefinition, runtimeDefinition, resetCount, seed, log]
-  );
+  }, [definitions, resetCount, seed, log]);
 
   useReaction(() => {
     if (compiled?.errors) {
@@ -155,6 +147,14 @@ function useCompilation(seed: string, log: (args: LogContent[]) => void) {
   }
 
   return [compiled, forceRecompile] as const;
+}
+
+function useDebouncedDefinitions() {
+  const game = useSelector(selectors.gameDefinition);
+  const runtime = useSelector(selectors.runtimeDefinition);
+  const defs = useMemo(() => [game, runtime] as const, [game, runtime]);
+  const [debounced] = useDebounce(defs, 1500);
+  return debounced;
 }
 
 function createEventLoggerMiddleware(
