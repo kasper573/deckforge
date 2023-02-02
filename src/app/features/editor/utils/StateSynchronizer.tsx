@@ -23,7 +23,11 @@ export function StateSynchronizer({ gameId }: { gameId: GameId }) {
       },
     }
   );
-  const { selectGame: setLocalGame, setSyncState } = useActions(editorActions);
+  const {
+    selectGame: setLocalGame,
+    setSyncState,
+    clearLogs,
+  } = useActions(editorActions);
   const { data: remoteGame, isFetching: isDownloading } =
     trpc.game.read.useQuery(
       { type: "gameId", gameId },
@@ -60,8 +64,9 @@ export function StateSynchronizer({ gameId }: { gameId: GameId }) {
   useEffect(
     () => () => {
       setLocalGame(undefined);
+      clearLogs();
     },
-    [setLocalGame]
+    [setLocalGame, clearLogs]
   );
 
   return null;
