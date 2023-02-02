@@ -27,9 +27,15 @@ export function DecksPanel(props: PanelProps) {
   const promptCreateDeck = () =>
     promptCreate("deck", (name) => createDeck({ name }));
 
-  const openContextMenu = useMenu([
-    <MenuItem onClick={promptCreateDeck}>New deck</MenuItem>,
-  ]);
+  const newDeckMenuItem = (
+    <MenuItem onClick={promptCreateDeck}>New deck</MenuItem>
+  );
+
+  const newCardMenuItem = (id: DeckId) => (
+    <MenuItem onClick={() => promptCreateCard(id)}>New card</MenuItem>
+  );
+
+  const openContextMenu = useMenu([newDeckMenuItem]);
 
   return (
     <Panel sx={{ py: 1 }} onContextMenu={openContextMenu} {...props}>
@@ -43,10 +49,9 @@ export function DecksPanel(props: PanelProps) {
           icon: <ObjectIcon type="deck" />,
           onDoubleClick: () => promptRename(deck),
           contextMenu: [
+            newDeckMenuItem,
+            newCardMenuItem(deck.deckId),
             <MenuItem onClick={() => promptRename(deck)}>Rename</MenuItem>,
-            <MenuItem onClick={() => promptCreateCard(deck.deckId)}>
-              New card
-            </MenuItem>,
             <MenuItem onClick={() => confirmDelete(deck)}>Delete</MenuItem>,
           ],
           children: deck.cards.map((card) => ({
@@ -55,6 +60,7 @@ export function DecksPanel(props: PanelProps) {
             icon: <ObjectIcon type="card" />,
             onDoubleClick: () => promptRename(card),
             contextMenu: [
+              newCardMenuItem(deck.deckId),
               <MenuItem onClick={() => promptRename(card)}>Rename</MenuItem>,
               <MenuItem onClick={() => confirmDelete(card)}>Delete</MenuItem>,
             ],
