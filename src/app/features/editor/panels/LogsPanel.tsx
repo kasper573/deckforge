@@ -3,7 +3,6 @@ import Tooltip from "@mui/material/Tooltip";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import { styled } from "@mui/material/styles";
-import { ObjectInspector } from "react-inspector";
 import { useLayoutEffect, useRef } from "react";
 import { Panel } from "../components/Panel";
 import { PanelControls } from "../components/PanelControls";
@@ -14,6 +13,8 @@ import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Delete } from "../../../components/icons";
+import { createModalId, useModal } from "../../../../lib/useModal";
+import { InspectorDialog } from "../../../dialogs/InspectorDialog";
 import type { PanelProps } from "./definition";
 
 export function LogsPanel(props: PanelProps) {
@@ -79,11 +80,19 @@ function LogValue({ value }: { value: unknown }) {
       if (value instanceof Error) {
         return <Normal>{String(value)}</Normal>;
       }
-      return <ObjectInspector data={value} theme="chromeDark" />;
+      return <InspectableValue value={value} />;
     default:
       return <Normal>{String(value)}</Normal>;
   }
 }
+
+function InspectableValue({ value }: { value: unknown }) {
+  const inspect = useModal(InspectorDialog, sharedInspectorDialogId);
+  return <Interaction onClick={() => inspect({ value })}>Object</Interaction>;
+}
+
+// Use a shared ID so each inspectable value doesn't allocate a new dialog
+const sharedInspectorDialogId = createModalId();
 
 const Value = styled("span")`
   & + & {
@@ -96,4 +105,8 @@ const Highlighted = styled(Value)`
 `;
 const Normal = styled(Value)`
   color: ${(p) => p.theme.palette.text.secondary};
+`;
+const Interaction = styled(Value)`
+  color: ${(p) => p.theme.palette.primary.main};
+  cursor: pointer;
 `;

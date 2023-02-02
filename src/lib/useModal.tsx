@@ -23,9 +23,10 @@ type ModalComponent<
 > = (props: ModalProps<Output, Input>) => JSX.Element;
 
 export function useModal<Output, Input>(
-  component: ModalComponent<Output, Input>
+  component: ModalComponent<Output, Input>,
+  fixedId?: ModalId
 ) {
-  const id = useMemo(nextId, []);
+  const id = useMemo(() => fixedId ?? createModalId(), [fixedId]);
 
   useEffect(() => {
     store.getState().upsertModal({ id, component });
@@ -149,7 +150,7 @@ const store = createStore<ModalStore>()(
 );
 
 let idCounter = 0;
-function nextId() {
+export function createModalId(): ModalId {
   return idCounter++;
 }
 
