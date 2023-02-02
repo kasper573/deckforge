@@ -1,5 +1,4 @@
-import type { ZodType } from "zod";
-import type { z } from "zod";
+import type { z, ZodType } from "zod";
 import { v4 } from "uuid";
 import Rand from "rand-seed";
 import type {
@@ -11,6 +10,10 @@ import type {
 import { propertyValue } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
 import { evalWithScope } from "../../../lib/evalWithScope";
+import { LogSpreadError } from "../editor/components/LogList";
+import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
+import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
+import { logIdentifier } from "../editor/types";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -20,10 +23,10 @@ import type {
   RuntimeEffects,
   RuntimeGenerics,
   RuntimeMachineContext,
+  RuntimeMiddleware,
   RuntimePlayer,
   RuntimePlayerId,
   RuntimeScriptAPI,
-  RuntimeMiddleware,
 } from "./types";
 import { createPile } from "./apis/Pile";
 
@@ -194,10 +197,22 @@ function describedCompile<T extends ZodType, G extends RuntimeGenerics>(
   ...args: Parameters<typeof compile<T, G>>
 ) {
   const result = compile(...args);
+  const decorateError: ErrorDecorator = (error, path) =>
+    error instanceof LogSpreadError
+      ? error // Keep the innermost error as-is
+      : new LogSpreadError(
+          logIdentifier(kind),
+          "(",
+          logIdentifier(name),
+          ")",
+          ...path.map((p) => logIdentifier(p)),
+          error
+        );
   if (result.type === "error") {
-    throw [kind, `(${name})`, result.error];
+    throw decorateError(result.error, []);
   }
-  return result.value;
+
+  return wrapWithErrorDecorator(result.value, decorateError);
 }
 
 function compile<T extends ZodType, G extends RuntimeGenerics>(

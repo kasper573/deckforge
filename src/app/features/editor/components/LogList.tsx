@@ -1,10 +1,9 @@
 import { styled } from "@mui/material/styles";
-import ListItem from "@mui/material/ListItem";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import uniqolor from "uniqolor";
-import List from "@mui/material/List";
 import Rand from "rand-seed";
+import Box from "@mui/material/Box";
 import { InspectorDialog } from "../../../dialogs/InspectorDialog";
 import { isLogIdentifier } from "../types";
 import type { LogEntry } from "../types";
@@ -12,21 +11,21 @@ import { createModalId, useModal } from "../../../../lib/useModal";
 
 export function LogList({ entries = [] }: { entries?: LogEntry[] }) {
   return (
-    <List>
+    <Box sx={{ p: 1 }}>
       {entries.map((entry) => (
         <LogListItem key={entry.id} entry={entry} />
       ))}
-    </List>
+    </Box>
   );
 }
 
 export function LogListItem({ entry }: { entry: LogEntry }) {
   return (
-    <ListItem>
+    <div>
       {entry.content.map((value, index) => (
         <LogValue key={index} value={value} />
       ))}
-    </ListItem>
+    </div>
   );
 }
 
@@ -59,6 +58,15 @@ export function LogValue({
       if (value === null) {
         return <Highlighted {...props}>null</Highlighted>;
       }
+      if (value instanceof LogSpreadError) {
+        return (
+          <>
+            {value.parts.map((part, index) => (
+              <LogValue key={index} value={part} />
+            ))}
+          </>
+        );
+      }
       if (value instanceof Error) {
         return <Normal {...props}>{String(value)}</Normal>;
       }
@@ -75,6 +83,13 @@ export function LogValue({
       return <ObjectValue value={value} name={objectName} {...props} />;
     default:
       return <Normal {...props}>{String(value)}</Normal>;
+  }
+}
+
+export class LogSpreadError {
+  public readonly parts: unknown[];
+  constructor(...parts: unknown[]) {
+    this.parts = parts;
   }
 }
 
