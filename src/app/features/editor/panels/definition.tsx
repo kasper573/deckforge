@@ -13,7 +13,7 @@ import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel/CodePanel";
 import { InspectorPanel } from "./InspectorPanel/InspectorPanel";
 import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
-import { RuntimePanel } from "./RuntimePanel";
+import { RuntimePanel } from "./RuntimePanel/RuntimePanel";
 import { MiddlewaresPanel } from "./MiddlewaresPanel";
 import { LogsPanel } from "./LogsPanel";
 
