@@ -27,7 +27,7 @@ export interface PanelProps {
 export interface PanelDefinition {
   component: ComponentType<PanelProps>;
   title: string;
-  tour?: TourStep;
+  tour: TourStep;
 }
 
 export const panelsDefinition: Record<PanelId, PanelDefinition> = {

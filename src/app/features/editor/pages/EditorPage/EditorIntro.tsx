@@ -8,7 +8,6 @@ import { useModal } from "../../../../../lib/useModal";
 import { Toast } from "../../../../components/Toast";
 import { ConfirmDialog } from "../../../../dialogs/ConfirmDialog";
 import { panelDefinitionList } from "../../panels/definition";
-import { defined } from "../../../../../lib/ts-extensions/defined";
 import type { TourState } from "../../../../components/Tour";
 import { Tour } from "../../../../components/Tour";
 import { Link } from "../../../../components/Link";
@@ -32,7 +31,7 @@ export function EditorIntro() {
     (startAt?: PanelId) =>
       new Promise<void>((resolve) => {
         tourResolverRef.current = resolve;
-        const step = startAt !== undefined ? panelTourIndex(startAt) : 0;
+        const step = startAt !== undefined ? tourIndex(startAt) : 0;
         setTourState((state) => ({ ...state, step, active: true }));
       }),
     []
@@ -91,13 +90,9 @@ const touchScrollDisabler = (
   />
 );
 
-const tourSteps = defined(panelDefinitionList.map((panel) => panel.tour));
-const panelTourIndex = (panelId: PanelId) =>
-  tourSteps.findIndex((tour) =>
-    panelDefinitionList.find(
-      (panel) => panel.id === panelId && panel.tour === tour
-    )
-  );
+const tourSteps = panelDefinitionList.map((panel) => panel.tour);
+const tourIndex = (id: PanelId) =>
+  panelDefinitionList.findIndex((p) => p.id === id);
 
 const modals = {
   intro: {
