@@ -35,7 +35,7 @@ export function RuntimePanel(props: PanelProps) {
   const [compiled, resetRuntime] = useCompilation(seed, log);
 
   function onRenderError(error: unknown) {
-    log(["Runtime render error", error]);
+    log(["Runtime render error: ", error]);
   }
 
   async function tryEditSeed() {
@@ -140,7 +140,7 @@ function useCompilation(seed: string, log: (args: unknown[]) => void) {
 
   useEffect(() => {
     if (compiled?.error) {
-      log(["Compiler error", compiled.error]);
+      log(["Compiler error: ", compiled.error]);
     }
   }, [compiled?.error, log]);
   return [compiled, forceRecompile] as const;
@@ -162,7 +162,7 @@ function createFailSafeMiddleware(
     try {
       next();
     } catch (error) {
-      log(["Error during event", action.name, "(", action.payload, ")", error]);
+      log(["Event error: ", action.name, "(", action.payload, ")", error]);
     }
   };
 }
