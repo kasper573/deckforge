@@ -66,7 +66,7 @@ export function Tour({ steps, state, onChange }: TourProps) {
 
   return (
     <>
-      <TooltipBackdrop style={{ clipPath }} open={active} />
+      <TooltipBackdrop style={{ clipPath }} open={active} onClick={close} />
       <Popper
         components={{ Root: TooltipRoot }}
         componentsProps={{
