@@ -6,17 +6,29 @@ import {
   MosaicWindowContext,
 } from "react-mosaic-component";
 import IconButton from "@mui/material/IconButton";
-import { Close } from "../../../components/icons";
+import { Close, Help } from "../../../components/icons";
 import type { PanelLayout } from "../types";
 import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
+import { showEditorHelp } from "../pages/EditorPage/events";
 
 export function PanelControls({ children }: { children?: ReactNode }) {
   return (
     <div>
+      <HelpPanelButton />
       {children}
       <ClosePanelButton />
     </div>
+  );
+}
+
+function HelpPanelButton() {
+  const id = usePanelId();
+
+  return (
+    <IconButton size="small" onClick={() => showEditorHelp.emit(id)}>
+      <Help />
+    </IconButton>
   );
 }
 
