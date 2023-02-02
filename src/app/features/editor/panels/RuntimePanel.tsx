@@ -38,7 +38,7 @@ export function RuntimePanel(props: PanelProps) {
   const hasErrors = !!compiled?.errors?.length;
 
   function onRenderError(error: unknown) {
-    log([logIdentifier("[Rendering Error]"), error]);
+    log([logIdentifier("[Renderer Error]", { color: colors.error }), error]);
   }
 
   async function tryEditSeed() {
@@ -140,9 +140,7 @@ function useCompilation(seed: string, log: (args: LogContent[]) => void) {
     if (compiled?.errors) {
       log([
         logIdentifier("[Compiler Error]", { color: colors.error }),
-        ...compiled.errors.map((e) =>
-          typeof e === "string" ? logIdentifier(e) : e
-        ),
+        ...compiled.errors,
       ]);
     }
   }, [compiled?.errors, log]);
@@ -155,7 +153,7 @@ function createEventLoggerMiddleware(
   return (state, action, next) => {
     log([
       logIdentifier("[Event]", { color: colors.info }),
-      logIdentifier(action.name),
+      action.name,
       "(",
       logIdentifier(action.payload, { name: "input" }),
       ")",
@@ -171,7 +169,10 @@ function createFailSafeMiddleware(
     try {
       next();
     } catch (error) {
-      log([logIdentifier("[Runtime Error]", { color: colors.error }), error]);
+      log([
+        logIdentifier("[State Reducer Error]", { color: colors.error }),
+        error,
+      ]);
     }
   };
 }

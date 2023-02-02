@@ -13,7 +13,6 @@ import { evalWithScope } from "../../../lib/evalWithScope";
 import { LogSpreadError } from "../editor/components/LogList";
 import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
-import { logIdentifier } from "../editor/types";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -200,14 +199,7 @@ function describedCompile<T extends ZodType, G extends RuntimeGenerics>(
   const decorateError: ErrorDecorator = (error, path) =>
     error instanceof LogSpreadError
       ? error // Keep the innermost error as-is
-      : new LogSpreadError(
-          logIdentifier(kind),
-          "(",
-          logIdentifier(name),
-          ")",
-          ...path.map((p) => logIdentifier(p)),
-          error
-        );
+      : new LogSpreadError(kind, "(", name, ")", ...path, error);
   if (result.type === "error") {
     throw decorateError(result.error, []);
   }
