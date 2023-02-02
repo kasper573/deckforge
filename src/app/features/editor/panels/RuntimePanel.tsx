@@ -187,11 +187,10 @@ function createFailSafeMiddleware(
   };
 }
 
-function RuntimeErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+function RuntimeErrorFallback({ resetErrorBoundary }: FallbackProps) {
   return (
     <PanelEmptyState>
       <Typography variant="h5">Runtime error</Typography>
-      <Typography sx={{ my: 1 }}>{error.message}</Typography>
       <Button onClick={resetErrorBoundary}>Retry</Button>
     </PanelEmptyState>
   );
