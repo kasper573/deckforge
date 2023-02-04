@@ -1,4 +1,3 @@
-import type { z, ZodType } from "zod";
 import { v4 } from "uuid";
 import Rand from "rand-seed";
 import type {
@@ -9,10 +8,6 @@ import type {
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
-import { evalWithScope } from "../../../lib/evalWithScope";
-import { LogSpreadError } from "../editor/components/LogList";
-import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
-import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -28,6 +23,7 @@ import type {
   RuntimeScriptAPI,
 } from "./types";
 import { createPile } from "./apis/Pile";
+import { compileScriptDescribed } from "./compileScript";
 
 export type GameRuntime<G extends RuntimeGenerics> = Machine<
   RuntimeMachineContext<G>
@@ -88,7 +84,7 @@ export function compileGame<G extends RuntimeGenerics>(
     );
 
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {
-      effects[name as keyof typeof effects] = describedCompile(
+      effects[name as keyof typeof effects] = compileScriptDescribed(
         "Event",
         name,
         code,
@@ -116,7 +112,7 @@ export function compileGame<G extends RuntimeGenerics>(
     }
 
     const compiledMiddlewares = gameDefinition.middlewares.map((middleware) =>
-      describedCompile("Middleware", middleware.name, middleware.code, {
+      compileScriptDescribed("Middleware", middleware.name, middleware.code, {
         type: runtimeDefinition.middleware,
         scriptAPI,
         initialValue: () => {},
@@ -178,68 +174,12 @@ function compileCard<G extends RuntimeGenerics>(
     typeId: cardId,
     name: name,
     properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
-    effects: describedCompile("Card", name, code, {
+    effects: compileScriptDescribed("Card", name, code, {
       type: options.runtimeDefinition.card.shape.effects,
       scriptAPI: { ...options.scriptAPI, thisCardId: id },
       initialValue: {},
     }),
   };
-}
-
-type CompileResult<T extends ZodType> =
-  | { type: "success"; value: z.infer<T> }
-  | { type: "error"; error: unknown };
-
-function describedCompile<T extends ZodType, G extends RuntimeGenerics>(
-  kind: string,
-  name: string,
-  ...args: Parameters<typeof compile<T, G>>
-) {
-  const result = compile(...args);
-  const decorateError: ErrorDecorator = (error, path) =>
-    error instanceof LogSpreadError
-      ? error // Keep the innermost error as-is
-      : new LogSpreadError(kind, "(", name, ")", ...path, error);
-  if (result.type === "error") {
-    throw decorateError(result.error, []);
-  }
-
-  return wrapWithErrorDecorator(result.value, decorateError);
-}
-
-function compile<T extends ZodType, G extends RuntimeGenerics>(
-  code: string,
-  options: {
-    type: T;
-    scriptAPI: RuntimeScriptAPI<G>;
-    initialValue?: z.infer<T>;
-  }
-): CompileResult<T> {
-  let definition = options.initialValue;
-
-  function define(newDefinition: unknown) {
-    const result = options.type.safeParse(newDefinition);
-    if (!result.success) {
-      throw new Error(result.error.message);
-    }
-    // Cannot use parsed data because zod injects destructive behavior on parsed functions.
-    // There's no need for using the parsed data anyway, since it's already json.
-    // We're just using zod for validation here, not for parsing.
-    definition = newDefinition;
-  }
-
-  function derive(
-    createDefinition: (scriptAPI: RuntimeScriptAPI<G>) => unknown
-  ) {
-    define(createDefinition(options.scriptAPI));
-  }
-
-  try {
-    evalWithScope(code, { define, derive }); // Assume code calls define/derive to set definition
-    return { type: "success", value: definition };
-  } catch (error) {
-    return { type: "error", error };
-  }
 }
 
 function namedPropertyDefaults(
