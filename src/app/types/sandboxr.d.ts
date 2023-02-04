@@ -4,12 +4,12 @@ declare module "sandboxr" {
   }
 
   export interface Sandbox {
-    execute(env?: SandboxEnvironment): SandboxValue;
+    execute(env?: SandboxEnvironment): AnySandboxValue;
   }
 
   export interface SandboxEnvironment {
     init(): void;
-    createVariable(name: string): SandboxVariable;
+    createVariable<T>(name: string): SandboxVariable<T>;
     objectFactory: SandboxObjectFactory;
   }
 
@@ -37,7 +37,9 @@ declare module "sandboxr" {
 
   export interface SandboxFunctionValue<T extends AnyFunction>
     extends SandboxValueDiscriminator<"function", T>,
-      SandboxFunction {}
+      SandboxFunction {
+    call(args: Parameters<T>): SandboxValue<ReturnType<T>>;
+  }
 
   export type AnySandboxValue = SandboxValue<never>;
   export type SandboxValue<T extends Primitive | AnyFunction | object> =
