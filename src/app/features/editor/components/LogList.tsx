@@ -100,6 +100,9 @@ export class LogSpreadError {
   constructor(...parts: unknown[]) {
     this.parts = parts;
   }
+  toString() {
+    return this.parts.join(" ");
+  }
 }
 
 function ObjectValue({
