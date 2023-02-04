@@ -47,7 +47,7 @@ export function compileScript<T extends ZodType, G extends RuntimeGenerics>(
     return { type: "error", error: `Script parsing error: ${error}` };
   }
 
-  const sandbox = SandBoxr.create(ast, { parse: acorn.parse });
+  const sandbox = SandBoxr.create(ast);
   const definitionHolder = { value: options.initialValue };
   const env = createEnvironmentForScript(options, definitionHolder);
 
