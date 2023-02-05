@@ -1,7 +1,6 @@
 import type { z, ZodType } from "zod";
-import * as acorn from "acorn";
-import type { SandboxFunctionValue, SandboxValue } from "sandboxr";
-import * as SandBoxr from "sandboxr";
+import { transform } from "@babel/standalone";
+import JSInterpreter from "js-interpreter";
 import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { LogSpreadError } from "../editor/components/LogList";
@@ -37,37 +36,12 @@ export function compileScriptDescribed<
 }
 
 export function compileScript<T extends ZodType, G extends RuntimeGenerics>(
-  code: string,
+  typescriptCode: string,
   options: CompileScriptOptions<T, G>
 ): CompileScriptResult<T> {
-  let ast;
-  try {
-    ast = acorn.parse(code, { ecmaVersion: 6 });
-  } catch (error) {
-    return { type: "error", error: `Script parsing error: ${error}` };
-  }
+  let definition = options.initialValue;
 
-  const sandbox = SandBoxr.create(ast);
-  const definitionHolder = { value: options.initialValue };
-  const env = createEnvironmentForScript(options, definitionHolder);
-
-  try {
-    sandbox.execute(env);
-    return { type: "success", value: definitionHolder.value };
-  } catch (error) {
-    return { type: "error", error: `Script execution error: ${error}` };
-  }
-}
-
-function createEnvironmentForScript<
-  T extends ZodType,
-  G extends RuntimeGenerics
->(
-  options: Omit<CompileScriptOptions<T, G>, "initialValue">,
-  output: { value: z.infer<T> }
-) {
-  function define(value: SandboxValue<z.infer<T>>) {
-    const newDefinition = value.toNative();
+  function define(newDefinition: z.infer<T>) {
     const result = options.type.safeParse(newDefinition);
     if (!result.success) {
       throw new Error(`Invalid script output: ${result.error.message}`);
@@ -75,24 +49,35 @@ function createEnvironmentForScript<
     // Cannot use parsed data because zod injects destructive behavior on parsed functions.
     // There's no need for using the parsed data anyway, since it's already json.
     // We're just using zod for validation here, not for parsing.
-    output.value = newDefinition;
+    definition = newDefinition;
   }
 
   function derive(
-    value: SandboxFunctionValue<(scriptAPI: RuntimeScriptAPI<G>) => unknown>
+    createDefinition: (scriptAPI: RuntimeScriptAPI<G>) => unknown
   ) {
-    const createDefinition = value.toNative();
-    const definition = createDefinition(options.scriptAPI);
-    define(env.objectFactory.createPrimitive(definition));
+    define(createDefinition(options.scriptAPI));
   }
 
-  const env = SandBoxr.createEnvironment();
-  env.init();
-  env
-    .createVariable("define")
-    .setValue(env.objectFactory.createFunction(define));
-  env
-    .createVariable("derive")
-    .setValue(env.objectFactory.createFunction(derive));
-  return env;
+  const es5Code = transform(typescriptCode, { presets: ["es2015"] })?.code;
+
+  if (!es5Code) {
+    return { type: "error", error: "Failed to transpile code" };
+  }
+
+  try {
+    const interpreter = new JSInterpreter(es5Code, (i, globals) => {
+      i.setProperty(globals, "define", i.createNativeFunction(define));
+      i.setProperty(globals, "derive", i.createNativeFunction(derive));
+    });
+    const hasMore = interpreter.run();
+    if (hasMore) {
+      return { type: "error", error: "Script did not resolve immediately" };
+    }
+    return { type: "success", value: definition };
+  } catch (error) {
+    return {
+      type: "error",
+      error: `Script compile error: ${error} while parsing:\n${typescriptCode}`,
+    };
+  }
 }
