@@ -1,5 +1,6 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
+import type { AnyFunction } from "js-interpreter";
 import type { CompileScriptResult } from "./compileScript";
 import { compileScript } from "./compileScript";
 import type { RuntimeScriptAPI } from "./types";
@@ -51,7 +52,11 @@ describe("can compile", () => {
     generateTests(
       "[1, `foo`, () => 1]",
       z.tuple([z.number(), z.string(), z.function()]),
-      [1, "foo", expect.any(Function)]
+      ([num, str, fn]: [number, string, AnyFunction]) => {
+        expect(num).toEqual(1);
+        expect(str).toEqual("foo");
+        expect(fn()).toEqual(1);
+      }
     );
   });
 
@@ -68,7 +73,9 @@ describe("can compile", () => {
   });
 
   describe("function", () => {
-    generateTests("(a, b) => a + b", z.function(), expect.any(Function));
+    generateTests("(a, b) => a + b", z.function(), (fn: AnyFunction) => {
+      expect(fn(1, 2)).toEqual(3);
+    });
   });
 });
 

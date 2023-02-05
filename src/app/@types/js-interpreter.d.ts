@@ -5,7 +5,9 @@ declare module "js-interpreter" {
 
   export type JSGlobals = Record<string, unknown>;
   export type NativeFunctionReference = unknown;
-  export type AnyFunction = <Args extends never>(...args: Args) => unknown;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export type AnyFunction = <Args extends any[]>(...args: Args) => unknown;
 
   class JSInterpreter {
     constructor(code: string, init: InitFunction);
