@@ -5,14 +5,28 @@ import { compileScript } from "./compileScript";
 import type { RuntimeScriptAPI } from "./types";
 
 describe("can compile", () => {
-  const cases = [
-    ["number", "123", z.number(), 123],
-    ["string", "'abc'", z.string(), "abc"],
-    ["boolean", "true", z.boolean(), true],
-    ["null", "null", z.null(), null],
-    ["undefined", "undefined", z.undefined(), undefined],
-    [
-      "class",
+  describe("number", () => {
+    generateTests("123", z.number(), 123);
+  });
+
+  describe("string", () => {
+    generateTests("'abc'", z.string(), "abc");
+  });
+
+  describe("boolean", () => {
+    generateTests("true", z.boolean(), true);
+  });
+
+  describe("null", () => {
+    generateTests("null", z.null(), null);
+  });
+
+  describe("undefined", () => {
+    generateTests("undefined", z.undefined(), undefined);
+  });
+
+  describe("class", () => {
+    generateTests(
       `class Foo {
         constructor (count) {
           this.count = count;
@@ -25,33 +39,40 @@ describe("can compile", () => {
         const foo = new Foo(1);
         foo.next();
         expect(foo.next()).toEqual(3);
-      },
-    ],
-    ["empty array", "[]", z.array(z.any()), []],
-    [
-      "array with values",
+      }
+    );
+  });
+
+  describe("empty array", () => {
+    generateTests("[]", z.array(z.unknown()), []);
+  });
+
+  describe("array with values", () => {
+    generateTests(
       "[1, `foo`, () => 1]",
       z.tuple([z.number(), z.string(), z.function()]),
-      [1, "foo", expect.any(Function)],
-    ],
-    ["empty object", "{ }", z.object({}), {}],
-    [
-      "object with properties",
+      [1, "foo", expect.any(Function)]
+    );
+  });
+
+  describe("empty object", () => {
+    generateTests("{}", z.object({}), {});
+  });
+
+  describe("object with properties", () => {
+    generateTests(
       "{ a: `foo`, b: 2, c () {} }",
       z.object({ a: z.string(), b: z.number(), c: z.function() }),
-      { a: "foo", b: 2, c: expect.any(Function) },
-    ],
-    ["function", "(a, b) => a + b", z.function(), expect.any(Function)],
-  ] as const;
+      { a: "foo", b: 2, c: expect.any(Function) }
+    );
+  });
 
-  for (const [name, code, type, expectation] of cases) {
-    describe(name, () => {
-      generateCompileScriptTest(code, type, expectation);
-    });
-  }
+  describe("function", () => {
+    generateTests("(a, b) => a + b", z.function(), expect.any(Function));
+  });
 });
 
-function generateCompileScriptTest<T extends ZodType>(
+function generateTests<T extends ZodType>(
   code: string,
   type: T,
   expectation: ((value: z.infer<T>) => unknown) | unknown
@@ -66,6 +87,7 @@ function generateCompileScriptTest<T extends ZodType>(
       expect(res).toEqual({ type: "success", value: expectation });
     }
   }
+
   it("using define", () => {
     const res = compileScript(`define(${code})`, { type, scriptAPI });
     assert(res);
