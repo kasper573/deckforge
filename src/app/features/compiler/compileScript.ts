@@ -36,7 +36,7 @@ export function compileScriptDescribed<
 }
 
 export function compileScript<T extends ZodType, G extends RuntimeGenerics>(
-  typescriptCode: string,
+  esnextCode: string,
   options: CompileScriptOptions<T, G>
 ): CompileScriptResult<T> {
   let definition = options.initialValue;
@@ -58,7 +58,7 @@ export function compileScript<T extends ZodType, G extends RuntimeGenerics>(
     define(createDefinition(options.scriptAPI));
   }
 
-  const es5Code = transform(typescriptCode, { presets: ["es2015"] })?.code;
+  const es5Code = transform(esnextCode, { presets: ["es2015"] })?.code;
 
   if (!es5Code) {
     return { type: "error", error: "Failed to transpile code" };
@@ -77,7 +77,7 @@ export function compileScript<T extends ZodType, G extends RuntimeGenerics>(
   } catch (error) {
     return {
       type: "error",
-      error: `Script compile error: ${error} while parsing:\n${typescriptCode}`,
+      error: `Script compile error: ${error} while parsing:\n${esnextCode}`,
     };
   }
 }
