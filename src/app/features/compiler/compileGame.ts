@@ -66,6 +66,7 @@ export function compileGame<G extends RuntimeGenerics>(
           runtime.actions[propertyName as keyof typeof runtime.actions],
       }),
     };
+    const cardEffects = new Map<CardInstanceId, Partial<RuntimeEffects<G>>>();
 
     const decks = gameDefinition.decks.map(
       (deck): RuntimeDeck<G> => ({
@@ -73,13 +74,13 @@ export function compileGame<G extends RuntimeGenerics>(
         name: deck.name,
         cards: gameDefinition.cards
           .filter((c) => c.deckId === deck.deckId)
-          .map((card) =>
-            compileCard(card, {
-              runtimeDefinition,
-              scriptAPI,
-              cardProperties,
-            })
-          ),
+          .map((def) => {
+            const options = { runtimeDefinition, scriptAPI, cardProperties };
+            const card = compileCard(def, options);
+            const effects = compileCardEffects({ ...card, ...def }, options);
+            cardEffects.set(card.id, effects);
+            return card;
+          }),
       })
     );
 
@@ -144,7 +145,12 @@ export function compileGame<G extends RuntimeGenerics>(
     const allMiddlewares =
       options?.middlewares?.(compiledMiddlewares) ?? compiledMiddlewares;
 
-    let builder = deriveMachine<G>(effects, initialState);
+    let builder = deriveMachine<G>(
+      effects,
+      initialState,
+      (id, effectName) => cardEffects.get(id)?.[effectName]
+    );
+
     builder = allMiddlewares.reduce(
       (builder, next) => builder.middleware(next),
       builder
@@ -174,12 +180,22 @@ function compileCard<G extends RuntimeGenerics>(
     typeId: cardId,
     name: name,
     properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
-    effects: compileModuleDescribed("Card", name, code, {
-      type: options.runtimeDefinition.card.shape.effects,
-      scriptAPI: { ...options.scriptAPI, thisCardId: id },
-      initialValue: {},
-    }),
   };
+}
+
+function compileCardEffects<G extends RuntimeGenerics>(
+  { id, name, code }: Pick<Card, "name" | "code"> & { id: CardInstanceId },
+  options: {
+    runtimeDefinition: RuntimeDefinition<G>;
+    scriptAPI: RuntimeScriptAPI<G>;
+    cardProperties: Property[];
+  }
+) {
+  return compileModuleDescribed("Card", name, code, {
+    type: options.runtimeDefinition.cardEffects,
+    scriptAPI: { ...options.scriptAPI, thisCardId: id },
+    initialValue: {},
+  });
 }
 
 function namedPropertyDefaults(

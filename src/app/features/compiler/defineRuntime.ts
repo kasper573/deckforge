@@ -26,6 +26,8 @@ import type {
   RuntimeStateFactory,
 } from "./types";
 import { zodPile } from "./apis/Pile";
+import type { CardInstanceId } from "./types";
+import type { RuntimeEffect } from "./types";
 
 export function defineRuntime<
   GlobalPropTypeDefs extends ZodRawShape,
@@ -81,8 +83,10 @@ export function defineRuntime<
     id: cardDefinitionType.shape.cardId,
     name: cardDefinitionType.shape.name,
     properties: z.object(cardProperties),
-    effects: effects.partial(),
   }) as unknown as RuntimeDefinition<G>["card"];
+
+  const cardEffects =
+    effects.partial() as unknown as RuntimeDefinition<G>["cardEffects"];
 
   const deck = z.object({
     id: deckId,
@@ -125,6 +129,7 @@ export function defineRuntime<
     globals,
     deck,
     card,
+    cardEffects,
     cardPile,
     player,
     state,
@@ -213,7 +218,11 @@ function deriveEffectsType<G extends RuntimeGenerics>(
 
 export function deriveMachine<G extends RuntimeGenerics>(
   effects: RuntimeEffects<G>,
-  initialState: RuntimeState<G>
+  initialState: RuntimeState<G>,
+  getEffectsForCard: <EffectName extends keyof G["actions"]>(
+    id: CardInstanceId,
+    action: EffectName
+  ) => RuntimeEffect<G, EffectName> | undefined
 ) {
   return createMachine(initialState)
     .effects(effects)
@@ -228,7 +237,7 @@ export function deriveMachine<G extends RuntimeGenerics>(
       const cards = uniq([...cardsInDecks, ...cardOnBoards]);
 
       for (const card of cards) {
-        const effect = card.effects[effectName];
+        const effect = getEffectsForCard(card.id, effectName);
         if (effect !== undefined) {
           yield effect;
         }

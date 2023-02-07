@@ -19,7 +19,6 @@ export interface RuntimeCard<G extends RuntimeGenerics> {
   typeId: CardId;
   name: string;
   properties: G["cardProps"];
-  effects: Partial<RuntimeEffects<G>>;
 }
 
 export interface RuntimeDeck<G extends RuntimeGenerics> {
@@ -68,6 +67,11 @@ export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<
   RuntimeMachineContext<G>
 >;
 
+export type RuntimeEffect<
+  G extends RuntimeGenerics,
+  EffectName extends keyof G["actions"]
+> = RuntimeEffects<G>[EffectName];
+
 export interface RuntimeDefinition<
   G extends RuntimeGenerics = RuntimeGenerics
 > {
@@ -75,6 +79,7 @@ export interface RuntimeDefinition<
   state: ZodType<RuntimeState<G>>;
   deck: ZodType<RuntimeDeck<G>>;
   card: ZodObject<ZodShapeFor<RuntimeCard<G>>>;
+  cardEffects: ZodType<Partial<RuntimeEffects<G>>>;
   cardPile: ZodType<Pile<RuntimeCard<G>>>;
   player: ZodObject<ZodShapeFor<RuntimePlayer<G>>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;

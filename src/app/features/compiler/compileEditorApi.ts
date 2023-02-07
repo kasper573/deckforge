@@ -19,8 +19,8 @@ export function compileEditorApi<G extends RuntimeGenerics>(
   const zodToTS = zodToTSResolver({
     Card: definition.card,
     CardPile: definition.cardPile,
+    CardEffects: definition.cardEffects,
     Deck: definition.deck,
-    CardEffects: definition.card.shape.effects,
     Player: definition.player,
     State: definition.state,
     EventHandlers: definition.effects,
@@ -44,7 +44,7 @@ export function compileEditorApi<G extends RuntimeGenerics>(
     card: zodToTS.add(
       common,
       declareModuleDefinition({
-        definitionType: zodToTS(definition.card.shape.effects),
+        definitionType: zodToTS(definition.cardEffects),
         apiType: cardApiType,
       })
     ),
