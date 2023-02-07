@@ -1,6 +1,7 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
 import { zodToTS, zodToTSResolver } from "./zodToTS";
+import { zodRuntimeBranded } from "./zodRuntimeBranded";
 
 const expectations = [
   { name: "string", type: z.string(), expected: "string" },
@@ -47,6 +48,11 @@ const expectations = [
     name: "functions (with args and return)",
     type: z.function().args(z.string(), z.number()).returns(z.string()),
     expected: "(arg0: string, arg1: number) => string",
+  },
+  {
+    name: "functions (with branded arg)",
+    type: z.function().args(zodRuntimeBranded("foo")),
+    expected: `(arg0: "Brand[foo]") => unknown`,
   },
   {
     name: "object (single property)",

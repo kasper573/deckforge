@@ -31,6 +31,7 @@ import {
   ZodVoid,
 } from "zod";
 import { memoize } from "lodash";
+import { getBrandName } from "./zodRuntimeBranded";
 
 export interface ZodToTSOptions {
   resolvers?: Map<ZodType, string>;
@@ -201,12 +202,12 @@ function zodToTSImpl(
     return zodToTS(type._def.getter());
   }
   if (type instanceof ZodBranded) {
-    if (brandName in type) {
-      return String(`"Brand[${type[brandName]}]"`);
+    const brandName = getBrandName(type);
+    if (brandName) {
+      return `"Brand[${brandName}]"`;
     }
     throw new Error(
-      "Branded types are not supported. " +
-        "Add the brand name as meta data to your brand using the brandName symbol. " +
+      "Branded types are not supported unless using zodRuntimeBranded. " +
         "Or use the resolvers option and provide manual resolutions for these types."
     );
   }
@@ -215,8 +216,6 @@ function zodToTSImpl(
     `Unsupported type: ${"typeName" in type._def ? type._def.typeName : type}`
   );
 }
-
-export const brandName = Symbol("brandName");
 
 function extractOptional(type: ZodType): [boolean, ZodType] {
   if (type instanceof ZodOptional) {
