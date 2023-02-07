@@ -13,7 +13,7 @@ import {
   cardType as cardDefinitionType,
   propertyValue,
 } from "../../../api/services/game/types";
-import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded";
 import { createMachine } from "../../../lib/machine/Machine";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import type {
@@ -64,7 +64,7 @@ export function defineRuntime<
   type GlobalProps = z.objectInputType<GlobalPropTypeDefs, ZodTypeAny>;
   type G = RuntimeGenerics<PlayerProps, CardProps, Actions, GlobalProps>;
 
-  const playerId = zodNominalString<RuntimePlayerId>();
+  const playerId = zodRuntimeBranded("RuntimePlayerId");
   const deckId = cardDefinitionType.shape.deckId;
 
   const lazyState = z.lazy(() => state);

@@ -1,17 +1,17 @@
 import type { ZodObject, ZodType } from "zod";
+import type { z } from "zod";
 import type {
   MachineActions,
   MachineEffects,
   MachineMiddleware,
 } from "../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../lib/machine/MachineContext";
-import type { NominalString } from "../../../lib/ts-extensions/NominalString";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
-import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded";
 import type { CardId, DeckId } from "../../../api/services/game/types";
 
-export type CardInstanceId = NominalString<"CardInstanceId">;
-export const cardInstanceIdType = zodNominalString<CardInstanceId>();
+export type CardInstanceId = z.infer<typeof cardInstanceIdType>;
+export const cardInstanceIdType = zodRuntimeBranded("CardInstanceId");
 
 export interface RuntimeCard<G extends RuntimeGenerics> {
   id: CardInstanceId;
@@ -26,8 +26,8 @@ export interface RuntimeDeck<G extends RuntimeGenerics> {
   cards: ReadonlyArray<RuntimeCard<G>>;
 }
 
-export const runtimePlayerIdType = zodNominalString<RuntimePlayerId>();
-export type RuntimePlayerId = NominalString<"PlayerId">;
+export const runtimePlayerIdType = zodRuntimeBranded("RuntimePlayerId");
+export type RuntimePlayerId = z.infer<typeof runtimePlayerIdType>;
 
 export interface RuntimePlayer<G extends RuntimeGenerics> {
   id: RuntimePlayerId;

@@ -1,43 +1,42 @@
 import type { MosaicNode } from "react-mosaic-component";
 import type { ZodType } from "zod";
 import { z } from "zod";
-import type {
-  EventId,
-  CardId,
-  DeckId,
-  PropertyId,
-  MiddlewareId,
-  Game,
+import type { Game } from "../../../api/services/game/types";
+import {
+  cardIdType,
+  deckIdType,
+  eventIdType,
+  middlewareIdType,
+  propertyIdType,
 } from "../../../api/services/game/types";
-import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
 
 export const editorObjectIdType = z
   .object({
     type: z.literal("event"),
-    eventId: zodNominalString<EventId>(),
+    eventId: eventIdType,
   })
   .or(
     z.object({
       type: z.literal("middleware"),
-      middlewareId: zodNominalString<MiddlewareId>(),
+      middlewareId: middlewareIdType,
     })
   )
   .or(
     z.object({
       type: z.literal("deck"),
-      deckId: zodNominalString<DeckId>(),
+      deckId: deckIdType,
     })
   )
   .or(
     z.object({
       type: z.literal("card"),
-      cardId: zodNominalString<CardId>(),
+      cardId: cardIdType,
     })
   )
   .or(
     z.object({
       type: z.literal("property"),
-      propertyId: zodNominalString<PropertyId>(),
+      propertyId: propertyIdType,
     })
   );
 

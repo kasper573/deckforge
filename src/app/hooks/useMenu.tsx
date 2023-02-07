@@ -5,7 +5,6 @@ import Menu from "@mui/material/Menu";
 import { createStore, useStore } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { concatFunctions } from "../../lib/ts-extensions/concatFunctions";
-import type { NominalString } from "../../lib/ts-extensions/NominalString";
 
 export type UseMenuItems = ReactElement[];
 
@@ -30,7 +29,7 @@ export const useMenu = (
   return useCallback((e: MouseEvent) => menuStore.getState().open(e, id), [id]);
 };
 
-type MenuId = NominalString<"MenuId">;
+type MenuId = string;
 interface MenuEntry {
   id: MenuId;
   props: Partial<MenuProps>;

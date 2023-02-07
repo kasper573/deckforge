@@ -1,6 +1,5 @@
 import { z } from "zod";
-import type { NominalString } from "../../../lib/ts-extensions/NominalString";
-import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded";
 import { codeType } from "../../utils/codeType";
 import { zodIdentifier } from "../../utils/zodIdentifier";
 import type {
@@ -9,8 +8,8 @@ import type {
 } from "../../../lib/zod-extensions/createTypeSerializer";
 import { createSerializableType } from "../../../lib/zod-extensions/createTypeSerializer";
 
-export type GameId = NominalString<"GameId">;
-export const gameIdType = zodNominalString<GameId>();
+export type GameId = z.infer<typeof gameIdType>;
+export const gameIdType = zodRuntimeBranded("GameId");
 
 export type EntityId = z.infer<typeof entityIdType>;
 export const entityIdType = z.enum(["player", "card"]);
@@ -37,8 +36,8 @@ export const propertyValue = createSerializableType(primitiveTypes, {
   void: void 0,
 });
 
-export type PropertyId = NominalString<"PropertyId">;
-export const propertyIdType = zodNominalString<PropertyId>();
+export type PropertyId = z.infer<typeof propertyIdType>;
+export const propertyIdType = zodRuntimeBranded("PropertyId");
 
 export type PropertyDefault = z.infer<typeof propertyDefaultType>;
 export const propertyDefaultType = z.unknown();
@@ -58,8 +57,8 @@ export const propertyType = z.object({
   defaultValue: propertyDefaultType,
 });
 
-export type EventId = NominalString<"EventId">;
-export const eventIdType = zodNominalString<EventId>();
+export type EventId = z.infer<typeof eventIdType>;
+export const eventIdType = zodRuntimeBranded("EventId");
 
 export type Event = z.infer<typeof eventType>;
 export const eventType = z.object({
@@ -69,8 +68,8 @@ export const eventType = z.object({
   inputType: propertyValue.serializedType,
 });
 
-export type MiddlewareId = NominalString<"MiddlewareId">;
-export const middlewareIdType = zodNominalString<MiddlewareId>();
+export type MiddlewareId = z.infer<typeof middlewareIdType>;
+export const middlewareIdType = zodRuntimeBranded("MiddlewareId");
 
 export type Middleware = z.infer<typeof middlewareType>;
 export const middlewareType = z.object({
@@ -79,8 +78,8 @@ export const middlewareType = z.object({
   code: codeType,
 });
 
-export type DeckId = NominalString<"DeckId">;
-export const deckIdType = zodNominalString<DeckId>();
+export type DeckId = z.infer<typeof deckIdType>;
+export const deckIdType = zodRuntimeBranded("DeckId");
 
 export type Deck = z.infer<typeof deckType>;
 export const deckType = z.object({
@@ -88,8 +87,8 @@ export const deckType = z.object({
   name: z.string().min(1).max(32),
 });
 
-export type CardId = NominalString<"CardId">;
-export const cardIdType = zodNominalString<CardId>();
+export type CardId = z.infer<typeof cardIdType>;
+export const cardIdType = zodRuntimeBranded("CardId");
 
 export type Card = z.infer<typeof cardType>;
 export const cardType = z.object({
@@ -109,8 +108,8 @@ export const gameDefinitionType = z.object({
   middlewares: z.array(middlewareType).default([]),
 });
 
-export type GameTypeId = NominalString<"GameTypeId">;
-export const gameTypeIdType = zodNominalString<GameTypeId>();
+export type GameTypeId = z.infer<typeof gameTypeIdType>;
+export const gameTypeIdType = zodRuntimeBranded("GameTypeId");
 
 export type Game = z.infer<typeof gameType>;
 export const gameType = z.object({
