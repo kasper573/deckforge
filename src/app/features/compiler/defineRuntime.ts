@@ -163,8 +163,13 @@ export function deriveRuntimeDefinition<Base extends RuntimeDefinition>(
   const commonProps = deriveRuntimeDefinitionParts(gameDefinition);
 
   if (baseDefinition) {
+    const mergedActions = {
+      ...commonProps.actions(),
+      ...baseDefinition.actions.shape,
+    };
     return defineRuntime({
       ...commonProps,
+      actions: () => mergedActions,
       globalProperties: () => baseDefinition.globals.shape,
       initialState: baseDefinition?.createInitialState,
     });

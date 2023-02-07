@@ -82,7 +82,7 @@ export interface RuntimeDefinition<
   cardPile: ZodType<RuntimeCard<G>[]>;
   player: ZodObject<ZodShapeFor<RuntimePlayer<G>>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
-  actions: ZodType<G["actions"]>;
+  actions: ZodObject<ZodShapeFor<G["actions"]>>;
   middleware: ZodType<RuntimeMiddleware<G>>;
   createInitialState: RuntimeStateFactory<G>;
 }
