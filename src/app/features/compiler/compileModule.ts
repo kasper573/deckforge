@@ -1,9 +1,9 @@
 import type { z, ZodType } from "zod";
 import { transform } from "@babel/standalone";
-import JSInterpreter from "js-interpreter";
 import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { LogSpreadError } from "../editor/components/LogList";
+import { evalWithScope } from "../../../lib/evalWithScope";
 import type { RuntimeGenerics, RuntimeScriptAPI } from "./types";
 
 export type CompileModuleResult<T extends ZodType> =
@@ -65,14 +65,7 @@ export function compileModule<T extends ZodType, G extends RuntimeGenerics>(
   }
 
   try {
-    const interpreter = new JSInterpreter(es5Code, (i, globals) => {
-      i.setProperty(globals, "define", i.createNativeFunction(define));
-      i.setProperty(globals, "derive", i.createNativeFunction(derive));
-    });
-    const hasMore = interpreter.run();
-    if (hasMore) {
-      return { type: "error", error: "Script did not resolve immediately" };
-    }
+    evalWithScope(es5Code, { define, derive });
     return { type: "success", value: definition };
   } catch (error) {
     return {
