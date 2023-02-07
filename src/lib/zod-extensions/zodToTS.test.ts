@@ -29,6 +29,26 @@ const expectations = [
     expected: "[string, number]",
   },
   {
+    name: "functions (no args or return)",
+    type: z.function(),
+    expected: "() => unknown",
+  },
+  {
+    name: "functions (with args)",
+    type: z.function().args(z.string(), z.number()),
+    expected: "(arg0: string, arg1: number) => unknown",
+  },
+  {
+    name: "functions (with return)",
+    type: z.function().returns(z.string()),
+    expected: "() => string",
+  },
+  {
+    name: "functions (with args and return)",
+    type: z.function().args(z.string(), z.number()).returns(z.string()),
+    expected: "(arg0: string, arg1: number) => string",
+  },
+  {
     name: "object (single property)",
     type: z.object({ foo: z.string() }),
     expected: "{ foo: string }",

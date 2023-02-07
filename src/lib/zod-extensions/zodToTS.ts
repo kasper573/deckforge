@@ -153,10 +153,14 @@ function zodToTSImpl(
     }
   }
   if (type instanceof ZodFunction) {
-    return `(...args: ${zodToTS(type._def.args, "args")}) => ${zodToTS(
-      type._def.returns,
-      "returns"
-    )}`;
+    const args = type._def.args as ZodTuple;
+    const argsString =
+      args.items.length === 0
+        ? ""
+        : args.items
+            .map((argType, argIndex) => `arg${argIndex}: ${zodToTS(argType)}`)
+            .join(", ");
+    return `(${argsString}) => ${zodToTS(type._def.returns, "returns")}`;
   }
   if (type instanceof ZodPromise) {
     return `Promise<${zodToTS(type._def.type)}>`;
