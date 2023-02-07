@@ -1,8 +1,9 @@
 import type { ZodRawShape, ZodType } from "zod";
 import { z } from "zod";
 import type { ZodTypeAny } from "zod/lib/types";
-import { uniq } from "lodash";
+import { uniqBy } from "lodash";
 import type {
+  CardId,
   DeckId,
   Event,
   Game,
@@ -25,8 +26,8 @@ import type {
   RuntimeScriptAPI,
   RuntimeStateFactory,
 } from "./types";
-import type { CardInstanceId } from "./types";
 import type { RuntimeEffect } from "./types";
+import { cardInstanceIdType } from "./types";
 
 export function defineRuntime<
   GlobalPropTypeDefs extends ZodRawShape,
@@ -79,7 +80,8 @@ export function defineRuntime<
   ) as unknown as RuntimeDefinition<G>["effects"];
 
   const card = z.object({
-    id: cardDefinitionType.shape.cardId,
+    id: cardInstanceIdType,
+    typeId: cardDefinitionType.shape.cardId,
     name: cardDefinitionType.shape.name,
     properties: z.object(cardProperties),
   }) as unknown as RuntimeDefinition<G>["card"];
@@ -219,7 +221,7 @@ export function deriveMachine<G extends RuntimeGenerics>(
   effects: RuntimeEffects<G>,
   initialState: RuntimeState<G>,
   getEffectsForCard: <EffectName extends keyof G["actions"]>(
-    id: CardInstanceId,
+    id: CardId,
     action: EffectName
   ) => RuntimeEffect<G, EffectName> | undefined
 ) {
@@ -233,10 +235,13 @@ export function deriveMachine<G extends RuntimeGenerics>(
           .flat()
       );
 
-      const cards = uniq([...cardsInDecks, ...cardOnBoards]);
+      const typeUniqueCards = uniqBy(
+        [...cardsInDecks, ...cardOnBoards],
+        (card) => card.typeId
+      );
 
-      for (const card of cards) {
-        const effect = getEffectsForCard(card.id, effectName);
+      for (const card of typeUniqueCards) {
+        const effect = getEffectsForCard(card.typeId, effectName);
         if (effect !== undefined) {
           yield effect;
         }
@@ -260,7 +265,7 @@ export function createScriptApiDefinition<G extends RuntimeGenerics>({
   return {
     cloneCard,
     actions,
-    thisCardId: card.shape.id,
+    thisCardId: card.shape.typeId,
     random: z.function().args(z.void()).returns(z.number()),
   };
 }

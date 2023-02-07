@@ -1,7 +1,9 @@
 import { v4 } from "uuid";
 import Rand from "rand-seed";
+import produce from "immer";
 import type {
   Card,
+  CardId,
   Game,
   Property,
   PropertyDefaults,
@@ -65,7 +67,7 @@ export function compileGame<G extends RuntimeGenerics>(
           runtime.actions[propertyName as keyof typeof runtime.actions],
       }),
     };
-    const cardEffects = new Map<CardInstanceId, Partial<RuntimeEffects<G>>>();
+    const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
 
     const decks = gameDefinition.decks.map(
       (deck): RuntimeDeck<G> => ({
@@ -77,7 +79,7 @@ export function compileGame<G extends RuntimeGenerics>(
             const options = { runtimeDefinition, scriptAPI, cardProperties };
             const card = compileCard(def, options);
             const effects = compileCardEffects({ ...card, ...def }, options);
-            cardEffects.set(card.id, effects);
+            cardEffects.set(def.cardId, effects);
             return card;
           }),
       })
@@ -96,20 +98,6 @@ export function compileGame<G extends RuntimeGenerics>(
       );
       return effects;
     }, {} as RuntimeEffects<G>);
-
-    function cloneCard(card: RuntimeCard<G>): RuntimeCard<G> {
-      const cardDefinition = gameDefinition.cards.find(
-        (c) => c.cardId === card.typeId
-      );
-      if (!cardDefinition) {
-        throw new Error(`Card ${card.typeId} not found`);
-      }
-      return compileCard(cardDefinition, {
-        runtimeDefinition,
-        scriptAPI,
-        cardProperties,
-      });
-    }
 
     const compiledMiddlewares = gameDefinition.middlewares.map((middleware) =>
       compileModuleDescribed("Middleware", middleware.name, middleware.code, {
@@ -173,17 +161,26 @@ function compileCard<G extends RuntimeGenerics>(
     cardProperties: Property[];
   }
 ): RuntimeCard<G> {
-  const id = v4() as CardInstanceId;
   return {
-    id,
+    id: createCardInstanceId(),
     typeId: cardId,
     name: name,
     properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
   };
 }
 
+function cloneCard<G extends RuntimeGenerics>(
+  card: RuntimeCard<G>
+): RuntimeCard<G> {
+  return produce(card, (draft) => {
+    draft.id = createCardInstanceId();
+  });
+}
+
+const createCardInstanceId = v4 as () => CardInstanceId;
+
 function compileCardEffects<G extends RuntimeGenerics>(
-  { id, name, code }: Pick<Card, "name" | "code"> & { id: CardInstanceId },
+  { cardId, name, code }: Card,
   options: {
     runtimeDefinition: RuntimeDefinition<G>;
     scriptAPI: RuntimeScriptAPI<G>;
@@ -192,7 +189,7 @@ function compileCardEffects<G extends RuntimeGenerics>(
 ) {
   return compileModuleDescribed("Card", name, code, {
     type: options.runtimeDefinition.cardEffects,
-    scriptAPI: { ...options.scriptAPI, thisCardId: id },
+    scriptAPI: { ...options.scriptAPI, thisCardId: cardId },
     initialValue: {},
   });
 }

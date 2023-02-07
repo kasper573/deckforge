@@ -108,7 +108,7 @@ export type RuntimeMachineContext<G extends RuntimeGenerics> = MachineContext<
 
 export type RuntimeScriptAPI<G extends RuntimeGenerics> = {
   actions: G["actions"];
-  thisCardId?: CardInstanceId;
+  thisCardId?: CardId;
   cloneCard: (card: RuntimeCard<G>) => RuntimeCard<G>;
   random: () => number;
 };
