@@ -6,11 +6,11 @@ import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { LogSpreadError } from "../editor/components/LogList";
 import type { RuntimeGenerics, RuntimeScriptAPI } from "./types";
 
-export type CompileScriptResult<T extends ZodType> =
+export type CompileModuleResult<T extends ZodType> =
   | { type: "success"; value: z.infer<T> }
   | { type: "error"; error: unknown };
 
-export interface CompileScriptOptions<
+export interface CompileModuleOptions<
   T extends ZodType,
   G extends RuntimeGenerics
 > {
@@ -19,11 +19,11 @@ export interface CompileScriptOptions<
   initialValue?: z.infer<T>;
 }
 
-export function compileScriptDescribed<
+export function compileModuleDescribed<
   T extends ZodType,
   G extends RuntimeGenerics
->(kind: string, name: string, ...args: Parameters<typeof compileScript<T, G>>) {
-  const result = compileScript(...args);
+>(kind: string, name: string, ...args: Parameters<typeof compileModule<T, G>>) {
+  const result = compileModule(...args);
   const decorateError: ErrorDecorator = (error, path) =>
     error instanceof LogSpreadError
       ? error // Keep the innermost error as-is
@@ -35,10 +35,10 @@ export function compileScriptDescribed<
   return wrapWithErrorDecorator(result.value, decorateError);
 }
 
-export function compileScript<T extends ZodType, G extends RuntimeGenerics>(
+export function compileModule<T extends ZodType, G extends RuntimeGenerics>(
   esnextCode: string,
-  options: CompileScriptOptions<T, G>
-): CompileScriptResult<T> {
+  options: CompileModuleOptions<T, G>
+): CompileModuleResult<T> {
   let definition = options.initialValue;
 
   function define(newDefinition: z.infer<T>) {

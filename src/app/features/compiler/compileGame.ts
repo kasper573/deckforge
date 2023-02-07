@@ -23,7 +23,7 @@ import type {
   RuntimeScriptAPI,
 } from "./types";
 import { createPile } from "./apis/Pile";
-import { compileScriptDescribed } from "./compileScript";
+import { compileModuleDescribed } from "./compileModule";
 
 export type GameRuntime<G extends RuntimeGenerics> = Machine<
   RuntimeMachineContext<G>
@@ -84,7 +84,7 @@ export function compileGame<G extends RuntimeGenerics>(
     );
 
     const effects = gameDefinition.events.reduce((effects, { name, code }) => {
-      effects[name as keyof typeof effects] = compileScriptDescribed(
+      effects[name as keyof typeof effects] = compileModuleDescribed(
         "Event",
         name,
         code,
@@ -112,7 +112,7 @@ export function compileGame<G extends RuntimeGenerics>(
     }
 
     const compiledMiddlewares = gameDefinition.middlewares.map((middleware) =>
-      compileScriptDescribed("Middleware", middleware.name, middleware.code, {
+      compileModuleDescribed("Middleware", middleware.name, middleware.code, {
         type: runtimeDefinition.middleware,
         scriptAPI,
         initialValue: () => {},
@@ -174,7 +174,7 @@ function compileCard<G extends RuntimeGenerics>(
     typeId: cardId,
     name: name,
     properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
-    effects: compileScriptDescribed("Card", name, code, {
+    effects: compileModuleDescribed("Card", name, code, {
       type: options.runtimeDefinition.card.shape.effects,
       scriptAPI: { ...options.scriptAPI, thisCardId: id },
       initialValue: {},

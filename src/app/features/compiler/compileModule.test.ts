@@ -1,8 +1,8 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
 import type { AnyFunction } from "js-interpreter";
-import type { CompileScriptResult } from "./compileScript";
-import { compileScript } from "./compileScript";
+import type { CompileModuleResult } from "./compileModule";
+import { compileModule } from "./compileModule";
 import type { RuntimeScriptAPI } from "./types";
 
 describe("can compile", () => {
@@ -84,7 +84,7 @@ function generateTests<T extends ZodType>(
   type: T,
   expectation: ((value: z.infer<T>) => unknown) | unknown
 ) {
-  function assert(res: CompileScriptResult<T>) {
+  function assert(res: CompileModuleResult<T>) {
     if (typeof expectation === "function") {
       if (res.type === "error") {
         throw res.error;
@@ -96,12 +96,12 @@ function generateTests<T extends ZodType>(
   }
 
   it("using define", () => {
-    const res = compileScript(`define(${code})`, { type, scriptAPI });
+    const res = compileModule(`define(${code})`, { type, scriptAPI });
     assert(res);
   });
 
   it("using derive", () => {
-    const res = compileScript(`derive(() => (${code}))`, { type, scriptAPI });
+    const res = compileModule(`derive(() => (${code}))`, { type, scriptAPI });
     assert(res);
   });
 }
