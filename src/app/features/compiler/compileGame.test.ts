@@ -126,7 +126,78 @@ define((state) => {
       events: [
         {
           eventId: v4() as EventId,
-          name: "playCard",
+          name: "play",
+          code: ``,
+          inputType: { player: "string", target: "string" },
+        },
+      ],
+      cards: [
+        {
+          cardId: v4() as CardId,
+          deckId,
+          name: "Lifesteal",
+          propertyDefaults: {},
+          code: `
+define({
+  play (state, {player: playerId, target: targetId, cardId}) {
+    const player = state.players.find((p) => p.id === playerId);
+    const target = state.players.find((p) => p.id === targetId);
+    const card = player.board.hand.find((c) => c.id === cardId);
+    if (card) {
+      player.properties.health += 5;
+      target.properties.health -= 5;
+    }
+  }
+})`,
+        },
+      ],
+      decks: [{ deckId, name: "Test Deck" }],
+    };
+    const runtimeDefinition = defineTestRuntime(gameDefinition);
+    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
+
+    runtime.execute((state) => {
+      const [player1, player2] = state.players;
+      const [card] = state.decks[0].cards;
+      player1.board.hand.push(card);
+      runtime?.actions.play({
+        player: player1.id,
+        target: player2.id,
+        cardId: card.id,
+      });
+      expect(player1.properties.health).toBe(15);
+      expect(player2.properties.health).toBe(5);
+    });
+  });
+
+  it("cloned card effect can mutate player property", () => {
+    const deckId = v4() as DeckId;
+    const gameDefinition: GameDefinition = {
+      properties: [
+        {
+          entityId: "player" as EntityId,
+          propertyId: v4() as PropertyId,
+          name: "health",
+          type: "number",
+          defaultValue: 10,
+        },
+      ],
+      middlewares: [],
+      events: [
+        {
+          eventId: v4() as EventId,
+          name: "clone",
+          code: `
+derive(({cloneCard}) => ({players, decks: [deck]}) => {
+  for (const player of players) {
+    player.board.hand.push(cloneCard(deck.cards[0]));
+  }
+})`,
+          inputType: { player: "string", target: "string" },
+        },
+        {
+          eventId: v4() as EventId,
+          name: "play",
           code: ``,
           inputType: { player: "string", target: "string" },
         },
@@ -139,14 +210,14 @@ define((state) => {
           propertyDefaults: {},
           code: `
 derive(({thisCardId}) => ({
-  playCard (state, {player: playerId, target: targetId, cardId}) {
-    if (cardId !== thisCardId) {
-      return;
-    }
+  play (state, {player: playerId, target: targetId, cardId}) {
     const player = state.players.find((p) => p.id === playerId);
     const target = state.players.find((p) => p.id === targetId);
-    player.properties.health += 5;
-    target.properties.health -= 5;
+    const card = player.board.hand.find(c => c.id === cardId);
+    if (card?.typeId === thisCardId) {
+      player.properties.health += 5;
+      target.properties.health -= 5;
+    }
   }
 }))`,
         },
@@ -158,11 +229,11 @@ derive(({thisCardId}) => ({
 
     runtime.execute((state) => {
       const [player1, player2] = state.players;
-      const cardId = state.decks[0].cards[0].id;
-      runtime?.actions.playCard({
+      runtime?.actions.clone();
+      runtime?.actions.play({
         player: player1.id,
         target: player2.id,
-        cardId,
+        cardId: player1.board.hand[0].id,
       });
       expect(player1.properties.health).toBe(15);
       expect(player2.properties.health).toBe(5);
