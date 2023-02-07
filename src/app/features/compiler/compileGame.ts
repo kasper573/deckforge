@@ -22,7 +22,6 @@ import type {
   RuntimePlayerId,
   RuntimeScriptAPI,
 } from "./types";
-import { createPile } from "./apis/Pile";
 import { compileModuleDescribed } from "./compileModule";
 
 export type GameRuntime<G extends RuntimeGenerics> = Machine<
@@ -130,9 +129,9 @@ export function compileGame<G extends RuntimeGenerics>(
         deckId: decks[0]?.id,
         properties,
         board: {
-          draw: createPile(),
-          discard: createPile(),
-          hand: createPile(),
+          draw: [],
+          discard: [],
+          hand: [],
         },
       };
     }

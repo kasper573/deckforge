@@ -86,7 +86,7 @@ define((state, damage) => {
 define((state) => {
   const deck = state.decks[0].cards;
   for (const player of state.players) {
-    player.board.draw.add(deck[0]);
+    player.board.draw.push(deck[0]);
   }
 });`,
         },
@@ -106,7 +106,7 @@ define((state) => {
     const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
     runtime.actions.addCard();
     const [player1] = runtime.state.players;
-    expect(player1.board.draw.size).toBe(1);
+    expect(player1.board.draw.length).toBe(1);
     expect(player1.board.draw.at(0)).toBe(runtime.state.decks[0].cards[0]);
   });
 

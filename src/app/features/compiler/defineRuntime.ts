@@ -25,7 +25,6 @@ import type {
   RuntimeScriptAPI,
   RuntimeStateFactory,
 } from "./types";
-import { zodPile } from "./apis/Pile";
 import type { CardInstanceId } from "./types";
 import type { RuntimeEffect } from "./types";
 
@@ -94,7 +93,7 @@ export function defineRuntime<
     cards: z.array(card),
   }) as unknown as RuntimeDefinition<G>["deck"];
 
-  const cardPile = zodPile(card) as unknown as RuntimeDefinition<G>["cardPile"];
+  const cardPile = z.array(card) as unknown as RuntimeDefinition<G>["cardPile"];
 
   const player = z.object({
     id: playerId,
