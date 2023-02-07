@@ -76,7 +76,7 @@ export interface RuntimeDefinition<
 > {
   globals: ZodObject<ZodShapeFor<G["globalProps"]>>;
   state: ZodType<RuntimeState<G>>;
-  deck: ZodType<RuntimeDeck<G>>;
+  deck: ZodObject<ZodShapeFor<RuntimeDeck<G>>>;
   card: ZodObject<ZodShapeFor<RuntimeCard<G>>>;
   cardEffects: ZodType<Partial<RuntimeEffects<G>>>;
   cardPile: ZodType<RuntimeCard<G>[]>;

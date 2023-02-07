@@ -6,13 +6,7 @@ import type {
   RuntimeGenericsFor,
   RuntimeMachineContext,
 } from "../../compiler/types";
-import { cardInstanceIdType, runtimePlayerIdType } from "../../compiler/types";
-
-export const gameStatusType = z.union([
-  z.object({ type: z.literal("idle") }),
-  z.object({ type: z.literal("battle") }),
-  z.object({ type: z.literal("result"), winner: runtimePlayerIdType }),
-]);
+import { cardInstanceIdType } from "../../compiler/types";
 
 export const runtimeDefinition = defineRuntime({
   playerProperties: {
@@ -25,8 +19,12 @@ export const runtimeDefinition = defineRuntime({
     manaCost: z.number(),
   },
   globalProperties: ({ playerId }) => ({
-    status: gameStatusType,
     currentPlayerId: playerId,
+    status: z.union([
+      z.object({ type: z.literal("idle") }),
+      z.object({ type: z.literal("battle") }),
+      z.object({ type: z.literal("result"), winner: playerId }),
+    ]),
   }),
   actions: ({ playerId, deckId }) => {
     const cardPayload = z.object({
@@ -61,11 +59,11 @@ export const runtimeDefinition = defineRuntime({
   },
 });
 
-export type VersusGameStatus = z.infer<typeof gameStatusType>;
-
 export type VersusDefinition = typeof runtimeDefinition;
+
 export type VersusGenerics = RuntimeGenericsFor<VersusDefinition>;
 export type VersusTypes = inferFromZodShape<VersusDefinition>;
+export type VersusGameStatus = VersusTypes["globals"]["status"];
 export type VersusMachineContext = RuntimeMachineContext<VersusGenerics>;
 
 export const adapter = createReactAdapter<VersusMachineContext>();
