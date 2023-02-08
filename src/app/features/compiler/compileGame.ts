@@ -82,7 +82,6 @@ export function compileGame<G extends RuntimeGenerics>(
         {
           type: runtimeDefinition.effects.shape[name],
           scriptAPI,
-          initialValue: () => {},
         }
       );
       return effects;
@@ -92,7 +91,6 @@ export function compileGame<G extends RuntimeGenerics>(
       compileModuleDescribed("Middleware", middleware.name, middleware.code, {
         type: runtimeDefinition.middleware,
         scriptAPI,
-        initialValue: () => {},
       })
     );
 
@@ -146,7 +144,7 @@ function compileCard<G extends RuntimeGenerics>(
   { cardId, name, code, propertyDefaults }: Card,
   options: {
     runtimeDefinition: RuntimeDefinition<G>;
-    scriptAPI: RuntimeScriptAPI<G>;
+    scriptAPI: RuntimeModuleAPI<G>;
     cardProperties: Property[];
   }
 ): RuntimeCard<G> {
@@ -179,7 +177,6 @@ function compileCardEffects<G extends RuntimeGenerics>(
   return compileModuleDescribed("Card", name, code, {
     type: options.runtimeDefinition.cardEffects,
     scriptAPI: { ...options.scriptAPI, thisCardId: cardId },
-    initialValue: {},
   });
 }
 

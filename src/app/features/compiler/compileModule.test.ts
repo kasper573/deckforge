@@ -1,98 +1,41 @@
-import type { ZodType } from "zod";
 import { z } from "zod";
-import type { AnyFunction } from "js-interpreter";
-import type { CompileModuleResult } from "./compileModule";
+import type {
+  CompileModuleResult,
+  inferModuleOutput,
+  ModuleOutputType,
+} from "./compileModule";
 import { compileModule } from "./compileModule";
 import type { RuntimeModuleAPI } from "./types";
 
 describe("can compile", () => {
-  describe("number", () => {
-    generateTests("123", z.number(), 123);
-  });
-
-  describe("string", () => {
-    generateTests("'abc'", z.string(), "abc");
-  });
-
-  describe("boolean", () => {
-    generateTests("true", z.boolean(), true);
-  });
-
-  describe("null", () => {
-    generateTests("null", z.null(), null);
-  });
-
-  describe("undefined", () => {
-    generateTests("undefined", z.undefined(), undefined);
-  });
-
-  describe("class", () => {
-    generateTests(
-      `class Foo {
-        constructor (count) {
-          this.count = count;
-        }
-        next () { return ++this.count; } 
-      }`,
-      z.function(),
-      (Foo: new (n: number) => { next(): number }) => {
-        expect(Foo.name).toEqual("Foo");
-        const foo = new Foo(1);
-        foo.next();
-        expect(foo.next()).toEqual(3);
-      }
-    );
-  });
-
-  describe("empty array", () => {
-    generateTests("[]", z.array(z.unknown()), []);
-  });
-
-  describe("array with values", () => {
-    generateTests(
-      "[1, `foo`, () => 1]",
-      z.tuple([z.number(), z.string(), z.function()]),
-      ([num, str, fn]: [number, string, AnyFunction]) => {
-        expect(num).toEqual(1);
-        expect(str).toEqual("foo");
-        expect(fn()).toEqual(1);
-      }
-    );
-  });
-
-  describe("empty object", () => {
-    generateTests("{}", z.object({}), {});
-  });
-
-  describe("object with properties", () => {
-    generateTests(
-      "{ a: `foo`, b: 2, c () {} }",
-      z.object({ a: z.string(), b: z.number(), c: z.function() }),
-      { a: "foo", b: 2, c: expect.any(Function) }
-    );
-  });
-
-  describe("function", () => {
-    generateTests("(a, b) => a + b", z.function(), (fn: AnyFunction) => {
+  describe("single function", () => {
+    generateTests("(a, b) => a + b", z.function(), (fn) => {
       expect(fn(1, 2)).toEqual(3);
     });
   });
+
+  describe("function record", () => {
+    generateTests(
+      `{add: (a, b) => a + b, sub: (a, b) => a - b}`,
+      z.object({ add: z.function(), sub: z.function() }),
+      ({ add, sub }) => {
+        expect(add(1, 2)).toEqual(3);
+        expect(sub(1, 2)).toEqual(-1);
+      }
+    );
+  });
 });
 
-function generateTests<T extends ZodType>(
+function generateTests<T extends ModuleOutputType>(
   code: string,
   type: T,
-  expectation: ((value: z.infer<T>) => unknown) | unknown
+  expectation: (value: inferModuleOutput<T>) => unknown
 ) {
   function assert(res: CompileModuleResult<T>) {
-    if (typeof expectation === "function") {
-      if (res.type === "error") {
-        throw res.error;
-      }
-      expectation(res.value as z.infer<T>);
-    } else {
-      expect(res).toEqual({ type: "success", value: expectation });
+    if (res.type === "error") {
+      throw res.error;
     }
+    expectation(res.value as z.infer<T>);
   }
 
   it("using define", () => {

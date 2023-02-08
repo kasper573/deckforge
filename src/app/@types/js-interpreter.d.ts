@@ -15,6 +15,8 @@ declare module "js-interpreter" {
     step(): boolean;
     createNativeFunction(fn: AnyFunction): NativeFunctionReference;
     setProperty(target: unknown, name: string, value: unknown): void;
+    appendCode(code: string): void;
+    readonly value: unknown;
   }
 
   export = JSInterpreter;
