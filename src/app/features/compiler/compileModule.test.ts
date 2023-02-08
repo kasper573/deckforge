@@ -30,6 +30,23 @@ describe("supports", () => {
     });
   });
 
+  it("calling module A from module B", () => {
+    const moduleA = compileModule(`(...args) => ["A", ...args]`, {
+      type: z.function(),
+    });
+    const moduleB = compileModule(`(...args) => moduleA("B", ...args)`, {
+      type: z.function(),
+      scriptAPI: { moduleA },
+    });
+
+    assert(moduleA, () => {
+      assert(moduleB, (b) => {
+        const res = b("input");
+        expect(res).toEqual(["A", "B", "input"]);
+      });
+    });
+  });
+
   describe("scriptAPI functions", () => {
     function test(path: [string, ...string[]]) {
       const res = compileWithScriptAPIValueAtPath(
