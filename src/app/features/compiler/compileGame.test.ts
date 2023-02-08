@@ -188,7 +188,7 @@ define({
           eventId: v4() as EventId,
           name: "clone",
           code: `
-derive(({cloneCard}) => ({players, decks: [deck]}) => {
+define(({players, decks: [deck]}) => {
   for (const player of players) {
     player.board.hand.push(cloneCard(deck.cards[0]));
   }
@@ -209,7 +209,7 @@ derive(({cloneCard}) => ({players, decks: [deck]}) => {
           name: "Lifesteal",
           propertyDefaults: {},
           code: `
-derive(({thisCardId}) => ({
+define({
   play (state, {player: playerId, target: targetId, cardId}) {
     const player = state.players.find((p) => p.id === playerId);
     const target = state.players.find((p) => p.id === targetId);
@@ -219,7 +219,7 @@ derive(({thisCardId}) => ({
       target.properties.health -= 5;
     }
   }
-}))`,
+})`,
         },
       ],
       decks: [{ deckId, name: "Test Deck" }],
@@ -306,13 +306,13 @@ derive(({thisCardId}) => ({
       events: [
         {
           eventId: v4() as EventId,
-          name: "increaseUntil",
+          name: "increaseN",
           code: `
-          derive(({actions}) => (state, max) => {
+          define((state, n) => {
             const [player] = state.players;
-            if (player.properties.count < max) {
+            if (n > 0) {
               player.properties.count++;
-              actions.increaseUntil(max);
+              actions.increaseN(n - 1);
             }
           });
           `,
@@ -325,7 +325,7 @@ derive(({thisCardId}) => ({
     const runtimeDefinition = defineTestRuntime(gameDefinition);
     const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
     runtime.execute((state) => {
-      runtime.actions.increaseUntil(10);
+      runtime.actions.increaseN(10);
       expect(state.players[0].properties.count).toBe(10);
     });
   });

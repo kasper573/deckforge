@@ -73,8 +73,5 @@ function declareModuleDefinition(p: {
   apiType: string;
   definitionType: string;
 }) {
-  return [
-    `declare function ${moduleCompilerSymbols.defineName}(definition: ${p.definitionType}): void;`,
-    `declare function ${moduleCompilerSymbols.deriveName}(createDefinition: (api: ${p.apiType}) => ${p.definitionType}): void;`,
-  ].join("\n");
+  return `declare function ${moduleCompilerSymbols.defineName}(definition: ${p.definitionType}): void;`;
 }
