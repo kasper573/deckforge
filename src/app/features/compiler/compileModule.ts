@@ -15,6 +15,9 @@ export type ModuleOutputFunction = AnyFunction;
 export type ModuleOutputRecord = Partial<Record<string, ModuleOutputFunction>>;
 export type inferModuleOutput<T extends ModuleOutputType> = z.infer<T>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyZodFunction = ZodFunction<any, any>;
+
 export type CompileModuleResult<T extends ModuleOutputType> =
   | { type: "success"; value: inferModuleOutput<T> }
   | { type: "error"; error: unknown };
@@ -51,22 +54,7 @@ export function compileModuleDescribed<
 export function compileModule<
   T extends ModuleOutputType,
   G extends RuntimeGenerics
->(code: string, options: CompileModuleOptions<T, G>): CompileModuleResult<T> {
-  try {
-    const value = createProcedureInterpreter(code, options.type);
-    return { type: "success", value };
-  } catch (error) {
-    return {
-      type: "error",
-      error: `Script compile error: ${error}`,
-    };
-  }
-}
-
-function createProcedureInterpreter<T extends ModuleOutputType>(
-  proceduresCode: string,
-  type: T
-): inferModuleOutput<T> {
+>(code: string, { type }: CompileModuleOptions<T, G>): CompileModuleResult<T> {
   const definitionVariable = "def_" + v4().replaceAll("-", "_");
 
   const bridgeCode = `
@@ -79,11 +67,16 @@ function createProcedureInterpreter<T extends ModuleOutputType>(
     }
   `;
 
-  const startupCode = transpile(`${bridgeCode}\n${proceduresCode}`);
-
-  const interpreter = new JSInterpreter(startupCode);
-
-  flush();
+  let interpreter: JSInterpreter;
+  try {
+    interpreter = new JSInterpreter(transpile(`${bridgeCode}\n${code}`));
+    flush();
+  } catch (error) {
+    return {
+      type: "error",
+      error: `Script compile error: ${error}`,
+    };
+  }
 
   function flush() {
     const hasMore = interpreter.run();
@@ -106,10 +99,7 @@ function createProcedureInterpreter<T extends ModuleOutputType>(
     return JSON.parse(interpreter.value as string);
   }
 
-  function createFunctionProxy<T extends AnyZodFunction>(
-    name: string | undefined,
-    type: T
-  ) {
+  function createFunctionProxy<T extends AnyZodFunction>(name?: string) {
     type Fn = z.infer<T>;
     function moduleFunctionProxy(...args: Parameters<Fn>): ReturnType<Fn> {
       const result = invoke(name, args);
@@ -120,17 +110,18 @@ function createProcedureInterpreter<T extends ModuleOutputType>(
   }
 
   if (type instanceof ZodObject) {
-    return Object.entries(type.shape as Record<string, AnyZodFunction>).reduce(
-      (acc: ModuleOutputRecord, [key, value]) => ({
+    const proxies = Object.keys(type.shape).reduce(
+      (acc: ModuleOutputRecord, key) => ({
         ...acc,
-        [key]: createFunctionProxy(key, value),
+        [key]: createFunctionProxy(key),
       }),
       {}
     );
+    return { type: "success", value: proxies };
   }
 
   if (type instanceof ZodFunction) {
-    return createFunctionProxy(undefined, type);
+    return { type: "success", value: createFunctionProxy() };
   }
 
   throw new Error("Unsupported type");
@@ -148,9 +139,6 @@ export const moduleCompilerSymbols = {
   defineName: "define",
   deriveName: "derive",
 } as const;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyZodFunction = ZodFunction<any, any>;
 
 function mutate(a: unknown, b: unknown) {
   if (Array.isArray(a) && Array.isArray(b)) {
