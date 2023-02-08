@@ -26,20 +26,14 @@ import type {
 } from "./types";
 import { compileModuleDescribed } from "./compileModule";
 
+export interface CompileGameResult<G extends RuntimeGenerics> {
+  runtime?: GameRuntime<G>;
+  errors?: unknown[];
+}
+
 export type GameRuntime<G extends RuntimeGenerics> = Machine<
   RuntimeMachineContext<G>
 >;
-
-export type GameInitialPlayer<G extends RuntimeGenerics> = Omit<
-  RuntimePlayer<G>,
-  "properties"
-> & {
-  properties?: Partial<RuntimePlayer<G>["properties"]>;
-};
-
-export interface GameInitialState<G extends RuntimeGenerics> {
-  players: [GameInitialPlayer<G>, GameInitialPlayer<G>];
-}
 
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
@@ -50,7 +44,7 @@ export function compileGame<G extends RuntimeGenerics>(
       compiledMiddlewares: RuntimeMiddleware<G>[]
     ) => RuntimeMiddleware<G>[];
   }
-): { runtime?: GameRuntime<G>; errors?: unknown[] } {
+): CompileGameResult<G> {
   try {
     const cardProperties = gameDefinition.properties.filter(
       (p) => p.entityId === "card"
