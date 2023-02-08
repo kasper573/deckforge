@@ -203,5 +203,6 @@ function mutate(a: unknown, b: unknown) {
     b !== null
   ) {
     Object.assign(a, b);
-  } else return a;
+  }
+  return a;
 }
