@@ -9,19 +9,19 @@ import { compileModule } from "./compileModule";
 
 describe("supports", () => {
   describe("return value", () => {
-    generateTests("() => 5", (fn) => {
+    testModuleOutputs("() => 5", (fn) => {
       expect(fn()).toEqual(5);
     });
   });
 
   describe("arguments", () => {
-    generateTests("(a, b) => a + b", (fn) => {
+    testModuleOutputs("(a, b) => a + b", (fn) => {
       expect(fn(1, 2)).toEqual(3);
     });
   });
 
   describe("argument mutation", () => {
-    generateTests("(a, b) => { a.x = 1; b.x = 2; }", (fn) => {
+    testModuleOutputs("(a, b) => { a.x = 1; b.x = 2; }", (fn) => {
       const a = { x: 0 };
       const b = { x: 0 };
       fn(a, b);
@@ -120,7 +120,7 @@ function compileWithGlobalAtPath(
   });
 }
 
-function generateTests(
+function testModuleOutputs(
   functionDefinitionCode: string,
   assertion: (value: AnyFunction) => unknown
 ) {
