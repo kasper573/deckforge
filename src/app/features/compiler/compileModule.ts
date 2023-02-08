@@ -3,11 +3,10 @@ import type { AnyFunction } from "js-interpreter";
 import JSInterpreter from "js-interpreter";
 import type { z, ZodType } from "zod";
 import { ZodFunction, ZodObject } from "zod";
-import { v4 } from "uuid";
 import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { LogSpreadError } from "../editor/components/LogList";
-import type { RuntimeGenerics, RuntimeModuleAPI } from "./types";
+import type { RuntimeGenerics } from "./types";
 
 export type ModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
@@ -27,7 +26,7 @@ export interface CompileModuleOptions<
   G extends RuntimeGenerics
 > {
   type: T;
-  scriptAPI: RuntimeModuleAPI<G>;
+  scriptAPI?: object;
 }
 
 export function compileModuleDescribed<
@@ -54,11 +53,16 @@ export function compileModuleDescribed<
 export function compileModule<
   T extends ModuleOutputType,
   G extends RuntimeGenerics
->(code: string, { type }: CompileModuleOptions<T, G>): CompileModuleResult<T> {
-  const definitionVariable = "def_" + v4().replaceAll("-", "_");
+>(
+  code: string,
+  { type, scriptAPI = {} }: CompileModuleOptions<T, G>
+): CompileModuleResult<T> {
+  const callFnName = "___call___";
+  const definitionVariable = "___def___";
 
   const bridgeCode = `
     let ${definitionVariable};
+    ${generateNativeBridgeCode(scriptAPI, callFnName)}
     function ${moduleCompilerSymbols.defineName}(definition) {
       ${definitionVariable} = definition;
     }
@@ -69,7 +73,10 @@ export function compileModule<
 
   let interpreter: JSInterpreter;
   try {
-    interpreter = new JSInterpreter(transpile(`${bridgeCode}\n${code}`));
+    code = transpile(`${bridgeCode}\n${code}`);
+    interpreter = new JSInterpreter(code, (i, globals) => {
+      i.setProperty(globals, callFnName, i.createNativeFunction(call));
+    });
     flush();
   } catch (error) {
     return {
@@ -83,6 +90,18 @@ export function compileModule<
     if (hasMore) {
       throw new Error("Script did not resolve immediately");
     }
+  }
+
+  function call(payload: string) {
+    const [path, args] = JSON.parse(payload) as [string[], unknown[]];
+    const fn = path.reduce(
+      (obj, key) => obj[key as keyof typeof obj],
+      scriptAPI as object
+    );
+    if (typeof fn !== "function") {
+      throw new Error(`"${path.join(".")}" is not a function`);
+    }
+    return JSON.stringify(fn(...args));
   }
 
   function invoke(
@@ -125,6 +144,41 @@ export function compileModule<
   }
 
   throw new Error("Unsupported type");
+}
+
+function generateNativeBridgeCode(scriptAPI: object, callFnName: string) {
+  return Object.entries(scriptAPI)
+    .map(
+      ([key, value]) => `const ${key} = ${valueToJS(value, callFnName, [key])};`
+    )
+    .join("\n");
+}
+
+function valueToJS(
+  value: unknown,
+  callFnName: string,
+  path: Array<string | number>
+): string {
+  const chain = (child: unknown, step: string | number) =>
+    valueToJS(child, callFnName, [...path, step]);
+
+  if (Array.isArray(value)) {
+    return `[${value.map(chain).join(", ")}]`;
+  }
+  if (typeof value === "object" && value !== null) {
+    return `{${Object.entries(value)
+      .map(([key, child]) => `${JSON.stringify(key)}: ${chain(child, key)}`)
+      .join(", ")}}`;
+  }
+  if (typeof value === "function") {
+    return `function () {
+      const path = ${JSON.stringify(path)};
+      const args = Array.prototype.slice.call(arguments); 
+      const result = ${callFnName}(JSON.stringify([path, args]));
+      return result !== undefined ? JSON.parse(result) : undefined; 
+    }`;
+  }
+  return JSON.stringify(value);
 }
 
 function transpile(code: string) {

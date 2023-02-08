@@ -6,7 +6,6 @@ import type {
   ModuleOutputType,
 } from "./compileModule";
 import { compileModule } from "./compileModule";
-import type { RuntimeModuleAPI } from "./types";
 
 describe("supports", () => {
   describe("function return value", () => {
@@ -25,26 +24,52 @@ describe("supports", () => {
     });
   });
 
-  it("a function using a scriptAPI action", () => {
-    const res = compileModule(`define(() => actions.add(1, 2))`, {
-      type: z.function(),
-      scriptAPI: {
-        ...scriptAPI,
-        actions: { add: (a: number, b: number) => a + b },
-      },
-    });
-    assert(res, (fn) => {
-      expect(fn(1, 2)).toEqual(3);
-    });
+  describe("function calling scriptAPI functions", () => {
+    function test(path: [string, ...string[]]) {
+      const res = compileWithScriptAPIValueAtPath(
+        path,
+        `define((...args) => ${path.join(".")}(...args))`,
+        (...args: unknown[]) => [path, ...args]
+      );
+      assert(res, (fn) => {
+        expect(fn(1, 2)).toEqual([path, 1, 2]);
+      });
+    }
+    it("in root", () => test(["root"]));
+    it("in nested object", () => test(["root", "nested"]));
+    it("in deeply nested object", () => test(["root", "nested", "deeply"]));
+  });
+
+  describe("function using scriptAPI values", () => {
+    function test(path: [string, ...string[]]) {
+      const values = [
+        false,
+        true,
+        0,
+        1,
+        "",
+        "a",
+        {},
+        { a: 1 },
+        [],
+        [1, 2, 3],
+        null,
+        undefined,
+      ];
+      const res = compileWithScriptAPIValueAtPath(
+        path,
+        `define(() => ${path.join(".")})`,
+        values
+      );
+      assert(res, (fn) => {
+        expect(fn()).toEqual(values);
+      });
+    }
+    it("in root", () => test(["root"]));
+    it("in nested object", () => test(["root", "nested"]));
+    it("in deeply nested object", () => test(["root", "nested", "deeply"]));
   });
 });
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const scriptAPI: RuntimeModuleAPI<any> = {
-  actions: {},
-  cloneCard: () => ({} as never),
-  random: Math.random,
-};
 
 function assert<T extends ModuleOutputType>(
   res: CompileModuleResult<T>,
@@ -54,6 +79,22 @@ function assert<T extends ModuleOutputType>(
     throw res.error;
   }
   assertion?.(res.value as z.infer<T>);
+}
+
+function compileWithScriptAPIValueAtPath(
+  path: [string, ...string[]],
+  code: string,
+  leafValue: unknown
+) {
+  const scriptAPI = path.reduceRight(
+    (acc: object, key) => ({ [key]: acc }),
+    leafValue as object
+  );
+
+  return compileModule(code, {
+    type: z.function(),
+    scriptAPI,
+  });
 }
 
 function generateTests(
@@ -86,12 +127,12 @@ function generateDefineDeriveTestBranches<T extends ModuleOutputType>(
   assertion: (value: inferModuleOutput<T>) => unknown
 ) {
   it("using define", () => {
-    const res = compileModule(`define(${code})`, { type, scriptAPI });
+    const res = compileModule(`define(${code})`, { type });
     assert(res, assertion);
   });
 
   it("using derive", () => {
-    const res = compileModule(`derive(() => (${code}))`, { type, scriptAPI });
+    const res = compileModule(`derive(() => (${code}))`, { type });
     assert(res, assertion);
   });
 }
