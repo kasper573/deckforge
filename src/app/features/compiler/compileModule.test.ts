@@ -8,13 +8,19 @@ import type {
 import { compileModule } from "./compileModule";
 
 describe("supports", () => {
-  describe("function return value", () => {
+  describe("return value", () => {
+    generateTests("() => 5", (fn) => {
+      expect(fn()).toEqual(5);
+    });
+  });
+
+  describe("arguments", () => {
     generateTests("(a, b) => a + b", (fn) => {
       expect(fn(1, 2)).toEqual(3);
     });
   });
 
-  describe("function argument mutation", () => {
+  describe("argument mutation", () => {
     generateTests("(a, b) => { a.x = 1; b.x = 2; }", (fn) => {
       const a = { x: 0 };
       const b = { x: 0 };
@@ -24,7 +30,7 @@ describe("supports", () => {
     });
   });
 
-  describe("function calling scriptAPI functions", () => {
+  describe("scriptAPI functions", () => {
     function test(path: [string, ...string[]]) {
       const res = compileWithScriptAPIValueAtPath(
         path,
@@ -40,7 +46,7 @@ describe("supports", () => {
     it("in deeply nested object", () => test(["root", "nested", "deeply"]));
   });
 
-  describe("function using scriptAPI values", () => {
+  describe("scriptAPI values", () => {
     function test(path: [string, ...string[]]) {
       const values = [
         false,
@@ -101,38 +107,23 @@ function generateTests(
   functionDefinitionCode: string,
   assertion: (value: AnyFunction) => unknown
 ) {
-  describe("single function", () => {
-    generateDefineDeriveTestBranches(
-      functionDefinitionCode,
-      z.function(),
+  it("single function", () => {
+    assert(
+      compileModule(`define(${functionDefinitionCode})`, {
+        type: z.function(),
+      }),
       assertion
     );
   });
 
-  describe("function record", () => {
-    generateDefineDeriveTestBranches(
-      `{ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} }`,
-      z.object({ first: z.function(), second: z.function() }),
-      ({ first, second }) => {
-        assertion(first);
-        assertion(second);
-      }
+  it("function record", () => {
+    const res = compileModule(
+      `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
+      { type: z.object({ first: z.function(), second: z.function() }) }
     );
-  });
-}
-
-function generateDefineDeriveTestBranches<T extends ModuleOutputType>(
-  code: string,
-  type: T,
-  assertion: (value: inferModuleOutput<T>) => unknown
-) {
-  it("using define", () => {
-    const res = compileModule(`define(${code})`, { type });
-    assert(res, assertion);
-  });
-
-  it("using derive", () => {
-    const res = compileModule(`derive(() => (${code}))`, { type });
-    assert(res, assertion);
+    assert(res, ({ first, second }) => {
+      assertion(first);
+      assertion(second);
+    });
   });
 }

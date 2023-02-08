@@ -66,9 +66,6 @@ export function compileModule<
     function ${moduleCompilerSymbols.defineName}(definition) {
       ${definitionVariable} = definition;
     }
-    function ${moduleCompilerSymbols.deriveName}(createDefinition) {
-      ${definitionVariable} = createDefinition({});
-    }
   `;
 
   let interpreter: JSInterpreter;
@@ -191,7 +188,6 @@ function transpile(code: string) {
 
 export const moduleCompilerSymbols = {
   defineName: "define",
-  deriveName: "derive",
 } as const;
 
 function mutate(a: unknown, b: unknown) {
