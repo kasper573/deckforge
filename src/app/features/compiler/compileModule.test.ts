@@ -36,7 +36,7 @@ describe("supports", () => {
     });
     const moduleB = compileModule(`(...args) => moduleA("B", ...args)`, {
       type: z.function(),
-      scriptAPI: { moduleA },
+      globals: { moduleA },
     });
 
     assert(moduleA, () => {
@@ -47,9 +47,9 @@ describe("supports", () => {
     });
   });
 
-  describe("scriptAPI functions", () => {
+  describe("global functions", () => {
     function test(path: [string, ...string[]]) {
-      const res = compileWithScriptAPIValueAtPath(
+      const res = compileWithGlobalAtPath(
         path,
         `define((...args) => ${path.join(".")}(...args))`,
         (...args: unknown[]) => [path, ...args]
@@ -63,7 +63,7 @@ describe("supports", () => {
     it("in deeply nested object", () => test(["root", "nested", "deeply"]));
   });
 
-  describe("scriptAPI values", () => {
+  describe("global values", () => {
     function test(path: [string, ...string[]]) {
       const values = [
         false,
@@ -79,7 +79,7 @@ describe("supports", () => {
         null,
         undefined,
       ];
-      const res = compileWithScriptAPIValueAtPath(
+      const res = compileWithGlobalAtPath(
         path,
         `define(() => ${path.join(".")})`,
         values
@@ -104,7 +104,7 @@ function assert<T extends ModuleOutputType>(
   assertion?.(res.value as z.infer<T>);
 }
 
-function compileWithScriptAPIValueAtPath(
+function compileWithGlobalAtPath(
   path: [string, ...string[]],
   code: string,
   leafValue: unknown
@@ -116,7 +116,7 @@ function compileWithScriptAPIValueAtPath(
 
   return compileModule(code, {
     type: z.function(),
-    scriptAPI,
+    globals: scriptAPI,
   });
 }
 

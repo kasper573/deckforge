@@ -26,7 +26,7 @@ export interface CompileModuleOptions<
   G extends RuntimeGenerics
 > {
   type: T;
-  scriptAPI?: object;
+  globals?: object;
 }
 
 export function compileModuleDescribed<
@@ -55,14 +55,14 @@ export function compileModule<
   G extends RuntimeGenerics
 >(
   code: string,
-  { type, scriptAPI = {} }: CompileModuleOptions<T, G>
+  { type, globals = {} }: CompileModuleOptions<T, G>
 ): CompileModuleResult<T> {
   const callFnName = "___call___";
   const definitionVariable = "___def___";
 
   const bridgeCode = `
     let ${definitionVariable};
-    ${generateNativeBridgeCode(scriptAPI, callFnName)}
+    ${bridgeGlobals(globals, callFnName)}
     function ${moduleCompilerSymbols.defineName}(definition) {
       ${definitionVariable} = definition;
     }
@@ -93,7 +93,7 @@ export function compileModule<
     const [path, args] = JSON.parse(payload) as [string[], unknown[]];
     const fn = path.reduce(
       (obj, key) => obj[key as keyof typeof obj],
-      scriptAPI as object
+      globals as object
     );
     if (typeof fn !== "function") {
       throw new Error(`"${path.join(".")}" is not a function`);
@@ -143,21 +143,22 @@ export function compileModule<
   throw new Error("Unsupported type");
 }
 
-function generateNativeBridgeCode(scriptAPI: object, callFnName: string) {
-  return Object.entries(scriptAPI)
+function bridgeGlobals(globals: object, callFnName: string): string {
+  return Object.entries(globals)
     .map(
-      ([key, value]) => `const ${key} = ${valueToJS(value, callFnName, [key])};`
+      ([key, value]) =>
+        `const ${key} = ${bridgeJSValue(value, callFnName, [key])};`
     )
     .join("\n");
 }
 
-function valueToJS(
+function bridgeJSValue(
   value: unknown,
   callFnName: string,
   path: Array<string | number>
 ): string {
   const chain = (child: unknown, step: string | number) =>
-    valueToJS(child, callFnName, [...path, step]);
+    bridgeJSValue(child, callFnName, [...path, step]);
 
   if (Array.isArray(value)) {
     return `[${value.map(chain).join(", ")}]`;
@@ -186,10 +187,6 @@ function transpile(code: string) {
   return result;
 }
 
-export const moduleCompilerSymbols = {
-  defineName: "define",
-} as const;
-
 function mutate(a: unknown, b: unknown) {
   if (Array.isArray(a) && Array.isArray(b)) {
     const maxLength = Math.max(a.length, b.length);
@@ -206,3 +203,7 @@ function mutate(a: unknown, b: unknown) {
   }
   return a;
 }
+
+export const moduleCompilerSymbols = {
+  defineName: "define",
+} as const;

@@ -50,7 +50,7 @@ export function compileGame<G extends RuntimeGenerics>(
     );
 
     const eventNames = gameDefinition.events.map((e) => e.name);
-    const scriptAPI: RuntimeModuleAPI<G> = {
+    const moduleAPI: RuntimeModuleAPI<G> = {
       random: createRandomFn(options?.seed),
       cloneCard,
       actions: functionRouter(eventNames, () => runtime.actions),
@@ -64,9 +64,11 @@ export function compileGame<G extends RuntimeGenerics>(
         cards: gameDefinition.cards
           .filter((c) => c.deckId === deck.deckId)
           .map((def) => {
-            const options = { runtimeDefinition, scriptAPI, cardProperties };
-            const card = compileCard(def, options);
-            const effects = compileCardEffects({ ...card, ...def }, options);
+            const card = compileCard<G>(def, cardProperties);
+            const effects = compileCardEffects(
+              { ...card, ...def },
+              { runtimeDefinition, moduleAPI }
+            );
             cardEffects.set(def.cardId, effects);
             return card;
           }),
@@ -80,7 +82,7 @@ export function compileGame<G extends RuntimeGenerics>(
         code,
         {
           type: runtimeDefinition.effects.shape[name],
-          scriptAPI,
+          globals: moduleAPI,
         }
       );
       return effects;
@@ -89,7 +91,7 @@ export function compileGame<G extends RuntimeGenerics>(
     const compiledMiddlewares = gameDefinition.middlewares.map((middleware) =>
       compileModuleDescribed("Middleware", middleware.name, middleware.code, {
         type: runtimeDefinition.middleware,
-        scriptAPI,
+        globals: moduleAPI,
       })
     );
 
@@ -140,18 +142,14 @@ export function compileGame<G extends RuntimeGenerics>(
 }
 
 function compileCard<G extends RuntimeGenerics>(
-  { cardId, name, code, propertyDefaults }: Card,
-  options: {
-    runtimeDefinition: RuntimeDefinition<G>;
-    scriptAPI: RuntimeModuleAPI<G>;
-    cardProperties: Property[];
-  }
+  { cardId, name, propertyDefaults }: Card,
+  cardProperties: Property[]
 ): RuntimeCard<G> {
   return {
     id: createCardInstanceId(),
     typeId: cardId,
     name: name,
-    properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
+    properties: namedPropertyDefaults(cardProperties, propertyDefaults),
   };
 }
 
@@ -169,13 +167,12 @@ function compileCardEffects<G extends RuntimeGenerics>(
   { cardId, name, code }: Card,
   options: {
     runtimeDefinition: RuntimeDefinition<G>;
-    scriptAPI: RuntimeModuleAPI<G>;
-    cardProperties: Property[];
+    moduleAPI: RuntimeModuleAPI<G>;
   }
 ) {
   return compileModuleDescribed("Card", name, code, {
     type: options.runtimeDefinition.cardEffects,
-    scriptAPI: { ...options.scriptAPI, thisCardId: cardId },
+    globals: { ...options.moduleAPI, thisCardId: cardId },
   });
 }
 
