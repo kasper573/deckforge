@@ -3,7 +3,7 @@ import { omit } from "lodash";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTSResolver } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
-import { createScriptApiDefinition } from "./defineRuntime";
+import { createModuleApiDefinition } from "./defineRuntime";
 import { moduleCompilerSymbols } from "./compileModule";
 
 export interface EditorApi<G extends RuntimeGenerics> {
@@ -34,7 +34,7 @@ export function compileEditorApi<G extends RuntimeGenerics>(
   });
 
   const common: CodeEditorTypeDefs = zodToTS.declare();
-  const scriptAPIShape = createScriptApiDefinition(definition);
+  const scriptAPIShape = createModuleApiDefinition(definition);
   const generalApiType = zodToTS(z.object(omit(scriptAPIShape, "thisCardId")));
   const cardApiType = zodToTS(z.object(scriptAPIShape));
 

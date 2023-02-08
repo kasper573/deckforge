@@ -1,6 +1,7 @@
 import { v4 } from "uuid";
 import Rand from "rand-seed";
 import produce from "immer";
+import type { AnyFunction } from "js-interpreter";
 import type {
   Card,
   CardId,
@@ -48,13 +49,11 @@ export function compileGame<G extends RuntimeGenerics>(
       (p) => p.entityId === "player"
     );
 
+    const eventNames = gameDefinition.events.map((e) => e.name);
     const scriptAPI: RuntimeModuleAPI<G> = {
       random: createRandomFn(options?.seed),
       cloneCard,
-      actions: new Proxy({} as typeof runtime.actions, {
-        get: (target, propertyName) =>
-          runtime.actions[propertyName as keyof typeof runtime.actions],
-      }),
+      actions: functionRouter(eventNames, () => runtime.actions),
     };
     const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
 
@@ -196,4 +195,16 @@ function namedPropertyDefaults(
 function createRandomFn(seed?: string) {
   const rng = new Rand(seed);
   return () => rng.next();
+}
+
+function functionRouter<T extends Record<string, AnyFunction>>(
+  names: Array<keyof T>,
+  getTarget: () => T
+): T {
+  const proxies = {} as T;
+  for (const name of names) {
+    const proxy = (...args: unknown[]) => getTarget()[name](...args);
+    proxies[name as keyof T] = proxy as T[keyof T];
+  }
+  return proxies;
 }

@@ -258,7 +258,7 @@ export function runtimeEvent<Args extends [] | [ZodTypeAny]>(...args: Args) {
   return z.function(z.tuple(args), z.void());
 }
 
-export function createScriptApiDefinition<G extends RuntimeGenerics>({
+export function createModuleApiDefinition<G extends RuntimeGenerics>({
   card,
   actions,
 }: Pick<RuntimeDefinition<G>, "card" | "actions">): ZodShapeFor<

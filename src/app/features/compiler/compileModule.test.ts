@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { AnyFunction } from "js-interpreter";
 import type {
   CompileModuleResult,
   inferModuleOutput,
@@ -7,22 +8,34 @@ import type {
 import { compileModule } from "./compileModule";
 import type { RuntimeModuleAPI } from "./types";
 
-describe("can compile", () => {
-  describe("single function", () => {
-    generateTests("(a, b) => a + b", z.function(), (fn) => {
+describe("supports", () => {
+  describe("function return value", () => {
+    generateTests("(a, b) => a + b", (fn) => {
       expect(fn(1, 2)).toEqual(3);
     });
   });
 
-  describe("function record", () => {
-    generateTests(
-      `{add: (a, b) => a + b, sub: (a, b) => a - b}`,
-      z.object({ add: z.function(), sub: z.function() }),
-      ({ add, sub }) => {
-        expect(add(1, 2)).toEqual(3);
-        expect(sub(1, 2)).toEqual(-1);
-      }
-    );
+  describe("function argument mutation", () => {
+    generateTests("(a, b) => { a.x = 1; b.x = 2; }", (fn) => {
+      const a = { x: 0 };
+      const b = { x: 0 };
+      fn(a, b);
+      expect(a.x).toEqual(1);
+      expect(b.x).toEqual(2);
+    });
+  });
+
+  it("a function using a scriptAPI action", () => {
+    const res = compileModule(`define(() => actions.add(1, 2))`, {
+      type: z.function(),
+      scriptAPI: {
+        ...scriptAPI,
+        actions: { add: (a: number, b: number) => a + b },
+      },
+    });
+    assert(res, (fn) => {
+      expect(fn(1, 2)).toEqual(3);
+    });
   });
 });
 
@@ -43,7 +56,31 @@ function assert<T extends ModuleOutputType>(
   assertion?.(res.value as z.infer<T>);
 }
 
-function generateTests<T extends ModuleOutputType>(
+function generateTests(
+  functionDefinitionCode: string,
+  assertion: (value: AnyFunction) => unknown
+) {
+  describe("single function", () => {
+    generateDefineDeriveTestBranches(
+      functionDefinitionCode,
+      z.function(),
+      assertion
+    );
+  });
+
+  describe("function record", () => {
+    generateDefineDeriveTestBranches(
+      `{ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} }`,
+      z.object({ first: z.function(), second: z.function() }),
+      ({ first, second }) => {
+        assertion(first);
+        assertion(second);
+      }
+    );
+  });
+}
+
+function generateDefineDeriveTestBranches<T extends ModuleOutputType>(
   code: string,
   type: T,
   assertion: (value: inferModuleOutput<T>) => unknown

@@ -3,6 +3,7 @@ import type { AnyFunction } from "js-interpreter";
 import JSInterpreter from "js-interpreter";
 import type { z, ZodType } from "zod";
 import { ZodFunction, ZodObject } from "zod";
+import { v4 } from "uuid";
 import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { LogSpreadError } from "../editor/components/LogList";
@@ -66,27 +67,21 @@ function createProcedureInterpreter<T extends ModuleOutputType>(
   proceduresCode: string,
   type: T
 ): inferModuleOutput<T> {
+  const definitionVariable = "def_" + v4().replaceAll("-", "_");
+
   const bridgeCode = `
-    var ${moduleCompilerSymbols.definitionVariable};
+    let ${definitionVariable};
     function ${moduleCompilerSymbols.defineName}(definition) {
-      ${moduleCompilerSymbols.definitionVariable} = definition;
+      ${definitionVariable} = definition;
     }
     function ${moduleCompilerSymbols.deriveName}(createDefinition) {
-      ${moduleCompilerSymbols.defineName}(
-        createDefinition(${moduleCompilerSymbols.moduleAPIVariable})
-      );
+      ${definitionVariable} = createDefinition({});
     }
   `;
 
   const startupCode = transpile(`${bridgeCode}\n${proceduresCode}`);
 
-  const interpreter = new JSInterpreter(startupCode, (i, globals) => {
-    i.setProperty(
-      globals,
-      moduleCompilerSymbols.moduleAPIVariable,
-      i.createNativeFunction(() => {})
-    );
-  });
+  const interpreter = new JSInterpreter(startupCode);
 
   flush();
 
@@ -101,9 +96,7 @@ function createProcedureInterpreter<T extends ModuleOutputType>(
     name: string | undefined,
     args: unknown[]
   ): { args: unknown[]; returns: unknown } {
-    const fnRef = `${moduleCompilerSymbols.definitionVariable}${
-      name ? `.${name}` : ""
-    }`;
+    const fnRef = `${definitionVariable}${name ? `.${name}` : ""}`;
     interpreter.appendCode(`
       var args = ${JSON.stringify(args)};
       var returns = ${fnRef}.apply(null, args);
@@ -152,32 +145,25 @@ function transpile(code: string) {
 }
 
 export const moduleCompilerSymbols = {
-  definitionVariable: "definitions",
   defineName: "define",
   deriveName: "derive",
-  moduleAPIVariable: "moduleAPI",
 } as const;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyZodFunction = ZodFunction<any, any>;
 
 function mutate(a: unknown, b: unknown) {
-  if (
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const maxLength = Math.max(a.length, b.length);
+    for (let i = 0; i < maxLength; i++) {
+      a[i] = mutate(a[i], b[i]);
+    }
+  } else if (
     typeof a === "object" &&
     a !== null &&
     typeof b === "object" &&
     b !== null
   ) {
     Object.assign(a, b);
-  } else if (Array.isArray(a) && Array.isArray(b)) {
-    const maxLength = Math.max(a.length, b.length);
-    for (let i = 0; i < maxLength; i++) {
-      a[i] = mutate(a[i], b[i]);
-    }
-  }
-  return a;
-}
-
-function iife(code: string) {
-  return `(function(){${code}})();`;
+  } else return a;
 }
