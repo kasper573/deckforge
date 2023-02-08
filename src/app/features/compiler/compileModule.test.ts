@@ -26,32 +26,35 @@ describe("can compile", () => {
   });
 });
 
-function generateTests<T extends ModuleOutputType>(
-  code: string,
-  type: T,
-  expectation: (value: inferModuleOutput<T>) => unknown
-) {
-  function assert(res: CompileModuleResult<T>) {
-    if (res.type === "error") {
-      throw res.error;
-    }
-    expectation(res.value as z.infer<T>);
-  }
-
-  it("using define", () => {
-    const res = compileModule(`define(${code})`, { type, scriptAPI });
-    assert(res);
-  });
-
-  it("using derive", () => {
-    const res = compileModule(`derive(() => (${code}))`, { type, scriptAPI });
-    assert(res);
-  });
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const scriptAPI: RuntimeModuleAPI<any> = {
   actions: {},
   cloneCard: () => ({} as never),
   random: Math.random,
 };
+
+function assert<T extends ModuleOutputType>(
+  res: CompileModuleResult<T>,
+  assertion?: (value: inferModuleOutput<T>) => unknown
+) {
+  if (res.type === "error") {
+    throw res.error;
+  }
+  assertion?.(res.value as z.infer<T>);
+}
+
+function generateTests<T extends ModuleOutputType>(
+  code: string,
+  type: T,
+  assertion: (value: inferModuleOutput<T>) => unknown
+) {
+  it("using define", () => {
+    const res = compileModule(`define(${code})`, { type, scriptAPI });
+    assert(res, assertion);
+  });
+
+  it("using derive", () => {
+    const res = compileModule(`derive(() => (${code}))`, { type, scriptAPI });
+    assert(res, assertion);
+  });
+}
