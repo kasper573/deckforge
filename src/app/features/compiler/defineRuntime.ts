@@ -23,7 +23,7 @@ import type {
   RuntimeGenerics,
   RuntimePlayerId,
   RuntimeState,
-  RuntimeScriptAPI,
+  RuntimeModuleAPI,
   RuntimeStateFactory,
 } from "./types";
 import type { RuntimeEffect } from "./types";
@@ -262,10 +262,10 @@ export function createScriptApiDefinition<G extends RuntimeGenerics>({
   card,
   actions,
 }: Pick<RuntimeDefinition<G>, "card" | "actions">): ZodShapeFor<
-  RuntimeScriptAPI<G>
+  RuntimeModuleAPI<G>
 > {
   const cloneCard = z.function().args(card).returns(card) as unknown as ZodType<
-    RuntimeScriptAPI<G>["cloneCard"]
+    RuntimeModuleAPI<G>["cloneCard"]
   >;
   return {
     cloneCard,

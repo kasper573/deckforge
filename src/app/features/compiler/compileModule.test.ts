@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { AnyFunction } from "js-interpreter";
 import type { CompileModuleResult } from "./compileModule";
 import { compileModule } from "./compileModule";
-import type { RuntimeScriptAPI } from "./types";
+import type { RuntimeModuleAPI } from "./types";
 
 describe("can compile", () => {
   describe("number", () => {
@@ -107,7 +107,7 @@ function generateTests<T extends ZodType>(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const scriptAPI: RuntimeScriptAPI<any> = {
+const scriptAPI: RuntimeModuleAPI<any> = {
   actions: {},
   cloneCard: () => ({} as never),
   random: Math.random,

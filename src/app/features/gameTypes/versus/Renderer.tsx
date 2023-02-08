@@ -1,6 +1,6 @@
 import { styled } from "@mui/material/styles";
 import type { ComponentProps } from "react";
-import type { GameRuntime } from "../../compiler/compileGame";
+import type { GameRuntime } from "../../compiler/types";
 import type { VersusGenerics } from "./runtimeDefinition";
 import { adapter } from "./runtimeDefinition";
 import { Scenes } from "./scenes";

@@ -9,20 +9,19 @@ import type {
   PropertyDefaults,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
-import type { Machine } from "../../../lib/machine/Machine";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
+  GameRuntime,
   RuntimeCard,
   RuntimeDeck,
   RuntimeDefinition,
   RuntimeEffects,
   RuntimeGenerics,
-  RuntimeMachineContext,
   RuntimeMiddleware,
   RuntimePlayer,
   RuntimePlayerId,
-  RuntimeScriptAPI,
+  RuntimeModuleAPI,
 } from "./types";
 import { compileModuleDescribed } from "./compileModule";
 
@@ -30,10 +29,6 @@ export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;
   errors?: unknown[];
 }
-
-export type GameRuntime<G extends RuntimeGenerics> = Machine<
-  RuntimeMachineContext<G>
->;
 
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
@@ -53,7 +48,7 @@ export function compileGame<G extends RuntimeGenerics>(
       (p) => p.entityId === "player"
     );
 
-    const scriptAPI: RuntimeScriptAPI<G> = {
+    const scriptAPI: RuntimeModuleAPI<G> = {
       random: createRandomFn(options?.seed),
       cloneCard,
       actions: new Proxy({} as typeof runtime.actions, {
@@ -177,7 +172,7 @@ function compileCardEffects<G extends RuntimeGenerics>(
   { cardId, name, code }: Card,
   options: {
     runtimeDefinition: RuntimeDefinition<G>;
-    scriptAPI: RuntimeScriptAPI<G>;
+    scriptAPI: RuntimeModuleAPI<G>;
     cardProperties: Property[];
   }
 ) {

@@ -1,5 +1,4 @@
-import type { ZodObject, ZodType } from "zod";
-import type { z } from "zod";
+import type { z, ZodObject, ZodType } from "zod";
 import type {
   MachineActions,
   MachineEffects,
@@ -9,6 +8,7 @@ import type { MachineContext } from "../../../lib/machine/MachineContext";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded";
 import type { CardId, DeckId } from "../../../api/services/game/types";
+import type { Machine } from "../../../lib/machine/Machine";
 
 export type CardInstanceId = z.infer<typeof cardInstanceIdType>;
 export const cardInstanceIdType = zodRuntimeBranded("CardInstanceId");
@@ -106,9 +106,13 @@ export type RuntimeMachineContext<G extends RuntimeGenerics> = MachineContext<
   G["actions"]
 >;
 
-export type RuntimeScriptAPI<G extends RuntimeGenerics> = {
+export type RuntimeModuleAPI<G extends RuntimeGenerics> = {
   actions: G["actions"];
   thisCardId?: CardId;
   cloneCard: (card: RuntimeCard<G>) => RuntimeCard<G>;
   random: () => number;
 };
+
+export type GameRuntime<G extends RuntimeGenerics> = Machine<
+  RuntimeMachineContext<G>
+>;

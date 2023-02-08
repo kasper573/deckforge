@@ -3,8 +3,7 @@ import { transform } from "@babel/standalone";
 import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { LogSpreadError } from "../editor/components/LogList";
-import { evalWithScope } from "../../../lib/evalWithScope";
-import type { RuntimeGenerics, RuntimeScriptAPI } from "./types";
+import type { RuntimeGenerics, RuntimeModuleAPI } from "./types";
 
 export type CompileModuleResult<T extends ZodType> =
   | { type: "success"; value: z.infer<T> }
