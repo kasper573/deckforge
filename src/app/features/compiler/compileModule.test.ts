@@ -31,15 +31,19 @@ describe("supports", () => {
   });
 
   it("calling module A from module B", () => {
-    const moduleA = compileModule(`(...args) => ["A", ...args]`, {
+    const moduleA = compileModule(`define((...args) => ["A", ...args])`, {
       type: z.function(),
-    });
-    const moduleB = compileModule(`(...args) => moduleA("B", ...args)`, {
-      type: z.function(),
-      globals: { moduleA },
     });
 
-    assert(moduleA, () => {
+    assert(moduleA, (a) => {
+      const moduleB = compileModule(
+        `define((...args) => moduleA("B", ...args))`,
+        {
+          type: z.function(),
+          globals: { moduleA: a },
+        }
+      );
+
       assert(moduleB, (b) => {
         const res = b("input");
         expect(res).toEqual(["A", "B", "input"]);
