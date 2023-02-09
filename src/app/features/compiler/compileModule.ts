@@ -1,8 +1,8 @@
 import { transform as jsToES5 } from "@babel/standalone";
 import type { AnyFunction } from "js-interpreter";
 import JSInterpreter from "js-interpreter";
-import type { z, ZodType } from "zod";
-import { ZodFunction, ZodObject } from "zod";
+import type { ZodType } from "zod";
+import { ZodFunction, ZodObject, z } from "zod";
 
 export type ModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
@@ -26,22 +26,36 @@ export function compileModule<T extends ModuleOutputType>(
   code: string,
   { type, globals = {} }: CompileModuleOptions<T>
 ): CompileModuleResult<T> {
-  const callFnName = "___call___";
-  const definitionVariable = "___def___";
-
   const bridgeCode = `
-    let ${definitionVariable};
-    ${bridgeGlobals(globals, callFnName)}
-    function ${moduleCompilerSymbols.defineName}(definition) {
-      ${definitionVariable} = definition;
+    let ${symbols.definition};
+    const ${symbols.mutate} = (${createMutateFn.toString()})();
+    function ${symbols.callDefined}(fn, args) {
+      const returns = fn.apply(null, args);
+      return JSON.stringify({ args, returns });
+    }
+    function ${symbols.callNative}(path, args) {
+      const payload = JSON.stringify([path, args]); 
+      const response = ${symbols.callNativeRaw}(payload);
+      const result = JSON.parse(response);
+      ${symbols.mutate}(args, result.args);
+      return result.returns;
+    }
+    ${bridgeGlobals(globals)}
+    function ${symbols.define}(definition) {
+      ${symbols.definition} = definition;
     }
   `;
 
   let interpreter: JSInterpreter;
   try {
     code = transpile(`${bridgeCode}\n${code}`);
+    console.log(code);
     interpreter = new JSInterpreter(code, (i, globals) => {
-      i.setProperty(globals, callFnName, i.createNativeFunction(call));
+      i.setProperty(
+        globals,
+        symbols.callNativeRaw,
+        i.createNativeFunction(callNativeRaw)
+      );
     });
     flush();
   } catch (error) {
@@ -58,7 +72,7 @@ export function compileModule<T extends ModuleOutputType>(
     }
   }
 
-  function call(payload: string) {
+  function callNativeRaw(payload: string) {
     const [path, args] = JSON.parse(payload) as [string[], unknown[]];
     const fn = path.reduce(
       (obj, key) => obj[key as keyof typeof obj],
@@ -67,29 +81,27 @@ export function compileModule<T extends ModuleOutputType>(
     if (typeof fn !== "function") {
       throw new Error(`"${path.join(".")}" is not a function`);
     }
-    return JSON.stringify(fn(...args));
+    const returns = fn(...args);
+    return JSON.stringify({ args, returns });
   }
 
-  function invoke(
-    name: string | undefined,
-    args: unknown[]
-  ): { args: unknown[]; returns: unknown } {
-    const fnRef = `${definitionVariable}${name ? `.${name}` : ""}`;
-    interpreter.appendCode(`
-      var args = ${JSON.stringify(args)};
-      var returns = ${fnRef}.apply(null, args);
-      JSON.stringify({args: args, returns: returns});
-    `);
+  function callDefined(name: string | undefined, args: unknown[]) {
+    const fnRef = name ? `${symbols.definition}.${name}` : symbols.definition;
+    interpreter.appendCode(
+      `${symbols.callDefined}(${fnRef}, ${JSON.stringify(args)});`
+    );
     flush();
-    return JSON.parse(interpreter.value as string);
+    const result = z
+      .object({ args: z.array(z.unknown()), returns: z.unknown() })
+      .parse(JSON.parse(interpreter.value as string));
+    mutate(args, result.args);
+    return result.returns;
   }
 
   function createFunctionProxy<T extends AnyZodFunction>(name?: string) {
     type Fn = z.infer<T>;
     function moduleFunctionProxy(...args: Parameters<Fn>): ReturnType<Fn> {
-      const result = invoke(name, args);
-      mutate(args, result.args);
-      return result.returns as ReturnType<Fn>;
+      return callDefined(name, args) as ReturnType<Fn>;
     }
     return moduleFunctionProxy;
   }
@@ -112,22 +124,15 @@ export function compileModule<T extends ModuleOutputType>(
   throw new Error("Unsupported type");
 }
 
-function bridgeGlobals(globals: object, callFnName: string): string {
+function bridgeGlobals(globals: object): string {
   return Object.entries(globals)
-    .map(
-      ([key, value]) =>
-        `const ${key} = ${bridgeJSValue(value, callFnName, [key])};`
-    )
-    .join("\n");
+    .map(([key, value]) => `const ${key} = ${bridgeJSValue(value, [key])}`)
+    .join(";\n");
 }
 
-function bridgeJSValue(
-  value: unknown,
-  callFnName: string,
-  path: Array<string | number>
-): string {
+function bridgeJSValue(value: unknown, path: Array<string | number>): string {
   const chain = (child: unknown, step: string | number) =>
-    bridgeJSValue(child, callFnName, [...path, step]);
+    bridgeJSValue(child, [...path, step]);
 
   if (Array.isArray(value)) {
     return `[${value.map(chain).join(", ")}]`;
@@ -138,12 +143,7 @@ function bridgeJSValue(
       .join(", ")}}`;
   }
   if (typeof value === "function") {
-    return `function () {
-      const path = ${JSON.stringify(path)};
-      const args = Array.prototype.slice.call(arguments); 
-      const result = ${callFnName}(JSON.stringify([path, args]));
-      return result !== undefined ? JSON.parse(result) : undefined; 
-    }`;
+    return `(...args) => ${symbols.callNative}(${JSON.stringify(path)}, args)`;
   }
   return JSON.stringify(value);
 }
@@ -156,23 +156,33 @@ function transpile(code: string) {
   return result;
 }
 
-function mutate(a: unknown, b: unknown) {
-  if (Array.isArray(a) && Array.isArray(b)) {
-    const maxLength = Math.max(a.length, b.length);
-    for (let i = 0; i < maxLength; i++) {
-      a[i] = mutate(a[i], b[i]);
+const mutate = createMutateFn();
+
+function createMutateFn() {
+  return function mutate(a: unknown, b: unknown) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      const maxLength = Math.max(a.length, b.length);
+      for (let i = 0; i < maxLength; i++) {
+        a[i] = mutate(a[i], b[i]);
+      }
+      return a;
     }
-  } else if (
-    typeof a === "object" &&
-    a !== null &&
-    typeof b === "object" &&
-    b !== null
-  ) {
-    Object.assign(a, b);
+    if (isObject(a) && isObject(b)) {
+      return Object.assign(a, b);
+    }
+    return b;
+  };
+
+  function isObject(obj: unknown): obj is object {
+    return obj !== null && obj?.constructor.name === "Object";
   }
-  return a;
 }
 
-export const moduleCompilerSymbols = {
-  defineName: "define",
+export const symbols = {
+  define: "define",
+  callNativeRaw: "___call_native_raw___",
+  callNative: "___call_native___",
+  callDefined: "___call_defined___",
+  mutate: "___mutate___",
+  definition: "___def___",
 } as const;

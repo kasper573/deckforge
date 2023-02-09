@@ -4,7 +4,7 @@ import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTSResolver } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
 import { createModuleApiDefinition } from "./defineRuntime";
-import { moduleCompilerSymbols } from "./compileModule";
+import { symbols } from "./compileModule";
 
 export interface EditorApi<G extends RuntimeGenerics> {
   card: CodeEditorTypeDefs;
@@ -73,5 +73,5 @@ function declareModuleDefinition(p: {
   apiType: string;
   definitionType: string;
 }) {
-  return `declare function ${moduleCompilerSymbols.defineName}(definition: ${p.definitionType}): void;`;
+  return `declare function ${symbols.define}(definition: ${p.definitionType}): void;`;
 }

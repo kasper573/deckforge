@@ -8,7 +8,7 @@ import type { PanelId } from "../types";
 import { useModal } from "../../../../lib/useModal";
 import { AlertDialog } from "../../../dialogs/AlertDialog";
 import type { TourStep } from "../../../components/Tour";
-import { moduleCompilerSymbols } from "../../compiler/compileModule";
+import { symbols } from "../../compiler/compileModule";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel/CodePanel";
@@ -100,9 +100,8 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
             types and functions available for the currently selected object.
           </Typography>
           <Typography>
-            In your code, call the{" "}
-            <code>${moduleCompilerSymbols.defineName}</code> to describe what
-            your object does.
+            In your code, call the <code>${symbols.define}</code> to describe
+            what your object does.
           </Typography>
         </>
       ),
