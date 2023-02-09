@@ -6,7 +6,6 @@ import { ZodFunction, ZodObject } from "zod";
 import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { LogSpreadError } from "../editor/components/LogList";
-import type { RuntimeGenerics } from "./types";
 
 export type ModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
@@ -21,22 +20,16 @@ export type CompileModuleResult<T extends ModuleOutputType> =
   | { type: "success"; value: inferModuleOutput<T> }
   | { type: "error"; error: unknown };
 
-export interface CompileModuleOptions<
-  T extends ModuleOutputType,
-  G extends RuntimeGenerics
-> {
+export interface CompileModuleOptions<T extends ModuleOutputType> {
   type: T;
   globals?: object;
 }
 
-export function compileModuleDescribed<
-  T extends ModuleOutputType,
-  G extends RuntimeGenerics
->(
+export function compileModuleDescribed<T extends ModuleOutputType>(
   kind: string,
   name: string,
   esnextCode: string,
-  options: CompileModuleOptions<T, G>
+  options: CompileModuleOptions<T>
 ) {
   const result = compileModule(esnextCode, options);
   const decorateError: ErrorDecorator = (error, path) =>
@@ -50,12 +43,9 @@ export function compileModuleDescribed<
   return wrapWithErrorDecorator(result.value, decorateError);
 }
 
-export function compileModule<
-  T extends ModuleOutputType,
-  G extends RuntimeGenerics
->(
+export function compileModule<T extends ModuleOutputType>(
   code: string,
-  { type, globals = {} }: CompileModuleOptions<T, G>
+  { type, globals = {} }: CompileModuleOptions<T>
 ): CompileModuleResult<T> {
   const callFnName = "___call___";
   const definitionVariable = "___def___";
