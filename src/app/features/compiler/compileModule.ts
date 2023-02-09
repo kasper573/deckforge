@@ -143,7 +143,9 @@ function bridgeJSValue(value: unknown, path: Array<string | number>): string {
       .join(", ")}}`;
   }
   if (typeof value === "function") {
-    return `(...args) => ${symbols.callNative}(${JSON.stringify(path)}, args)`;
+    return `function () { return ${symbols.callNative}(${JSON.stringify(
+      path
+    )}, arguments); }`;
   }
   return JSON.stringify(value);
 }
