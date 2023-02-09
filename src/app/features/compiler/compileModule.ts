@@ -49,7 +49,6 @@ export function compileModule<T extends ModuleOutputType>(
   let interpreter: JSInterpreter;
   try {
     code = transpile(`${bridgeCode}\n${code}`);
-    console.log(code);
     interpreter = new JSInterpreter(code, (i, globals) => {
       i.setProperty(
         globals,
