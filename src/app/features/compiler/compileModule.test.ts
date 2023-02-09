@@ -51,6 +51,28 @@ describe("supports", () => {
     });
   });
 
+  it("using arguments mutated by another module during chained function call", () => {
+    const double = compileModule(`define((state) => state.x *= 2)`, {
+      type: z.function(),
+    });
+
+    const program = compileModule(
+      `define((state) => { state.x = 5; double(state); })`,
+      {
+        type: z.function(),
+        globals: {
+          double: double.type === "success" ? double.value : undefined,
+        },
+      }
+    );
+
+    assert(program, (run) => {
+      const state = { x: 0 };
+      run(state);
+      expect(state.x).toEqual(10);
+    });
+  });
+
   describe("global functions", () => {
     function test(path: [string, ...string[]]) {
       const res = compileWithGlobalAtPath(
