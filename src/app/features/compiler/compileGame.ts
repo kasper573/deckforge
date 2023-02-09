@@ -10,6 +10,9 @@ import type {
   PropertyDefaults,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
+import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
+import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
+import { LogSpreadError } from "../editor/components/LogList";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -20,11 +23,12 @@ import type {
   RuntimeEffects,
   RuntimeGenerics,
   RuntimeMiddleware,
+  RuntimeModuleAPI,
   RuntimePlayer,
   RuntimePlayerId,
-  RuntimeModuleAPI,
 } from "./types";
-import { compileModuleDescribed } from "./compileModule";
+import type { CompileModuleOptions, ModuleOutputType } from "./compileModule";
+import { compileModule } from "./compileModule";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;
@@ -174,6 +178,24 @@ function compileCardEffects<G extends RuntimeGenerics>(
     type: options.runtimeDefinition.cardEffects,
     globals: { ...options.moduleAPI, thisCardId: cardId },
   });
+}
+
+function compileModuleDescribed<T extends ModuleOutputType>(
+  kind: string,
+  name: string,
+  esnextCode: string,
+  options: CompileModuleOptions<T>
+) {
+  const result = compileModule(esnextCode, options);
+  const decorateError: ErrorDecorator = (error, path) =>
+    error instanceof LogSpreadError
+      ? error // Keep the innermost error as-is
+      : new LogSpreadError(kind, "(", name, ")", ...path, error);
+  if (result.type === "error") {
+    throw decorateError(result.error, []);
+  }
+
+  return wrapWithErrorDecorator(result.value, decorateError);
 }
 
 function namedPropertyDefaults(

@@ -3,9 +3,6 @@ import type { AnyFunction } from "js-interpreter";
 import JSInterpreter from "js-interpreter";
 import type { z, ZodType } from "zod";
 import { ZodFunction, ZodObject } from "zod";
-import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
-import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
-import { LogSpreadError } from "../editor/components/LogList";
 
 export type ModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
@@ -23,24 +20,6 @@ export type CompileModuleResult<T extends ModuleOutputType> =
 export interface CompileModuleOptions<T extends ModuleOutputType> {
   type: T;
   globals?: object;
-}
-
-export function compileModuleDescribed<T extends ModuleOutputType>(
-  kind: string,
-  name: string,
-  esnextCode: string,
-  options: CompileModuleOptions<T>
-) {
-  const result = compileModule(esnextCode, options);
-  const decorateError: ErrorDecorator = (error, path) =>
-    error instanceof LogSpreadError
-      ? error // Keep the innermost error as-is
-      : new LogSpreadError(kind, "(", name, ")", ...path, error);
-  if (result.type === "error") {
-    throw decorateError(result.error, []);
-  }
-
-  return wrapWithErrorDecorator(result.value, decorateError);
 }
 
 export function compileModule<T extends ModuleOutputType>(
