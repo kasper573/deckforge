@@ -43,110 +43,108 @@ export function compileGame<G extends RuntimeGenerics>(
     ) => RuntimeMiddleware<G>[];
   }
 ): CompileGameResult<G> {
-  try {
-    const cardProperties = gameDefinition.properties.filter(
-      (p) => p.entityId === "card"
-    );
-    const playerProperties = gameDefinition.properties.filter(
-      (p) => p.entityId === "player"
-    );
+  const cardProperties = gameDefinition.properties.filter(
+    (p) => p.entityId === "card"
+  );
+  const playerProperties = gameDefinition.properties.filter(
+    (p) => p.entityId === "player"
+  );
 
-    const eventNames = gameDefinition.events.map((e) => e.name);
-    const moduleAPI: RuntimeModuleAPI<G> = {
-      random: createRandomFn(options?.seed),
-      cloneCard,
-      actions: functionRouter(eventNames, () => runtime.actions),
-    };
-    const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
-    const moduleCompiler = new ModuleCompiler(decorateModuleError);
+  const eventNames = gameDefinition.events.map((e) => e.name);
+  const moduleAPI: RuntimeModuleAPI<G> = {
+    random: createRandomFn(options?.seed),
+    cloneCard,
+    actions: functionRouter(eventNames, () => runtime.actions),
+  };
+  const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
+  const moduleCompiler = new ModuleCompiler(decorateModuleError);
 
-    const decks = gameDefinition.decks.map(
-      (deck): RuntimeDeck<G> => ({
-        id: deck.deckId,
-        name: deck.name,
-        cards: gameDefinition.cards
-          .filter((c) => c.deckId === deck.deckId)
-          .map((def) => {
-            const card = compileCard<G>(def, cardProperties);
-            const effects = moduleCompiler.addModule(`Card_${def.cardId}`, {
-              type: runtimeDefinition.cardEffects,
-              code: def.code,
-              globals: { ...moduleAPI, thisCardId: card.typeId },
-            });
-            cardEffects.set(def.cardId, effects);
-            return card;
-          }),
-      })
-    );
+  const decks = gameDefinition.decks.map(
+    (deck): RuntimeDeck<G> => ({
+      id: deck.deckId,
+      name: deck.name,
+      cards: gameDefinition.cards
+        .filter((c) => c.deckId === deck.deckId)
+        .map((def) => {
+          const card = compileCard<G>(def, cardProperties);
+          const effects = moduleCompiler.addModule(`Card_${def.cardId}`, {
+            type: runtimeDefinition.cardEffects,
+            code: def.code,
+            globals: { ...moduleAPI, thisCardId: card.typeId },
+          });
+          cardEffects.set(def.cardId, effects);
+          return card;
+        }),
+    })
+  );
 
-    const effects = gameDefinition.events.reduce(
-      (effects, { eventId, name, code }) => {
-        effects[name as keyof typeof effects] = moduleCompiler.addModule(
-          `Event_${eventId}`,
-          {
-            type: runtimeDefinition.effects.shape[name],
-            code,
-            globals: moduleAPI,
-          }
-        );
-        return effects;
-      },
-      {} as RuntimeEffects<G>
-    );
-
-    const compiledMiddlewares = gameDefinition.middlewares.map(
-      ({ middlewareId, code }) =>
-        moduleCompiler.addModule(`Middleware_${middlewareId}`, {
-          type: runtimeDefinition.middleware,
+  const effects = gameDefinition.events.reduce(
+    (effects, { eventId, name, code }) => {
+      effects[name as keyof typeof effects] = moduleCompiler.addModule(
+        `Event_${eventId}`,
+        {
+          type: runtimeDefinition.effects.shape[name],
           code,
           globals: moduleAPI,
-        })
-    );
+        }
+      );
+      return effects;
+    },
+    {} as RuntimeEffects<G>
+  );
 
-    function createPlayer(): RuntimePlayer<G> {
-      const properties = namedPropertyDefaults(
-        playerProperties
-      ) as RuntimePlayer<G>["properties"];
+  const compiledMiddlewares = gameDefinition.middlewares.map(
+    ({ middlewareId, code }) =>
+      moduleCompiler.addModule(`Middleware_${middlewareId}`, {
+        type: runtimeDefinition.middleware,
+        code,
+        globals: moduleAPI,
+      })
+  );
 
-      return {
-        id: v4() as RuntimePlayerId,
-        deckId: decks[0]?.id,
-        properties,
-        board: {
-          draw: [],
-          discard: [],
-          hand: [],
-        },
-      };
-    }
+  function createPlayer(): RuntimePlayer<G> {
+    const properties = namedPropertyDefaults(
+      playerProperties
+    ) as RuntimePlayer<G>["properties"];
 
-    const initialState = runtimeDefinition.createInitialState({
-      decks,
-      createPlayer,
-    });
-
-    const allMiddlewares =
-      options?.middlewares?.(compiledMiddlewares) ?? compiledMiddlewares;
-
-    let builder = deriveMachine<G>(
-      effects,
-      initialState,
-      (id, effectName) => cardEffects.get(id)?.[effectName]
-    );
-
-    builder = allMiddlewares.reduce(
-      (builder, next) => builder.middleware(next),
-      builder
-    );
-
-    const runtime = builder.build();
-    return { runtime };
-  } catch (error) {
-    if (Array.isArray(error)) {
-      return { errors: error };
-    }
-    return { errors: [error] };
+    return {
+      id: v4() as RuntimePlayerId,
+      deckId: decks[0]?.id,
+      properties,
+      board: {
+        draw: [],
+        discard: [],
+        hand: [],
+      },
+    };
   }
+
+  const result = moduleCompiler.compile();
+  if (result.isErr()) {
+    return { errors: [result.error] };
+  }
+
+  const initialState = runtimeDefinition.createInitialState({
+    decks,
+    createPlayer,
+  });
+
+  const allMiddlewares =
+    options?.middlewares?.(compiledMiddlewares) ?? compiledMiddlewares;
+
+  let builder = deriveMachine<G>(
+    effects,
+    initialState,
+    (id, effectName) => cardEffects.get(id)?.[effectName]
+  );
+
+  builder = allMiddlewares.reduce(
+    (builder, next) => builder.middleware(next),
+    builder
+  );
+
+  const runtime = builder.build();
+  return { runtime };
 }
 
 function compileCard<G extends RuntimeGenerics>(
