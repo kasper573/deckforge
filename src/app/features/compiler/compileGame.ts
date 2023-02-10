@@ -11,7 +11,6 @@ import type {
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
 import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
-import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { LogSpreadError } from "../editor/components/LogList";
 import { deriveMachine } from "./defineRuntime";
 import type {
@@ -27,8 +26,7 @@ import type {
   RuntimePlayer,
   RuntimePlayerId,
 } from "./types";
-import type { ModuleDefinition } from "./compileModule";
-import { compileModule } from "./compileModule";
+import { ModuleCompiler } from "./compileModule";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;
@@ -60,6 +58,7 @@ export function compileGame<G extends RuntimeGenerics>(
       actions: functionRouter(eventNames, () => runtime.actions),
     };
     const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
+    const moduleCompiler = new ModuleCompiler(decorateModuleError);
 
     const decks = gameDefinition.decks.map(
       (deck): RuntimeDeck<G> => ({
@@ -69,34 +68,39 @@ export function compileGame<G extends RuntimeGenerics>(
           .filter((c) => c.deckId === deck.deckId)
           .map((def) => {
             const card = compileCard<G>(def, cardProperties);
-            const effects = compileCardEffects(
-              { ...card, ...def },
-              { runtimeDefinition, moduleAPI }
-            );
+            const effects = moduleCompiler.addModule(`Card_${def.cardId}`, {
+              type: runtimeDefinition.cardEffects,
+              code: def.code,
+              globals: { ...moduleAPI, thisCardId: card.typeId },
+            });
             cardEffects.set(def.cardId, effects);
             return card;
           }),
       })
     );
 
-    const effects = gameDefinition.events.reduce((effects, { name, code }) => {
-      effects[name as keyof typeof effects] = compileModuleDescribed(
-        "Event",
-        name,
-        code,
-        {
-          type: runtimeDefinition.effects.shape[name],
-          globals: moduleAPI,
-        }
-      );
-      return effects;
-    }, {} as RuntimeEffects<G>);
+    const effects = gameDefinition.events.reduce(
+      (effects, { eventId, name, code }) => {
+        effects[name as keyof typeof effects] = moduleCompiler.addModule(
+          `Event_${eventId}`,
+          {
+            type: runtimeDefinition.effects.shape[name],
+            code,
+            globals: moduleAPI,
+          }
+        );
+        return effects;
+      },
+      {} as RuntimeEffects<G>
+    );
 
-    const compiledMiddlewares = gameDefinition.middlewares.map((middleware) =>
-      compileModuleDescribed("Middleware", middleware.name, middleware.code, {
-        type: runtimeDefinition.middleware,
-        globals: moduleAPI,
-      })
+    const compiledMiddlewares = gameDefinition.middlewares.map(
+      ({ middlewareId, code }) =>
+        moduleCompiler.addModule(`Middleware_${middlewareId}`, {
+          type: runtimeDefinition.middleware,
+          code,
+          globals: moduleAPI,
+        })
     );
 
     function createPlayer(): RuntimePlayer<G> {
@@ -167,36 +171,10 @@ function cloneCard<G extends RuntimeGenerics>(
 
 const createCardInstanceId = v4 as () => CardInstanceId;
 
-function compileCardEffects<G extends RuntimeGenerics>(
-  { cardId, name, code }: Card,
-  options: {
-    runtimeDefinition: RuntimeDefinition<G>;
-    moduleAPI: RuntimeModuleAPI<G>;
-  }
-) {
-  return compileModuleDescribed("Card", name, code, {
-    type: options.runtimeDefinition.cardEffects,
-    globals: { ...options.moduleAPI, thisCardId: cardId },
-  });
-}
-
-function compileModuleDescribed<T extends ModuleOutputType>(
-  kind: string,
-  name: string,
-  esnextCode: string,
-  options: ModuleDefinition<T>
-) {
-  const result = compileModule(esnextCode, options);
-  const decorateError: ErrorDecorator = (error, path) =>
-    error instanceof LogSpreadError
-      ? error // Keep the innermost error as-is
-      : new LogSpreadError(kind, "(", name, ")", ...path, error);
-  if (result.type === "error") {
-    throw decorateError(result.error, []);
-  }
-
-  return wrapWithErrorDecorator(result.value, decorateError);
-}
+const decorateModuleError: ErrorDecorator = (error, [moduleName, ...path]) =>
+  error instanceof LogSpreadError
+    ? error // Keep the innermost error as-is
+    : new LogSpreadError(moduleName, "(", name, ")", ...path, error);
 
 function namedPropertyDefaults(
   properties: Property[],
