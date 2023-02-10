@@ -1,10 +1,10 @@
-import { transform as jsToES5 } from "@babel/standalone";
 import type { AnyFunction } from "js-interpreter";
 import JSInterpreter from "js-interpreter";
 import type { ZodType } from "zod";
 import { ZodFunction, ZodObject, z } from "zod";
 import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
+import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
 
 export type AnyModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
@@ -273,11 +273,13 @@ function bridgeJSValue(
 }
 
 function transpile(code: string) {
-  const result = jsToES5(code, { presets: ["es2015"] })?.code;
-  if (!result) {
-    throw new Error("Failed to transpile code");
-  }
-  return result;
+  const result = transpileModule(code, {
+    compilerOptions: {
+      target: ScriptTarget.ES5,
+      module: ModuleKind.CommonJS,
+    },
+  });
+  return result.outputText;
 }
 
 const mutate = createMutateFn();
