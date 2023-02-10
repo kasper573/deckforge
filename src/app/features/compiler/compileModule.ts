@@ -6,6 +6,7 @@ import { ZodFunction, ZodObject, z } from "zod";
 import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
 
+export type AnyModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
 export type ModuleOutputFunction = AnyFunction;
 export type ModuleOutputRecord = Partial<Record<string, ModuleOutputFunction>>;
@@ -13,55 +14,61 @@ export type ModuleOutputRecord = Partial<Record<string, ModuleOutputFunction>>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyZodFunction = ZodFunction<any, any>;
 
-export type CompiledModule<Definition extends ModuleDefinition> = z.infer<
-  Definition["type"]
->;
+export type CompiledModule<
+  Type extends AnyModuleOutputType = AnyModuleOutputType
+> = z.infer<Type>;
 
-export type CompiledModules<Definitions extends ModuleDefinitions> = {
-  [Name in keyof Definitions]: CompiledModule<Definitions[Name]>;
+export type CompiledModules<
+  Definitions extends ModuleDefinitions = ModuleDefinitions
+> = {
+  [Name in keyof Definitions]: CompiledModule<Definitions[Name]["type"]>;
 };
 
-export interface ModuleDefinition<T extends ModuleOutput = ModuleOutput> {
-  type: ZodType<T>;
+export interface ModuleDefinition<
+  T extends AnyModuleOutputType = AnyModuleOutputType
+> {
+  type: T;
   globals?: object;
   code: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ModuleDefinitions = Record<string, ModuleDefinition<any>>;
+export type ModuleDefinitions = Record<string, ModuleDefinition>;
 
-export class ModuleBuilder<Definitions extends ModuleDefinitions> {
-  constructor(private definitions: Definitions) {}
+export class ModuleCompiler {
+  #modules?: CompiledModules;
+  #definitions: ModuleDefinitions = {};
 
-  addModule<Name extends string, Output extends ModuleOutput>(
+  constructor(private errorDecorator?: AnyFunction) {}
+
+  addModule<Name extends string, Definition extends ModuleDefinition>(
     name: Name,
-    type: ZodType<Output>,
-    code: string,
-    globals?: object
+    definition: Definition
   ) {
-    return new ModuleBuilder({
-      ...this.definitions,
-      [name]: { type, code, globals },
-    } as Definitions & Record<Name, Output>);
+    this.#definitions[name] = definition;
+    return createModuleProxy(name, definition, (name, functionName, args) => {
+      const m = this.#modules?.[name];
+      if (!m) {
+        throw new Error("Module not compiled");
+      }
+      const f = functionName ? m[functionName as keyof typeof m] : m;
+      if (typeof f !== "function") {
+        throw new Error(
+          `Property "${functionName}" is not a function on module "${name}"`
+        );
+      }
+      return f(...args);
+    });
   }
 
   compile() {
-    return compileModules(this.definitions);
+    const result = compileModules(this.#definitions);
+    if (result.isOk()) {
+      this.#modules = result.value;
+    }
+    return result;
   }
-}
 
-export function createModuleBuilder() {
-  return new ModuleBuilder({});
-}
-
-export function compileModule<Definition extends ModuleDefinition>(
-  code: Definition["code"],
-  { type, globals = {} }: Omit<Definition, "code">
-): Result<CompiledModule<Definition>, unknown> {
-  const result = createModuleBuilder()
-    .addModule("main", type, code, globals)
-    .compile()
-    .map((modules) => modules.main);
+  dispose() {}
 }
 
 export function compileModules<Definitions extends ModuleDefinitions>(
@@ -137,43 +144,10 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     return result.returns;
   }
 
-  function createFunctionProxy<T extends AnyZodFunction>(
-    moduleName: string,
-    name: string | undefined
-  ) {
-    type Fn = z.infer<T>;
-    function moduleFunctionProxy(...args: Parameters<Fn>): ReturnType<Fn> {
-      return callDefined(moduleName, name, args) as ReturnType<Fn>;
-    }
-    return moduleFunctionProxy;
-  }
-
-  function createModuleProxy<Definition extends ModuleDefinition>(
-    moduleName: string,
-    { type }: Definition
-  ): CompiledModule<Definition> {
-    if (type instanceof ZodObject) {
-      const proxies = Object.keys(type.shape).reduce(
-        (acc: ModuleOutputRecord, key) => ({
-          ...acc,
-          [key]: createFunctionProxy(moduleName, key),
-        }),
-        {}
-      );
-      return proxies;
-    }
-
-    if (type instanceof ZodFunction) {
-      return createFunctionProxy(moduleName, undefined);
-    }
-
-    throw new Error("Unsupported module type");
-  }
-
   const moduleProxies = Object.entries(definitions).reduce(
     (acc, [moduleName, definition]) => ({
       ...acc,
-      [moduleName]: createModuleProxy(moduleName, definition),
+      [moduleName]: createModuleProxy(moduleName, definition, callDefined),
     }),
     {} as CompiledModules<Definitions>
   );
@@ -192,6 +166,43 @@ function createScopedModuleCode(definitions: ModuleDefinitions) {
   `
     )
     .join("\n");
+}
+
+function createModuleProxy<Definition extends ModuleDefinition>(
+  moduleName: string,
+  { type }: Definition,
+  handleProxyCall: (
+    moduleName: string,
+    functionName: string | undefined,
+    args: unknown[]
+  ) => unknown
+): CompiledModule<Definition["type"]> {
+  function createFunctionProxy<T extends AnyZodFunction>(
+    moduleName: string,
+    name: string | undefined
+  ) {
+    type Fn = z.infer<T>;
+    function moduleFunctionProxy(...args: Parameters<Fn>): ReturnType<Fn> {
+      return handleProxyCall(moduleName, name, args) as ReturnType<Fn>;
+    }
+    return moduleFunctionProxy;
+  }
+  if (type instanceof ZodObject) {
+    const proxies = Object.keys(type.shape).reduce(
+      (acc: ModuleOutputRecord, key) => ({
+        ...acc,
+        [key]: createFunctionProxy(moduleName, key),
+      }),
+      {}
+    );
+    return proxies;
+  }
+
+  if (type instanceof ZodFunction) {
+    return createFunctionProxy(moduleName, undefined);
+  }
+
+  throw new Error("Unsupported module type");
 }
 
 function createBridgeCode() {

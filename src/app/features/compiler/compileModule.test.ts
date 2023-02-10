@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { AnyFunction } from "js-interpreter";
 import type { Result } from "neverthrow";
-
-import { compileModule, createModuleBuilder } from "./compileModule";
+import type { CompiledModule, ModuleDefinition } from "./compileModule";
+import { ModuleCompiler } from "./compileModule";
 
 describe("supports", () => {
   describe("return value", () => {
@@ -28,53 +28,60 @@ describe("supports", () => {
   });
 
   it("calling module A from module B", () => {
-    const moduleA = compileModule(`define((...args) => ["A", ...args])`, {
+    const compiler = new ModuleCompiler();
+    const moduleA = compiler.addModule("moduleA", {
       type: z.function(),
+      code: `define((...args) => ["A", ...args])`,
+    });
+    const moduleB = compiler.addModule("moduleB", {
+      type: z.function(),
+      code: `define((...args) => moduleA("B", ...args))`,
+      globals: { moduleA },
     });
 
-    assert(moduleA, (a) => {
-      const moduleB = compileModule(
-        `define((...args) => moduleA("B", ...args))`,
-        {
-          type: z.function(),
-          globals: { moduleA: a },
-        }
-      );
+    const result = compiler.compile();
 
-      assert(moduleB, (b) => {
-        const res = b("input");
-        expect(res).toEqual(["A", "B", "input"]);
-      });
+    assert(result, () => {
+      const res = moduleB("input");
+      expect(res).toEqual(["A", "B", "input"]);
     });
   });
 
   it("using arguments mutated by another module during chained function call", () => {
-    const result = createModuleBuilder()
-      .addModule("double", z.function(), `define((state) => state.x *= 2)`)
-      .addModule(
-        "program",
-        z.function(),
-        `define((state) => { state.x = 5; double(state); })`
-      )
-      .compile();
+    const compiler = new ModuleCompiler();
 
-    assert(result, (modules) => {
+    const double = compiler.addModule("double", {
+      type: z.function(),
+      code: `define((state) => state.x *= 2)`,
+    });
+
+    const program = compiler.addModule("program", {
+      type: z.function(),
+      code: `define((state) => { state.x = 5; double(state); })`,
+      globals: { double },
+    });
+
+    const result = compiler.compile();
+
+    assert(result, () => {
       const state = { x: 0 };
-      modules.program(state);
+      program(state);
       expect(state.x).toEqual(10);
     });
   });
 
   describe("global functions", () => {
     function test(path: [string, ...string[]]) {
-      const res = compileWithGlobalAtPath(
-        path,
-        `define((...args) => ${path.join(".")}(...args))`,
-        (...args: unknown[]) => [path, ...args]
+      testCompiledModule(
+        {
+          type: z.function(),
+          code: `define((...args) => ${path.join(".")}(...args))`,
+          globals: globalAtPath(path, (...args: unknown[]) => [path, ...args]),
+        },
+        (fn) => {
+          expect(fn(1, 2)).toEqual([path, 1, 2]);
+        }
       );
-      assert(res, (fn) => {
-        expect(fn(1, 2)).toEqual([path, 1, 2]);
-      });
     }
     it("in root", () => test(["root"]));
     it("in nested object", () => test(["root", "nested"]));
@@ -97,14 +104,16 @@ describe("supports", () => {
         null,
         undefined,
       ];
-      const res = compileWithGlobalAtPath(
-        path,
-        `define(() => ${path.join(".")})`,
-        values
+      testCompiledModule(
+        {
+          type: z.function(),
+          globals: globalAtPath(path, values),
+          code: `define(() => ${path.join(".")})`,
+        },
+        (fn) => {
+          expect(fn()).toEqual(values);
+        }
       );
-      assert(res, (fn) => {
-        expect(fn()).toEqual(values);
-      });
     }
     it("in root", () => test(["root"]));
     it("in nested object", () => test(["root", "nested"]));
@@ -119,20 +128,11 @@ function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
   assertion?.(res.value);
 }
 
-function compileWithGlobalAtPath(
-  path: [string, ...string[]],
-  code: string,
-  leafValue: unknown
-) {
-  const scriptAPI = path.reduceRight(
+function globalAtPath(path: [string, ...string[]], leafValue: unknown) {
+  return path.reduceRight(
     (acc: object, key) => ({ [key]: acc }),
     leafValue as object
   );
-
-  return compileModule(code, {
-    type: z.function(),
-    globals: scriptAPI,
-  });
 }
 
 function testModuleOutputs(
@@ -140,22 +140,40 @@ function testModuleOutputs(
   assertion: (value: AnyFunction) => unknown
 ) {
   it("single function", () => {
-    assert(
-      compileModule(`define(${functionDefinitionCode})`, {
+    testCompiledModule(
+      {
+        code: `define(${functionDefinitionCode})`,
         type: z.function(),
-      }),
+      },
       assertion
     );
   });
 
   it("function record", () => {
-    const res = compileModule(
-      `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
-      { type: z.object({ first: z.function(), second: z.function() }) }
+    testCompiledModule(
+      {
+        type: z.object({ first: z.function(), second: z.function() }),
+        code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
+      },
+      ({ first, second }) => {
+        assertion(first);
+        assertion(second);
+      }
     );
-    assert(res, ({ first, second }) => {
-      assertion(first);
-      assertion(second);
-    });
   });
+}
+
+function testCompiledModule<Definition extends ModuleDefinition>(
+  definition: Definition,
+  assertion: (value: CompiledModule<Definition["type"]>) => unknown
+) {
+  const compiler = new ModuleCompiler();
+
+  try {
+    const main = compiler.addModule("main", definition);
+    const result = compiler.compile();
+    assert(result, () => assertion(main));
+  } finally {
+    compiler.dispose();
+  }
 }
