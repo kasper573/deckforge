@@ -207,11 +207,11 @@ function createModuleProxy<Definition extends ModuleDefinition>(
 ): CompiledModule<Definition["type"]> {
   function createFunctionProxy<T extends AnyZodFunction>(
     moduleName: string,
-    name: string | undefined
+    functionName: string | undefined
   ) {
     type Fn = z.infer<T>;
     function moduleFunctionProxy(...args: Parameters<Fn>): ReturnType<Fn> {
-      return handleProxyCall(moduleName, name, args) as ReturnType<Fn>;
+      return handleProxyCall(moduleName, functionName, args) as ReturnType<Fn>;
     }
     return moduleFunctionProxy;
   }
