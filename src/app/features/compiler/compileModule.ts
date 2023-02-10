@@ -3,52 +3,80 @@ import type { AnyFunction } from "js-interpreter";
 import JSInterpreter from "js-interpreter";
 import type { ZodType } from "zod";
 import { ZodFunction, ZodObject, z } from "zod";
+import type { Result } from "neverthrow";
+import { err, ok } from "neverthrow";
 
-export type ModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
 export type ModuleOutputFunction = AnyFunction;
 export type ModuleOutputRecord = Partial<Record<string, ModuleOutputFunction>>;
-export type inferModuleOutput<T extends ModuleOutputType> = z.infer<T>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyZodFunction = ZodFunction<any, any>;
 
-export type CompileModuleResult<T extends ModuleOutputType> =
-  | { type: "success"; value: inferModuleOutput<T> }
-  | { type: "error"; error: unknown };
+export type CompiledModule<Definition extends ModuleDefinition> = z.infer<
+  Definition["type"]
+>;
 
-export interface CompileModuleOptions<T extends ModuleOutputType> {
-  type: T;
+export type CompiledModules<Definitions extends ModuleDefinitions> = {
+  [Name in keyof Definitions]: CompiledModule<Definitions[Name]>;
+};
+
+export interface ModuleDefinition<T extends ModuleOutput = ModuleOutput> {
+  type: ZodType<T>;
   globals?: object;
+  code: string;
 }
 
-export function compileModule<T extends ModuleOutputType>(
-  code: string,
-  { type, globals = {} }: CompileModuleOptions<T>
-): CompileModuleResult<T> {
-  const bridgeCode = `
-    let ${symbols.definition};
-    const ${symbols.mutate} = (${createMutateFn.toString()})();
-    function ${symbols.callDefined}(fn, args) {
-      const returns = fn.apply(null, args);
-      return JSON.stringify({ args, returns });
-    }
-    function ${symbols.callNative}(path, args) {
-      const payload = JSON.stringify([path, args]); 
-      const response = ${symbols.callNativeRaw}(payload);
-      const result = JSON.parse(response);
-      ${symbols.mutate}(args, result.args);
-      return result.returns;
-    }
-    ${bridgeGlobals(globals)}
-    function ${symbols.define}(definition) {
-      ${symbols.definition} = definition;
-    }
-  `;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ModuleDefinitions = Record<string, ModuleDefinition<any>>;
 
+export class ModuleBuilder<Definitions extends ModuleDefinitions> {
+  constructor(private definitions: Definitions) {}
+
+  addModule<Name extends string, Output extends ModuleOutput>(
+    name: Name,
+    type: ZodType<Output>,
+    code: string,
+    globals?: object
+  ) {
+    return new ModuleBuilder({
+      ...this.definitions,
+      [name]: { type, code, globals },
+    } as Definitions & Record<Name, Output>);
+  }
+
+  compile() {
+    return compileModules(this.definitions);
+  }
+}
+
+export function createModuleBuilder() {
+  return new ModuleBuilder({});
+}
+
+export function compileModule<Definition extends ModuleDefinition>(
+  code: Definition["code"],
+  { type, globals = {} }: Omit<Definition, "code">
+): Result<CompiledModule<Definition>, unknown> {
+  const result = createModuleBuilder()
+    .addModule("main", type, code, globals)
+    .compile()
+    .map((modules) => modules.main);
+}
+
+export function compileModules<Definitions extends ModuleDefinitions>(
+  definitions: Definitions
+): Result<CompiledModules<Definitions>, unknown> {
   let interpreter: JSInterpreter;
   try {
-    code = transpile(`${bridgeCode}\n${code}`);
+    const code = transpile(`
+      ${createBridgeCode()}
+      ${createScopedModuleCode(definitions)}
+      if (Object.keys(${symbols.modules}).length === 0) {
+        throw new Error("No modules were defined");
+      }
+    `);
+    console.log(code);
     interpreter = new JSInterpreter(code, (i, globals) => {
       i.setProperty(
         globals,
@@ -58,10 +86,7 @@ export function compileModule<T extends ModuleOutputType>(
     });
     flush();
   } catch (error) {
-    return {
-      type: "error",
-      error: `Script compile error: ${error}`,
-    };
+    return err(`Script compile error: ${error}`);
   }
 
   function flush() {
@@ -72,7 +97,12 @@ export function compileModule<T extends ModuleOutputType>(
   }
 
   function callNativeRaw(payload: string) {
-    const [path, args] = JSON.parse(payload) as [string[], unknown[]];
+    const [moduleName, path, args] = JSON.parse(payload) as [
+      string,
+      string[],
+      unknown[]
+    ];
+    const globals = definitions[moduleName as keyof Definitions]?.globals ?? {};
     const fn = path.reduce(
       (obj, key) => obj[key as keyof typeof obj],
       globals as object
@@ -84,10 +114,20 @@ export function compileModule<T extends ModuleOutputType>(
     return JSON.stringify({ args, returns });
   }
 
-  function callDefined(name: string | undefined, args: unknown[]) {
-    const fnRef = name ? `${symbols.definition}.${name}` : symbols.definition;
+  function callDefined(
+    moduleName: string,
+    functionName: string | undefined,
+    args: unknown[]
+  ) {
+    const moduleRef = `${symbols.modules}.${moduleName}`;
+    const fnRef = functionName ? `${moduleRef}.${functionName}` : moduleRef;
     interpreter.appendCode(
-      `${symbols.callDefined}(${fnRef}, ${JSON.stringify(args)});`
+      `(function () {
+        if (typeof ${fnRef} === "undefined") {
+          throw new Error("${fnRef} is not defined");
+        }
+        return ${symbols.callDefined}(${fnRef}, ${JSON.stringify(args)});
+      })()`
     );
     flush();
     const result = z
@@ -97,41 +137,100 @@ export function compileModule<T extends ModuleOutputType>(
     return result.returns;
   }
 
-  function createFunctionProxy<T extends AnyZodFunction>(name?: string) {
+  function createFunctionProxy<T extends AnyZodFunction>(
+    moduleName: string,
+    name: string | undefined
+  ) {
     type Fn = z.infer<T>;
     function moduleFunctionProxy(...args: Parameters<Fn>): ReturnType<Fn> {
-      return callDefined(name, args) as ReturnType<Fn>;
+      return callDefined(moduleName, name, args) as ReturnType<Fn>;
     }
     return moduleFunctionProxy;
   }
 
-  if (type instanceof ZodObject) {
-    const proxies = Object.keys(type.shape).reduce(
-      (acc: ModuleOutputRecord, key) => ({
-        ...acc,
-        [key]: createFunctionProxy(key),
-      }),
-      {}
-    );
-    return { type: "success", value: proxies };
+  function createModuleProxy<Definition extends ModuleDefinition>(
+    moduleName: string,
+    { type }: Definition
+  ): CompiledModule<Definition> {
+    if (type instanceof ZodObject) {
+      const proxies = Object.keys(type.shape).reduce(
+        (acc: ModuleOutputRecord, key) => ({
+          ...acc,
+          [key]: createFunctionProxy(moduleName, key),
+        }),
+        {}
+      );
+      return proxies;
+    }
+
+    if (type instanceof ZodFunction) {
+      return createFunctionProxy(moduleName, undefined);
+    }
+
+    throw new Error("Unsupported module type");
   }
 
-  if (type instanceof ZodFunction) {
-    return { type: "success", value: createFunctionProxy() };
-  }
+  const moduleProxies = Object.entries(definitions).reduce(
+    (acc, [moduleName, definition]) => ({
+      ...acc,
+      [moduleName]: createModuleProxy(moduleName, definition),
+    }),
+    {} as CompiledModules<Definitions>
+  );
 
-  throw new Error("Unsupported type");
+  return ok(moduleProxies);
 }
 
-function bridgeGlobals(globals: object): string {
+function createScopedModuleCode(definitions: ModuleDefinitions) {
+  return Object.entries(definitions)
+    .map(
+      ([moduleName, { code, globals = {} }]) => `
+    ((${symbols.define}) => {
+      ${bridgeGlobals(moduleName, globals)}
+      ${code}
+    })((def) => ${symbols.define}("${moduleName}", def));
+  `
+    )
+    .join("\n");
+}
+
+function createBridgeCode() {
+  return `
+    const ${symbols.modules} = {};
+    const ${symbols.mutate} = (${createMutateFn.toString()})();
+    function ${symbols.callDefined}(fn, args) {
+      const returns = fn.apply(null, args);
+      return JSON.stringify({ args, returns });
+    }
+    function ${symbols.callNative}(moduleName, path, args) {
+      const payload = JSON.stringify([moduleName, path, args]); 
+      const response = ${symbols.callNativeRaw}(payload);
+      const result = JSON.parse(response);
+      ${symbols.mutate}(args, result.args);
+      return result.returns;
+    }
+    function ${symbols.define}(moduleName, moduleDefinition) {
+      ${symbols.modules}[moduleName] = moduleDefinition;
+    }
+  `;
+}
+
+function bridgeGlobals(moduleName: string, globals: object): string {
   return Object.entries(globals)
-    .map(([key, value]) => `const ${key} = ${bridgeJSValue(value, [key])}`)
+    .map(
+      ([key, value]) =>
+        `const ${key} = ${bridgeJSValue(moduleName, value, [key])}`
+    )
     .join(";\n");
 }
 
-function bridgeJSValue(value: unknown, path: Array<string | number>): string {
+function bridgeJSValue(
+  moduleName: string,
+  value: unknown,
+  path: Array<string | number>
+): string {
   const chain = (child: unknown, step: string | number) =>
-    bridgeJSValue(child, [...path, step]);
+    bridgeJSValue(moduleName, child, [...path, step]);
 
   if (Array.isArray(value)) {
     return `[${value.map(chain).join(", ")}]`;
@@ -142,9 +241,9 @@ function bridgeJSValue(value: unknown, path: Array<string | number>): string {
       .join(", ")}}`;
   }
   if (typeof value === "function") {
-    return `function () { return ${symbols.callNative}(${JSON.stringify(
-      path
-    )}, arguments); }`;
+    return `function () { return ${
+      symbols.callNative
+    }("${moduleName}", ${JSON.stringify(path)}, arguments); }`;
   }
   return JSON.stringify(value);
 }
@@ -185,5 +284,5 @@ export const symbols = {
   callNative: "___call_native___",
   callDefined: "___call_defined___",
   mutate: "___mutate___",
-  definition: "___def___",
+  modules: "___modules___",
 } as const;

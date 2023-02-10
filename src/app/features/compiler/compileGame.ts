@@ -27,7 +27,7 @@ import type {
   RuntimePlayer,
   RuntimePlayerId,
 } from "./types";
-import type { CompileModuleOptions, ModuleOutputType } from "./compileModule";
+import type { ModuleDefinition } from "./compileModule";
 import { compileModule } from "./compileModule";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
@@ -184,7 +184,7 @@ function compileModuleDescribed<T extends ModuleOutputType>(
   kind: string,
   name: string,
   esnextCode: string,
-  options: CompileModuleOptions<T>
+  options: ModuleDefinition<T>
 ) {
   const result = compileModule(esnextCode, options);
   const decorateError: ErrorDecorator = (error, path) =>

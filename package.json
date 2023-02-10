@@ -60,6 +60,7 @@
     "lodash": "4.17.21",
     "monaco-editor": "0.34.1",
     "morgan": "1.10.0",
+    "neverthrow": "^6.0.0",
     "path-to-regexp": "6.2.1",
     "rand-seed": "1.0.2",
     "react": "18.2.0",

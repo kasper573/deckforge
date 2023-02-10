@@ -1,11 +1,8 @@
 import { z } from "zod";
 import type { AnyFunction } from "js-interpreter";
-import type {
-  CompileModuleResult,
-  inferModuleOutput,
-  ModuleOutputType,
-} from "./compileModule";
-import { compileModule } from "./compileModule";
+import type { Result } from "neverthrow";
+
+import { compileModule, createModuleBuilder } from "./compileModule";
 
 describe("supports", () => {
   describe("return value", () => {
@@ -52,23 +49,18 @@ describe("supports", () => {
   });
 
   it("using arguments mutated by another module during chained function call", () => {
-    const double = compileModule(`define((state) => state.x *= 2)`, {
-      type: z.function(),
-    });
+    const result = createModuleBuilder()
+      .addModule("double", z.function(), `define((state) => state.x *= 2)`)
+      .addModule(
+        "program",
+        z.function(),
+        `define((state) => { state.x = 5; double(state); })`
+      )
+      .compile();
 
-    const program = compileModule(
-      `define((state) => { state.x = 5; double(state); })`,
-      {
-        type: z.function(),
-        globals: {
-          double: double.type === "success" ? double.value : undefined,
-        },
-      }
-    );
-
-    assert(program, (run) => {
+    assert(result, (modules) => {
       const state = { x: 0 };
-      run(state);
+      modules.program(state);
       expect(state.x).toEqual(10);
     });
   });
@@ -120,14 +112,11 @@ describe("supports", () => {
   });
 });
 
-function assert<T extends ModuleOutputType>(
-  res: CompileModuleResult<T>,
-  assertion?: (value: inferModuleOutput<T>) => unknown
-) {
-  if (res.type === "error") {
+function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
+  if (res.isErr()) {
     throw res.error;
   }
-  assertion?.(res.value as z.infer<T>);
+  assertion?.(res.value);
 }
 
 function compileWithGlobalAtPath(
