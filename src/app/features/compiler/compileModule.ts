@@ -220,9 +220,6 @@ function createBridgeCode() {
     const ${symbols.modules} = {};
     const ${symbols.mutate} = (${createMutateFn.toString()})();
     function ${symbols.callDefined}(fn, args) {
-      if (typeof fn !== "function") {
-        throw new Error("fn is not a function");
-      }
       const returns = fn.apply(null, args);
       return JSON.stringify({ args, returns });
     }
