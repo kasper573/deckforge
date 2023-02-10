@@ -1,7 +1,12 @@
 import { z } from "zod";
 import type { AnyFunction } from "js-interpreter";
 import type { Result } from "neverthrow";
-import type { CompiledModule, ModuleDefinition } from "./compileModule";
+import type { Err } from "neverthrow";
+import type {
+  CompiledModule,
+  CompiledModules,
+  ModuleDefinition,
+} from "./compileModule";
 import { ModuleCompiler } from "./compileModule";
 
 describe("supports", () => {
@@ -24,6 +29,15 @@ describe("supports", () => {
       fn(a, b);
       expect(a.x).toEqual(1);
       expect(b.x).toEqual(2);
+    });
+  });
+
+  it("detecting a module that does not define anything", () => {
+    testCompilerResult({ type: z.function(), code: `` }, (result) => {
+      expect(result.isErr()).toBe(true);
+      expect((result as Err<unknown, unknown>).error).toEqual(
+        `Compiler error: Error: No modules were defined`
+      );
     });
   });
 
@@ -165,14 +179,29 @@ function testModuleOutputs(
 
 function testCompiledModule<Definition extends ModuleDefinition>(
   definition: Definition,
-  assertion: (value: CompiledModule<Definition["type"]>) => unknown
+  assertion: (
+    value: CompiledModule<Definition["type"]>,
+    result: Result<CompiledModules, unknown>
+  ) => unknown
+) {
+  testCompilerResult(definition, (result, module) => {
+    assert(result, () => assertion(module, result));
+  });
+}
+
+function testCompilerResult<Definition extends ModuleDefinition>(
+  definition: Definition,
+  assertion: (
+    result: Result<CompiledModules, unknown>,
+    module: CompiledModule<Definition["type"]>
+  ) => unknown
 ) {
   const compiler = new ModuleCompiler();
 
   try {
-    const main = compiler.addModule("main", definition);
+    const module = compiler.addModule("main", definition);
     const result = compiler.compile();
-    assert(result, () => assertion(main));
+    assertion(result, module);
   } finally {
     compiler.dispose();
   }
