@@ -83,7 +83,6 @@ export function compileModules<Definitions extends ModuleDefinitions>(
         throw new Error("No modules were defined");
       }
     `);
-    console.log(code);
     interpreter = new JSInterpreter(code, (i, globals) => {
       i.setProperty(
         globals,
