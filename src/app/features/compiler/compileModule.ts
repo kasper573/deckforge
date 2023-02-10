@@ -74,15 +74,21 @@ export class ModuleCompiler {
 export function compileModules<Definitions extends ModuleDefinitions>(
   definitions: Definitions
 ): Result<CompiledModules<Definitions>, unknown> {
+  let code: string;
+  try {
+    code = transpile(`
+    ${createBridgeCode()}
+    ${createScopedModuleCode(definitions)}
+    if (Object.keys(${symbols.modules}).length === 0) {
+      throw new Error("No modules were defined");
+    }
+  `);
+  } catch (error) {
+    return err(enhancedError(`Transpile error: ${error}`));
+  }
+
   let interpreter: JSInterpreter;
   try {
-    const code = transpile(`
-      ${createBridgeCode()}
-      ${createScopedModuleCode(definitions)}
-      if (Object.keys(${symbols.modules}).length === 0) {
-        throw new Error("No modules were defined");
-      }
-    `);
     interpreter = new JSInterpreter(code, (i, globals) => {
       i.setProperty(
         globals,
@@ -92,13 +98,13 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     });
     flush();
   } catch (error) {
-    return err(`Script compile error: ${error}`);
+    return err(enhancedError(`Compiler error: ${error}`));
   }
 
   function flush() {
     const hasMore = interpreter.run();
     if (hasMore) {
-      throw new Error("Script did not resolve immediately");
+      throw enhancedError("Script did not resolve immediately");
     }
   }
 
@@ -125,22 +131,27 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     functionName: string | undefined,
     args: unknown[]
   ) {
-    const moduleRef = `${symbols.modules}.${moduleName}`;
+    const moduleRef = `${symbols.modules}["${moduleName}"]`;
     const fnRef = functionName ? `${moduleRef}.${functionName}` : moduleRef;
-    interpreter.appendCode(
-      `(function () {
-        if (typeof ${fnRef} === "undefined") {
-          throw new Error("${fnRef} is not defined");
-        }
-        return ${symbols.callDefined}(${fnRef}, ${JSON.stringify(args)});
-      })()`
-    );
-    flush();
+    const invocationCode = `${symbols.callDefined}(${fnRef}, ${JSON.stringify(
+      args
+    )})`;
+    try {
+      interpreter.appendCode(invocationCode);
+      flush();
+    } catch (error) {
+      throw enhancedError(`Runtime error: ${error}`);
+    }
+
     const result = z
       .object({ args: z.array(z.unknown()), returns: z.unknown() })
       .parse(JSON.parse(interpreter.value as string));
     mutate(args, result.args);
     return result.returns;
+  }
+
+  function enhancedError(error: unknown) {
+    return error;
   }
 
   const moduleProxies = Object.entries(definitions).reduce(
@@ -209,6 +220,9 @@ function createBridgeCode() {
     const ${symbols.modules} = {};
     const ${symbols.mutate} = (${createMutateFn.toString()})();
     function ${symbols.callDefined}(fn, args) {
+      if (typeof fn !== "function") {
+        throw new Error("fn is not a function");
+      }
       const returns = fn.apply(null, args);
       return JSON.stringify({ args, returns });
     }
