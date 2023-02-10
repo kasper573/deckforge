@@ -37,6 +37,7 @@ export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
   options?: {
+    debug?: boolean;
     seed?: string;
     middlewares?: (
       compiledMiddlewares: RuntimeMiddleware<G>[]
@@ -57,7 +58,9 @@ export function compileGame<G extends RuntimeGenerics>(
     actions: functionRouter(eventNames, () => runtime.actions),
   };
   const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
-  const moduleCompiler = new ModuleCompiler(decorateModuleError);
+  const moduleCompiler = new ModuleCompiler(decorateModuleError, {
+    debug: options?.debug,
+  });
 
   const decks = gameDefinition.decks.map(
     (deck): RuntimeDeck<G> => ({

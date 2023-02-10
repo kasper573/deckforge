@@ -34,18 +34,26 @@ export interface ModuleDefinition<
 
 export type ModuleDefinitions = Record<string, ModuleDefinition>;
 
+export interface CompileModulesOptions {
+  debug?: boolean;
+}
+
 export class ModuleCompiler {
   #modules?: CompiledModules;
   #definitions: ModuleDefinitions = {};
 
-  constructor(private errorDecorator?: AnyFunction) {}
+  constructor(
+    private errorDecorator?: AnyFunction,
+    private options: CompileModulesOptions = {}
+  ) {}
 
   addModule<Name extends string, Definition extends ModuleDefinition>(
     name: Name,
     definition: Definition
   ) {
     this.#definitions[name] = definition;
-    return createModuleProxy(name, definition, (name, functionName, args) => {
+
+    return createModuleProxy(name, definition, (_, functionName, args) => {
       const m = this.#modules?.[name];
       if (!m) {
         throw new Error("Module not compiled");
@@ -61,7 +69,7 @@ export class ModuleCompiler {
   }
 
   compile() {
-    const result = compileModules(this.#definitions);
+    const result = compileModules(this.#definitions, this.options);
     if (result.isOk()) {
       this.#modules = result.value;
     }
@@ -72,7 +80,8 @@ export class ModuleCompiler {
 }
 
 export function compileModules<Definitions extends ModuleDefinitions>(
-  definitions: Definitions
+  definitions: Definitions,
+  options: CompileModulesOptions = {}
 ): Result<CompiledModules<Definitions>, unknown> {
   let code: string;
   try {
@@ -140,7 +149,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       interpreter.appendCode(invocationCode);
       flush();
     } catch (error) {
-      throw enhancedError(`Runtime error: ${error}`);
+      throw enhancedError(`Runtime error: ${error}`, invocationCode);
     }
 
     const result = z
@@ -150,8 +159,17 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     return result.returns;
   }
 
-  function enhancedError(error: unknown) {
-    return error;
+  function enhancedError(error: unknown, invocationCode?: string) {
+    if (!options.debug) {
+      return error;
+    }
+
+    const nonTranspiledCode = Object.values(definitions)
+      .map((d) => d.code)
+      .join("\n");
+    return `${error}:\nmodule:\n${
+      code ?? nonTranspiledCode
+    }\ninvocation:\n${invocationCode}`;
   }
 
   const moduleProxies = Object.entries(definitions).reduce(
