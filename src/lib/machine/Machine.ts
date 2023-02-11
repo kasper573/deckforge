@@ -25,6 +25,7 @@ function createMachineInstance<MC extends MachineContext>(
   middlewares: MachineMiddleware<MC>[] = []
 ): Machine<MC> {
   const subscriptions = new Set<(state: MC["state"]) => void>();
+  const effectHandler = createEffectHandlerMiddleware(effects, selectReactions);
 
   let currentDraft: MC["state"] | undefined;
   function performAction<ActionName extends keyof MC["actions"]>(
@@ -32,10 +33,7 @@ function createMachineInstance<MC extends MachineContext>(
     payload: MachineActionPayload<MC["actions"][ActionName]>
   ) {
     machine.execute((draft) => {
-      const middlewareQueue = [
-        ...middlewares,
-        createEffectHandlerMiddleware(effects, selectReactions),
-      ];
+      const middlewareQueue = [...middlewares, effectHandler];
 
       function callNextMiddleware() {
         const nextMiddleware = middlewareQueue.shift();
