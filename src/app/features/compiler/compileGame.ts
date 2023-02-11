@@ -181,7 +181,7 @@ const eventModuleName = (event: Event) =>
 const reducerModuleName = (reducer: Reducer) =>
   validIdentifier(`Reducer_${reducer.name}`);
 const cardModuleName = (deck: Deck, card: Card) =>
-  validIdentifier(`Deck_${deck.name}_Card_${card.name}`);
+  validIdentifier(`Card_${deck.name}_${card.name}`);
 
 function namedPropertyDefaults(
   properties: Property[],
