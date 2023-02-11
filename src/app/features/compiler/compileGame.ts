@@ -1,13 +1,13 @@
 import { v4 } from "uuid";
 import Rand from "rand-seed";
 import produce from "immer";
-import type { AnyFunction } from "js-interpreter";
 import type {
   Card,
   CardId,
   Game,
   Property,
   PropertyDefaults,
+  Event,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
 import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
@@ -53,16 +53,22 @@ export function compileGame<G extends RuntimeGenerics>(
     (p) => p.entityId === "player"
   );
 
-  const eventNames = gameDefinition.events.map((e) => e.name);
-  const moduleAPI: RuntimeModuleAPI<G> = {
-    random: createRandomFn(options?.seed),
-    cloneCard,
-    actions: functionRouter(eventNames, () => runtime.actions),
-  };
-  const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
   const moduleCompiler = new ModuleCompiler(decorateModuleError, {
     debug: options?.debug,
   });
+  const moduleAPI: RuntimeModuleAPI<G> = {
+    random: createRandomFn(options?.seed),
+    cloneCard,
+    actions: moduleCompiler.refs(
+      Object.fromEntries(
+        gameDefinition.events.map((event) => [
+          event.name,
+          eventModuleName(event),
+        ])
+      )
+    ),
+  };
+  const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
 
   const decks = gameDefinition.decks.map(
     (deck): RuntimeDeck<G> => ({
@@ -83,20 +89,17 @@ export function compileGame<G extends RuntimeGenerics>(
     })
   );
 
-  const effects = gameDefinition.events.reduce(
-    (effects, { eventId, name, code }) => {
-      effects[name as keyof typeof effects] = moduleCompiler.addModule(
-        `Event_${eventId}`,
-        {
-          type: runtimeDefinition.effects.shape[name],
-          code,
-          globals: moduleAPI,
-        }
-      );
-      return effects;
-    },
-    {} as RuntimeEffects<G>
-  );
+  const effects = gameDefinition.events.reduce((effects, event) => {
+    effects[event.name as keyof typeof effects] = moduleCompiler.addModule(
+      eventModuleName(event),
+      {
+        type: runtimeDefinition.effects.shape[event.name],
+        code: event.code,
+        globals: moduleAPI,
+      }
+    );
+    return effects;
+  }, {} as RuntimeEffects<G>);
 
   const runtimeReducers = gameDefinition.reducers.map(({ reducerId, code }) =>
     moduleCompiler.addModule(`Reducer_${reducerId}`, {
@@ -176,6 +179,7 @@ function cloneCard<G extends RuntimeGenerics>(
 }
 
 const createCardInstanceId = v4 as () => CardInstanceId;
+const eventModuleName = (event: Event) => `Event_${event.eventId}`;
 
 const decorateModuleError: ErrorDecorator = (error, [moduleName, ...path]) =>
   error instanceof LogSpreadError
@@ -198,18 +202,6 @@ function namedPropertyDefaults(
 function createRandomFn(seed?: string) {
   const rng = new Rand(seed);
   return () => rng.next();
-}
-
-function functionRouter<T extends Record<string, AnyFunction>>(
-  names: Array<keyof T>,
-  getTarget: () => T
-): T {
-  const proxies = {} as T;
-  for (const name of names) {
-    const proxy = (...args: unknown[]) => getTarget()[name](...args);
-    proxies[name as keyof T] = proxy as T[keyof T];
-  }
-  return proxies;
 }
 
 function createReducerReducer<G extends RuntimeGenerics>(

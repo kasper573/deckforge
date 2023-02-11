@@ -323,8 +323,8 @@ define({
           code: `
           define((state) => {
             state.properties.status = 10;
-            actions.increase(20);
-            actions.decrease(5);
+            actions.increase(state, 20);
+            actions.decrease(state, 5);
           });
           `,
           inputType: "void",
@@ -353,7 +353,7 @@ define({
           define((state, n) => {
             if (n > 0) {
               state.properties.status++;
-              actions.increaseN(n - 1);
+              actions.increaseN(state, n - 1);
             }
           });
           `,

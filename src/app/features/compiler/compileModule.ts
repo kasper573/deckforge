@@ -313,7 +313,9 @@ function bridgeJSValue(
     return `{${Object.entries(value)
       .map(
         ([moduleIdentifier, moduleName]) =>
-          `get ${moduleIdentifier} () { return ${symbols.modules}["${moduleName}"]; }`
+          `get ${assertValidIdentifier(moduleIdentifier)} () { return ${
+            symbols.modules
+          }["${moduleName}"]; }`
       )
       .join(", ")}}`;
   }
@@ -399,6 +401,14 @@ function errorMessageWithStackTrace(error: unknown) {
 
 function validIdentifier(name: string) {
   return name.replace(/[^a-zA-Z0-9_]/g, "_");
+}
+
+function assertValidIdentifier(name: string) {
+  const valid = validIdentifier(name);
+  if (valid !== name) {
+    throw new Error(`Invalid identifier: ${name}`);
+  }
+  return valid;
 }
 
 function zodInstanceOf<OfType extends ZodType>(
