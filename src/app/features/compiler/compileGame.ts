@@ -10,9 +10,7 @@ import type {
   Event,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
-import { LogSpreadError } from "../editor/components/LogList";
 import type { MachineMiddleware } from "../../../lib/machine/MachineAction";
-import { defined } from "../../../lib/ts-extensions/defined";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -28,7 +26,6 @@ import type {
   RuntimePlayer,
   RuntimePlayerId,
 } from "./types";
-import type { ModuleErrorFactory } from "./compileModule";
 import { ModuleCompiler } from "./compileModule";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
@@ -53,9 +50,7 @@ export function compileGame<G extends RuntimeGenerics>(
     (p) => p.entityId === "player"
   );
 
-  const moduleCompiler = new ModuleCompiler({
-    createError: createModuleError,
-  });
+  const moduleCompiler = new ModuleCompiler();
   const moduleAPI: RuntimeModuleAPI<G> = {
     random: createRandomFn(options?.seed),
     cloneCard,
@@ -184,16 +179,6 @@ function cloneCard<G extends RuntimeGenerics>(
 
 const createCardInstanceId = v4 as () => CardInstanceId;
 const eventModuleName = (event: Event) => `Event_${event.eventId}`;
-
-const createModuleError: ModuleErrorFactory = ({
-  functionName,
-  definition: { meta = [] } = {},
-  error,
-}) =>
-  new LogSpreadError(
-    ...defined([...(Array.isArray(meta) ? meta : [meta]), functionName]),
-    error
-  );
 
 function namedPropertyDefaults(
   properties: Property[],

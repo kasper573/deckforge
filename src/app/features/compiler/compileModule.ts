@@ -32,12 +32,7 @@ export interface ModuleDefinition<
 }
 
 export type ModuleDefinitions = Record<string, ModuleDefinition>;
-export type ModuleErrorFactory = (
-  props: {
-    description: string;
-    definition?: ModuleDefinition;
-  } & BridgeErrorProps
-) => unknown;
+export type ModuleErrorFactory = (error: unknown) => unknown;
 
 export interface CompileModulesOptions {
   createError?: ModuleErrorFactory;
@@ -86,19 +81,11 @@ export class ModuleCompiler {
 export function compileModules<Definitions extends ModuleDefinitions>(
   definitions: Definitions,
   {
-    createError: createErrorImpl = defaultModuleError,
+    createError: createErrorImpl = (error) => error,
   }: CompileModulesOptions = {}
 ): Result<CompiledModules<Definitions>, unknown> {
-  const createError: ModuleErrorFactory = (props) => {
-    const definition = props.moduleName
-      ? definitions[props.moduleName]
-      : undefined;
-    return createErrorImpl({
-      definition,
-      ...props,
-      ...bridgeErrorProtocol.parse(props.error),
-    });
-  };
+  const createError: ModuleErrorFactory = (error) =>
+    createErrorImpl(bridgeErrorProtocol.parse(error));
 
   let code: string;
   try {
@@ -109,7 +96,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       .join("\n")}
   `);
   } catch (error) {
-    return err(createError({ description: "Transpile error", error }));
+    return err(createError(error));
   }
 
   let interpreter: JSInterpreter;
@@ -123,13 +110,13 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     });
     flush();
   } catch (error) {
-    return err(createError({ description: "Compiler error", error }));
+    return err(createError(error));
   }
 
   function flush() {
     const hasMore = interpreter.run();
     if (hasMore) {
-      throw createError({ description: "Script did not resolve immediately" });
+      throw createError("Script did not resolve immediately");
     }
   }
 
@@ -145,10 +132,9 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       globals as object
     );
     if (typeof fn !== "function") {
-      throw createError({
-        moduleName,
-        description: `"${path.join(".")}" is not a global function`,
-      });
+      throw createError(
+        `"${[moduleName, ...path].join(".")}" is not a global function`
+      );
     }
     const returns = fn(...args);
     return JSON.stringify({ args, returns });
@@ -164,12 +150,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       interpreter.appendCode(invocationCode);
       flush();
     } catch (error) {
-      throw createError({
-        description: "Runtime error",
-        moduleName,
-        functionName,
-        error,
-      });
+      throw createError(error);
     }
 
     const result = z
@@ -194,20 +175,26 @@ function createModuleCode(
   moduleName: string,
   { code, type, globals }: ModuleDefinition
 ) {
+  const stackIdentifier = validIdentifier(moduleName);
   if (zodInstanceOf(type, ZodFunction)) {
-    return `((${symbols.define}) => {
+    return `(function ${stackIdentifier} (${symbols.define}) {
         ${bridgeGlobals(moduleName, globals)}
         ${symbols.define}(${defaultDefinitionCode(type)});
-        ${enhanceErrorCode({ moduleName, code })}
-      })((def) => ${symbols.define}("${moduleName}", def));
+        ${enhanceErrorCode(code)}
+      })((def) => {
+        const enhancedDef = function ${stackIdentifier} (...args) {
+          ${enhanceErrorCode("return def(...args);")}
+        };
+        ${symbols.define}("${moduleName}", enhancedDef);
+      });
     `;
   }
 
   if (zodInstanceOf(type, ZodObject)) {
-    return `((${symbols.define}) => {
+    return `(function ${stackIdentifier} (${symbols.define}) {
         ${bridgeGlobals(moduleName, globals)}
         ${symbols.define}({});
-        ${enhanceErrorCode({ moduleName, code })}
+        ${enhanceErrorCode(code)}
       })((def) => {
         const defaults = ${defaultDefinitionCode(type)};
         ${symbols.define}("${moduleName}", {...defaults, ...def});
@@ -218,19 +205,17 @@ function createModuleCode(
   throw new Error("Unsupported module type");
 }
 
-function enhanceErrorCode({
-  code,
-  ...props
-}: {
-  code: string;
-} & Omit<BridgeErrorProps, "error">) {
+function enhanceErrorCode(code: string) {
   return `
     try {
       ${code}
     } catch (error) {
-      var props = ${JSON.stringify(props)};
-      props["error"] = String(error);
-      throw new Error(JSON.stringify(props));
+      if (error.name === "BridgeError") {
+        throw error;
+      }
+      error = new Error(String(error?.stack ?? error));
+      error.name = "BridgeError";
+      throw error;
     }
   `;
 }
@@ -296,15 +281,9 @@ function createInvocationCode(
     functionName ? `${moduleName}.${functionName}` : moduleName
   );
   return `(function invocation_${description}() {
-    ${enhanceErrorCode({
-      moduleName,
-      functionName,
-      code: `
-        return ${symbols.callDefined}("${moduleName}", ${
-        functionName ? `"${functionName}"` : "undefined"
-      }, ${JSON.stringify(args)});
-      `,
-    })}
+    return ${symbols.callDefined}("${moduleName}", ${
+    functionName ? `"${functionName}"` : "undefined"
+  }, ${JSON.stringify(args)});
   })()`;
 }
 
@@ -313,10 +292,12 @@ function createBridgeCode() {
     const ${symbols.modules} = {};
     const ${symbols.mutate} = (${createMutateFn.toString()})();
     function ${symbols.callDefined}(moduleName, functionName, args) {
-      const m = ${symbols.modules}[moduleName];
-      const fn = functionName ? m[functionName] : m;
-      const returns = fn.apply(null, args);
-      return JSON.stringify({ args, returns });
+      ${enhanceErrorCode(`
+        const m = ${symbols.modules}[moduleName];
+        const fn = functionName ? m[functionName] : m;
+        const returns = fn.apply(null, args);
+        return JSON.stringify({ args, returns });
+      `)}
     }
     function ${symbols.callNative}(moduleName, path, args) {
       const payload = JSON.stringify([moduleName, path, args]); 
@@ -436,33 +417,15 @@ export const symbols = {
   modules: "___modules___",
 } as const;
 
-const bridgeErrorProtocol = z.any().transform((error): BridgeErrorProps => {
+const bridgeErrorProtocol = z.any().transform((error): unknown => {
   try {
-    return bridgeErrorObject.parse(
-      JSON.parse(error instanceof Error ? error.message : error)
-    );
+    return z
+      .object({ error: z.unknown() })
+      .parse(JSON.parse(error instanceof Error ? error.message : error)).error;
   } catch {
-    return { error };
+    return error;
   }
 });
-
-type BridgeErrorProps = z.infer<typeof bridgeErrorObject>;
-const bridgeErrorObject = z
-  .object({
-    functionName: z.string(),
-    moduleName: z.string(),
-    error: z.unknown(),
-  })
-  .partial();
-
-const defaultModuleError: ModuleErrorFactory = ({
-  moduleName,
-  functionName,
-  error,
-}) => {
-  const location = [moduleName, functionName].filter(Boolean).join(".");
-  return new Error(location ? `@ ${location}: ${error}` : `${error}`);
-};
 
 function validIdentifier(name: string) {
   return name.replace(/[^a-zA-Z0-9_]/g, "_");
