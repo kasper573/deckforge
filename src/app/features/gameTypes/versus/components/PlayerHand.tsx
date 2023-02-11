@@ -9,7 +9,7 @@ export function PlayerHand({
   target,
 }: {
   player: VersusTypes["player"];
-  cards: VersusTypes["cardPile"];
+  cards: VersusTypes["card"][];
   target: VersusTypes["player"];
 }) {
   const actions = adapter.useRuntimeActions();
