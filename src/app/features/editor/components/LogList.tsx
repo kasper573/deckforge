@@ -78,7 +78,7 @@ export function LogValue({
         );
       }
       if (value instanceof Error) {
-        return <Normal {...props}>{String(value)}</Normal>;
+        return <LogValue value={String(value)} {...props} />;
       }
       if (isLogIdentifier(value)) {
         return (
