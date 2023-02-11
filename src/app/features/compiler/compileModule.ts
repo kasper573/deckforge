@@ -5,14 +5,12 @@ import { ZodFunction, ZodObject, z } from "zod";
 import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
 import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
+import { normalizeType } from "../../../lib/zod-extensions/zodNormalize";
 
 export type AnyModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
 export type ModuleOutputFunction = AnyFunction;
 export type ModuleOutputRecord = Partial<Record<string, ModuleOutputFunction>>;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyZodFunction = ZodFunction<any, any>;
 
 export type CompiledModule<
   Type extends AnyModuleOutputType = AnyModuleOutputType
@@ -175,7 +173,7 @@ function createModuleCode(
   moduleName: string,
   { code, type, globals }: ModuleDefinition
 ) {
-  if (type instanceof ZodFunction) {
+  if (zodInstanceOf(type, ZodFunction)) {
     return `((${symbols.define}) => {
         ${bridgeGlobals(moduleName, globals)}
         ${symbols.define}(${defaultDefinitionCode(type)});
@@ -184,7 +182,7 @@ function createModuleCode(
     `;
   }
 
-  if (type instanceof ZodObject) {
+  if (zodInstanceOf(type, ZodObject)) {
     return `((${symbols.define}) => {
         ${bridgeGlobals(moduleName, globals)}
         ${symbols.define}({});
@@ -200,17 +198,17 @@ function createModuleCode(
 }
 
 function defaultDefinitionCode(type: ZodType): string {
-  if (type instanceof ZodObject) {
+  if (zodInstanceOf(type, ZodObject)) {
     return `{
       ${Object.entries(type.shape as ZodRawShape)
         .map(([key, value]) => `${key}: ${defaultDefinitionCode(value)}`)
         .join(",")}
     }`;
   }
-  if (type instanceof ZodFunction) {
+  if (zodInstanceOf(type, ZodFunction)) {
     return `() => {}`;
   }
-  return "undefined";
+  throw new Error("Unsupported module type");
 }
 
 function createModuleProxy<Definition extends ModuleDefinition>(
@@ -232,7 +230,8 @@ function createModuleProxy<Definition extends ModuleDefinition>(
     }
     return moduleFunctionProxy;
   }
-  if (type instanceof ZodObject) {
+
+  if (zodInstanceOf(type, ZodObject)) {
     const proxies = Object.keys(type.shape).reduce(
       (acc: ModuleOutputRecord, key) => ({
         ...acc,
@@ -243,7 +242,7 @@ function createModuleProxy<Definition extends ModuleDefinition>(
     return proxies;
   }
 
-  if (type instanceof ZodFunction) {
+  if (zodInstanceOf(type, ZodFunction)) {
     return createFunctionProxy(moduleName, undefined);
   }
 
@@ -375,3 +374,15 @@ function errorMessageWithStackTrace(error: unknown) {
 function validIdentifier(name: string) {
   return name.replace(/[^a-zA-Z0-9_]/g, "_");
 }
+
+function zodInstanceOf<OfType extends ZodType>(
+  type: ZodType,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ofType: new (...args: any[]) => OfType
+): type is OfType {
+  type = normalizeType(type);
+  return type instanceof ofType;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyZodFunction = ZodFunction<any, any>;

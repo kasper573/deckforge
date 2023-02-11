@@ -224,6 +224,16 @@ function testModuleOutputs(
   assertion: CompilerAssertion<ZodType<ModuleOutputFunction>>,
   test: typeof testCompilerResult = testCompiledModule
 ) {
+  it("optional single function (assert bypass)", () => {
+    test(
+      {
+        code: `define(${functionDefinitionCode})`,
+        type: z.function().optional() as ZodType<AnyFunction>,
+      },
+      assertion
+    );
+  });
+
   it("single function", () => {
     test(
       {
@@ -243,6 +253,19 @@ function testModuleOutputs(
       ({ first, second }, result) => {
         assertion(first, result);
         assertion(second, result);
+      }
+    );
+  });
+
+  it("partial function record", () => {
+    test(
+      {
+        type: z.object({ first: z.function(), second: z.function() }).partial(),
+        code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
+      },
+      ({ first, second }, result) => {
+        assertion(first!, result);
+        assertion(second!, result);
       }
     );
   });
