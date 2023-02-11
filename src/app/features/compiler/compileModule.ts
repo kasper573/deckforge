@@ -368,7 +368,12 @@ function createMutateFn() {
     }
     if (isObject(a) && isObject(b)) {
       for (const key of Object.keys(b)) {
-        a[key] = mutate(a[key], b[key]);
+        const nextValue = mutate(a[key], b[key]);
+        try {
+          a[key] = nextValue;
+        } catch {
+          // ignore read-only errors
+        }
       }
       return a;
     }
