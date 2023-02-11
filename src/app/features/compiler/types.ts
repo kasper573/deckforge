@@ -2,13 +2,13 @@ import type { z, ZodObject, ZodType } from "zod";
 import type {
   MachineActions,
   MachineEffects,
-  MachineMiddleware,
 } from "../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../lib/machine/MachineContext";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded";
 import type { CardId, DeckId } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
+import type { MachineActionObject } from "../../../lib/machine/MachineAction";
 
 export type CardInstanceId = z.infer<typeof cardInstanceIdType>;
 export const cardInstanceIdType = zodRuntimeBranded("CardInstanceId");
@@ -97,9 +97,13 @@ export type PropRecord = Record<string, unknown>;
 export type RuntimeGenericsFor<T extends RuntimeDefinition> =
   T extends RuntimeDefinition<infer G> ? G : never;
 
-export type RuntimeMiddleware<G extends RuntimeGenerics> = MachineMiddleware<
-  RuntimeMachineContext<G>
->;
+export type RuntimeMiddleware<
+  G extends RuntimeGenerics,
+  MC extends RuntimeMachineContext<G> = RuntimeMachineContext<G>
+> = (
+  state: MC["state"],
+  action: MachineActionObject<MC, keyof MC["actions"]>
+) => void;
 
 export type RuntimeMachineContext<G extends RuntimeGenerics> = MachineContext<
   RuntimeState<G>,

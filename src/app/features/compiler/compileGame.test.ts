@@ -362,15 +362,14 @@ define({
     });
   });
 
-  it("compiled middleware can opt out of next middleware", () => {
+  it("can compile multiple middlewares", () => {
     const gameDefinition: GameDefinition = {
       middlewares: [
         {
           middlewareId: v4() as MiddlewareId,
           name: "set to 1",
-          code: `define((state, action, next) => {
+          code: `define((state, action) => {
             state.properties.status = 1;
-            next();
           })`,
         },
         {
@@ -382,9 +381,9 @@ define({
         },
         {
           middlewareId: v4() as MiddlewareId,
-          name: "set to 0",
+          name: "subtract 1",
           code: `define((state) => {
-            state.properties.status = 0;
+            state.properties.status -= 1;
           })`,
         },
       ],
@@ -403,7 +402,7 @@ define({
     const runtimeDefinition = defineTestRuntime(gameDefinition);
     const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
     runtime!.actions.foo();
-    expect(runtime!.state.properties.status).toEqual(3);
+    expect(runtime!.state.properties.status).toEqual(2);
   });
 });
 
