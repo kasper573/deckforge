@@ -32,13 +32,12 @@ export interface ModuleDefinition<
 }
 
 export type ModuleDefinitions = Record<string, ModuleDefinition>;
-export type ModuleErrorFactory = (props: {
-  description: string;
-  moduleName?: string;
-  definition?: ModuleDefinition;
-  functionName?: string;
-  error?: unknown;
-}) => unknown;
+export type ModuleErrorFactory = (
+  props: {
+    description: string;
+    definition?: ModuleDefinition;
+  } & BridgeErrorProps
+) => unknown;
 
 export interface CompileModulesOptions {
   createError?: ModuleErrorFactory;
@@ -94,7 +93,11 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     const definition = props.moduleName
       ? definitions[props.moduleName]
       : undefined;
-    return createErrorImpl({ definition, ...props });
+    return createErrorImpl({
+      definition,
+      ...props,
+      ...bridgeErrorProtocol.parse(props.error),
+    });
   };
 
   let code: string;
@@ -120,14 +123,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     });
     flush();
   } catch (error) {
-    const res = bridgeErrorSchema.safeParse(error);
-    return err(
-      createError({
-        description: "Compiler error",
-        moduleName: res.success ? res.data.moduleName : undefined,
-        error: res.success ? res.data.error : error,
-      })
-    );
+    return err(createError({ description: "Compiler error", error }));
   }
 
   function flush() {
@@ -198,21 +194,11 @@ function createModuleCode(
   moduleName: string,
   { code, type, globals }: ModuleDefinition
 ) {
-  code = `
-    try {
-      ${code}
-    } catch (error) {
-      throw new Error(
-        JSON.stringify({ moduleName: "${moduleName}", error: String(error) })
-      );
-    }
-  `;
-
   if (zodInstanceOf(type, ZodFunction)) {
     return `((${symbols.define}) => {
         ${bridgeGlobals(moduleName, globals)}
         ${symbols.define}(${defaultDefinitionCode(type)});
-        ${code}
+        ${enhanceErrorCode({ moduleName, code })}
       })((def) => ${symbols.define}("${moduleName}", def));
     `;
   }
@@ -221,7 +207,7 @@ function createModuleCode(
     return `((${symbols.define}) => {
         ${bridgeGlobals(moduleName, globals)}
         ${symbols.define}({});
-        ${code}
+        ${enhanceErrorCode({ moduleName, code })}
       })((def) => {
         const defaults = ${defaultDefinitionCode(type)};
         ${symbols.define}("${moduleName}", {...defaults, ...def});
@@ -230,6 +216,23 @@ function createModuleCode(
   }
 
   throw new Error("Unsupported module type");
+}
+
+function enhanceErrorCode({
+  code,
+  ...props
+}: {
+  code: string;
+} & Omit<BridgeErrorProps, "error">) {
+  return `
+    try {
+      ${code}
+    } catch (error) {
+      var props = ${JSON.stringify(props)};
+      props["error"] = String(error);
+      throw new Error(JSON.stringify(props));
+    }
+  `;
 }
 
 function defaultDefinitionCode(type: ZodType): string {
@@ -293,9 +296,15 @@ function createInvocationCode(
     functionName ? `${moduleName}.${functionName}` : moduleName
   );
   return `(function invocation_${description}() {
-    return ${symbols.callDefined}("${moduleName}", ${
-    functionName ? `"${functionName}"` : "undefined"
-  }, ${JSON.stringify(args)})
+    ${enhanceErrorCode({
+      moduleName,
+      functionName,
+      code: `
+        return ${symbols.callDefined}("${moduleName}", ${
+        functionName ? `"${functionName}"` : "undefined"
+      }, ${JSON.stringify(args)});
+      `,
+    })}
   })()`;
 }
 
@@ -346,9 +355,9 @@ function bridgeJSValue(
     return `{${Object.entries(value)
       .map(
         ([moduleIdentifier, moduleName]) =>
-          `get ${assertValidIdentifier(moduleIdentifier)} () { return ${
-            symbols.modules
-          }["${moduleName}"]; }`
+          `get ${assertValidIdentifier(moduleIdentifier)} () { 
+            return ${symbols.modules}["${moduleName}"];
+          }`
       )
       .join(", ")}}`;
   }
@@ -387,8 +396,6 @@ const polyfill = `
     }
   }
 `;
-
-const errorModuleNameProp = "moduleName";
 
 const mutate = createMutateFn();
 
@@ -429,25 +436,32 @@ export const symbols = {
   modules: "___modules___",
 } as const;
 
-const bridgeErrorSchema = z.any().transform((value) =>
-  z
-    .object({
-      moduleName: z.string(),
-      error: z.string(),
-    })
-    .parse(JSON.parse(value instanceof Error ? value.message : value))
-);
+const bridgeErrorProtocol = z.any().transform((error): BridgeErrorProps => {
+  try {
+    return bridgeErrorObject.parse(
+      JSON.parse(error instanceof Error ? error.message : error)
+    );
+  } catch {
+    return { error };
+  }
+});
+
+type BridgeErrorProps = z.infer<typeof bridgeErrorObject>;
+const bridgeErrorObject = z
+  .object({
+    functionName: z.string(),
+    moduleName: z.string(),
+    error: z.unknown(),
+  })
+  .partial();
 
 const defaultModuleError: ModuleErrorFactory = ({
   moduleName,
   functionName,
   error,
 }) => {
-  let location = [moduleName, functionName].filter(Boolean).join(".");
-  if (location) {
-    location = ` @ ${location}`;
-  }
-  return new Error(`Runtime error${location}: ${error}`);
+  const location = [moduleName, functionName].filter(Boolean).join(".");
+  return new Error(location ? `@ ${location}: ${error}` : `${error}`);
 };
 
 function validIdentifier(name: string) {
