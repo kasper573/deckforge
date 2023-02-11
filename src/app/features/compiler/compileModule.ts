@@ -352,13 +352,16 @@ function createMutateFn() {
       return a;
     }
     if (isObject(a) && isObject(b)) {
-      return Object.assign(a, b);
+      for (const key of Object.keys(b)) {
+        a[key] = mutate(a[key], b[key]);
+      }
+      return a;
     }
     return b;
   };
 
-  function isObject(obj: unknown): obj is object {
-    return obj !== null && obj?.constructor.name === "Object";
+  function isObject(obj: unknown): obj is Record<string, unknown> {
+    return obj !== null && typeof obj === "object";
   }
 }
 
