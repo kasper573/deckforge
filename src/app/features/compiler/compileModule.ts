@@ -321,7 +321,7 @@ function bridgeJSValue(
 }
 
 function transpile(code: string) {
-  const result = transpileModule(code, {
+  const result = transpileModule(`${polyfill}\n${code}`, {
     compilerOptions: {
       target: ScriptTarget.ES5,
       module: ModuleKind.CommonJS,
@@ -329,6 +329,16 @@ function transpile(code: string) {
   });
   return result.outputText;
 }
+
+const polyfill = `
+  Array.prototype.find = function (predicate) {
+    for (let i = 0; i < this.length; i++) {
+      if (predicate(this[i])) {
+        return this[i];
+      }
+    }
+  }
+`;
 
 const mutate = createMutateFn();
 
