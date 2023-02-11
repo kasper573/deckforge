@@ -331,7 +331,7 @@ function transpile(code: string) {
 }
 
 const polyfill = `
-  Array.prototype.find = function (predicate) {
+  Array.prototype.find ??= function (predicate) {
     for (let i = 0; i < this.length; i++) {
       if (predicate(this[i])) {
         return this[i];
