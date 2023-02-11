@@ -92,7 +92,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       .join("\n")}
   `);
   } catch (error) {
-    return err(enhancedError(`Transpile error: ${error}`));
+    return err(enhancedError("Transpile error", error));
   }
 
   let interpreter: JSInterpreter;
@@ -106,7 +106,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     });
     flush();
   } catch (error) {
-    return err(enhancedError(`Compiler error: ${error}`));
+    return err(enhancedError("Compiler error", error));
   }
 
   function flush() {
@@ -144,7 +144,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       interpreter.appendCode(invocationCode);
       flush();
     } catch (error) {
-      throw enhancedError(`Runtime error: ${error}`, invocationCode);
+      throw enhancedError("Runtime error", error);
     }
 
     const result = z
@@ -154,21 +154,10 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     return result.returns;
   }
 
-  function enhancedError(error: unknown, invocationCode?: string) {
-    if (!options.debug) {
-      return error;
-    }
-
-    const nonTranspiledCode = Object.values(definitions)
-      .map((d) => d.code)
-      .join("\n");
-
-    const parts: unknown[] = [`${error}:`];
-    if (invocationCode) {
-      parts.push("invocation:", invocationCode);
-    }
-    parts.push("module:", code ?? nonTranspiledCode);
-    return parts.join("\n");
+  function enhancedError(description: string, error?: unknown) {
+    return options.debug
+      ? new Error(`${description}: ${errorMessageWithStackTrace(error)}`)
+      : new Error(`${description}: ${error?.toString() ?? ""}`);
   }
 
   const moduleProxies = Object.entries(definitions).reduce(
@@ -266,9 +255,14 @@ function createInvocationCode(
   functionName: string | undefined,
   args: unknown[]
 ) {
-  return `${symbols.callDefined}("${moduleName}", ${
+  const description = validIdentifier(
+    functionName ? `${moduleName}.${functionName}` : moduleName
+  );
+  return `(function invocation_${description}() {
+    return ${symbols.callDefined}("${moduleName}", ${
     functionName ? `"${functionName}"` : "undefined"
-  }, ${JSON.stringify(args)})`;
+  }, ${JSON.stringify(args)})
+  })()`;
 }
 
 function createBridgeCode() {
@@ -367,3 +361,17 @@ export const symbols = {
   mutate: "___mutate___",
   modules: "___modules___",
 } as const;
+
+function errorMessageWithStackTrace(error: unknown) {
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error instanceof Error) {
+    return `${error.message}\n${error.stack}`;
+  }
+  return JSON.stringify(error);
+}
+
+function validIdentifier(name: string) {
+  return name.replace(/[^a-zA-Z0-9_]/g, "_");
+}
