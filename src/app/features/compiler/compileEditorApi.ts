@@ -22,7 +22,6 @@ export function compileEditorApi<G extends RuntimeGenerics>(
     CardTypeId: definition.card.shape.typeId,
     CardInstanceId: definition.card.shape.id,
     Card: definition.card,
-    CardPile: definition.cardPile,
     CardEffects: definition.cardEffects,
     Deck: definition.deck,
     Player: definition.player,

@@ -79,7 +79,6 @@ export interface RuntimeDefinition<
   deck: ZodObject<ZodShapeFor<RuntimeDeck<G>>>;
   card: ZodObject<ZodShapeFor<RuntimeCard<G>>>;
   cardEffects: ZodType<Partial<RuntimeEffects<G>>>;
-  cardPile: ZodType<RuntimeCard<G>[]>;
   player: ZodObject<ZodShapeFor<RuntimePlayer<G>>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
   actions: ZodObject<ZodShapeFor<G["actions"]>>;

@@ -96,16 +96,14 @@ export function defineRuntime<
     cards: z.array(card),
   }) as unknown as RuntimeDefinition<G>["deck"];
 
-  const cardPile = z.array(card) as unknown as RuntimeDefinition<G>["cardPile"];
-
   const player = z.object({
     id: playerId,
     deckId,
     properties: z.object(playerProperties),
     board: z.object({
-      draw: cardPile,
-      hand: cardPile,
-      discard: cardPile,
+      draw: z.array(card),
+      hand: z.array(card),
+      discard: z.array(card),
     }),
   }) as unknown as RuntimeDefinition<G>["player"];
 
@@ -131,7 +129,6 @@ export function defineRuntime<
     deck,
     card,
     cardEffects,
-    cardPile,
     player,
     state,
     effects,
