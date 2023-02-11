@@ -8,6 +8,8 @@ import type {
   Property,
   PropertyDefaults,
   Event,
+  Reducer,
+  Deck,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
 import type { MachineMiddleware } from "../../../lib/machine/MachineAction";
@@ -26,7 +28,7 @@ import type {
   RuntimePlayer,
   RuntimePlayerId,
 } from "./types";
-import { ModuleCompiler } from "./compileModule";
+import { ModuleCompiler, validIdentifier } from "./compileModule";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;
@@ -73,11 +75,10 @@ export function compileGame<G extends RuntimeGenerics>(
         .filter((c) => c.deckId === deck.deckId)
         .map((def) => {
           const card = compileCard<G>(def, cardProperties);
-          const effects = moduleCompiler.addModule(`Card_${def.cardId}`, {
+          const effects = moduleCompiler.addModule(cardModuleName(deck, def), {
             type: runtimeDefinition.cardEffects,
             code: def.code,
             globals: { ...moduleAPI, thisCardId: card.typeId },
-            meta: ["Card", def.name],
           });
           cardEffects.set(def.cardId, effects);
           return card;
@@ -92,20 +93,17 @@ export function compileGame<G extends RuntimeGenerics>(
         type: runtimeDefinition.effects.shape[event.name],
         code: event.code,
         globals: moduleAPI,
-        meta: ["Event", event.name],
       }
     );
     return effects;
   }, {} as RuntimeEffects<G>);
 
-  const runtimeReducers = gameDefinition.reducers.map(
-    ({ reducerId, name, code }) =>
-      moduleCompiler.addModule(`Reducer_${reducerId}`, {
-        type: runtimeDefinition.reducer,
-        code,
-        globals: moduleAPI,
-        meta: ["Reducer", name],
-      })
+  const runtimeReducers = gameDefinition.reducers.map((reducer) =>
+    moduleCompiler.addModule(reducerModuleName(reducer), {
+      type: runtimeDefinition.reducer,
+      code: reducer.code,
+      globals: moduleAPI,
+    })
   );
 
   function createPlayer(): RuntimePlayer<G> {
@@ -178,7 +176,12 @@ function cloneCard<G extends RuntimeGenerics>(
 }
 
 const createCardInstanceId = v4 as () => CardInstanceId;
-const eventModuleName = (event: Event) => `Event_${event.eventId}`;
+const eventModuleName = (event: Event) =>
+  validIdentifier(`Event_${event.name}`);
+const reducerModuleName = (reducer: Reducer) =>
+  validIdentifier(`Reducer_${reducer.name}`);
+const cardModuleName = (deck: Deck, card: Card) =>
+  validIdentifier(`Deck_${deck.name}_Card_${card.name}`);
 
 function namedPropertyDefaults(
   properties: Property[],

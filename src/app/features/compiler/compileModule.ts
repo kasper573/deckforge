@@ -28,7 +28,6 @@ export interface ModuleDefinition<
   type: T;
   globals?: object;
   code: string;
-  meta?: unknown;
 }
 
 export type ModuleDefinitions = Record<string, ModuleDefinition>;
@@ -48,6 +47,7 @@ export class ModuleCompiler {
     name: Name,
     definition: Definition
   ) {
+    assertValidIdentifier(name);
     this.#definitions[name] = definition;
 
     return createModuleProxy(name, definition, (_, functionName, args) => {
@@ -175,14 +175,13 @@ function createModuleCode(
   moduleName: string,
   { code, type, globals }: ModuleDefinition
 ) {
-  const stackIdentifier = validIdentifier(moduleName);
   if (zodInstanceOf(type, ZodFunction)) {
-    return `(function ${stackIdentifier} (${symbols.define}) {
+    return `(function define_${moduleName} (${symbols.define}) {
         ${bridgeGlobals(moduleName, globals)}
         ${symbols.define}(${defaultDefinitionCode(type)});
         ${enhanceErrorCode(code)}
       })((def) => {
-        const enhancedDef = function ${stackIdentifier} (...args) {
+        const enhancedDef = function call_${moduleName} (...args) {
           ${enhanceErrorCode("return def(...args);")}
         };
         ${symbols.define}("${moduleName}", enhancedDef);
@@ -191,7 +190,7 @@ function createModuleCode(
   }
 
   if (zodInstanceOf(type, ZodObject)) {
-    return `(function ${stackIdentifier} (${symbols.define}) {
+    return `(function define_${moduleName} (${symbols.define}) {
         ${bridgeGlobals(moduleName, globals)}
         ${symbols.define}({});
         ${enhanceErrorCode(code)}
@@ -277,9 +276,9 @@ function createInvocationCode(
   functionName: string | undefined,
   args: unknown[]
 ) {
-  const description = validIdentifier(
-    functionName ? `${moduleName}.${functionName}` : moduleName
-  );
+  const description = functionName
+    ? `${moduleName}_${functionName}`
+    : moduleName;
   return `(function invocation_${description}() {
     return ${symbols.callDefined}("${moduleName}", ${
     functionName ? `"${functionName}"` : "undefined"
@@ -427,14 +426,13 @@ const bridgeErrorProtocol = z.any().transform((error): unknown => {
   }
 });
 
-function validIdentifier(name: string) {
-  return name.replace(/[^a-zA-Z0-9_]/g, "_");
-}
+export const validIdentifier = (str: string) =>
+  str.replace(/[^a-zA-Z0-9_]/g, "_");
 
-function assertValidIdentifier(name: string) {
-  const valid = validIdentifier(name);
-  if (valid !== name) {
-    throw new Error(`Invalid identifier: ${name}`);
+function assertValidIdentifier(str: string) {
+  const valid = validIdentifier(str);
+  if (valid !== str) {
+    throw new Error(`Invalid identifier: ${str}`);
   }
   return valid;
 }
