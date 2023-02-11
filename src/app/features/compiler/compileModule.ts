@@ -162,9 +162,13 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     const nonTranspiledCode = Object.values(definitions)
       .map((d) => d.code)
       .join("\n");
-    return `${error}:\nmodule:\n${
-      code ?? nonTranspiledCode
-    }\ninvocation:\n${invocationCode}`;
+
+    const parts: unknown[] = [`${error}:`];
+    if (invocationCode) {
+      parts.push("invocation:", invocationCode);
+    }
+    parts.push("module:", code ?? nonTranspiledCode);
+    return parts.join("\n");
   }
 
   const moduleProxies = Object.entries(definitions).reduce(
