@@ -131,6 +131,26 @@ describe("supports", () => {
     });
   });
 
+  it("calling module A from module B via reference", () => {
+    const compiler = new ModuleCompiler();
+    compiler.addModule("moduleA", {
+      type: z.function(),
+      code: `define((...args) => ["A", ...args])`,
+    });
+    const moduleB = compiler.addModule("moduleB", {
+      type: z.function(),
+      code: `define((...args) => moduleA("B", ...args))`,
+      globals: compiler.refs(["moduleA"]),
+    });
+
+    const result = compiler.compile();
+
+    assert(result, () => {
+      const res = moduleB("input");
+      expect(res).toEqual(["A", "B", "input"]);
+    });
+  });
+
   it("calling module recursively", () => {
     const compiler = new ModuleCompiler();
     const countProxy = (n: number, calls?: number) => count(n, calls);

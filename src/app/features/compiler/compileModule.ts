@@ -66,6 +66,8 @@ export class ModuleCompiler {
     });
   }
 
+  refs = ModuleReferences.create;
+
   compile() {
     const result = compileModules(this.#definitions, this.options);
     if (result.isOk()) {
@@ -288,22 +290,33 @@ function createBridgeCode() {
 }
 
 function bridgeGlobals(moduleName: string, globals: object = {}): string {
-  return Object.entries(globals)
-    .map(
-      ([key, value]) =>
-        `const ${key} = ${bridgeJSValue(moduleName, value, [key])}`
-    )
-    .join(";\n");
+  const rootKeys = Object.keys(globals);
+  if (rootKeys.length === 0) {
+    return "";
+  }
+
+  return [
+    `const globals = ${bridgeJSValue(moduleName, globals)}`,
+    ...rootKeys.map((key) => `const ${key} = globals["${key}"]`),
+  ].join(";\n");
 }
 
 function bridgeJSValue(
   moduleName: string,
   value: unknown,
-  path: Array<string | number>
+  path: Array<string | number> = []
 ): string {
   const chain = (child: unknown, step: string | number) =>
     bridgeJSValue(moduleName, child, [...path, step]);
 
+  if (value instanceof ModuleReferences) {
+    return `{${Object.entries(value)
+      .map(
+        ([moduleIdentifier, moduleName]) =>
+          `get ${moduleIdentifier} () { return ${symbols.modules}["${moduleName}"]; }`
+      )
+      .join(", ")}}`;
+  }
   if (Array.isArray(value)) {
     return `[${value.map(chain).join(", ")}]`;
   }
@@ -399,3 +412,19 @@ function zodInstanceOf<OfType extends ZodType>(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyZodFunction = ZodFunction<any, any>;
+
+export class ModuleReferences implements Record<string, string> {
+  [x: string]: string;
+
+  constructor(definition: Readonly<Record<string, string>>) {
+    Object.assign(this, definition);
+  }
+
+  static create(names: string[] | Record<string, string>) {
+    return new ModuleReferences(
+      Array.isArray(names)
+        ? Object.fromEntries(names.map((name) => [name, name]))
+        : names
+    );
+  }
+}
