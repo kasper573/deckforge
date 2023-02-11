@@ -120,10 +120,10 @@ export function defineRuntime<
 
   const actionUnion = z.unknown();
 
-  const middleware = z
+  const reducer = z
     .function()
     .args(state, actionUnion)
-    .returns(z.void()) as RuntimeDefinition<G>["middleware"];
+    .returns(z.void()) as RuntimeDefinition<G>["reducer"];
 
   const definition: RuntimeDefinition<G> = {
     globals,
@@ -135,7 +135,7 @@ export function defineRuntime<
     state,
     effects,
     actions,
-    middleware,
+    reducer,
     createInitialState,
   };
 

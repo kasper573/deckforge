@@ -23,8 +23,8 @@ export function useCompilation(
       return compileGame(runtime, game, {
         seed,
         middlewares: (defaults) => [
-          createEventLoggerMiddleware(log),
-          createFailSafeMiddleware(log),
+          createEventLoggerReducer(log),
+          createFailSafeReducer(log),
           ...defaults,
         ],
       });
@@ -58,7 +58,7 @@ function useDebouncedDefinitions() {
   return useDebounce(defs, 1500);
 }
 
-function createEventLoggerMiddleware(
+function createEventLoggerReducer(
   log: (args: unknown[]) => void
 ): MachineMiddleware<MachineContext> {
   return (state, action, next) => {
@@ -73,7 +73,7 @@ function createEventLoggerMiddleware(
   };
 }
 
-function createFailSafeMiddleware(
+function createFailSafeReducer(
   log: (args: unknown[]) => void
 ): MachineMiddleware<MachineContext> {
   return (state, action, next) => {

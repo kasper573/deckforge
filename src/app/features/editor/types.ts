@@ -6,7 +6,7 @@ import {
   cardIdType,
   deckIdType,
   eventIdType,
-  middlewareIdType,
+  reducerIdType,
   propertyIdType,
 } from "../../../api/services/game/types";
 
@@ -17,8 +17,8 @@ export const editorObjectIdType = z
   })
   .or(
     z.object({
-      type: z.literal("middleware"),
-      middlewareId: middlewareIdType,
+      type: z.literal("reducer"),
+      reducerId: reducerIdType,
     })
   )
   .or(
@@ -83,7 +83,7 @@ export const panelIdType = z.enum([
   "code",
   "decks",
   "events",
-  "middlewares",
+  "reducers",
   "cardProperties",
   "playerProperties",
   "inspector",

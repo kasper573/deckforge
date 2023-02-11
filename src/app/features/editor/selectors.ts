@@ -4,7 +4,7 @@ import type {
   DeckId,
   EntityId,
   EventId,
-  MiddlewareId,
+  ReducerId,
   PropertyId,
 } from "../../../api/services/game/types";
 import { getKeyVisibilities } from "../../../lib/reactMosaicExtensions";
@@ -55,8 +55,8 @@ export const selectors = {
     switch (id.type) {
       case "event":
         return [selectors.event(id.eventId)(state)?.name ?? ""];
-      case "middleware":
-        return [selectors.middleware(id.middlewareId)(state)?.name ?? ""];
+      case "reducer":
+        return [selectors.reducer(id.reducerId)(state)?.name ?? ""];
       case "card":
         const card = selectors.card(id.cardId)(state);
         const deck = card && selectors.deck(card.deckId)(state);
@@ -92,17 +92,17 @@ export const selectors = {
       ...event,
     }));
   },
-  middlewares: (state: EditorState) => {
+  reducers: (state: EditorState) => {
     if (!state.game) {
       return [];
     }
-    const { middlewares } = state.game.definition;
-    return middlewares.map((middleware) => ({
+    const { reducers } = state.game.definition;
+    return reducers.map((reducer) => ({
       objectId: {
-        type: "middleware",
-        middlewareId: middleware.middlewareId,
+        type: "reducer",
+        reducerId: reducer.reducerId,
       } as EditorObjectId,
-      ...middleware,
+      ...reducer,
     }));
   },
   deck: (deckId: DeckId) => (state: EditorState) =>
@@ -111,10 +111,8 @@ export const selectors = {
     state.game?.definition.cards.find((c) => c.cardId === cardId),
   event: (eventId: EventId) => (state: EditorState) =>
     state.game?.definition.events.find((a) => a.eventId === eventId),
-  middleware: (middlewareId: MiddlewareId) => (state: EditorState) =>
-    state.game?.definition.middlewares.find(
-      (a) => a.middlewareId === middlewareId
-    ),
+  reducer: (reducerId: ReducerId) => (state: EditorState) =>
+    state.game?.definition.reducers.find((a) => a.reducerId === reducerId),
   property: (propertyId: PropertyId) => (state: EditorState) =>
     state.game?.definition.properties.find((p) => p.propertyId === propertyId),
   propertiesFor: (entityId: EntityId) => (state: EditorState) =>

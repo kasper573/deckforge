@@ -8,7 +8,7 @@ import { symbols } from "./compileModule";
 
 export interface EditorApi<G extends RuntimeGenerics> {
   card: CodeEditorTypeDefs;
-  middleware: CodeEditorTypeDefs;
+  reducer: CodeEditorTypeDefs;
   events: {
     [K in keyof G["actions"]]: CodeEditorTypeDefs;
   };
@@ -30,7 +30,7 @@ export function compileEditorApi<G extends RuntimeGenerics>(
     State: definition.state,
     EventHandlers: definition.effects,
     EventDispatchers: definition.actions,
-    Middleware: definition.middleware,
+    Reducer: definition.reducer,
   });
 
   const common: CodeEditorTypeDefs = zodToTS.declare();
@@ -39,10 +39,10 @@ export function compileEditorApi<G extends RuntimeGenerics>(
   const cardApiType = zodToTS(z.object(scriptAPIShape));
 
   return {
-    middleware: zodToTS.add(
+    reducer: zodToTS.add(
       common,
       declareModuleDefinition({
-        definitionType: zodToTS(definition.middleware),
+        definitionType: zodToTS(definition.reducer),
         apiType: generalApiType,
       })
     ),

@@ -83,7 +83,7 @@ export interface RuntimeDefinition<
   player: ZodObject<ZodShapeFor<RuntimePlayer<G>>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
   actions: ZodObject<ZodShapeFor<G["actions"]>>;
-  middleware: ZodType<RuntimeMiddleware<G>>;
+  reducer: ZodType<RuntimeReducer<G>>;
   createInitialState: RuntimeStateFactory<G>;
 }
 
@@ -97,7 +97,7 @@ export type PropRecord = Record<string, unknown>;
 export type RuntimeGenericsFor<T extends RuntimeDefinition> =
   T extends RuntimeDefinition<infer G> ? G : never;
 
-export type RuntimeMiddleware<
+export type RuntimeReducer<
   G extends RuntimeGenerics,
   MC extends RuntimeMachineContext<G> = RuntimeMachineContext<G>
 > = (

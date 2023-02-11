@@ -6,7 +6,7 @@ export const defaultPanelLayout: MosaicNode<PanelId> = {
     first: "events",
     second: {
       first: {
-        first: "middlewares",
+        first: "reducers",
         second: "cardProperties",
         direction: "column",
         splitPercentage: 50,

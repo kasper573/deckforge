@@ -68,12 +68,12 @@ export const eventType = z.object({
   inputType: propertyValue.serializedType,
 });
 
-export type MiddlewareId = z.infer<typeof middlewareIdType>;
-export const middlewareIdType = zodRuntimeBranded("MiddlewareId");
+export type ReducerId = z.infer<typeof reducerIdType>;
+export const reducerIdType = zodRuntimeBranded("ReducerId");
 
-export type Middleware = z.infer<typeof middlewareType>;
-export const middlewareType = z.object({
-  middlewareId: middlewareIdType,
+export type Reducer = z.infer<typeof reducerType>;
+export const reducerType = z.object({
+  reducerId: reducerIdType,
   name: z.string().min(1).max(32),
   code: codeType,
 });
@@ -105,7 +105,7 @@ export const gameDefinitionType = z.object({
   cards: z.array(cardType).default([]),
   properties: z.array(propertyType).default([]),
   events: z.array(eventType).default([]),
-  middlewares: z.array(middlewareType).default([]),
+  reducers: z.array(reducerType).default([]),
 });
 
 export type GameTypeId = z.infer<typeof gameTypeIdType>;

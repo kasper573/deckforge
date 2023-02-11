@@ -15,7 +15,7 @@ import { CodePanel } from "./CodePanel/CodePanel";
 import { InspectorPanel } from "./InspectorPanel/InspectorPanel";
 import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
 import { RuntimePanel } from "./RuntimePanel/RuntimePanel";
-import { MiddlewaresPanel } from "./MiddlewaresPanel";
+import { ReducersPanel } from "./ReducersPanel";
 import { LogsPanel } from "./LogsPanel";
 
 export interface PanelProps {
@@ -92,7 +92,7 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
         <>
           <Typography paragraph>
             The code panel allows you to edit the code for the currently
-            selected event, middleware or card.
+            selected event, reducer or card.
           </Typography>
           <Typography paragraph>
             Deck forge uses javascript, with type hints provided by typescript
@@ -141,31 +141,25 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       ),
     },
   },
-  middlewares: {
-    component: memo(MiddlewaresPanel, isEqual),
-    title: "Middlewares",
+  reducers: {
+    component: memo(ReducersPanel, isEqual),
+    title: "Reducers",
     tour: {
-      className: "tour-middlewares",
+      className: "tour-reducers",
       content: (
         <>
           <Typography paragraph>
-            Middlewares are <StateReducer /> functions that run each time any
-            event is invoked.
+            Reducers are <StateReducer /> functions that run each time any event
+            is invoked.
           </Typography>
 
           <Typography paragraph>
-            They have an additional parameter <code>next</code>, which is a
-            function that will call the next middleware. This allows you to
-            intercept and enhance the behavior of all events.
-          </Typography>
-
-          <Typography paragraph>
-            Middlewares are applied in the order they are listed. Drag and drop
-            to re-order middlewares.
+            Reducers are applied in the order they are listed. Drag and drop to
+            re-order reducers.
           </Typography>
 
           <Typography>
-            Right click to add, remove or rename middlewares.
+            Right click to add, remove or rename reducers.
           </Typography>
         </>
       ),

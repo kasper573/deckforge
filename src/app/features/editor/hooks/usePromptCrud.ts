@@ -8,7 +8,7 @@ import {
   cardType,
   deckType,
   eventType,
-  middlewareType,
+  reducerType,
   propertyType,
 } from "../../../../api/services/game/types";
 import { useStore } from "../store";
@@ -85,7 +85,7 @@ const uniqueNameSchema = (schema: ZodString, existingNames?: string[]) =>
 
 const objectNameSchemas: Record<EditorObjectId["type"], ZodString> = {
   property: propertyType.shape.name,
-  middleware: middlewareType.shape.name,
+  reducer: reducerType.shape.name,
   event: eventType.shape.name,
   card: cardType.shape.name,
   deck: deckType.shape.name,

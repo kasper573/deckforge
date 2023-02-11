@@ -171,15 +171,15 @@
       "type": "event"
     }
   ],
-  "middlewares": [
+  "reducers": [
     {
-      "middlewareId": "6c0a965b-820d-42c0-8c2e-88df67f71710",
+      "reducerId": "6c0a965b-820d-42c0-8c2e-88df67f71710",
       "name": "Check for winner",
       "code": "define((state, action, next) => {\r\n  if (state.properties.status.type === \"battle\") {\r\n    for (const player of state.players) {\r\n      if (player.properties.health <= 0) {\r\n        const otherPlayer = state.players.find(p => p !== player);\r\n        state.properties.status = {type: \"result\", winner: otherPlayer.id};\r\n        break;\r\n      }\r\n    }\r\n  }\r\n  next();\r\n})",
-      "type": "middleware"
+      "type": "reducer"
     },
     {
-      "middlewareId": "cfa77116-ac96-4047-b953-1c5fecdac746",
+      "reducerId": "cfa77116-ac96-4047-b953-1c5fecdac746",
       "name": "Clamp health and mana",
       "code": "define((state, action, next) => {\r\n  for (const {properties} of state.players) {\r\n    properties.health = clamp(properties.health, 0, properties.healthMax);\r\n    properties.mana = clamp(properties.mana, 0, properties.manaMax);\r\n  }\r\n  next();\r\n})\r\n\r\nfunction clamp(v, min, max) {\r\n  return Math.min(max, Math.max(v, min));\r\n}"
     }

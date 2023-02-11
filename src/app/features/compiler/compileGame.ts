@@ -23,7 +23,7 @@ import type {
   RuntimeEffects,
   RuntimeGenerics,
   RuntimeMachineContext,
-  RuntimeMiddleware,
+  RuntimeReducer,
   RuntimeModuleAPI,
   RuntimePlayer,
   RuntimePlayerId,
@@ -42,7 +42,7 @@ export function compileGame<G extends RuntimeGenerics>(
     debug?: boolean;
     seed?: string;
     middlewares?: (
-      builtinMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
+      defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
     ) => MachineMiddleware<RuntimeMachineContext<G>>[];
   }
 ): CompileGameResult<G> {
@@ -98,13 +98,12 @@ export function compileGame<G extends RuntimeGenerics>(
     {} as RuntimeEffects<G>
   );
 
-  const runtimeReducers = gameDefinition.middlewares.map(
-    ({ middlewareId, code }) =>
-      moduleCompiler.addModule(`Middleware_${middlewareId}`, {
-        type: runtimeDefinition.middleware,
-        code,
-        globals: moduleAPI,
-      })
+  const runtimeReducers = gameDefinition.reducers.map(({ reducerId, code }) =>
+    moduleCompiler.addModule(`Reducer_${reducerId}`, {
+      type: runtimeDefinition.reducer,
+      code,
+      globals: moduleAPI,
+    })
   );
 
   function createPlayer(): RuntimePlayer<G> {
@@ -134,12 +133,12 @@ export function compileGame<G extends RuntimeGenerics>(
     createPlayer,
   });
 
-  const builtinMiddlewares = runtimeReducers.length
-    ? [createReducerMiddleware(...runtimeReducers)]
+  const defaultMiddlewares = runtimeReducers.length
+    ? [createReducerReducer(...runtimeReducers)]
     : [];
 
   const allMiddlewares =
-    options?.middlewares?.(builtinMiddlewares) ?? builtinMiddlewares;
+    options?.middlewares?.(defaultMiddlewares) ?? defaultMiddlewares;
 
   let builder = deriveMachine<G>(
     effects,
@@ -213,8 +212,8 @@ function functionRouter<T extends Record<string, AnyFunction>>(
   return proxies;
 }
 
-function createReducerMiddleware<G extends RuntimeGenerics>(
-  ...reducers: RuntimeMiddleware<G>[]
+function createReducerReducer<G extends RuntimeGenerics>(
+  ...reducers: RuntimeReducer<G>[]
 ): MachineMiddleware<RuntimeMachineContext<G>> {
   return (state, action, next) => {
     for (const reduce of reducers) {

@@ -7,7 +7,7 @@ import type {
   EventId,
   Game,
   GameDefinition,
-  MiddlewareId,
+  ReducerId,
   PropertyId,
 } from "../../../api/services/game/types";
 import { defineRuntime, deriveRuntimeDefinitionParts } from "./defineRuntime";
@@ -17,7 +17,7 @@ import type { RuntimeGenerics } from "./types";
 describe("compileGame", () => {
   it("can compile game with a single event without errors", () => {
     const gameDefinition: GameDefinition = {
-      middlewares: [],
+      reducers: [],
       properties: [],
       events: [
         {
@@ -38,7 +38,7 @@ describe("compileGame", () => {
 
   it("compiled event can mutate player property", () => {
     const gameDefinition: GameDefinition = {
-      middlewares: [],
+      reducers: [],
       properties: [
         {
           entityId: "player" as EntityId,
@@ -76,7 +76,7 @@ define((state, damage) => {
     const deckId = v4() as DeckId;
     const gameDefinition: GameDefinition = {
       properties: [],
-      middlewares: [],
+      reducers: [],
       events: [
         {
           eventId: v4() as EventId,
@@ -122,7 +122,7 @@ define((state) => {
           defaultValue: 10,
         },
       ],
-      middlewares: [],
+      reducers: [],
       events: [
         {
           eventId: v4() as EventId,
@@ -182,7 +182,7 @@ define({
           defaultValue: 10,
         },
       ],
-      middlewares: [],
+      reducers: [],
       events: [
         {
           eventId: v4() as EventId,
@@ -259,7 +259,7 @@ define({
     const gameDefinition: GameDefinition = {
       properties: Object.values(properties),
       events: [],
-      middlewares: [],
+      reducers: [],
       cards: [
         {
           cardId: v4() as CardId,
@@ -302,7 +302,7 @@ define({
           type: "number",
         },
       ],
-      middlewares: [],
+      reducers: [],
       events: [
         {
           eventId: v4() as EventId,
@@ -330,11 +330,11 @@ define({
     });
   });
 
-  it("compiled middleware can read and mutate state", () => {
+  it("compiled reducer can read and mutate state", () => {
     const gameDefinition: GameDefinition = {
-      middlewares: [
+      reducers: [
         {
-          middlewareId: v4() as MiddlewareId,
+          reducerId: v4() as ReducerId,
           name: "make player 1 win",
           code: `define((state) => {
             state.properties.status = { type: "result", winner: state.players[0].id };
@@ -362,25 +362,25 @@ define({
     });
   });
 
-  it("can compile multiple middlewares", () => {
+  it("can compile multiple reducers", () => {
     const gameDefinition: GameDefinition = {
-      middlewares: [
+      reducers: [
         {
-          middlewareId: v4() as MiddlewareId,
+          reducerId: v4() as ReducerId,
           name: "set to 1",
           code: `define((state, action) => {
             state.properties.status = 1;
           })`,
         },
         {
-          middlewareId: v4() as MiddlewareId,
+          reducerId: v4() as ReducerId,
           name: "add 2",
           code: `define((state) => {
             state.properties.status += 2;
           })`,
         },
         {
-          middlewareId: v4() as MiddlewareId,
+          reducerId: v4() as ReducerId,
           name: "subtract 1",
           code: `define((state) => {
             state.properties.status -= 1;

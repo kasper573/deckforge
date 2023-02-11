@@ -6,7 +6,7 @@ import type {
   Event,
   Game,
   GameDefinition,
-  Middleware,
+  Reducer,
   Property,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
@@ -109,10 +109,10 @@ const editorSlice = createSlice({
       "eventId",
       (state) => state.game?.definition.events ?? []
     ),
-    ...entityReducers<Middleware>()(
-      "Middleware",
-      "middlewareId",
-      (state) => state.game?.definition.middlewares ?? []
+    ...entityReducers<Reducer>()(
+      "Reducer",
+      "reducerId",
+      (state) => state.game?.definition.reducers ?? []
     ),
     ...entityReducers<Card>()(
       "Card",
@@ -178,20 +178,18 @@ const editorSlice = createSlice({
         ...payload,
       });
     },
-    createMiddleware(
+    createReducer(
       state,
       {
         payload,
-      }: PayloadAction<
-        MakePartial<Omit<Middleware, "middlewareId">, "name" | "code">
-      >
+      }: PayloadAction<MakePartial<Omit<Reducer, "reducerId">, "name" | "code">>
     ) {
       if (!state.game) {
         return;
       }
-      state.game.definition.middlewares.push({
-        middlewareId: createId(),
-        name: "New middleware",
+      state.game.definition.reducers.push({
+        reducerId: createId(),
+        name: "New reducer",
         code: "",
         ...payload,
       });

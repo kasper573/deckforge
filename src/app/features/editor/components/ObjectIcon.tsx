@@ -27,7 +27,7 @@ const EventIcon = styled(Reply)`
 
 const iconComponents: Record<EditorObjectId["type"], ComponentType> = {
   event: EventIcon,
-  middleware: Link,
+  reducer: Link,
   deck: Collections,
   card: CropPortrait,
   property: Link,
