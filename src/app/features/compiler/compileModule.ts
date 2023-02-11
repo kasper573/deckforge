@@ -88,9 +88,6 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     code = transpile(`
     ${createBridgeCode()}
     ${createScopedModuleCode(definitions)}
-    if (Object.keys(${symbols.modules}).length === 0) {
-      throw new Error("No modules were defined");
-    }
   `);
   } catch (error) {
     return err(enhancedError(`Transpile error: ${error}`));
@@ -190,6 +187,9 @@ function createScopedModuleCode(definitions: ModuleDefinitions) {
     ((${symbols.define}) => {
       ${bridgeGlobals(moduleName, globals)}
       ${code}
+      if (${symbols.modules}["${moduleName}"] === undefined) {
+        throw new Error('Module "${moduleName}" is missing a define call');
+      }
     })((def) => ${symbols.define}("${moduleName}", def));
   `
     )

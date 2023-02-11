@@ -35,40 +35,26 @@ describe("supports", () => {
   });
 
   describe("detecting a module that does not call define", () => {
-    const addSingleModule = (name: string) => (compiler: ModuleCompiler) =>
-      compiler.addModule(name, { type: z.function(), code: "" });
-    const addRecordModule = (name: string) => (compiler: ModuleCompiler) =>
-      compiler.addModule(name, {
-        type: z.object({ first: z.function(), second: z.function() }),
-        code: "",
-      });
+    const addModule =
+      (name: string, code = "") =>
+      (compiler: ModuleCompiler) =>
+        compiler.addModule(name, { type: z.function(), code });
 
-    it("one module, single function", () => {
-      expectModuleRequiredError(addRecordModule("fn"));
+    it("one empty module", () => {
+      expectModuleRequiredError(addModule("a"));
     });
 
-    it("one module, function record", () => {
-      expectModuleRequiredError(addRecordModule("record"));
-    });
-
-    it("two modules, single functions", () => {
+    it("two empty modules", () => {
       expectModuleRequiredError((compiler) => {
-        addSingleModule("first")(compiler);
-        addSingleModule("second")(compiler);
+        addModule("a")(compiler);
+        addModule("b")(compiler);
       });
     });
 
-    it("two modules, function records", () => {
+    it("two modules, one empty", () => {
       expectModuleRequiredError((compiler) => {
-        addRecordModule("first")(compiler);
-        addRecordModule("second")(compiler);
-      });
-    });
-
-    it("two modules, mixed", () => {
-      expectModuleRequiredError((compiler) => {
-        addSingleModule("fn")(compiler);
-        addRecordModule("record")(compiler);
+        addModule("empty")(compiler);
+        addModule("defined", "define(() => 5)")(compiler);
       });
     });
   });
@@ -171,7 +157,7 @@ function expectModuleRequiredError(setup: (compiler: ModuleCompiler) => void) {
   useCompilerResult(setup, ([result]) => {
     expect(result).toEqual(
       expect.objectContaining({
-        error: `Compiler error: Error: No modules were defined`,
+        error: expect.stringMatching(/module ".*?" is missing a define call/i),
       })
     );
   });
