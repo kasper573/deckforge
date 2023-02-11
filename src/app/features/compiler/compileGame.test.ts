@@ -146,8 +146,6 @@ define({
     if (card) {
       player.properties.health += 5;
       target.properties.health -= 5;
-    } else {
-      log("Card not found");
     }
   }
 })`,
