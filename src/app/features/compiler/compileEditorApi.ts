@@ -1,4 +1,5 @@
 import type { ZodRawShape } from "zod";
+import { omit } from "lodash";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTSResolver } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
@@ -36,7 +37,10 @@ export function compileEditorApi<G extends RuntimeGenerics>(
     reducer: zodToTS.add(
       common,
       declareModuleGlobals(
-        createModuleApiDefinition(definition, definition.reducer)
+        omit(
+          createModuleApiDefinition(definition, definition.reducer),
+          "thisCardId"
+        )
       )
     ),
     card: zodToTS.add(
@@ -50,7 +54,10 @@ export function compileEditorApi<G extends RuntimeGenerics>(
         eventTypeDefs[effectName as keyof G["actions"]] = zodToTS.add(
           common,
           declareModuleGlobals(
-            createModuleApiDefinition(definition, effectType)
+            omit(
+              createModuleApiDefinition(definition, effectType),
+              "thisCardId"
+            )
           )
         );
         return eventTypeDefs;
