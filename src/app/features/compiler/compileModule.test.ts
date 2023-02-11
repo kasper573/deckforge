@@ -1,11 +1,13 @@
+/* eslint-disable react-hooks/rules-of-hooks */
+import type { ZodType } from "zod";
 import { z } from "zod";
-import type { AnyFunction } from "js-interpreter";
 import type { Result } from "neverthrow";
-import type { Err } from "neverthrow";
 import type {
+  AnyModuleOutputType,
   CompiledModule,
   CompiledModules,
   ModuleDefinition,
+  ModuleOutputFunction,
 } from "./compileModule";
 import { ModuleCompiler } from "./compileModule";
 
@@ -32,11 +34,18 @@ describe("supports", () => {
     });
   });
 
-  it("detecting a module that does not define anything", () => {
-    testCompilerResult({ type: z.function(), code: `` }, (result) => {
-      expect(result.isErr()).toBe(true);
-      expect((result as Err<unknown, unknown>).error).toEqual(
-        `Compiler error: Error: No modules were defined`
+  describe("detecting a module that does not call define", () => {
+    it("single function", () => {
+      useCompilerResult(
+        (compiler) =>
+          compiler.addModule("test", { type: z.function(), code: "" }),
+        ([result]) => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              error: `Compiler error: Error: No modules were defined`,
+            })
+          );
+        }
       );
     });
   });
@@ -151,10 +160,11 @@ function globalAtPath(path: [string, ...string[]], leafValue: unknown) {
 
 function testModuleOutputs(
   functionDefinitionCode: string,
-  assertion: (value: AnyFunction) => unknown
+  assertion: CompilerAssertion<ZodType<ModuleOutputFunction>>,
+  test: typeof testCompilerResult = testCompiledModule
 ) {
   it("single function", () => {
-    testCompiledModule(
+    test(
       {
         code: `define(${functionDefinitionCode})`,
         type: z.function(),
@@ -164,44 +174,61 @@ function testModuleOutputs(
   });
 
   it("function record", () => {
-    testCompiledModule(
+    test(
       {
         type: z.object({ first: z.function(), second: z.function() }),
         code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
       },
-      ({ first, second }) => {
-        assertion(first);
-        assertion(second);
+      ({ first, second }, result) => {
+        assertion(first, result);
+        assertion(second, result);
       }
     );
   });
 }
 
-function testCompiledModule<Definition extends ModuleDefinition>(
-  definition: Definition,
-  assertion: (
-    value: CompiledModule<Definition["type"]>,
-    result: Result<CompiledModules, unknown>
-  ) => unknown
+function testCompiledModule<Def extends ModuleDefinition>(
+  definition: Def,
+  assertion: CompilerAssertion<Def["type"]>
 ) {
-  testCompilerResult(definition, (result, module) => {
+  testCompilerResult(definition, (module, result) => {
     assert(result, () => assertion(module, result));
   });
 }
 
-function testCompilerResult<Definition extends ModuleDefinition>(
-  definition: Definition,
-  assertion: (
-    result: Result<CompiledModules, unknown>,
-    module: CompiledModule<Definition["type"]>
-  ) => unknown
+type CompilerAssertion<T extends AnyModuleOutputType> = (
+  module: CompiledModule<T>,
+  result: Result<CompiledModules, unknown>
+) => unknown;
+
+function testCompilerResult<Def extends ModuleDefinition>(
+  definition: Def,
+  assertion: CompilerAssertion<Def["type"]>
+) {
+  useCompilerResult(
+    (compiler) => compiler.addModule("main", definition),
+    ([result, module]) => assertion(module, result)
+  );
+}
+
+function useCompilerResult<T extends AnyModuleOutputType, SetupOutput>(
+  setup: (compiler: ModuleCompiler) => SetupOutput,
+  handle: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
 ) {
   const compiler = new ModuleCompiler();
-
   try {
-    const module = compiler.addModule("main", definition);
+    const output = setup(compiler);
     const result = compiler.compile();
-    assertion(result, module);
+    handle([result, output]);
+  } finally {
+    compiler.dispose();
+  }
+}
+
+function useCompiler(fn: (compiler: ModuleCompiler) => void) {
+  const compiler = new ModuleCompiler();
+  try {
+    fn(compiler);
   } finally {
     compiler.dispose();
   }
