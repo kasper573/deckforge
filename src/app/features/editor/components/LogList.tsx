@@ -9,6 +9,7 @@ import { InspectorDialog } from "../../../dialogs/InspectorDialog";
 import { isLogIdentifier } from "../types";
 import type { LogEntry } from "../types";
 import { createModalId, useModal } from "../../../../lib/useModal";
+import { joinNodes } from "../../../../lib/joinNodes";
 
 export function LogList({ entries = [] }: { entries?: LogEntry[] }) {
   const collapsed = useMemo(() => collapsedLogEntries(entries), [entries]);
@@ -91,7 +92,8 @@ export function LogValue({
       }
       return <ObjectValue value={value} name={objectName} {...props} />;
     default:
-      return <Normal {...props}>{String(value)}</Normal>;
+      const lines = String(value).split(/\n/);
+      return <Normal {...props}>{joinNodes(lines, <br />)}</Normal>;
   }
 }
 
