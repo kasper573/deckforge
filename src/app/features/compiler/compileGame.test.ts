@@ -448,12 +448,9 @@ define({
 });
 
 function tryCompileGame<G extends RuntimeGenerics>(
-  ...[runtimeDef, gameDef, options]: Parameters<typeof compileGame<G>>
+  ...args: Parameters<typeof compileGame<G>>
 ) {
-  const { runtime, errors } = compileGame<G>(runtimeDef, gameDef, {
-    debug: true,
-    ...options,
-  });
+  const { runtime, errors } = compileGame<G>(...args);
   if (errors) {
     throw new Error(errors.join(", "));
   }

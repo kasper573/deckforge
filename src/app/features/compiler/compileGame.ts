@@ -10,9 +10,9 @@ import type {
   Event,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
-import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
 import { LogSpreadError } from "../editor/components/LogList";
 import type { MachineMiddleware } from "../../../lib/machine/MachineAction";
+import { defined } from "../../../lib/ts-extensions/defined";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -28,6 +28,7 @@ import type {
   RuntimePlayer,
   RuntimePlayerId,
 } from "./types";
+import type { ModuleErrorFactory } from "./compileModule";
 import { ModuleCompiler } from "./compileModule";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
@@ -39,7 +40,6 @@ export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
   options?: {
-    debug?: boolean;
     seed?: string;
     middlewares?: (
       defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
@@ -53,8 +53,8 @@ export function compileGame<G extends RuntimeGenerics>(
     (p) => p.entityId === "player"
   );
 
-  const moduleCompiler = new ModuleCompiler(decorateModuleError, {
-    debug: options?.debug,
+  const moduleCompiler = new ModuleCompiler({
+    createError: createModuleError,
   });
   const moduleAPI: RuntimeModuleAPI<G> = {
     random: createRandomFn(options?.seed),
@@ -82,6 +82,7 @@ export function compileGame<G extends RuntimeGenerics>(
             type: runtimeDefinition.cardEffects,
             code: def.code,
             globals: { ...moduleAPI, thisCardId: card.typeId },
+            meta: ["Card", def.name],
           });
           cardEffects.set(def.cardId, effects);
           return card;
@@ -96,17 +97,20 @@ export function compileGame<G extends RuntimeGenerics>(
         type: runtimeDefinition.effects.shape[event.name],
         code: event.code,
         globals: moduleAPI,
+        meta: ["Event", event.name],
       }
     );
     return effects;
   }, {} as RuntimeEffects<G>);
 
-  const runtimeReducers = gameDefinition.reducers.map(({ reducerId, code }) =>
-    moduleCompiler.addModule(`Reducer_${reducerId}`, {
-      type: runtimeDefinition.reducer,
-      code,
-      globals: moduleAPI,
-    })
+  const runtimeReducers = gameDefinition.reducers.map(
+    ({ reducerId, name, code }) =>
+      moduleCompiler.addModule(`Reducer_${reducerId}`, {
+        type: runtimeDefinition.reducer,
+        code,
+        globals: moduleAPI,
+        meta: ["Reducer", name],
+      })
   );
 
   function createPlayer(): RuntimePlayer<G> {
@@ -181,10 +185,15 @@ function cloneCard<G extends RuntimeGenerics>(
 const createCardInstanceId = v4 as () => CardInstanceId;
 const eventModuleName = (event: Event) => `Event_${event.eventId}`;
 
-const decorateModuleError: ErrorDecorator = (error, [moduleName, ...path]) =>
-  error instanceof LogSpreadError
-    ? error // Keep the innermost error as-is
-    : new LogSpreadError(moduleName, "(", name, ")", ...path, error);
+const createModuleError: ModuleErrorFactory = ({
+  functionName,
+  definition: { meta = [] } = {},
+  error,
+}) =>
+  new LogSpreadError(
+    ...defined([...(Array.isArray(meta) ? meta : [meta]), functionName]),
+    error
+  );
 
 function namedPropertyDefaults(
   properties: Property[],

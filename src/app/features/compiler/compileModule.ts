@@ -28,22 +28,27 @@ export interface ModuleDefinition<
   type: T;
   globals?: object;
   code: string;
+  meta?: unknown;
 }
 
 export type ModuleDefinitions = Record<string, ModuleDefinition>;
+export type ModuleErrorFactory = (props: {
+  description: string;
+  moduleName?: string;
+  definition?: ModuleDefinition;
+  functionName?: string;
+  error?: unknown;
+}) => unknown;
 
 export interface CompileModulesOptions {
-  debug?: boolean;
+  createError?: ModuleErrorFactory;
 }
 
 export class ModuleCompiler {
   #modules?: CompiledModules;
   #definitions: ModuleDefinitions = {};
 
-  constructor(
-    private errorDecorator?: AnyFunction,
-    private options: CompileModulesOptions = {}
-  ) {}
+  constructor(private options: CompileModulesOptions = {}) {}
 
   addModule<Name extends string, Definition extends ModuleDefinition>(
     name: Name,
@@ -81,8 +86,17 @@ export class ModuleCompiler {
 
 export function compileModules<Definitions extends ModuleDefinitions>(
   definitions: Definitions,
-  options: CompileModulesOptions = {}
+  {
+    createError: createErrorImpl = defaultModuleError,
+  }: CompileModulesOptions = {}
 ): Result<CompiledModules<Definitions>, unknown> {
+  const createError: ModuleErrorFactory = (props) => {
+    const definition = props.moduleName
+      ? definitions[props.moduleName]
+      : undefined;
+    return createErrorImpl({ definition, ...props });
+  };
+
   let code: string;
   try {
     code = transpile(`
@@ -92,7 +106,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       .join("\n")}
   `);
   } catch (error) {
-    return err(enhancedError("Transpile error", error));
+    return err(createError({ description: "Transpile error", error }));
   }
 
   let interpreter: JSInterpreter;
@@ -106,13 +120,20 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     });
     flush();
   } catch (error) {
-    return err(enhancedError("Compiler error", error));
+    const res = bridgeErrorSchema.safeParse(error);
+    return err(
+      createError({
+        description: "Compiler error",
+        moduleName: res.success ? res.data.moduleName : undefined,
+        error: res.success ? res.data.error : error,
+      })
+    );
   }
 
   function flush() {
     const hasMore = interpreter.run();
     if (hasMore) {
-      throw enhancedError("Script did not resolve immediately");
+      throw createError({ description: "Script did not resolve immediately" });
     }
   }
 
@@ -128,7 +149,10 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       globals as object
     );
     if (typeof fn !== "function") {
-      throw new Error(`"${path.join(".")}" is not a function`);
+      throw createError({
+        moduleName,
+        description: `"${path.join(".")}" is not a global function`,
+      });
     }
     const returns = fn(...args);
     return JSON.stringify({ args, returns });
@@ -144,7 +168,12 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       interpreter.appendCode(invocationCode);
       flush();
     } catch (error) {
-      throw enhancedError("Runtime error", error);
+      throw createError({
+        description: "Runtime error",
+        moduleName,
+        functionName,
+        error,
+      });
     }
 
     const result = z
@@ -152,12 +181,6 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       .parse(JSON.parse(interpreter.value as string));
     mutate(args, result.args);
     return result.returns;
-  }
-
-  function enhancedError(description: string, error?: unknown) {
-    return options.debug
-      ? new Error(`${description}: ${errorMessageWithStackTrace(error)}`)
-      : new Error(`${description}: ${error?.toString() ?? ""}`);
   }
 
   const moduleProxies = Object.entries(definitions).reduce(
@@ -175,6 +198,16 @@ function createModuleCode(
   moduleName: string,
   { code, type, globals }: ModuleDefinition
 ) {
+  code = `
+    try {
+      ${code}
+    } catch (error) {
+      throw new Error(
+        JSON.stringify({ moduleName: "${moduleName}", error: String(error) })
+      );
+    }
+  `;
+
   if (zodInstanceOf(type, ZodFunction)) {
     return `((${symbols.define}) => {
         ${bridgeGlobals(moduleName, globals)}
@@ -355,6 +388,8 @@ const polyfill = `
   }
 `;
 
+const errorModuleNameProp = "moduleName";
+
 const mutate = createMutateFn();
 
 function createMutateFn() {
@@ -394,15 +429,26 @@ export const symbols = {
   modules: "___modules___",
 } as const;
 
-function errorMessageWithStackTrace(error: unknown) {
-  if (typeof error === "string") {
-    return error;
+const bridgeErrorSchema = z.any().transform((value) =>
+  z
+    .object({
+      moduleName: z.string(),
+      error: z.string(),
+    })
+    .parse(JSON.parse(value instanceof Error ? value.message : value))
+);
+
+const defaultModuleError: ModuleErrorFactory = ({
+  moduleName,
+  functionName,
+  error,
+}) => {
+  let location = [moduleName, functionName].filter(Boolean).join(".");
+  if (location) {
+    location = ` @ ${location}`;
   }
-  if (error instanceof Error) {
-    return `${error.message}\n${error.stack}`;
-  }
-  return JSON.stringify(error);
-}
+  return new Error(`Runtime error${location}: ${error}`);
+};
 
 function validIdentifier(name: string) {
   return name.replace(/[^a-zA-Z0-9_]/g, "_");

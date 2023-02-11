@@ -341,7 +341,7 @@ function useCompilerResult<T extends AnyModuleOutputType, SetupOutput>(
   setup: (compiler: ModuleCompiler) => SetupOutput,
   handle: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
 ) {
-  const compiler = new ModuleCompiler(undefined, { debug: true });
+  const compiler = new ModuleCompiler();
   try {
     const output = setup(compiler);
     const result = compiler.compile();
