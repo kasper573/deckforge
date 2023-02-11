@@ -35,18 +35,41 @@ describe("supports", () => {
   });
 
   describe("detecting a module that does not call define", () => {
-    it("single function", () => {
-      useCompilerResult(
-        (compiler) =>
-          compiler.addModule("test", { type: z.function(), code: "" }),
-        ([result]) => {
-          expect(result).toEqual(
-            expect.objectContaining({
-              error: `Compiler error: Error: No modules were defined`,
-            })
-          );
-        }
-      );
+    const addSingleModule = (name: string) => (compiler: ModuleCompiler) =>
+      compiler.addModule(name, { type: z.function(), code: "" });
+    const addRecordModule = (name: string) => (compiler: ModuleCompiler) =>
+      compiler.addModule(name, {
+        type: z.object({ first: z.function(), second: z.function() }),
+        code: "",
+      });
+
+    it("one module, single function", () => {
+      expectModuleRequiredError(addRecordModule("fn"));
+    });
+
+    it("one module, function record", () => {
+      expectModuleRequiredError(addRecordModule("record"));
+    });
+
+    it("two modules, single functions", () => {
+      expectModuleRequiredError((compiler) => {
+        addSingleModule("first")(compiler);
+        addSingleModule("second")(compiler);
+      });
+    });
+
+    it("two modules, function records", () => {
+      expectModuleRequiredError((compiler) => {
+        addRecordModule("first")(compiler);
+        addRecordModule("second")(compiler);
+      });
+    });
+
+    it("two modules, mixed", () => {
+      expectModuleRequiredError((compiler) => {
+        addSingleModule("fn")(compiler);
+        addRecordModule("record")(compiler);
+      });
     });
   });
 
@@ -143,6 +166,16 @@ describe("supports", () => {
     it("in deeply nested object", () => test(["root", "nested", "deeply"]));
   });
 });
+
+function expectModuleRequiredError(setup: (compiler: ModuleCompiler) => void) {
+  useCompilerResult(setup, ([result]) => {
+    expect(result).toEqual(
+      expect.objectContaining({
+        error: `Compiler error: Error: No modules were defined`,
+      })
+    );
+  });
+}
 
 function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
   if (res.isErr()) {
