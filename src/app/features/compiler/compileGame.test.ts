@@ -294,14 +294,7 @@ define({
 
   it("compiled runtime can chain events ", () => {
     const gameDefinition: GameDefinition = {
-      properties: [
-        {
-          entityId: "player" as EntityId,
-          propertyId: v4() as PropertyId,
-          name: "count",
-          type: "number",
-        },
-      ],
+      properties: [],
       reducers: [],
       events: [
         {
@@ -309,9 +302,8 @@ define({
           name: "increaseN",
           code: `
           define((state, n) => {
-            const [player] = state.players;
             if (n > 0) {
-              player.properties.count++;
+              state.properties.status++;
               actions.increaseN(n - 1);
             }
           });
@@ -326,7 +318,7 @@ define({
     const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
     runtime.execute((state) => {
       runtime.actions.increaseN(10);
-      expect(state.players[0].properties.count).toBe(10);
+      expect(state.properties.status).toBe(10);
     });
   });
 
