@@ -59,14 +59,14 @@ export function compileGame<G extends RuntimeGenerics>(
   const moduleAPI: RuntimeModuleAPI<G> = {
     random: createRandomFn(options?.seed),
     cloneCard,
-    actions: moduleCompiler.refs(
+    events: moduleCompiler.refs(
       Object.fromEntries(
         gameDefinition.events.map((event) => [
           event.name,
           eventModuleName(event),
         ])
       )
-    ),
+    ) as unknown as RuntimeEffects<G>,
   };
   const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
 

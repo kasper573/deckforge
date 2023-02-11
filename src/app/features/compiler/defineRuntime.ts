@@ -28,6 +28,7 @@ import type {
 } from "./types";
 import type { RuntimeEffect } from "./types";
 import { cardInstanceIdType } from "./types";
+import { symbols } from "./compileModule";
 
 export function defineRuntime<
   GlobalPropTypeDefs extends ZodRawShape,
@@ -257,19 +258,23 @@ export function runtimeEvent<Args extends [] | [ZodTypeAny]>(...args: Args) {
   return z.function(z.tuple(args), z.void());
 }
 
-export function createModuleApiDefinition<G extends RuntimeGenerics>({
-  card,
-  actions,
-}: Pick<RuntimeDefinition<G>, "card" | "actions">): ZodShapeFor<
-  RuntimeModuleAPI<G>
-> {
+export function createModuleApiDefinition<G extends RuntimeGenerics>(
+  { card, effects }: Pick<RuntimeDefinition<G>, "card" | "effects">,
+  outputType: ZodType
+) {
+  const events = effects as unknown as ZodType<RuntimeModuleAPI<G>["events"]>;
   const cloneCard = z.function().args(card).returns(card) as unknown as ZodType<
     RuntimeModuleAPI<G>["cloneCard"]
   >;
-  return {
+  const apiTypes: ZodShapeFor<RuntimeModuleAPI<G>> = {
     cloneCard,
-    actions,
+    events,
     thisCardId: card.shape.typeId,
     random: z.function().args(z.void()).returns(z.number()),
+  };
+
+  return {
+    ...apiTypes,
+    [symbols.define]: z.function().args(outputType).returns(z.void()),
   };
 }
