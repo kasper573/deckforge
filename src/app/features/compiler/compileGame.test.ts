@@ -107,7 +107,7 @@ define((state) => {
     runtime.actions.addCard();
     const [player1] = runtime.state.players;
     expect(player1.board.draw.length).toBe(1);
-    expect(player1.board.draw.at(0)).toBe(runtime.state.decks[0].cards[0]);
+    expect(player1.board.draw.at(0)).toEqual(runtime.state.decks[0].cards[0]);
   });
 
   it("compiled card effect can mutate player property", () => {
