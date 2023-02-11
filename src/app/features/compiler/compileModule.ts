@@ -180,11 +180,11 @@ function createModuleCode(
         ${bridgeGlobals(moduleName, globals)}
         ${symbols.define}(${defaultDefinitionCode(type)});
         ${enhanceErrorCode(code)}
-      })((def) => {
-        const enhancedDef = function call_${moduleName} (...args) {
-          ${enhanceErrorCode("return def(...args);")}
+      })((fn) => {
+        function call_${moduleName} (...args) {
+          ${enhanceErrorCode("return fn(...args);")}
         };
-        ${symbols.define}("${moduleName}", enhancedDef);
+        ${symbols.define}("${moduleName}", call_${moduleName});
       });
     `;
   }
