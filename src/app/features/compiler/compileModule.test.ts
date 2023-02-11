@@ -131,6 +131,28 @@ describe("supports", () => {
     });
   });
 
+  it("calling module recursively", () => {
+    const compiler = new ModuleCompiler();
+    const countProxy = (n: number, calls?: number) => count(n, calls);
+    const count = compiler.addModule("moduleA", {
+      type: z
+        .function()
+        .args(z.number(), z.number().optional())
+        .returns(z.number()),
+      code: `define((n, calls = 0) => {
+        return n > 0 ? count(n - 1, calls + 1) : calls;
+      })`,
+      globals: { count: countProxy },
+    });
+
+    const result = compiler.compile();
+
+    assert(result, () => {
+      const res = count(10, undefined);
+      expect(res).toEqual(10);
+    });
+  });
+
   it("using arguments mutated by another module during chained function call", () => {
     const compiler = new ModuleCompiler();
 
