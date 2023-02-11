@@ -2,6 +2,7 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
 import type { Result } from "neverthrow";
+import type { AnyFunction } from "js-interpreter";
 import type {
   AnyModuleOutputType,
   CompiledModule,
@@ -34,29 +35,70 @@ describe("supports", () => {
     });
   });
 
-  describe("detecting a module that does not call define", () => {
-    const addModule =
+  describe("calling empty modules", () => {
+    const addFnModule =
       (name: string, code = "") =>
       (compiler: ModuleCompiler) =>
         compiler.addModule(name, { type: z.function(), code });
 
-    it("one empty module", () => {
-      expectModuleRequiredError(addModule("a"));
+    const addRecordModule =
+      (name: string, code = "") =>
+      (compiler: ModuleCompiler) => {
+        const functionName = "foo" as const;
+        return compiler.addModule(name, {
+          type: z.object({ [functionName]: z.function() }),
+          code: code ? `define({ ${functionName}: ${code} })` : "",
+        })[functionName];
+      };
+
+    it("one empty function module", () => {
+      testEmptyInvoke(addFnModule("a"));
     });
 
-    it("two empty modules", () => {
-      expectModuleRequiredError((compiler) => {
-        addModule("a")(compiler);
-        addModule("b")(compiler);
+    it("two empty function modules", () => {
+      testEmptyInvoke((compiler) => {
+        addFnModule("a")(compiler);
+        return addFnModule("b")(compiler);
       });
     });
 
-    it("two modules, one empty", () => {
-      expectModuleRequiredError((compiler) => {
-        addModule("empty")(compiler);
-        addModule("defined", "define(() => 5)")(compiler);
+    it("two function modules, one empty", () => {
+      testEmptyInvoke((compiler) => {
+        addFnModule("defined", "define(() => 5)")(compiler);
+        return addFnModule("empty")(compiler);
       });
     });
+
+    it("one empty record module", () => {
+      testEmptyInvoke(addRecordModule("a"));
+    });
+
+    it("two empty record modules", () => {
+      testEmptyInvoke((compiler) => {
+        addRecordModule("a")(compiler);
+        return addRecordModule("b")(compiler);
+      });
+    });
+
+    it("two record modules, one empty", () => {
+      testEmptyInvoke((compiler) => {
+        addRecordModule("defined", "define(() => 5)")(compiler);
+        return addRecordModule("empty")(compiler);
+      });
+    });
+
+    function testEmptyInvoke(setup: (compiler: ModuleCompiler) => AnyFunction) {
+      useCompilerResult(setup, ([, fn]) => {
+        function createArgs() {
+          return [{ foo: "bar" }, 2, true];
+        }
+        const args = createArgs();
+        let result: unknown;
+        expect(() => (result = fn([...args]))).not.toThrow();
+        expect(result).toBeUndefined();
+        expect(args).toEqual(createArgs());
+      });
+    }
   });
 
   it("calling module A from module B", () => {
@@ -152,16 +194,6 @@ describe("supports", () => {
     it("in deeply nested object", () => test(["root", "nested", "deeply"]));
   });
 });
-
-function expectModuleRequiredError(setup: (compiler: ModuleCompiler) => void) {
-  useCompilerResult(setup, ([result]) => {
-    expect(result).toEqual(
-      expect.objectContaining({
-        error: expect.stringMatching(/module ".*?" is missing a define call/i),
-      })
-    );
-  });
-}
 
 function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
   if (res.isErr()) {

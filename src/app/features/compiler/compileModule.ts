@@ -1,6 +1,6 @@
 import type { AnyFunction } from "js-interpreter";
 import JSInterpreter from "js-interpreter";
-import type { ZodType } from "zod";
+import type { ZodRawShape, ZodType } from "zod";
 import { ZodFunction, ZodObject, z } from "zod";
 import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
@@ -183,17 +183,29 @@ export function compileModules<Definitions extends ModuleDefinitions>(
 function createScopedModuleCode(definitions: ModuleDefinitions) {
   return Object.entries(definitions)
     .map(
-      ([moduleName, { code, globals = {} }]) => `
+      ([moduleName, { code, type, globals = {} }]) => `
     ((${symbols.define}) => {
       ${bridgeGlobals(moduleName, globals)}
+      ${symbols.define}(${defaultDefinitionCode(type)});
       ${code}
-      if (${symbols.modules}["${moduleName}"] === undefined) {
-        throw new Error('Module "${moduleName}" is missing a define call');
-      }
     })((def) => ${symbols.define}("${moduleName}", def));
   `
     )
     .join("\n");
+}
+
+function defaultDefinitionCode(type: ZodType): string {
+  if (type instanceof ZodObject) {
+    return `{
+      ${Object.entries(type.shape as ZodRawShape)
+        .map(([key, value]) => `${key}: ${defaultDefinitionCode(value)}`)
+        .join(",")}
+    }`;
+  }
+  if (type instanceof ZodFunction) {
+    return `() => {}`;
+  }
+  return "undefined";
 }
 
 function createModuleProxy<Definition extends ModuleDefinition>(
