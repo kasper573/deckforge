@@ -87,7 +87,9 @@ export function compileModules<Definitions extends ModuleDefinitions>(
   try {
     code = transpile(`
     ${createBridgeCode()}
-    ${createScopedModuleCode(definitions)}
+    ${Object.entries(definitions)
+      .map((args) => createModuleCode(...args))
+      .join("\n")}
   `);
   } catch (error) {
     return err(enhancedError(`Transpile error: ${error}`));
@@ -137,11 +139,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     functionName: string | undefined,
     args: unknown[]
   ) {
-    const moduleRef = `${symbols.modules}["${moduleName}"]`;
-    const fnRef = functionName ? `${moduleRef}.${functionName}` : moduleRef;
-    const invocationCode = `${symbols.callDefined}(${fnRef}, ${JSON.stringify(
-      args
-    )})`;
+    const invocationCode = createInvocationCode(moduleName, functionName, args);
     try {
       interpreter.appendCode(invocationCode);
       flush();
@@ -180,18 +178,16 @@ export function compileModules<Definitions extends ModuleDefinitions>(
   return ok(moduleProxies);
 }
 
-function createScopedModuleCode(definitions: ModuleDefinitions) {
-  return Object.entries(definitions)
-    .map(
-      ([moduleName, { code, type, globals = {} }]) => `
-    ((${symbols.define}) => {
+function createModuleCode(
+  moduleName: string,
+  { code, type, globals }: ModuleDefinition
+) {
+  return `((${symbols.define}) => {
       ${bridgeGlobals(moduleName, globals)}
       ${symbols.define}(${defaultDefinitionCode(type)});
       ${code}
     })((def) => ${symbols.define}("${moduleName}", def));
-  `
-    )
-    .join("\n");
+  `;
 }
 
 function defaultDefinitionCode(type: ZodType): string {
@@ -245,11 +241,23 @@ function createModuleProxy<Definition extends ModuleDefinition>(
   throw new Error("Unsupported module type");
 }
 
+function createInvocationCode(
+  moduleName: string,
+  functionName: string | undefined,
+  args: unknown[]
+) {
+  return `${symbols.callDefined}("${moduleName}", ${
+    functionName ? `"${functionName}"` : "undefined"
+  }, ${JSON.stringify(args)})`;
+}
+
 function createBridgeCode() {
   return `
     const ${symbols.modules} = {};
     const ${symbols.mutate} = (${createMutateFn.toString()})();
-    function ${symbols.callDefined}(fn, args) {
+    function ${symbols.callDefined}(moduleName, functionName, args) {
+      const m = ${symbols.modules}[moduleName];
+      const fn = functionName ? m[functionName] : m;
       const returns = fn.apply(null, args);
       return JSON.stringify({ args, returns });
     }
@@ -266,7 +274,7 @@ function createBridgeCode() {
   `;
 }
 
-function bridgeGlobals(moduleName: string, globals: object): string {
+function bridgeGlobals(moduleName: string, globals: object = {}): string {
   return Object.entries(globals)
     .map(
       ([key, value]) =>
