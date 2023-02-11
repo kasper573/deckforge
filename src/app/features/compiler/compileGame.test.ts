@@ -292,7 +292,56 @@ define({
     });
   });
 
-  it("compiled runtime can chain events ", () => {
+  it("compiled runtime can trigger actions from events", () => {
+    const gameDefinition: GameDefinition = {
+      properties: [],
+      reducers: [],
+      events: [
+        {
+          eventId: v4() as EventId,
+          name: "increase",
+          code: `
+          define((state, n) => {
+            state.properties.status += n;
+          });
+          `,
+          inputType: "number",
+        },
+        {
+          eventId: v4() as EventId,
+          name: "decrease",
+          code: `
+          define((state, n) => {
+            state.properties.status -= n;
+          });
+          `,
+          inputType: "number",
+        },
+        {
+          eventId: v4() as EventId,
+          name: "calculate",
+          code: `
+          define((state) => {
+            state.properties.status = 10;
+            actions.increase(20);
+            actions.decrease(5);
+          });
+          `,
+          inputType: "void",
+        },
+      ],
+      cards: [],
+      decks: [],
+    };
+    const runtimeDefinition = defineTestRuntime(gameDefinition);
+    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
+    runtime.execute((state) => {
+      runtime.actions.calculate();
+      expect(state.properties.status).toBe(25);
+    });
+  });
+
+  it("compiled runtime can recurse events ", () => {
     const gameDefinition: GameDefinition = {
       properties: [],
       reducers: [],
