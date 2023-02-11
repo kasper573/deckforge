@@ -182,12 +182,28 @@ function createModuleCode(
   moduleName: string,
   { code, type, globals }: ModuleDefinition
 ) {
-  return `((${symbols.define}) => {
-      ${bridgeGlobals(moduleName, globals)}
-      ${symbols.define}(${defaultDefinitionCode(type)});
-      ${code}
-    })((def) => ${symbols.define}("${moduleName}", def));
-  `;
+  if (type instanceof ZodFunction) {
+    return `((${symbols.define}) => {
+        ${bridgeGlobals(moduleName, globals)}
+        ${symbols.define}(${defaultDefinitionCode(type)});
+        ${code}
+      })((def) => ${symbols.define}("${moduleName}", def));
+    `;
+  }
+
+  if (type instanceof ZodObject) {
+    return `((${symbols.define}) => {
+        ${bridgeGlobals(moduleName, globals)}
+        ${symbols.define}({});
+        ${code}
+      })((def) => {
+        const defaults = ${defaultDefinitionCode(type)};
+        ${symbols.define}("${moduleName}", {...defaults, ...def});
+      });
+    `;
+  }
+
+  throw new Error("Unsupported module type");
 }
 
 function defaultDefinitionCode(type: ZodType): string {

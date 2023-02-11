@@ -87,6 +87,16 @@ describe("supports", () => {
       });
     });
 
+    it("one record module with one empty and one defined function", () => {
+      testEmptyInvoke((compiler) => {
+        const record = compiler.addModule("record", {
+          type: z.object({ empty: z.function(), defined: z.function() }),
+          code: `define({ defined: define(() => 5) })`,
+        });
+        return record.empty;
+      });
+    });
+
     function testEmptyInvoke(setup: (compiler: ModuleCompiler) => AnyFunction) {
       useCompilerResult(setup, ([, fn]) => {
         function createArgs() {
@@ -266,20 +276,11 @@ function useCompilerResult<T extends AnyModuleOutputType, SetupOutput>(
   setup: (compiler: ModuleCompiler) => SetupOutput,
   handle: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
 ) {
-  const compiler = new ModuleCompiler();
+  const compiler = new ModuleCompiler(undefined, { debug: true });
   try {
     const output = setup(compiler);
     const result = compiler.compile();
     handle([result, output]);
-  } finally {
-    compiler.dispose();
-  }
-}
-
-function useCompiler(fn: (compiler: ModuleCompiler) => void) {
-  const compiler = new ModuleCompiler();
-  try {
-    fn(compiler);
   } finally {
     compiler.dispose();
   }
