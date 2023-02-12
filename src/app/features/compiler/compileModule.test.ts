@@ -245,6 +245,73 @@ describe("supports", () => {
     it("in nested object", () => test(["root", "nested"]));
     it("in deeply nested object", () => test(["root", "nested", "deeply"]));
   });
+
+  describe("sandboxing", () => {
+    generateMaliciousCodeTests();
+
+    describe("via eval", () => {
+      generateMaliciousCodeTests((code) => `eval(\`${code}\`)`);
+    });
+
+    describe("via Function", () => {
+      generateMaliciousCodeTests((code) => `Function(\`return ${code}\`)()`);
+    });
+
+    function generateMaliciousCodeTests(wrapCode = (code: string) => code) {
+      const symbols = [
+        "document",
+        "localStorage",
+        "fetch",
+        "XMLHttpRequest",
+        "setTimeout",
+        "setInterval",
+        "setImmediate",
+        "requestAnimationFrame",
+        "clearTimeout",
+        "clearInterval",
+        "clearImmediate",
+        "cancelAnimationFrame",
+        "alert",
+        "confirm",
+        "prompt",
+        "console",
+      ];
+
+      for (const symbolName of symbols) {
+        describe(symbolName, () => {
+          it("does not exist", () => {
+            useCompilerResult(
+              (compiler) =>
+                compiler.addModule("module", {
+                  type: z.function(),
+                  code: `define(() => ${wrapCode(symbolName)})`,
+                }),
+              ([, tryToAccessSymbol]) => {
+                expect(tryToAccessSymbol).toThrowError(
+                  `${symbolName} is not defined`
+                );
+              }
+            );
+          });
+
+          it("does not exist on window object", () => {
+            useCompilerResult(
+              (compiler) =>
+                compiler.addModule("module", {
+                  type: z.function(),
+                  code: `define(() => ${wrapCode(
+                    `typeof window.${symbolName}`
+                  )})`,
+                }),
+              ([, getSymbolTypeName]) => {
+                expect(getSymbolTypeName()).toBe("undefined");
+              }
+            );
+          });
+        });
+      }
+    }
+  });
 });
 
 function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
