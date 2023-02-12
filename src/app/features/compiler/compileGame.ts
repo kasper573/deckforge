@@ -4,12 +4,12 @@ import produce from "immer";
 import type {
   Card,
   CardId,
+  Deck,
+  Event,
   Game,
   Property,
   PropertyDefaults,
-  Event,
   Reducer,
-  Deck,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
 import type { MachineMiddleware } from "../../../lib/machine/MachineAction";
@@ -23,12 +23,13 @@ import type {
   RuntimeEffects,
   RuntimeGenerics,
   RuntimeMachineContext,
-  RuntimeReducer,
   RuntimeModuleAPI,
   RuntimePlayer,
   RuntimePlayerId,
+  RuntimeReducer,
 } from "./types";
 import { ModuleCompiler, validIdentifier } from "./compileModule";
+import { moduleCompilerOptions } from "./moduleCompilerOptions";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;
@@ -52,7 +53,9 @@ export function compileGame<G extends RuntimeGenerics>(
     (p) => p.entityId === "player"
   );
 
-  const moduleCompiler = new ModuleCompiler();
+  const moduleCompiler = new ModuleCompiler({
+    compilerOptions: moduleCompilerOptions,
+  });
   const moduleAPI: RuntimeModuleAPI<G> = {
     random: createRandomFn(options?.seed),
     cloneCard,

@@ -4,6 +4,7 @@ import type { ZodRawShape, ZodType } from "zod";
 import { ZodFunction, ZodObject, z } from "zod";
 import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
+import type { CompilerOptions } from "typescript";
 import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
 import { normalizeType } from "../../../lib/zod-extensions/zodNormalize";
 
@@ -33,8 +34,11 @@ export interface ModuleDefinition<
 export type ModuleDefinitions = Record<string, ModuleDefinition>;
 export type ModuleErrorFactory = (error: unknown) => unknown;
 
+export type ModuleCompilerOptions = Pick<CompilerOptions, "lib">;
+
 export interface CompileModulesOptions {
   createError?: ModuleErrorFactory;
+  compilerOptions?: ModuleCompilerOptions;
 }
 
 export class ModuleCompiler {
@@ -81,6 +85,7 @@ export class ModuleCompiler {
 export function compileModules<Definitions extends ModuleDefinitions>(
   definitions: Definitions,
   {
+    compilerOptions,
     createError: createErrorImpl = (error) => error,
   }: CompileModulesOptions = {}
 ): Result<CompiledModules<Definitions>, unknown> {
@@ -89,12 +94,15 @@ export function compileModules<Definitions extends ModuleDefinitions>(
 
   let code: string;
   try {
-    code = transpile(`
+    code = transpile(
+      `
     ${createBridgeCode()}
     ${Object.entries(definitions)
       .map((args) => createModuleCode(...args))
       .join("\n")}
-  `);
+  `,
+      compilerOptions
+    );
   } catch (error) {
     return err(createError(error));
   }
@@ -357,11 +365,12 @@ function bridgeJSValue(
   return JSON.stringify(value);
 }
 
-function transpile(code: string) {
-  const result = transpileModule(`${polyfill}\n${code}`, {
+function transpile(code: string, options?: ModuleCompilerOptions) {
+  const result = transpileModule(`${polyfill}${code}`, {
     compilerOptions: {
       target: ScriptTarget.ES5,
       module: ModuleKind.CommonJS,
+      ...options,
     },
   });
   return result.outputText;
