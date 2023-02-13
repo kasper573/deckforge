@@ -7,13 +7,16 @@ import { ZodFunction } from "zod";
 import type { QuickJSRuntime } from "quickjs-emscripten";
 import { zodInstanceOf } from "../../../../lib/zod-extensions/zodInstanceOf";
 import { createZodProxy } from "../../../../lib/zod-extensions/createZodProxy";
-import type { CompiledModule, ModuleDefinition } from "../moduleRuntimeTypes";
+import type {
+  CompiledModule,
+  ModuleDefinition,
+  ModuleRuntime,
+} from "../moduleRuntimeTypes";
 import { ModuleReferences } from "../moduleRuntimeTypes";
-import type { JSInterpreterModuleRuntime } from "./JSInterpreter";
 
 export function createQuickJSModuleRuntime(
   quick: QuickJSWASMModule
-): Readonly<JSInterpreterModuleRuntime> {
+): ModuleRuntime {
   const modules = new Map<string, QuickJSModule>();
   const runtime = quick.newRuntime({});
   return {

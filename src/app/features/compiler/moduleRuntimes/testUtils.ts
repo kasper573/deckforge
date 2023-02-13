@@ -9,10 +9,10 @@ import type {
   CompiledModules,
   ModuleDefinition,
   ModuleOutputFunction,
+  ModuleRuntime,
 } from "../moduleRuntimeTypes";
-import { JSInterpreterModuleRuntime } from "./JSInterpreter";
 
-export function generateModuleRuntimeTests() {
+export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   describe("return value", () =>
     testModuleOutputs("() => 5", (fn) => {
       expect(fn()).toEqual(5);
@@ -35,12 +35,12 @@ export function generateModuleRuntimeTests() {
   describe("calling empty modules", () => {
     const addFnModule =
       (name: string, code = "") =>
-      (runtime: JSInterpreterModuleRuntime) =>
+      (runtime: ModuleRuntime) =>
         runtime.addModule(name, { type: z.function(), code });
 
     const addRecordModule =
       (name: string, code = "") =>
-      (runtime: JSInterpreterModuleRuntime) => {
+      (runtime: ModuleRuntime) => {
         const functionName = "foo" as const;
         return runtime.addModule(name, {
           type: z.object({ [functionName]: z.function() }),
@@ -85,9 +85,7 @@ export function generateModuleRuntimeTests() {
         return record.empty;
       }));
 
-    function testEmptyInvoke(
-      setup: (runtime: JSInterpreterModuleRuntime) => AnyFunction
-    ) {
+    function testEmptyInvoke(setup: (runtime: ModuleRuntime) => AnyFunction) {
       return useRuntimeResult(setup, ([, fn]) => {
         function createArgs() {
           return [{ foo: "bar" }, 2, true];
@@ -396,10 +394,10 @@ export function generateModuleRuntimeTests() {
   }
 
   function useRuntimeResult<T extends AnyModuleOutputType, SetupOutput>(
-    setup: (runtime: JSInterpreterModuleRuntime) => SetupOutput,
+    setup: (runtime: ModuleRuntime) => SetupOutput,
     handle?: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
   ) {
-    const runtime = new JSInterpreterModuleRuntime();
+    const runtime = createRuntime();
     try {
       const output = setup(runtime);
       const result = runtime.compile();

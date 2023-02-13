@@ -1,6 +1,7 @@
 import type { AnyFunction } from "js-interpreter";
 import type { z, ZodType } from "zod";
 import type { CompilerOptions } from "typescript";
+import type { Result } from "neverthrow";
 
 export type AnyModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
@@ -21,6 +22,19 @@ export interface ModuleDefinition<
   type: T;
   globals?: object;
   code: string;
+}
+
+export interface ModuleRuntime {
+  addModule<Name extends string, Definition extends ModuleDefinition>(
+    name: Name,
+    definition: Definition
+  ): CompiledModule<Definition["type"]>;
+
+  refs: typeof ModuleReferences.create;
+
+  compile(): Result<CompiledModules, unknown>;
+
+  dispose(): void;
 }
 
 export type ModuleDefinitions = Record<string, ModuleDefinition>;

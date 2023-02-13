@@ -28,9 +28,10 @@ import type {
   RuntimePlayerId,
   RuntimeReducer,
 } from "./types";
-import { JSInterpreterModuleRuntime as ES5ModuleRuntime } from "./moduleRuntimes/JSInterpreter";
+import { JSInterpreterModuleRuntime } from "./moduleRuntimes/JSInterpreter";
 import { validIdentifier } from "./moduleRuntimes/JSInterpreter";
 import { moduleCompilerOptions } from "./moduleCompilerOptions";
+import type { ModuleRuntime } from "./moduleRuntimeTypes";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;
@@ -41,13 +42,13 @@ export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
   {
-    moduleRuntime = new ES5ModuleRuntime({
+    moduleRuntime = new JSInterpreterModuleRuntime({
       compilerOptions: moduleCompilerOptions,
     }),
     seed,
     middlewares,
   }: {
-    moduleRuntime?: ES5ModuleRuntime;
+    moduleRuntime?: ModuleRuntime;
     seed?: string;
     middlewares?: (
       defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
