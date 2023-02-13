@@ -9,6 +9,7 @@ import { zodInstanceOf } from "../../../../lib/zod-extensions/zodInstanceOf";
 import { createZodProxy } from "../../../../lib/zod-extensions/createZodProxy";
 import type { CompiledModule, ModuleDefinition, ModuleRuntime } from "./types";
 import { ModuleReferences } from "./types";
+import { symbols } from "./symbols";
 
 export function createQuickJSModuleRuntime(
   quick: QuickJSWASMModule
@@ -102,7 +103,7 @@ function declareGlobals(
 }
 
 const defineFunctionConventionBindings = `
-function define (def) {
+function ${symbols.define} (def) {
   module.exports = def;
 }    
 `;
