@@ -30,6 +30,13 @@ describe("createZodProxy", () => {
     const proxy = createTestProxy(schema, obj);
     expect(proxy.nested.fn()).toBe("result");
   });
+
+  it("can call root function", () => {
+    const schema = z.function();
+    const fn = () => "result";
+    const proxy = createTestProxy(schema, fn);
+    expect(proxy()).toBe("result");
+  });
 });
 
 function createTestProxy<T extends ZodType>(type: T, target: z.infer<T>) {
