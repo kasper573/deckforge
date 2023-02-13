@@ -137,7 +137,7 @@ export function compileGame<G extends RuntimeGenerics>(
   });
 
   const defaultMiddlewares = runtimeReducers.length
-    ? [createReducerReducer(...runtimeReducers)]
+    ? [createReducerMiddleware(...runtimeReducers)]
     : [];
 
   const allMiddlewares =
@@ -204,13 +204,13 @@ function createRandomFn(seed?: string) {
   return () => rng.next();
 }
 
-function createReducerReducer<G extends RuntimeGenerics>(
+function createReducerMiddleware<G extends RuntimeGenerics>(
   ...reducers: RuntimeReducer<G>[]
 ): MachineMiddleware<RuntimeMachineContext<G>> {
   return (state, action, next) => {
+    next();
     for (const reduce of reducers) {
       reduce(state, action);
     }
-    next();
   };
 }
