@@ -13,27 +13,24 @@ import type {
 import { ModuleCompiler } from "./compileModule";
 
 describe("supports", () => {
-  describe("return value", () => {
+  describe("return value", () =>
     testModuleOutputs("() => 5", (fn) => {
       expect(fn()).toEqual(5);
-    });
-  });
+    }));
 
-  describe("arguments", () => {
+  describe("arguments", () =>
     testModuleOutputs("(a, b) => a + b", (fn) => {
       expect(fn(1, 2)).toEqual(3);
-    });
-  });
+    }));
 
-  describe("argument mutation", () => {
+  describe("argument mutation", () =>
     testModuleOutputs("(a, b) => { a.x = 1; b.x = 2; }", (fn) => {
       const a = { x: 0 };
       const b = { x: 0 };
       fn(a, b);
       expect(a.x).toEqual(1);
       expect(b.x).toEqual(2);
-    });
-  });
+    }));
 
   describe("calling empty modules", () => {
     const addFnModule =
@@ -51,54 +48,45 @@ describe("supports", () => {
         })[functionName];
       };
 
-    it("one empty function module", () => {
-      testEmptyInvoke(addFnModule("a"));
-    });
+    it("one empty function module", () => testEmptyInvoke(addFnModule("a")));
 
-    it("two empty function modules", () => {
+    it("two empty function modules", () =>
       testEmptyInvoke((compiler) => {
         addFnModule("a")(compiler);
         return addFnModule("b")(compiler);
-      });
-    });
+      }));
 
-    it("two function modules, one empty", () => {
+    it("two function modules, one empty", () =>
       testEmptyInvoke((compiler) => {
         addFnModule("defined", "define(() => 5)")(compiler);
         return addFnModule("empty")(compiler);
-      });
-    });
+      }));
 
-    it("one empty record module", () => {
-      testEmptyInvoke(addRecordModule("a"));
-    });
+    it("one empty record module", () => testEmptyInvoke(addRecordModule("a")));
 
-    it("two empty record modules", () => {
+    it("two empty record modules", () =>
       testEmptyInvoke((compiler) => {
         addRecordModule("a")(compiler);
         return addRecordModule("b")(compiler);
-      });
-    });
+      }));
 
-    it("two record modules, one empty", () => {
+    it("two record modules, one empty", () =>
       testEmptyInvoke((compiler) => {
         addRecordModule("defined", "define(() => 5)")(compiler);
         return addRecordModule("empty")(compiler);
-      });
-    });
+      }));
 
-    it("one record module with one empty and one defined function", () => {
+    it("one record module with one empty and one defined function", () =>
       testEmptyInvoke((compiler) => {
         const record = compiler.addModule("record", {
           type: z.object({ empty: z.function(), defined: z.function() }),
           code: `define({ defined: define(() => 5) })`,
         });
         return record.empty;
-      });
-    });
+      }));
 
     function testEmptyInvoke(setup: (compiler: ModuleCompiler) => AnyFunction) {
-      useCompilerResult(setup, ([, fn]) => {
+      return useCompilerResult(setup, ([, fn]) => {
         function createArgs() {
           return [{ foo: "bar" }, 2, true];
         }
@@ -111,7 +99,7 @@ describe("supports", () => {
     }
   });
 
-  it("calling module A from module B", () => {
+  it("calling module A from module B", () =>
     useCompilerResult(
       (compiler) => {
         const moduleA = compiler.addModule("moduleA", {
@@ -129,10 +117,9 @@ describe("supports", () => {
         const res = moduleB("input");
         expect(res).toEqual(["A", "B", "input"]);
       }
-    );
-  });
+    ));
 
-  it("calling module A from module B via reference", () => {
+  it("calling module A from module B via reference", () =>
     useCompilerResult(
       (compiler) => {
         compiler.addModule("moduleA", {
@@ -149,10 +136,9 @@ describe("supports", () => {
         const res = moduleB("input");
         expect(res).toEqual(["A", "B", "input"]);
       }
-    );
-  });
+    ));
 
-  it("calling module recursively", () => {
+  it("calling module recursively", () =>
     useCompilerResult(
       (compiler) => {
         const countProxy = (n: number, calls?: number) => count(n, calls);
@@ -172,10 +158,9 @@ describe("supports", () => {
         const res = count(10, undefined);
         expect(res).toEqual(10);
       }
-    );
-  });
+    ));
 
-  it("using arguments mutated by another module during chained function call", () => {
+  it("using arguments mutated by another module during chained function call", () =>
     useCompilerResult(
       (compiler) => {
         const double = compiler.addModule("double", {
@@ -194,12 +179,11 @@ describe("supports", () => {
         program(state);
         expect(state.x).toEqual(10);
       }
-    );
-  });
+    ));
 
   describe("global functions", () => {
     function test(path: [string, ...string[]]) {
-      testCompiledModule(
+      return testCompiledModule(
         {
           type: z.function(),
           code: `define((...args) => ${path.join(".")}(...args))`,
@@ -280,7 +264,7 @@ describe("supports", () => {
 
       for (const symbolName of symbols) {
         describe(symbolName, () => {
-          it("does not exist", () => {
+          it("does not exist", () =>
             useCompilerResult(
               (compiler) =>
                 compiler.addModule("module", {
@@ -292,10 +276,9 @@ describe("supports", () => {
                   `${symbolName} is not defined`
                 );
               }
-            );
-          });
+            ));
 
-          it("does not exist on window object", () => {
+          it("does not exist on window object", () =>
             useCompilerResult(
               (compiler) =>
                 compiler.addModule("module", {
@@ -307,8 +290,7 @@ describe("supports", () => {
               ([, getSymbolTypeName]) => {
                 expect(getSymbolTypeName()).toBe("undefined");
               }
-            );
-          });
+            ));
         });
       }
     }
@@ -334,27 +316,25 @@ function testModuleOutputs(
   assertion: CompilerAssertion<ZodType<ModuleOutputFunction>>,
   test: typeof testCompilerResult = testCompiledModule
 ) {
-  it("optional single function (assert bypass)", () => {
+  it("optional single function (assert bypass)", () =>
     test(
       {
         code: `define(${functionDefinitionCode})`,
         type: z.function().optional() as ZodType<AnyFunction>,
       },
       assertion
-    );
-  });
+    ));
 
-  it("single function", () => {
+  it("single function", () =>
     test(
       {
         code: `define(${functionDefinitionCode})`,
         type: z.function(),
       },
       assertion
-    );
-  });
+    ));
 
-  it("function record", () => {
+  it("function record", () =>
     test(
       {
         type: z.object({ first: z.function(), second: z.function() }),
@@ -364,10 +344,9 @@ function testModuleOutputs(
         assertion(first, result);
         assertion(second, result);
       }
-    );
-  });
+    ));
 
-  it("partial function record", () => {
+  it("partial function record", () =>
     test(
       {
         type: z.object({ first: z.function(), second: z.function() }).partial(),
@@ -377,15 +356,14 @@ function testModuleOutputs(
         assertion(first!, result);
         assertion(second!, result);
       }
-    );
-  });
+    ));
 }
 
 function testCompiledModule<Def extends ModuleDefinition>(
   definition: Def,
   assertion: CompilerAssertion<Def["type"]>
 ) {
-  testCompilerResult(definition, (module, result) => {
+  return testCompilerResult(definition, (module, result) => {
     assert(result, () => assertion(module, result));
   });
 }
@@ -399,13 +377,13 @@ function testCompilerResult<Def extends ModuleDefinition>(
   definition: Def,
   assertion: CompilerAssertion<Def["type"]>
 ) {
-  useCompilerResult(
+  return useCompilerResult(
     (compiler) => compiler.addModule("main", definition),
     ([result, module]) => assertion(module, result)
   );
 }
 
-function useCompilerResult<T extends AnyModuleOutputType, SetupOutput>(
+async function useCompilerResult<T extends AnyModuleOutputType, SetupOutput>(
   setup: (compiler: ModuleCompiler) => SetupOutput,
   handle: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
 ) {
