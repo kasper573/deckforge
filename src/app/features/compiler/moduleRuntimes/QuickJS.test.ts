@@ -1,6 +1,6 @@
 import type { QuickJSWASMModule } from "quickjs-emscripten";
 import { getQuickJS } from "quickjs-emscripten";
-import { generateModuleRuntimeTests } from "./testUtils";
+import { generateModuleRuntimeTests } from "./tests";
 import { createQuickJSModuleRuntime } from "./QuickJS";
 
 describe("QuickJS", () => {
