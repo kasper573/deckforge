@@ -1,5 +1,5 @@
 import type { ModuleCompilerOptions } from "./compileModule";
 
 export const moduleCompilerOptions: ModuleCompilerOptions = {
-  lib: ["esnext"],
+  lib: ["es6"],
 };
