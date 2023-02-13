@@ -5,7 +5,7 @@ import type {
   CompiledModule,
   ModuleDefinition,
   ModuleOutputRecord,
-} from "./compileModule";
+} from "./moduleRuntimeTypes";
 
 export function createModuleProxy<Definition extends ModuleDefinition>(
   moduleName: string,

@@ -3,23 +3,16 @@ import type { ZodType } from "zod";
 import { z } from "zod";
 import type { Result } from "neverthrow";
 import type { AnyFunction } from "js-interpreter";
-import type { QuickJSWASMModule } from "quickjs-emscripten";
-import { getQuickJS } from "quickjs-emscripten";
 import type {
   AnyModuleOutputType,
   CompiledModule,
   CompiledModules,
   ModuleDefinition,
   ModuleOutputFunction,
-} from "./compileModule";
-import { ModuleRuntime } from "./compileModule";
+} from "../moduleRuntimeTypes";
+import { JSInterpreterModuleRuntime } from "./JSInterpreter";
 
-let quickJS: QuickJSWASMModule;
-describe("supports", () => {
-  beforeAll(async () => {
-    quickJS = await getQuickJS();
-  });
-
+export function generateModuleRuntimeTests() {
   describe("return value", () =>
     testModuleOutputs("() => 5", (fn) => {
       expect(fn()).toEqual(5);
@@ -42,12 +35,12 @@ describe("supports", () => {
   describe("calling empty modules", () => {
     const addFnModule =
       (name: string, code = "") =>
-      (runtime: ModuleRuntime) =>
+      (runtime: JSInterpreterModuleRuntime) =>
         runtime.addModule(name, { type: z.function(), code });
 
     const addRecordModule =
       (name: string, code = "") =>
-      (runtime: ModuleRuntime) => {
+      (runtime: JSInterpreterModuleRuntime) => {
         const functionName = "foo" as const;
         return runtime.addModule(name, {
           type: z.object({ [functionName]: z.function() }),
@@ -92,7 +85,9 @@ describe("supports", () => {
         return record.empty;
       }));
 
-    function testEmptyInvoke(setup: (runtime: ModuleRuntime) => AnyFunction) {
+    function testEmptyInvoke(
+      setup: (runtime: JSInterpreterModuleRuntime) => AnyFunction
+    ) {
       return useRuntimeResult(setup, ([, fn]) => {
         function createArgs() {
           return [{ foo: "bar" }, 2, true];
@@ -311,104 +306,106 @@ describe("supports", () => {
       });
     });
   });
-});
 
-function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
-  if (res.isErr()) {
-    throw res.error;
+  function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
+    if (res.isErr()) {
+      throw res.error;
+    }
+    assertion?.(res.value);
   }
-  assertion?.(res.value);
-}
 
-function globalAtPath(path: [string, ...string[]], leafValue: unknown) {
-  return path.reduceRight(
-    (acc: object, key) => ({ [key]: acc }),
-    leafValue as object
-  );
-}
+  function globalAtPath(path: [string, ...string[]], leafValue: unknown) {
+    return path.reduceRight(
+      (acc: object, key) => ({ [key]: acc }),
+      leafValue as object
+    );
+  }
 
-function testModuleOutputs(
-  functionDefinitionCode: string,
-  assertion: RuntimeAssertion<ZodType<ModuleOutputFunction>>,
-  test: typeof testRuntimeResult = testCompiledModule
-) {
-  it("optional single function (assert bypass)", () =>
-    test(
-      {
-        code: `define(${functionDefinitionCode})`,
-        type: z.function().optional() as ZodType<AnyFunction>,
-      },
-      assertion
-    ));
+  function testModuleOutputs(
+    functionDefinitionCode: string,
+    assertion: RuntimeAssertion<ZodType<ModuleOutputFunction>>,
+    test: typeof testRuntimeResult = testCompiledModule
+  ) {
+    it("optional single function (assert bypass)", () =>
+      test(
+        {
+          code: `define(${functionDefinitionCode})`,
+          type: z.function().optional() as ZodType<AnyFunction>,
+        },
+        assertion
+      ));
 
-  it("single function", () =>
-    test(
-      {
-        code: `define(${functionDefinitionCode})`,
-        type: z.function(),
-      },
-      assertion
-    ));
+    it("single function", () =>
+      test(
+        {
+          code: `define(${functionDefinitionCode})`,
+          type: z.function(),
+        },
+        assertion
+      ));
 
-  it("function record", () =>
-    test(
-      {
-        type: z.object({ first: z.function(), second: z.function() }),
-        code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
-      },
-      ({ first, second }, result) => {
-        assertion(first, result);
-        assertion(second, result);
-      }
-    ));
+    it("function record", () =>
+      test(
+        {
+          type: z.object({ first: z.function(), second: z.function() }),
+          code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
+        },
+        ({ first, second }, result) => {
+          assertion(first, result);
+          assertion(second, result);
+        }
+      ));
 
-  it("partial function record", () =>
-    test(
-      {
-        type: z.object({ first: z.function(), second: z.function() }).partial(),
-        code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
-      },
-      ({ first, second }, result) => {
-        assertion(first!, result);
-        assertion(second!, result);
-      }
-    ));
-}
+    it("partial function record", () =>
+      test(
+        {
+          type: z
+            .object({ first: z.function(), second: z.function() })
+            .partial(),
+          code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
+        },
+        ({ first, second }, result) => {
+          assertion(first!, result);
+          assertion(second!, result);
+        }
+      ));
+  }
 
-function testCompiledModule<Def extends ModuleDefinition>(
-  definition: Def,
-  assertion: RuntimeAssertion<Def["type"]>
-) {
-  return testRuntimeResult(definition, (module, result) => {
-    assert(result, () => assertion(module, result));
-  });
-}
+  function testCompiledModule<Def extends ModuleDefinition>(
+    definition: Def,
+    assertion: RuntimeAssertion<Def["type"]>
+  ) {
+    return testRuntimeResult(definition, (module, result) => {
+      assert(result, () => assertion(module, result));
+    });
+  }
 
-type RuntimeAssertion<T extends AnyModuleOutputType> = (
-  module: CompiledModule<T>,
-  result: Result<CompiledModules, unknown>
-) => unknown;
+  type RuntimeAssertion<T extends AnyModuleOutputType> = (
+    module: CompiledModule<T>,
+    result: Result<CompiledModules, unknown>
+  ) => unknown;
 
-function testRuntimeResult<Def extends ModuleDefinition>(
-  definition: Def,
-  assertion: RuntimeAssertion<Def["type"]>
-) {
-  return useRuntimeResult(
-    (runtime) => runtime.addModule("main", definition),
-    ([result, module]) => assertion(module, result)
-  );
-}
+  function testRuntimeResult<Def extends ModuleDefinition>(
+    definition: Def,
+    assertion: RuntimeAssertion<Def["type"]>
+  ) {
+    return useRuntimeResult(
+      (runtime) => runtime.addModule("main", definition),
+      ([result, module]) => assertion(module, result)
+    );
+  }
 
-function useRuntimeResult<T extends AnyModuleOutputType, SetupOutput>(
-  setup: (runtime: ModuleRuntime) => SetupOutput,
-  handle?: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
-) {
-  const runtime = new ModuleRuntime();
-  try {
-    const output = setup(runtime);
-    const result = runtime.compile();
-    handle?.([result, output]);
-  } finally {
-    runtime.dispose();
+  function useRuntimeResult<T extends AnyModuleOutputType, SetupOutput>(
+    setup: (runtime: JSInterpreterModuleRuntime) => SetupOutput,
+    handle?: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
+  ) {
+    const runtime = new JSInterpreterModuleRuntime();
+    try {
+      const output = setup(runtime);
+      const result = runtime.compile();
+      handle?.([result, output]);
+    } finally {
+      runtime.dispose();
+    }
   }
 }

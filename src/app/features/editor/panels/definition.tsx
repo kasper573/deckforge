@@ -8,7 +8,7 @@ import type { PanelId } from "../types";
 import { useModal } from "../../../../lib/useModal";
 import { AlertDialog } from "../../../dialogs/AlertDialog";
 import type { TourStep } from "../../../components/Tour";
-import { symbols } from "../../compiler/compileModule";
+import { symbols } from "../../compiler/moduleRuntimes/JSInterpreter";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel/CodePanel";

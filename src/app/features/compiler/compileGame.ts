@@ -28,8 +28,8 @@ import type {
   RuntimePlayerId,
   RuntimeReducer,
 } from "./types";
-import { ModuleRuntime as ES5ModuleRuntime } from "./compileModule";
-import { validIdentifier } from "./compileModule";
+import { JSInterpreterModuleRuntime as ES5ModuleRuntime } from "./moduleRuntimes/JSInterpreter";
+import { validIdentifier } from "./moduleRuntimes/JSInterpreter";
 import { moduleCompilerOptions } from "./moduleCompilerOptions";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {

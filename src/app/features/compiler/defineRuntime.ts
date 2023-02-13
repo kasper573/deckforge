@@ -28,7 +28,7 @@ import type {
 } from "./types";
 import type { RuntimeEffect } from "./types";
 import { cardInstanceIdType } from "./types";
-import { symbols } from "./compileModule";
+import { symbols } from "./moduleRuntimes/JSInterpreter";
 
 export function defineRuntime<
   GlobalPropTypeDefs extends ZodRawShape,
