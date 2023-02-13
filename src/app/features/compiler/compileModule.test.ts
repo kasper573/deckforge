@@ -112,88 +112,89 @@ describe("supports", () => {
   });
 
   it("calling module A from module B", () => {
-    const compiler = new ModuleCompiler();
-    const moduleA = compiler.addModule("moduleA", {
-      type: z.function(),
-      code: `define((...args) => ["A", ...args])`,
-    });
-    const moduleB = compiler.addModule("moduleB", {
-      type: z.function(),
-      code: `define((...args) => moduleA("B", ...args))`,
-      globals: { moduleA },
-    });
-
-    const result = compiler.compile();
-
-    assert(result, () => {
-      const res = moduleB("input");
-      expect(res).toEqual(["A", "B", "input"]);
-    });
+    useCompilerResult(
+      (compiler) => {
+        const moduleA = compiler.addModule("moduleA", {
+          type: z.function(),
+          code: `define((...args) => ["A", ...args])`,
+        });
+        const moduleB = compiler.addModule("moduleB", {
+          type: z.function(),
+          code: `define((...args) => moduleA("B", ...args))`,
+          globals: { moduleA },
+        });
+        return moduleB;
+      },
+      ([, moduleB]) => {
+        const res = moduleB("input");
+        expect(res).toEqual(["A", "B", "input"]);
+      }
+    );
   });
 
   it("calling module A from module B via reference", () => {
-    const compiler = new ModuleCompiler();
-    compiler.addModule("moduleA", {
-      type: z.function(),
-      code: `define((...args) => ["A", ...args])`,
-    });
-    const moduleB = compiler.addModule("moduleB", {
-      type: z.function(),
-      code: `define((...args) => moduleA("B", ...args))`,
-      globals: compiler.refs(["moduleA"]),
-    });
-
-    const result = compiler.compile();
-
-    assert(result, () => {
-      const res = moduleB("input");
-      expect(res).toEqual(["A", "B", "input"]);
-    });
+    useCompilerResult(
+      (compiler) => {
+        compiler.addModule("moduleA", {
+          type: z.function(),
+          code: `define((...args) => ["A", ...args])`,
+        });
+        return compiler.addModule("moduleB", {
+          type: z.function(),
+          code: `define((...args) => moduleA("B", ...args))`,
+          globals: compiler.refs(["moduleA"]),
+        });
+      },
+      ([, moduleB]) => {
+        const res = moduleB("input");
+        expect(res).toEqual(["A", "B", "input"]);
+      }
+    );
   });
 
   it("calling module recursively", () => {
-    const compiler = new ModuleCompiler();
-    const countProxy = (n: number, calls?: number) => count(n, calls);
-    const count = compiler.addModule("moduleA", {
-      type: z
-        .function()
-        .args(z.number(), z.number().optional())
-        .returns(z.number()),
-      code: `define((n, calls = 0) => {
+    useCompilerResult(
+      (compiler) => {
+        const countProxy = (n: number, calls?: number) => count(n, calls);
+        const count = compiler.addModule("moduleA", {
+          type: z
+            .function()
+            .args(z.number(), z.number().optional())
+            .returns(z.number()),
+          code: `define((n, calls = 0) => {
         return n > 0 ? count(n - 1, calls + 1) : calls;
       })`,
-      globals: { count: countProxy },
-    });
-
-    const result = compiler.compile();
-
-    assert(result, () => {
-      const res = count(10, undefined);
-      expect(res).toEqual(10);
-    });
+          globals: { count: countProxy },
+        });
+        return count;
+      },
+      ([, count]) => {
+        const res = count(10, undefined);
+        expect(res).toEqual(10);
+      }
+    );
   });
 
   it("using arguments mutated by another module during chained function call", () => {
-    const compiler = new ModuleCompiler();
+    useCompilerResult(
+      (compiler) => {
+        const double = compiler.addModule("double", {
+          type: z.function(),
+          code: `define((state) => state.x *= 2)`,
+        });
 
-    const double = compiler.addModule("double", {
-      type: z.function(),
-      code: `define((state) => state.x *= 2)`,
-    });
-
-    const program = compiler.addModule("program", {
-      type: z.function(),
-      code: `define((state) => { state.x = 5; double(state); })`,
-      globals: { double },
-    });
-
-    const result = compiler.compile();
-
-    assert(result, () => {
-      const state = { x: 0 };
-      program(state);
-      expect(state.x).toEqual(10);
-    });
+        return compiler.addModule("program", {
+          type: z.function(),
+          code: `define((state) => { state.x = 5; double(state); })`,
+          globals: { double },
+        });
+      },
+      ([, program]) => {
+        const state = { x: 0 };
+        program(state);
+        expect(state.x).toEqual(10);
+      }
+    );
   });
 
   describe("global functions", () => {
