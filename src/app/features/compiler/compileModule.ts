@@ -1,12 +1,13 @@
 import type { AnyFunction } from "js-interpreter";
 import JSInterpreter from "js-interpreter";
 import type { ZodRawShape, ZodType } from "zod";
-import { ZodFunction, ZodObject, z } from "zod";
+import { z, ZodFunction, ZodObject } from "zod";
 import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
 import type { CompilerOptions } from "typescript";
 import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
-import { normalizeType } from "../../../lib/zod-extensions/zodNormalize";
+import { zodInstanceOf } from "../../../lib/zod-extensions/zodInstanceOf";
+import { createModuleProxy } from "./createModuleProxy";
 
 export type AnyModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
@@ -259,44 +260,6 @@ function defaultDefinitionCode(type: ZodType): string {
   throw new Error("Unsupported module type");
 }
 
-function createModuleProxy<Definition extends ModuleDefinition>(
-  moduleName: string,
-  { type }: Definition,
-  handleProxyCall: (
-    moduleName: string,
-    functionName: string | undefined,
-    args: unknown[]
-  ) => unknown
-): CompiledModule<Definition["type"]> {
-  function createFunctionProxy<T extends AnyZodFunction>(
-    moduleName: string,
-    functionName: string | undefined
-  ) {
-    type Fn = z.infer<T>;
-    function moduleFunctionProxy(...args: Parameters<Fn>): ReturnType<Fn> {
-      return handleProxyCall(moduleName, functionName, args) as ReturnType<Fn>;
-    }
-    return moduleFunctionProxy;
-  }
-
-  if (zodInstanceOf(type, ZodObject)) {
-    const proxies = Object.keys(type.shape).reduce(
-      (acc: ModuleOutputRecord, key) => ({
-        ...acc,
-        [key]: createFunctionProxy(moduleName, key),
-      }),
-      {}
-    );
-    return proxies;
-  }
-
-  if (zodInstanceOf(type, ZodFunction)) {
-    return createFunctionProxy(moduleName, undefined);
-  }
-
-  throw new Error("Unsupported module type");
-}
-
 function createInvocationCode(
   moduleName: string,
   functionName: string | undefined,
@@ -465,18 +428,6 @@ function assertValidIdentifier(str: string) {
   }
   return valid;
 }
-
-function zodInstanceOf<OfType extends ZodType>(
-  type: ZodType,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ofType: new (...args: any[]) => OfType
-): type is OfType {
-  type = normalizeType(type);
-  return type instanceof ofType;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyZodFunction = ZodFunction<any, any>;
 
 export class ModuleReferences implements Record<string, string> {
   [x: string]: string;
