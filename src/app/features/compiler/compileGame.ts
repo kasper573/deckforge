@@ -29,8 +29,8 @@ import type {
   RuntimeReducer,
 } from "./types";
 import { JSInterpreterModuleRuntime } from "./moduleRuntimes/JSInterpreter";
-import { moduleCompilerOptions } from "./moduleCompilerOptions";
-import type { ModuleRuntime } from "./moduleRuntimeTypes";
+import { moduleCompilerOptions } from "./settings";
+import type { ModuleRuntime } from "./moduleRuntimes/types";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;

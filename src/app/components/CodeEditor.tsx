@@ -3,7 +3,7 @@ import type { ComponentProps, MutableRefObject } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import { v4 } from "uuid";
 import type { editor, languages } from "monaco-editor";
-import { moduleCompilerOptions } from "../features/compiler/moduleCompilerOptions";
+import { moduleCompilerOptions } from "../features/compiler/settings";
 
 export type CodeEditorTypeDefs = string;
 

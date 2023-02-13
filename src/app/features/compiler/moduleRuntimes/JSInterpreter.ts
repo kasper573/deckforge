@@ -14,8 +14,8 @@ import type {
   ModuleRuntimeOptions,
   CompiledModule,
   ModuleOutputRecord,
-} from "../moduleRuntimeTypes";
-import { ModuleReferences } from "../moduleRuntimeTypes";
+} from "./types";
+import { ModuleReferences } from "./types";
 import { symbols as moduleRuntimeSymbols } from "./symbols";
 
 export class JSInterpreterModuleRuntime {

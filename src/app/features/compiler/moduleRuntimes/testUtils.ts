@@ -10,7 +10,7 @@ import type {
   ModuleDefinition,
   ModuleOutputFunction,
   ModuleRuntime,
-} from "../moduleRuntimeTypes";
+} from "./types";
 
 export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   describe("return value", () =>
