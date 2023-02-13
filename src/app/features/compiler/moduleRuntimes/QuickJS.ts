@@ -13,11 +13,11 @@ import { symbols } from "./symbols";
 
 export function createQuickJSModuleRuntime(
   quick: QuickJSWASMModule
-): ModuleRuntime {
+) {
   const modules = new Map<string, QuickJSModule>();
   const runtime = quick.newRuntime({});
   return {
-    refs: ModuleReferences.create,
+    refs: (...args) => ModuleReferences.create(...args),
     addModule(name, definition) {
       const existingModule = modules.get(name);
       if (existingModule) {
@@ -39,7 +39,7 @@ export function createQuickJSModuleRuntime(
       modules.clear();
       runtime.dispose();
     },
-  };
+  } satisfies ModuleRuntime;
 }
 
 class QuickJSModule<Definition extends ModuleDefinition = ModuleDefinition> {

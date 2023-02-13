@@ -311,7 +311,9 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   });
 }
 
-export function createRuntimeTestUtils(createRuntime: () => ModuleRuntime) {
+export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
+  createRuntime: () => Runtime
+) {
   function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
     if (res.isErr()) {
       throw res.error;
@@ -396,7 +398,7 @@ export function createRuntimeTestUtils(createRuntime: () => ModuleRuntime) {
   }
 
   function useRuntimeResult<T extends AnyModuleOutputType, SetupOutput>(
-    setup: (runtime: ModuleRuntime) => SetupOutput,
+    setup: (runtime: Runtime) => SetupOutput,
     handle?: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
   ) {
     const runtime = createRuntime();
