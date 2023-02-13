@@ -4,17 +4,21 @@ import { normalizeType } from "./zodNormalize";
 
 export function zodTypeAtPath(
   type: ZodType,
-  path: string
+  path: string[]
 ): ZodType | undefined {
+  if (path.length === 0) {
+    return type;
+  }
+
   type = normalizeType(type);
 
   if (type instanceof ZodObject) {
-    const [first, ...rest] = path.split(".");
+    const [first, ...rest] = path;
     type = type.shape[first];
     if (!rest.length) {
       return type;
     }
-    return zodTypeAtPath(type, rest.join("."));
+    return zodTypeAtPath(type, rest);
   }
 
   if (type instanceof ZodIntersection) {
