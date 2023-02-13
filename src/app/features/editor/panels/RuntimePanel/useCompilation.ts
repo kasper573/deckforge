@@ -80,10 +80,7 @@ function createFailSafeReducer(
     try {
       next();
     } catch (error) {
-      log([
-        logIdentifier("[State Reducer Error]", { color: colors.error }),
-        error,
-      ]);
+      log([logIdentifier("[Runtime Error]", { color: colors.error }), error]);
     }
   };
 }
