@@ -15,6 +15,7 @@ import type {
   ModuleRuntimeOptions,
 } from "../moduleRuntimeTypes";
 import { ModuleReferences } from "../moduleRuntimeTypes";
+import { symbols as moduleRuntimeSymbols } from "./symbols";
 
 export class JSInterpreterModuleRuntime {
   #modules?: CompiledModules;
@@ -373,8 +374,8 @@ function createMutateFn() {
   }
 }
 
-export const symbols = {
-  define: "define",
+const symbols = {
+  ...moduleRuntimeSymbols,
   callNativeRaw: "___call_native_raw___",
   callNative: "___call_native___",
   callDefined: "___call_defined___",
@@ -392,8 +393,7 @@ const bridgeErrorProtocol = z.any().transform((error): unknown => {
   }
 });
 
-export const validIdentifier = (str: string) =>
-  str.replace(/[^a-zA-Z0-9_]/g, "_");
+const validIdentifier = (str: string) => str.replace(/[^a-zA-Z0-9_]/g, "_");
 
 function assertValidIdentifier(str: string) {
   const valid = validIdentifier(str);

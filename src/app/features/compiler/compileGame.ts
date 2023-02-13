@@ -29,7 +29,6 @@ import type {
   RuntimeReducer,
 } from "./types";
 import { JSInterpreterModuleRuntime } from "./moduleRuntimes/JSInterpreter";
-import { validIdentifier } from "./moduleRuntimes/JSInterpreter";
 import { moduleCompilerOptions } from "./moduleCompilerOptions";
 import type { ModuleRuntime } from "./moduleRuntimeTypes";
 
@@ -185,12 +184,12 @@ function cloneCard<G extends RuntimeGenerics>(
 }
 
 const createCardInstanceId = v4 as () => CardInstanceId;
-const eventModuleName = (event: Event) =>
-  validIdentifier(`Event_${event.name}`);
+const moduleName = (str: string) => str.replace(/[^a-zA-Z0-9_]/g, "_");
+const eventModuleName = (event: Event) => moduleName(`Event_${event.name}`);
 const reducerModuleName = (reducer: Reducer) =>
-  validIdentifier(`Reducer_${reducer.name}`);
+  moduleName(`Reducer_${reducer.name}`);
 const cardModuleName = (deck: Deck, card: Card) =>
-  validIdentifier(`Card_${deck.name}_${card.name}`);
+  moduleName(`Card_${deck.name}_${card.name}`);
 
 function namedPropertyDefaults(
   properties: Property[],
