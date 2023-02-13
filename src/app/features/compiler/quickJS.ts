@@ -9,14 +9,14 @@ import { zodInstanceOf } from "../../../lib/zod-extensions/zodInstanceOf";
 import { createZodProxy } from "../../../lib/zod-extensions/createZodProxy";
 import type {
   CompiledModule,
-  ModuleCompiler,
+  ModuleRuntime,
   ModuleDefinition,
 } from "./compileModule";
 import { ModuleReferences } from "./compileModule";
 
 export function createQuickJSModuleRuntime(
   quick: QuickJSWASMModule
-): Readonly<ModuleCompiler> {
+): Readonly<ModuleRuntime> {
   const modules = new Map<string, QuickJSModule>();
   const runtime = quick.newRuntime({});
   return {

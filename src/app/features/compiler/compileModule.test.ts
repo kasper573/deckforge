@@ -12,7 +12,7 @@ import type {
   ModuleDefinition,
   ModuleOutputFunction,
 } from "./compileModule";
-import { ModuleCompiler } from "./compileModule";
+import { ModuleRuntime } from "./compileModule";
 
 let quickJS: QuickJSWASMModule;
 describe("supports", () => {
@@ -42,14 +42,14 @@ describe("supports", () => {
   describe("calling empty modules", () => {
     const addFnModule =
       (name: string, code = "") =>
-      (compiler: ModuleCompiler) =>
-        compiler.addModule(name, { type: z.function(), code });
+      (runtime: ModuleRuntime) =>
+        runtime.addModule(name, { type: z.function(), code });
 
     const addRecordModule =
       (name: string, code = "") =>
-      (compiler: ModuleCompiler) => {
+      (runtime: ModuleRuntime) => {
         const functionName = "foo" as const;
-        return compiler.addModule(name, {
+        return runtime.addModule(name, {
           type: z.object({ [functionName]: z.function() }),
           code: code ? `define({ ${functionName}: ${code} })` : "",
         })[functionName];
@@ -58,42 +58,42 @@ describe("supports", () => {
     it("one empty function module", () => testEmptyInvoke(addFnModule("a")));
 
     it("two empty function modules", () =>
-      testEmptyInvoke((compiler) => {
-        addFnModule("a")(compiler);
-        return addFnModule("b")(compiler);
+      testEmptyInvoke((runtime) => {
+        addFnModule("a")(runtime);
+        return addFnModule("b")(runtime);
       }));
 
     it("two function modules, one empty", () =>
-      testEmptyInvoke((compiler) => {
-        addFnModule("defined", "define(() => 5)")(compiler);
-        return addFnModule("empty")(compiler);
+      testEmptyInvoke((runtime) => {
+        addFnModule("defined", "define(() => 5)")(runtime);
+        return addFnModule("empty")(runtime);
       }));
 
     it("one empty record module", () => testEmptyInvoke(addRecordModule("a")));
 
     it("two empty record modules", () =>
-      testEmptyInvoke((compiler) => {
-        addRecordModule("a")(compiler);
-        return addRecordModule("b")(compiler);
+      testEmptyInvoke((runtime) => {
+        addRecordModule("a")(runtime);
+        return addRecordModule("b")(runtime);
       }));
 
     it("two record modules, one empty", () =>
-      testEmptyInvoke((compiler) => {
-        addRecordModule("defined", "define(() => 5)")(compiler);
-        return addRecordModule("empty")(compiler);
+      testEmptyInvoke((runtime) => {
+        addRecordModule("defined", "define(() => 5)")(runtime);
+        return addRecordModule("empty")(runtime);
       }));
 
     it("one record module with one empty and one defined function", () =>
-      testEmptyInvoke((compiler) => {
-        const record = compiler.addModule("record", {
+      testEmptyInvoke((runtime) => {
+        const record = runtime.addModule("record", {
           type: z.object({ empty: z.function(), defined: z.function() }),
           code: `define({ defined: define(() => 5) })`,
         });
         return record.empty;
       }));
 
-    function testEmptyInvoke(setup: (compiler: ModuleCompiler) => AnyFunction) {
-      return useCompilerResult(setup, ([, fn]) => {
+    function testEmptyInvoke(setup: (runtime: ModuleRuntime) => AnyFunction) {
+      return useRuntimeResult(setup, ([, fn]) => {
         function createArgs() {
           return [{ foo: "bar" }, 2, true];
         }
@@ -107,13 +107,13 @@ describe("supports", () => {
   });
 
   it("calling module A from module B", () =>
-    useCompilerResult(
-      (compiler) => {
-        const moduleA = compiler.addModule("moduleA", {
+    useRuntimeResult(
+      (runtime) => {
+        const moduleA = runtime.addModule("moduleA", {
           type: z.function(),
           code: `define((...args) => ["A", ...args])`,
         });
-        const moduleB = compiler.addModule("moduleB", {
+        const moduleB = runtime.addModule("moduleB", {
           type: z.function(),
           code: `define((...args) => moduleA("B", ...args))`,
           globals: { moduleA },
@@ -127,16 +127,16 @@ describe("supports", () => {
     ));
 
   it("calling module A from module B via reference", () =>
-    useCompilerResult(
-      (compiler) => {
-        compiler.addModule("moduleA", {
+    useRuntimeResult(
+      (runtime) => {
+        runtime.addModule("moduleA", {
           type: z.function(),
           code: `define((...args) => ["A", ...args])`,
         });
-        return compiler.addModule("moduleB", {
+        return runtime.addModule("moduleB", {
           type: z.function(),
           code: `define((...args) => moduleA("B", ...args))`,
-          globals: compiler.refs(["moduleA"]),
+          globals: runtime.refs(["moduleA"]),
         });
       },
       ([, moduleB]) => {
@@ -146,10 +146,10 @@ describe("supports", () => {
     ));
 
   it("calling module recursively", () =>
-    useCompilerResult(
-      (compiler) => {
+    useRuntimeResult(
+      (runtime) => {
         const countProxy = (n: number, calls?: number) => count(n, calls);
-        const count = compiler.addModule("moduleA", {
+        const count = runtime.addModule("moduleA", {
           type: z
             .function()
             .args(z.number(), z.number().optional())
@@ -168,14 +168,14 @@ describe("supports", () => {
     ));
 
   it("using arguments mutated by another module during chained function call", () =>
-    useCompilerResult(
-      (compiler) => {
-        const double = compiler.addModule("double", {
+    useRuntimeResult(
+      (runtime) => {
+        const double = runtime.addModule("double", {
           type: z.function(),
           code: `define((state) => state.x *= 2)`,
         });
 
-        return compiler.addModule("program", {
+        return runtime.addModule("program", {
           type: z.function(),
           code: `define((state) => { state.x = 5; double(state); })`,
           globals: { double },
@@ -272,9 +272,9 @@ describe("supports", () => {
       for (const symbolName of symbols) {
         describe(symbolName, () => {
           it("does not exist", () =>
-            useCompilerResult(
-              (compiler) =>
-                compiler.addModule("module", {
+            useRuntimeResult(
+              (runtime) =>
+                runtime.addModule("module", {
                   type: z.function(),
                   code: `define(() => ${wrapCode(symbolName)})`,
                 }),
@@ -286,9 +286,9 @@ describe("supports", () => {
             ));
 
           it("does not exist on window object", () =>
-            useCompilerResult(
-              (compiler) =>
-                compiler.addModule("module", {
+            useRuntimeResult(
+              (runtime) =>
+                runtime.addModule("module", {
                   type: z.function(),
                   code: `define(() => ${wrapCode(
                     `typeof window.${symbolName}`
@@ -304,8 +304,8 @@ describe("supports", () => {
   });
 
   it("can compile empty module without errors", () => {
-    useCompilerResult((compiler) => {
-      compiler.addModule("module", {
+    useRuntimeResult((runtime) => {
+      runtime.addModule("module", {
         type: z.function(),
         code: ``,
       });
@@ -329,8 +329,8 @@ function globalAtPath(path: [string, ...string[]], leafValue: unknown) {
 
 function testModuleOutputs(
   functionDefinitionCode: string,
-  assertion: CompilerAssertion<ZodType<ModuleOutputFunction>>,
-  test: typeof testCompilerResult = testCompiledModule
+  assertion: RuntimeAssertion<ZodType<ModuleOutputFunction>>,
+  test: typeof testRuntimeResult = testCompiledModule
 ) {
   it("optional single function (assert bypass)", () =>
     test(
@@ -377,38 +377,38 @@ function testModuleOutputs(
 
 function testCompiledModule<Def extends ModuleDefinition>(
   definition: Def,
-  assertion: CompilerAssertion<Def["type"]>
+  assertion: RuntimeAssertion<Def["type"]>
 ) {
-  return testCompilerResult(definition, (module, result) => {
+  return testRuntimeResult(definition, (module, result) => {
     assert(result, () => assertion(module, result));
   });
 }
 
-type CompilerAssertion<T extends AnyModuleOutputType> = (
+type RuntimeAssertion<T extends AnyModuleOutputType> = (
   module: CompiledModule<T>,
   result: Result<CompiledModules, unknown>
 ) => unknown;
 
-function testCompilerResult<Def extends ModuleDefinition>(
+function testRuntimeResult<Def extends ModuleDefinition>(
   definition: Def,
-  assertion: CompilerAssertion<Def["type"]>
+  assertion: RuntimeAssertion<Def["type"]>
 ) {
-  return useCompilerResult(
-    (compiler) => compiler.addModule("main", definition),
+  return useRuntimeResult(
+    (runtime) => runtime.addModule("main", definition),
     ([result, module]) => assertion(module, result)
   );
 }
 
-function useCompilerResult<T extends AnyModuleOutputType, SetupOutput>(
-  setup: (compiler: ModuleCompiler) => SetupOutput,
+function useRuntimeResult<T extends AnyModuleOutputType, SetupOutput>(
+  setup: (runtime: ModuleRuntime) => SetupOutput,
   handle?: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
 ) {
-  const compiler = new ModuleCompiler();
+  const runtime = new ModuleRuntime();
   try {
-    const output = setup(compiler);
-    const result = compiler.compile();
+    const output = setup(runtime);
+    const result = runtime.compile();
     handle?.([result, output]);
   } finally {
-    compiler.dispose();
+    runtime.dispose();
   }
 }

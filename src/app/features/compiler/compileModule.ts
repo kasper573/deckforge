@@ -37,16 +37,16 @@ export type ModuleErrorFactory = (error: unknown) => unknown;
 
 export type ModuleCompilerOptions = Pick<CompilerOptions, "lib">;
 
-export interface CompileModulesOptions {
+export interface ModuleRuntimeOptions {
   createError?: ModuleErrorFactory;
   compilerOptions?: ModuleCompilerOptions;
 }
 
-export class ModuleCompiler {
+export class ModuleRuntime {
   #modules?: CompiledModules;
   #definitions: ModuleDefinitions = {};
 
-  constructor(private options: CompileModulesOptions = {}) {}
+  constructor(private options: ModuleRuntimeOptions = {}) {}
 
   addModule<Name extends string, Definition extends ModuleDefinition>(
     name: Name,
@@ -88,7 +88,7 @@ function compileModules<Definitions extends ModuleDefinitions>(
   {
     compilerOptions,
     createError: createErrorImpl = (error) => error,
-  }: CompileModulesOptions = {}
+  }: ModuleRuntimeOptions = {}
 ): Result<CompiledModules<Definitions>, unknown> {
   const createError: ModuleErrorFactory = (error) =>
     createErrorImpl(bridgeErrorProtocol.parse(error));
