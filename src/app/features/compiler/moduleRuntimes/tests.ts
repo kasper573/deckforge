@@ -13,18 +13,20 @@ import type {
 } from "./types";
 
 export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
+  const t = createRuntimeTestUtils(createRuntime);
+
   describe("return value", () =>
-    testModuleOutputs("() => 5", (fn) => {
+    t.testModuleOutputs("() => 5", (fn) => {
       expect(fn()).toEqual(5);
     }));
 
   describe("arguments", () =>
-    testModuleOutputs("(a, b) => a + b", (fn) => {
+    t.testModuleOutputs("(a, b) => a + b", (fn) => {
       expect(fn(1, 2)).toEqual(3);
     }));
 
   describe("argument mutation", () =>
-    testModuleOutputs("(a, b) => { a.x = 1; b.x = 2; }", (fn) => {
+    t.testModuleOutputs("(a, b) => { a.x = 1; b.x = 2; }", (fn) => {
       const a = { x: 0 };
       const b = { x: 0 };
       fn(a, b);
@@ -86,7 +88,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
       }));
 
     function testEmptyInvoke(setup: (runtime: ModuleRuntime) => AnyFunction) {
-      return useRuntimeResult(setup, ([, fn]) => {
+      return t.useRuntimeResult(setup, ([, fn]) => {
         function createArgs() {
           return [{ foo: "bar" }, 2, true];
         }
@@ -100,7 +102,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   });
 
   it("calling module A from module B", () =>
-    useRuntimeResult(
+    t.useRuntimeResult(
       (runtime) => {
         const moduleA = runtime.addModule("moduleA", {
           type: z.function(),
@@ -120,7 +122,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     ));
 
   it("calling module A from module B via reference", () =>
-    useRuntimeResult(
+    t.useRuntimeResult(
       (runtime) => {
         runtime.addModule("moduleA", {
           type: z.function(),
@@ -139,7 +141,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     ));
 
   it("calling module recursively", () =>
-    useRuntimeResult(
+    t.useRuntimeResult(
       (runtime) => {
         const countProxy = (n: number, calls?: number) => count(n, calls);
         const count = runtime.addModule("moduleA", {
@@ -161,7 +163,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     ));
 
   it("using arguments mutated by another module during chained function call", () =>
-    useRuntimeResult(
+    t.useRuntimeResult(
       (runtime) => {
         const double = runtime.addModule("double", {
           type: z.function(),
@@ -183,11 +185,14 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   describe("global functions", () => {
     function test(path: [string, ...string[]]) {
-      return testCompiledModule(
+      return t.testCompiledModule(
         {
           type: z.function(),
           code: `define((...args) => ${path.join(".")}(...args))`,
-          globals: globalAtPath(path, (...args: unknown[]) => [path, ...args]),
+          globals: t.globalAtPath(path, (...args: unknown[]) => [
+            path,
+            ...args,
+          ]),
         },
         (fn) => {
           expect(fn(1, 2)).toEqual([path, 1, 2]);
@@ -215,10 +220,10 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
         null,
         undefined,
       ];
-      testCompiledModule(
+      t.testCompiledModule(
         {
           type: z.function(),
-          globals: globalAtPath(path, values),
+          globals: t.globalAtPath(path, values),
           code: `define(() => ${path.join(".")})`,
         },
         (fn) => {
@@ -265,7 +270,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
       for (const symbolName of symbols) {
         describe(symbolName, () => {
           it("does not exist", () =>
-            useRuntimeResult(
+            t.useRuntimeResult(
               (runtime) =>
                 runtime.addModule("module", {
                   type: z.function(),
@@ -279,7 +284,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
             ));
 
           it("does not exist on window object", () =>
-            useRuntimeResult(
+            t.useRuntimeResult(
               (runtime) =>
                 runtime.addModule("module", {
                   type: z.function(),
@@ -297,14 +302,16 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   });
 
   it("can compile empty module without errors", () => {
-    useRuntimeResult((runtime) => {
+    t.useRuntimeResult((runtime) => {
       runtime.addModule("module", {
         type: z.function(),
         code: ``,
       });
     });
   });
+}
 
+export function createRuntimeTestUtils(createRuntime: () => ModuleRuntime) {
   function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
     if (res.isErr()) {
       throw res.error;
@@ -378,11 +385,6 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     });
   }
 
-  type RuntimeAssertion<T extends AnyModuleOutputType> = (
-    module: CompiledModule<T>,
-    result: Result<CompiledModules, unknown>
-  ) => unknown;
-
   function testRuntimeResult<Def extends ModuleDefinition>(
     definition: Def,
     assertion: RuntimeAssertion<Def["type"]>
@@ -406,4 +408,18 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
       runtime.dispose();
     }
   }
+
+  return {
+    assert,
+    globalAtPath,
+    testModuleOutputs,
+    testCompiledModule,
+    testRuntimeResult,
+    useRuntimeResult,
+  };
 }
+
+export type RuntimeAssertion<T extends AnyModuleOutputType> = (
+  module: CompiledModule<T>,
+  result: Result<CompiledModules, unknown>
+) => unknown;
