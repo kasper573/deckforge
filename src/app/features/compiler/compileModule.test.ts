@@ -3,6 +3,8 @@ import type { ZodType } from "zod";
 import { z } from "zod";
 import type { Result } from "neverthrow";
 import type { AnyFunction } from "js-interpreter";
+import type { QuickJSWASMModule } from "quickjs-emscripten";
+import { getQuickJS } from "quickjs-emscripten";
 import type {
   AnyModuleOutputType,
   CompiledModule,
@@ -12,7 +14,12 @@ import type {
 } from "./compileModule";
 import { ModuleCompiler } from "./compileModule";
 
+let quickJS: QuickJSWASMModule;
 describe("supports", () => {
+  beforeAll(async () => {
+    quickJS = await getQuickJS();
+  });
+
   describe("return value", () =>
     testModuleOutputs("() => 5", (fn) => {
       expect(fn()).toEqual(5);
@@ -295,6 +302,15 @@ describe("supports", () => {
       }
     }
   });
+
+  it("can compile empty module without errors", () => {
+    useCompilerResult((compiler) => {
+      compiler.addModule("module", {
+        type: z.function(),
+        code: ``,
+      });
+    });
+  });
 });
 
 function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
@@ -383,15 +399,15 @@ function testCompilerResult<Def extends ModuleDefinition>(
   );
 }
 
-async function useCompilerResult<T extends AnyModuleOutputType, SetupOutput>(
+function useCompilerResult<T extends AnyModuleOutputType, SetupOutput>(
   setup: (compiler: ModuleCompiler) => SetupOutput,
-  handle: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
+  handle?: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
 ) {
   const compiler = new ModuleCompiler();
   try {
     const output = setup(compiler);
     const result = compiler.compile();
-    handle([result, output]);
+    handle?.([result, output]);
   } finally {
     compiler.dispose();
   }

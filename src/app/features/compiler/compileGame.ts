@@ -28,7 +28,8 @@ import type {
   RuntimePlayerId,
   RuntimeReducer,
 } from "./types";
-import { ModuleCompiler, validIdentifier } from "./compileModule";
+import { ModuleCompiler as ES5ModuleCompiler } from "./compileModule";
+import { validIdentifier } from "./compileModule";
 import { moduleCompilerOptions } from "./moduleCompilerOptions";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
@@ -39,12 +40,19 @@ export interface CompileGameResult<G extends RuntimeGenerics> {
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
-  options?: {
+  {
+    moduleCompiler = new ES5ModuleCompiler({
+      compilerOptions: moduleCompilerOptions,
+    }),
+    seed,
+    middlewares,
+  }: {
+    moduleCompiler?: ES5ModuleCompiler;
     seed?: string;
     middlewares?: (
       defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
     ) => MachineMiddleware<RuntimeMachineContext<G>>[];
-  }
+  } = {}
 ): CompileGameResult<G> {
   const cardProperties = gameDefinition.properties.filter(
     (p) => p.entityId === "card"
@@ -53,11 +61,8 @@ export function compileGame<G extends RuntimeGenerics>(
     (p) => p.entityId === "player"
   );
 
-  const moduleCompiler = new ModuleCompiler({
-    compilerOptions: moduleCompilerOptions,
-  });
   const moduleAPI: RuntimeModuleAPI<G> = {
-    random: createRandomFn(options?.seed),
+    random: createRandomFn(seed),
     cloneCard,
     events: moduleCompiler.refs(
       Object.fromEntries(
@@ -141,7 +146,7 @@ export function compileGame<G extends RuntimeGenerics>(
     : [];
 
   const allMiddlewares =
-    options?.middlewares?.(defaultMiddlewares) ?? defaultMiddlewares;
+    middlewares?.(defaultMiddlewares) ?? defaultMiddlewares;
 
   let builder = deriveMachine<G>(
     effects,
