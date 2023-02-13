@@ -82,7 +82,7 @@ export class ModuleCompiler {
   dispose() {}
 }
 
-export function compileModules<Definitions extends ModuleDefinitions>(
+function compileModules<Definitions extends ModuleDefinitions>(
   definitions: Definitions,
   {
     compilerOptions,
