@@ -153,6 +153,7 @@ export function compileModules<Definitions extends ModuleDefinitions>(
     functionName: string | undefined,
     args: unknown[]
   ) {
+    const name = invocationName(moduleName, functionName);
     const invocationCode = createInvocationCode(moduleName, functionName, args);
     try {
       interpreter.appendCode(invocationCode);
@@ -161,11 +162,28 @@ export function compileModules<Definitions extends ModuleDefinitions>(
       throw createError(error);
     }
 
+    let payload: unknown;
+    try {
+      payload = JSON.parse(interpreter.value as string);
+    } catch {
+      throw createError(
+        `${name} did not return a JSON string. Received: ${interpreter.value}`
+      );
+    }
+
     const result = z
       .object({ args: z.array(z.unknown()), returns: z.unknown() })
-      .parse(JSON.parse(interpreter.value as string));
-    mutate(args, result.args);
-    return result.returns;
+      .safeParse(payload);
+
+    if (!result.success) {
+      throw createError(
+        `${name} did not return a valid response payload: ` +
+          result.error.message
+      );
+    }
+
+    mutate(args, result.data.args);
+    return result.data.returns;
   }
 
   const moduleProxies = Object.entries(definitions).reduce(
@@ -284,14 +302,16 @@ function createInvocationCode(
   functionName: string | undefined,
   args: unknown[]
 ) {
-  const description = functionName
-    ? `${moduleName}_${functionName}`
-    : moduleName;
-  return `(function invocation_${description}() {
+  const name = invocationName(moduleName, functionName);
+  return `(function ${name}() {
     return ${symbols.callDefined}("${moduleName}", ${
     functionName ? `"${functionName}"` : "undefined"
   }, ${JSON.stringify(args)});
   })()`;
+}
+
+function invocationName(moduleName: string, functionName?: string) {
+  return `invocation_${moduleName}${functionName ? `_${functionName}` : ""}`;
 }
 
 function createBridgeCode() {
