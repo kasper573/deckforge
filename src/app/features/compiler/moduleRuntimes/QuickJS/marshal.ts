@@ -5,10 +5,10 @@ export type Marshal = ReturnType<typeof createMarshal>;
 
 export function createMarshal(
   vm: QuickJSContext,
-  getModuleReference: (path: string[]) => QuickJSHandle
+  getModuleReference?: (path: string[]) => QuickJSHandle
 ) {
   function create(value: unknown): QuickJSHandle {
-    if (hasModuleReference(value)) {
+    if (getModuleReference && hasModuleReference(value)) {
       return getModuleReference(value[moduleReferenceSymbol]);
     }
     if (Array.isArray(value)) {

@@ -19,7 +19,7 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
   constructor(
     private readonly vm: QuickJSContext,
     public readonly definition: Readonly<ModuleDefinition<Output>>,
-    getModuleReference: (path: string[]) => QuickJSHandle
+    getModuleReference?: (path: string[]) => QuickJSHandle
   ) {
     this.marshal = createMarshal(vm, getModuleReference);
 

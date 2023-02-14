@@ -14,12 +14,12 @@ export function createQuickJSCompiler(
   const runtime = createRuntime();
   const modules = new Map<string, QuickJSModule>();
 
-  function getModuleReference([moduleName, ...path]: string[]): QuickJSHandle {
+  function resolveModule([moduleName, ...path]: string[]): QuickJSHandle {
     const m = modules.get(moduleName);
-    if (!m) {
-      throw new Error(`Module not found: ${moduleName}`);
+    if (m) {
+      return m.resolve(path);
     }
-    return m.defer(path);
+    throw new Error(`Module "${moduleName}" not found`);
   }
 
   return {
@@ -30,7 +30,7 @@ export function createQuickJSCompiler(
       const m = new QuickJSModule(
         runtime.newContext(),
         definition,
-        getModuleReference
+        resolveModule
       );
       modules.set(definition.name, m);
       return m.compiled;
