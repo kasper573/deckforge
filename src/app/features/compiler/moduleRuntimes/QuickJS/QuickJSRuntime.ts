@@ -28,7 +28,7 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
   ) {
     this.code = defineCode(code);
     this.vm = createVM();
-    this.marshal = createMarshal(this.vm, this.getHandleAtPath.bind(this));
+    this.marshal = createMarshal(this.vm);
     this.globalsHandle = globals
       ? this.marshal.assign(this.vm.global, globals)
       : undefined;

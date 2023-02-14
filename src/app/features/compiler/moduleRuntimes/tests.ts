@@ -151,7 +151,7 @@ export function generateModuleRuntimeTests(
         }
       ));
 
-    it.skip("calling module A from module B via reference", () =>
+    it("calling module A from module B via reference", () =>
       t.assertValidRuntime(
         (compiler) => {
           compiler.addModule({
@@ -172,7 +172,7 @@ export function generateModuleRuntimeTests(
         }
       ));
 
-    it.skip("calling module A from module B via future reference", () =>
+    it("calling module A from module B via future reference", () =>
       t.assertValidRuntime(
         (compiler) => {
           const b = compiler.addModule({

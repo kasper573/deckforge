@@ -1,12 +1,8 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
-import { ModuleReferences } from "../types";
 
 export type Marshal = ReturnType<typeof createMarshal>;
 
-export function createMarshal(
-  vm: QuickJSContext,
-  getHandleAtPath?: (path: string[]) => QuickJSHandle
-) {
+export function createMarshal(vm: QuickJSContext) {
   function create(value: unknown): QuickJSHandle {
     if (Array.isArray(value)) {
       return assign(vm.newArray(), value);
@@ -37,15 +33,13 @@ export function createMarshal(
     throw new Error("Unsupported value type: " + value);
   }
 
-  function assign(target: QuickJSHandle, value: object): QuickJSHandle {
-    if (getHandleAtPath && value instanceof ModuleReferences) {
-      for (const [k, v] of Object.entries(value)) {
-        vm.defineProp(target, k, { get: () => getHandleAtPath([v]) });
-      }
-    } else {
-      for (const [k, v] of Object.entries(value)) {
-        create(v).consume((h) => vm.setProp(target, k, h));
-      }
+  function assign(
+    target: QuickJSHandle,
+    value: object,
+    _path: string[] = []
+  ): QuickJSHandle {
+    for (const [k, v] of Object.entries(value)) {
+      create(v).consume((h) => vm.setProp(target, k, h));
     }
     return target;
   }
