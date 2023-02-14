@@ -1,76 +1,110 @@
-import type { QuickJSWASMModule } from "quickjs-emscripten";
-import { err, ok } from "neverthrow";
-import type { CompiledModules, ModuleRuntime } from "../types";
-import { ModuleReferences } from "../types";
-import type { MarshalAdapter } from "./marshal";
-import { QuickJSModule } from "./QuickJSModule";
+import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
+import type { ZodType, z } from "zod";
+import { ZodFunction } from "zod";
+import { symbols as abstractSymbols } from "../symbols";
+import type { ModuleRuntime } from "../types";
+import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
+import { zodInstanceOf } from "../../../../../lib/zod-extensions/zodInstanceOf";
+import type { Marshal } from "./marshal";
+import { createMarshal } from "./marshal";
+import { coerceError } from "./errorType";
 
-export function createQuickJSRuntime(quick: QuickJSWASMModule) {
-  const runtime = quick.newRuntime({});
-  const modules = new Map<string, QuickJSModule>();
-  const moduleResolver = createModuleResolver(modules);
+export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
+  private readonly globalsHandle?: QuickJSHandle;
+  private readonly vm: QuickJSContext;
+  private readonly marshal: Marshal;
+  readonly compiled: Output;
+  readonly definitionHandle?: QuickJSHandle;
+  readonly error?: unknown;
 
-  function dispose() {
-    modules.forEach((m) => m.dispose());
-    modules.clear();
-    runtime?.dispose();
+  constructor(
+    createVM: () => QuickJSContext,
+    type: ZodType<Output>,
+    code: string,
+    globals?: object
+  ) {
+    this.vm = createVM();
+    this.marshal = createMarshal(this.vm, this.getHandleAtPath.bind(this));
+    this.globalsHandle = globals
+      ? this.marshal.assign(this.vm.global, globals)
+      : undefined;
+
+    const result = this.vm.evalCode(defineCode(code));
+
+    if (result.error) {
+      this.error = coerceError(
+        result.error.consume(this.vm.dump),
+        `Failed to compile module`
+      );
+    } else {
+      this.definitionHandle = result.value;
+    }
+
+    this.compiled = QuickJSModuleRuntime.createProxy(type, () => this);
   }
 
-  return {
-    refs: (...args) => ModuleReferences.create(...args),
-
-    addModule(definition) {
-      modules.get(definition.name)?.dispose();
-      const module = new QuickJSModule(runtime, definition, moduleResolver);
-      modules.set(definition.name, module);
-      return module.compiled;
-    },
-
-    compile() {
-      const compiled: CompiledModules = {};
-      for (const m of modules.values()) {
-        if (m.error) {
-          m.dispose();
-          runtime.dispose();
-          return err(m.error);
-        } else {
-          compiled[m.definition.name] = m.compiled;
-        }
+  static createProxy<T extends ZodType>(
+    type: T,
+    getRuntime: () => QuickJSModuleRuntime<z.infer<T>>
+  ) {
+    return createZodProxy(type, (path, typeAtPath) => {
+      if (!zodInstanceOf(typeAtPath, ZodFunction)) {
+        throw new Error(`Not a function: "${path.join(".")}"`);
       }
-      return ok(compiled);
-    },
-    dispose,
-  } satisfies ModuleRuntime;
+      return (...args: unknown[]) => getRuntime().call(path, args);
+    });
+  }
+
+  callUnmanaged(path: string[], argumentHandles: QuickJSHandle[]) {
+    return this.getHandleAtPath(path).consume((fnHandle) =>
+      this.vm.callFunction(fnHandle, this.vm.null, ...argumentHandles)
+    );
+  }
+
+  call(path: string[], args: unknown[]) {
+    const argHandles = args.map(this.marshal.create);
+    const result = this.callUnmanaged(path, argHandles);
+    argHandles.forEach((a) => a.dispose());
+
+    if (result.error) {
+      throw coerceError(
+        result.error.consume(this.vm.dump),
+        `Failed to invoke "${path.join(".")}"`
+      );
+    }
+
+    return result.value.consume(this.vm.dump);
+  }
+
+  getHandleAtPath(path: string[]): QuickJSHandle {
+    if (!this.definitionHandle) {
+      throw new Error("Module not compiled");
+    }
+    return path.reduce((acc, key, index) => {
+      const handle = this.vm.getProp(acc, key);
+      const isLeaf = index === path.length - 1;
+      if (!isLeaf) {
+        handle.dispose();
+      }
+      return handle;
+    }, this.definitionHandle);
+  }
+
+  dispose() {
+    this.definitionHandle?.dispose();
+    this.globalsHandle?.dispose();
+    this.vm.dispose();
+  }
 }
 
-function createModuleResolver(
-  modules: Map<string, QuickJSModule>
-): MarshalAdapter {
-  function requireModule(moduleName: string) {
-    const { compiled } = modules.get(moduleName) ?? {};
-    if (!compiled) {
-      throw new Error(`Module "${moduleName}" not found`);
+function defineCode(code: string) {
+  const def = "___definition___";
+  return `
+    let ${def} = undefined;
+    function ${abstractSymbols.define} (def) {
+      ${def} = def;
     }
-    return compiled;
-  }
-  return {
-    transform(value) {
-      if (value instanceof ModuleReferences) {
-        return Object.fromEntries(
-          Object.entries(value).map(([identifier, moduleName]) => [
-            identifier,
-            requireModule(moduleName),
-          ])
-        );
-      }
-      return value;
-    },
-    resolve(value: unknown) {
-      for (const { compiled, definitionHandle } of modules.values()) {
-        if (compiled === value) {
-          return definitionHandle;
-        }
-      }
-    },
-  };
+    (() => { ${code} } )();
+    ${def}
+  `;
 }

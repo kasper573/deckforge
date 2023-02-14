@@ -17,20 +17,21 @@ export type CompiledModules<
 };
 
 export interface ModuleDefinition<
-  T extends AnyModuleOutputType = AnyModuleOutputType
+  T extends AnyModuleOutputType = AnyModuleOutputType,
+  Name extends string = string
 > {
-  name: string;
+  name: Name;
   type: T;
   globals?: object;
   code: string;
 }
 
-export type ModuleRuntime = {
-  readonly compiled: CompiledModules;
+export type ModuleRuntime<T> = {
+  readonly compiled: T;
   dispose(): void;
 };
 
-export type RuntimeCompileResult = Result<ModuleRuntime, unknown>;
+export type RuntimeCompileResult = Result<ModuleRuntime<ModuleOutput>, unknown>;
 
 export interface ModuleCompiler {
   addModule<Definition extends ModuleDefinition>(

@@ -1,99 +1,61 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
-
-export type MarshalAdapter = {
-  transform: (value: unknown) => unknown;
-  resolve: (value: unknown) => QuickJSHandle | undefined;
-};
-
-const noopAdapter: MarshalAdapter = {
-  transform: (value) => value,
-  resolve: () => undefined,
-};
+import { ModuleReferences } from "../types";
 
 export type Marshal = ReturnType<typeof createMarshal>;
 
 export function createMarshal(
   vm: QuickJSContext,
-  adapter: MarshalAdapter = noopAdapter
+  getHandleAtPath?: (path: string[]) => QuickJSHandle
 ) {
-  function create(input: unknown): RecursiveQuickJSHandle {
-    const value = adapter.transform(input);
-    const handle = adapter.resolve(value);
-    if (handle) {
-      return { handle, isReference: true };
-    }
-
+  function create(value: unknown): QuickJSHandle {
     if (Array.isArray(value)) {
       return assign(vm.newArray(), value);
     }
     if (value === null) {
-      return { handle: vm.null };
+      return vm.null;
     }
     if (value === undefined) {
-      return { handle: vm.undefined };
+      return vm.undefined;
     }
     switch (typeof value) {
       case "string":
-        return { handle: vm.newString(value) };
+        return vm.newString(value);
       case "number":
-        return { handle: vm.newNumber(value) };
+        return vm.newNumber(value);
       case "boolean":
-        return { handle: value ? vm.true : vm.false };
+        return value ? vm.true : vm.false;
       case "object":
         return assign(vm.newObject(), value);
       case "function":
-        return {
-          handle: vm.newFunction(value.name, (...argumentHandles) => {
-            const args = argumentHandles.map(vm.dump);
-            const result = value(...args);
-            return create(result).handle;
-          }),
-        };
+        return vm.newFunction(value.name, (...argumentHandles) => {
+          const args = argumentHandles.map(vm.dump);
+          const result = value(...args);
+          return create(result);
+        });
     }
 
     throw new Error("Unsupported value type: " + value);
   }
 
-  function assign<Target extends QuickJSHandle>(
-    target: Target,
-    input: object
-  ): RecursiveQuickJSHandle {
-    const value = adapter.transform(input);
-    const handle = adapter.resolve(value);
-    if (handle) {
-      return { handle, isReference: true };
+  function assign(target: QuickJSHandle, value: object): QuickJSHandle {
+    if (getHandleAtPath && value instanceof ModuleReferences) {
+      for (const [k, v] of Object.entries(value)) {
+        const handle = getHandleAtPath([v]);
+        if (!handle) {
+          throw new Error(`Failed to resolve module reference: ${v}`);
+        }
+        handle.consume((h) => vm.setProp(target, k, h));
+      }
+    } else {
+      for (const [k, v] of Object.entries(value)) {
+        create(v).consume((h) => vm.setProp(target, k, h));
+      }
     }
-
-    if (typeof value !== "object" || value === null) {
-      throw new Error("Expected object");
-    }
-
-    const children: RecursiveQuickJSHandle[] = [];
-    for (const [k, v] of Object.entries(value)) {
-      const node = create(v);
-      vm.setProp(target, k, node.handle);
-      children.push(node);
-    }
-    return { handle: target, children };
-  }
-
-  function dispose(node: RecursiveQuickJSHandle) {
-    if (node.isReference) {
-      return; // Don't dispose references
-    }
-    node.children?.forEach(dispose);
-    node.handle.dispose();
+    return target;
   }
 
   return {
     create,
     assign,
-    dispose,
   };
 }
-
-export type RecursiveQuickJSHandle = {
-  handle: QuickJSHandle;
-  children?: RecursiveQuickJSHandle[];
-  isReference?: boolean;
-};
