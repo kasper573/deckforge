@@ -2,7 +2,6 @@ import type { QuickJSHandle, QuickJSWASMModule } from "quickjs-emscripten";
 import { err, ok } from "neverthrow";
 import type { QuickJSContext } from "quickjs-emscripten";
 import { z } from "zod";
-import type { ZodType } from "zod";
 import { ZodFunction } from "zod";
 import type { QuickJSRuntime } from "quickjs-emscripten";
 import { zodInstanceOf } from "../../../../lib/zod-extensions/zodInstanceOf";
@@ -21,13 +20,13 @@ export function createQuickJSModuleRuntime(quick: QuickJSWASMModule) {
   const runtime = quick.newRuntime({});
   return {
     refs: (...args) => ModuleReferences.create(...args),
-    addModule(name, definition) {
-      const existingModule = modules.get(name);
+    addModule(definition) {
+      const existingModule = modules.get(definition.name);
       if (existingModule) {
         existingModule.dispose();
       }
       const newModule = new QuickJSModule(runtime, definition);
-      modules.set(name, newModule);
+      modules.set(definition.name, newModule);
       return newModule.compiled;
     },
     compile() {
@@ -66,13 +65,13 @@ class QuickJSModule<Definition extends ModuleDefinition = ModuleDefinition> {
     if (result.error) {
       this.error = coerceError(
         result.error.consume(this.vm.dump),
-        "Failed to compile module"
+        `Failed to compile module "${definition.name}"`
       );
     } else {
       result.value.dispose();
     }
 
-    this.compiled = createQuickJSModuleInterface(this.vm, this.definition.type);
+    this.compiled = createQuickJSModuleInterface(this.vm, this.definition);
   }
 
   dispose() {
@@ -81,10 +80,10 @@ class QuickJSModule<Definition extends ModuleDefinition = ModuleDefinition> {
   }
 }
 
-function createQuickJSModuleInterface<T extends ZodType>(
+function createQuickJSModuleInterface<Def extends ModuleDefinition>(
   vm: QuickJSContext,
-  type: T
-): z.infer<T> {
+  { type, name }: Def
+): z.infer<Def["type"]> {
   return createZodProxy(type, (path, typeAtPath) => {
     if (!zodInstanceOf(typeAtPath, ZodFunction)) {
       throw new Error("Unsupported type");
@@ -94,7 +93,7 @@ function createQuickJSModuleInterface<T extends ZodType>(
       if (result.error) {
         throw coerceError(
           result.error.consume(vm.dump),
-          "Failed to invoke " + ["module", ...path].join(".")
+          "Failed to invoke " + [name, ...path].join(".")
         );
       }
       return result.value.consume(vm.dump);
