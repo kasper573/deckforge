@@ -12,13 +12,13 @@ import type {
   ModuleRuntimeOptions,
   CompiledModule,
   ModuleOutputRecord,
-  ModuleRuntime,
-  ModuleRuntimeCompileResult,
+  ModuleCompiler,
+  RuntimeCompileResult,
 } from "./types";
 import { ModuleReferences } from "./types";
 import { symbols as moduleRuntimeSymbols } from "./symbols";
 
-export class JSInterpreterModuleRuntime implements ModuleRuntime {
+export class JSInterpreterCompiler implements ModuleCompiler {
   #modules?: CompiledModules;
   #definitions: ModuleDefinitions = {};
 
@@ -50,20 +50,18 @@ export class JSInterpreterModuleRuntime implements ModuleRuntime {
   refs = ModuleReferences.create;
 
   compile() {
-    const result = compileModules(this.#definitions, this.options);
+    const result = compileRuntime(this.#definitions, this.options);
     if (result.isOk()) {
-      this.#modules = result.value;
+      this.#modules = result.value.modules;
     }
     return result;
   }
-
-  dispose() {}
 }
 
-function compileModules(
+function compileRuntime(
   definitions: ModuleDefinitions,
   { compilerOptions }: ModuleRuntimeOptions = {}
-): ModuleRuntimeCompileResult {
+): RuntimeCompileResult {
   const createError = (error: unknown) => bridgeErrorProtocol.parse(error);
 
   let code: string;
@@ -168,7 +166,7 @@ function compileModules(
     {} as CompiledModules
   );
 
-  return ok(moduleProxies);
+  return ok({ modules: moduleProxies, dispose() {} });
 }
 
 function createModuleCode(

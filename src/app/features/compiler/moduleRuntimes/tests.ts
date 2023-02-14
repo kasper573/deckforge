@@ -5,16 +5,18 @@ import type { AnyFunction } from "js-interpreter";
 import type {
   ModuleDefinition,
   ModuleOutputFunction,
-  ModuleRuntime,
+  ModuleCompiler,
 } from "./types";
-import type { ModuleRuntimeCompileResult } from "./types";
+import type { RuntimeCompileResult } from "./types";
 
-export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
+export function generateModuleRuntimeTests(
+  createRuntime: () => ModuleCompiler
+) {
   const t = createRuntimeTestUtils(createRuntime);
 
   it("can define a function module without error", () =>
-    t.assertValidRuntime((runtime) => {
-      runtime.addModule({
+    t.assertValidRuntime((compiler) => {
+      compiler.addModule({
         name: "test",
         type: z.function(),
         code: "define(() => {})",
@@ -22,8 +24,8 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     }));
 
   it("can define a record module without error", () =>
-    t.assertValidRuntime((runtime) => {
-      runtime.addModule({
+    t.assertValidRuntime((compiler) => {
+      compiler.addModule({
         name: "test",
         type: z.object({ foo: z.function() }),
         code: "define({ foo () { } })",
@@ -52,14 +54,14 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   describe("calling empty modules", () => {
     const addFnModule =
       (name: string, code = "") =>
-      (runtime: ModuleRuntime) =>
-        runtime.addModule({ name, type: z.function(), code });
+      (compiler: ModuleCompiler) =>
+        compiler.addModule({ name, type: z.function(), code });
 
     const addRecordModule =
       (name: string, code = "") =>
-      (runtime: ModuleRuntime) => {
+      (compiler: ModuleCompiler) => {
         const functionName = "foo" as const;
-        return runtime.addModule({
+        return compiler.addModule({
           name,
           type: z.object({ [functionName]: z.function() }),
           code: code ? `define({ ${functionName}: ${code} })` : "",
@@ -69,34 +71,34 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     it("one empty function module", () => testEmptyInvoke(addFnModule("a")));
 
     it("two empty function modules", () =>
-      testEmptyInvoke((runtime) => {
-        addFnModule("a")(runtime);
-        return addFnModule("b")(runtime);
+      testEmptyInvoke((compiler) => {
+        addFnModule("a")(compiler);
+        return addFnModule("b")(compiler);
       }));
 
     it("two function modules, one empty", () =>
-      testEmptyInvoke((runtime) => {
-        addFnModule("defined", "define(() => 5)")(runtime);
-        return addFnModule("empty")(runtime);
+      testEmptyInvoke((compiler) => {
+        addFnModule("defined", "define(() => 5)")(compiler);
+        return addFnModule("empty")(compiler);
       }));
 
     it("one empty record module", () => testEmptyInvoke(addRecordModule("a")));
 
     it("two empty record modules", () =>
-      testEmptyInvoke((runtime) => {
-        addRecordModule("a")(runtime);
-        return addRecordModule("b")(runtime);
+      testEmptyInvoke((compiler) => {
+        addRecordModule("a")(compiler);
+        return addRecordModule("b")(compiler);
       }));
 
     it("two record modules, one empty", () =>
-      testEmptyInvoke((runtime) => {
-        addRecordModule("defined", "define(() => 5)")(runtime);
-        return addRecordModule("empty")(runtime);
+      testEmptyInvoke((compiler) => {
+        addRecordModule("defined", "define(() => 5)")(compiler);
+        return addRecordModule("empty")(compiler);
       }));
 
     it("one record module with one empty and one defined function", () =>
-      testEmptyInvoke((runtime) => {
-        const record = runtime.addModule({
+      testEmptyInvoke((compiler) => {
+        const record = compiler.addModule({
           name: "record",
           type: z.object({ empty: z.function(), defined: z.function() }),
           code: `define({ defined: define(() => 5) })`,
@@ -104,7 +106,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
         return record.empty;
       }));
 
-    function testEmptyInvoke(setup: (runtime: ModuleRuntime) => AnyFunction) {
+    function testEmptyInvoke(setup: (runtime: ModuleCompiler) => AnyFunction) {
       return t.assertValidRuntime(setup, (fn) => {
         function createArgs() {
           return [{ foo: "bar" }, 2, true];
@@ -120,13 +122,13 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   it("calling module A from module B", () =>
     t.assertValidRuntime(
-      (runtime) => {
-        const moduleA = runtime.addModule({
+      (compiler) => {
+        const moduleA = compiler.addModule({
           name: "moduleA",
           type: z.function(),
           code: `define((...args) => ["A", ...args])`,
         });
-        const moduleB = runtime.addModule({
+        const moduleB = compiler.addModule({
           name: "moduleB",
           type: z.function(),
           code: `define((...args) => moduleA("B", ...args))`,
@@ -142,17 +144,17 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   it("calling module A from module B via reference", () =>
     t.assertValidRuntime(
-      (runtime) => {
-        runtime.addModule({
+      (compiler) => {
+        compiler.addModule({
           name: "moduleA",
           type: z.function(),
           code: `define((...args) => ["A", ...args])`,
         });
-        return runtime.addModule({
+        return compiler.addModule({
           name: "moduleB",
           type: z.function(),
           code: `define((...args) => moduleA("B", ...args))`,
-          globals: runtime.refs(["moduleA"]),
+          globals: compiler.refs(["moduleA"]),
         });
       },
       (moduleB) => {
@@ -163,14 +165,14 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   it("calling module A from module B via future reference", () =>
     t.assertValidRuntime(
-      (runtime) => {
-        const b = runtime.addModule({
+      (compiler) => {
+        const b = compiler.addModule({
           name: "moduleB",
           type: z.function(),
           code: `define((...args) => moduleA("B", ...args))`,
-          globals: runtime.refs(["moduleA"]),
+          globals: compiler.refs(["moduleA"]),
         });
-        runtime.addModule({
+        compiler.addModule({
           name: "moduleA",
           type: z.function(),
           code: `define((...args) => ["A", ...args])`,
@@ -185,9 +187,9 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   it("calling module recursively", () =>
     t.assertValidRuntime(
-      (runtime) => {
+      (compiler) => {
         const countProxy = (n: number, calls?: number) => count(n, calls);
-        const count = runtime.addModule({
+        const count = compiler.addModule({
           name: "moduleA",
           type: z
             .function()
@@ -208,14 +210,14 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   it("using arguments mutated by another module during chained function call", () =>
     t.assertValidRuntime(
-      (runtime) => {
-        const double = runtime.addModule({
+      (compiler) => {
+        const double = compiler.addModule({
           name: "double",
           type: z.function(),
           code: `define((state) => state.x *= 2)`,
         });
 
-        return runtime.addModule({
+        return compiler.addModule({
           name: "program",
           type: z.function(),
           code: `define((state) => { state.x = 5; double(state); })`,
@@ -335,8 +337,8 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
         describe(symbolName, () => {
           it("does not exist", () =>
             t.assertValidRuntime(
-              (runtime) =>
-                runtime.addModule({
+              (compiler) =>
+                compiler.addModule({
                   name: "module",
                   type: z.function(),
                   code: `define(() => ${wrapCode(symbolName)})`,
@@ -350,8 +352,8 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
           it("does not exist on window object", () =>
             t.assertValidRuntime(
-              (runtime) =>
-                runtime.addModule({
+              (compiler) =>
+                compiler.addModule({
                   name: "module",
                   type: z.function(),
                   code: `define(() => ${wrapCode(
@@ -368,14 +370,14 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   });
 
   it("can compile empty module without errors", () => {
-    t.assertValidRuntime((runtime) => {
-      runtime.addModule({ name: "module", type: z.function(), code: `` });
+    t.assertValidRuntime((compiler) => {
+      compiler.addModule({ name: "module", type: z.function(), code: `` });
     });
   });
 }
 
-export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
-  createRuntime: () => Runtime
+export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
+  createCompiler: () => Compiler
 ) {
   function globalAtPath(path: [string, ...string[]], leafValue: unknown) {
     return path.reduceRight(
@@ -440,13 +442,13 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
     assert: (output: z.infer<Def["type"]>) => void
   ) {
     return assertValidRuntime(
-      (runtime) => runtime.addModule({ name: "main", ...definition }),
+      (compiler) => compiler.addModule({ name: "main", ...definition }),
       assert
     );
   }
 
   function assertValidRuntime<T>(
-    setup: (runtime: Runtime) => T,
+    setup: (compiler: Compiler) => T,
     assert?: (setupOutput: T) => void
   ) {
     return useRuntime(setup, (result, setupOutput) => {
@@ -458,20 +460,20 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
   }
 
   function useRuntime<T>(
-    setup: (runtime: Runtime) => T,
-    handle?: (result: ModuleRuntimeCompileResult, setupOutput: T) => void
+    setup: (compiler: Compiler) => T,
+    handle?: (result: RuntimeCompileResult, setupOutput: T) => void
   ) {
-    const runtime = createRuntime();
+    const compiler = createCompiler();
 
     let setupOutput: T;
     let setupError: unknown;
     try {
-      setupOutput = setup(runtime);
+      setupOutput = setup(compiler);
     } catch (error) {
       setupError = error;
     }
 
-    const result = runtime.compile();
+    const result = compiler.compile();
 
     let handlerError: unknown;
     if (!setupError) {
@@ -485,7 +487,9 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
 
     let disposeError: unknown;
     try {
-      runtime.dispose();
+      if (result.isOk()) {
+        result.value.dispose();
+      }
     } catch (error) {
       disposeError = error;
     }

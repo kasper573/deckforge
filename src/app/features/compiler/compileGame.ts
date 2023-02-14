@@ -28,26 +28,27 @@ import type {
   RuntimePlayerId,
   RuntimeReducer,
 } from "./types";
-import { JSInterpreterModuleRuntime } from "./moduleRuntimes/JSInterpreter";
+import { JSInterpreterCompiler } from "./moduleRuntimes/JSInterpreter";
 import { moduleCompilerOptions } from "./settings";
-import type { ModuleRuntime } from "./moduleRuntimes/types";
+import type { ModuleCompiler } from "./moduleRuntimes/types";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;
   errors?: unknown[];
+  dispose?: () => void;
 }
 
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
   {
-    moduleRuntime = new JSInterpreterModuleRuntime({
+    moduleCompiler = new JSInterpreterCompiler({
       compilerOptions: moduleCompilerOptions,
     }),
     seed,
     middlewares,
   }: {
-    moduleRuntime?: ModuleRuntime;
+    moduleCompiler?: ModuleCompiler;
     seed?: string;
     middlewares?: (
       defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
@@ -64,7 +65,7 @@ export function compileGame<G extends RuntimeGenerics>(
   const moduleAPI: RuntimeModuleAPI<G> = {
     random: createRandomFn(seed),
     cloneCard,
-    events: moduleRuntime.refs(
+    events: moduleCompiler.refs(
       Object.fromEntries(
         gameDefinition.events.map((event) => [
           event.name,
@@ -83,7 +84,7 @@ export function compileGame<G extends RuntimeGenerics>(
         .filter((c) => c.deckId === deck.deckId)
         .map((def) => {
           const card = compileCard<G>(def, cardProperties);
-          const effects = moduleRuntime.addModule({
+          const effects = moduleCompiler.addModule({
             name: cardModuleName(deck, def),
             type: runtimeDefinition.cardEffects,
             code: def.code,
@@ -96,7 +97,7 @@ export function compileGame<G extends RuntimeGenerics>(
   );
 
   const effects = gameDefinition.events.reduce((effects, event) => {
-    effects[event.name as keyof typeof effects] = moduleRuntime.addModule({
+    effects[event.name as keyof typeof effects] = moduleCompiler.addModule({
       name: eventModuleName(event),
       type: runtimeDefinition.effects.shape[event.name],
       code: event.code,
@@ -106,7 +107,7 @@ export function compileGame<G extends RuntimeGenerics>(
   }, {} as RuntimeEffects<G>);
 
   const runtimeReducers = gameDefinition.reducers.map((reducer) =>
-    moduleRuntime.addModule({
+    moduleCompiler.addModule({
       name: reducerModuleName(reducer),
       type: runtimeDefinition.reducer,
       code: reducer.code,
@@ -131,10 +132,12 @@ export function compileGame<G extends RuntimeGenerics>(
     };
   }
 
-  const result = moduleRuntime.compile();
-  if (result.isErr()) {
-    return { errors: [result.error] };
+  const moduleCompileResult = moduleCompiler.compile();
+  if (moduleCompileResult.isErr()) {
+    return { errors: [moduleCompileResult.error] };
   }
+
+  const moduleRuntime = moduleCompileResult.value;
 
   const initialState = runtimeDefinition.createInitialState({
     decks,
@@ -160,7 +163,12 @@ export function compileGame<G extends RuntimeGenerics>(
   );
 
   const runtime = builder.build();
-  return { runtime };
+  return {
+    runtime,
+    dispose() {
+      moduleRuntime.dispose();
+    },
+  };
 }
 
 function compileCard<G extends RuntimeGenerics>(

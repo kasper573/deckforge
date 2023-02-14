@@ -25,18 +25,21 @@ export interface ModuleDefinition<
   code: string;
 }
 
-export type ModuleRuntimeCompileResult = Result<CompiledModules, unknown>;
+export type ModuleRuntime = {
+  readonly modules: CompiledModules;
+  dispose(): void;
+};
 
-export interface ModuleRuntime {
+export type RuntimeCompileResult = Result<ModuleRuntime, unknown>;
+
+export interface ModuleCompiler {
   addModule<Definition extends ModuleDefinition>(
     definition: Definition
   ): CompiledModule<Definition["type"]>;
 
   refs: typeof ModuleReferences.create;
 
-  compile(): ModuleRuntimeCompileResult;
-
-  dispose(): void;
+  compile(): RuntimeCompileResult;
 }
 
 export type ModuleDefinitions = Record<string, ModuleDefinition>;
