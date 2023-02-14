@@ -14,7 +14,6 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
   private readonly globalsHandle?: QuickJSHandle;
   private readonly vm: QuickJSContext;
   private readonly marshal: Marshal;
-  private readonly code: string;
   readonly compiled: Output;
   readonly definitionHandle?: QuickJSHandle;
 
