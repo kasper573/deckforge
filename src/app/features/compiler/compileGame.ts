@@ -83,7 +83,8 @@ export function compileGame<G extends RuntimeGenerics>(
         .filter((c) => c.deckId === deck.deckId)
         .map((def) => {
           const card = compileCard<G>(def, cardProperties);
-          const effects = moduleRuntime.addModule(cardModuleName(deck, def), {
+          const effects = moduleRuntime.addModule({
+            name: cardModuleName(deck, def),
             type: runtimeDefinition.cardEffects,
             code: def.code,
             globals: { ...moduleAPI, thisCardId: card.typeId },
@@ -95,19 +96,18 @@ export function compileGame<G extends RuntimeGenerics>(
   );
 
   const effects = gameDefinition.events.reduce((effects, event) => {
-    effects[event.name as keyof typeof effects] = moduleRuntime.addModule(
-      eventModuleName(event),
-      {
-        type: runtimeDefinition.effects.shape[event.name],
-        code: event.code,
-        globals: moduleAPI,
-      }
-    );
+    effects[event.name as keyof typeof effects] = moduleRuntime.addModule({
+      name: eventModuleName(event),
+      type: runtimeDefinition.effects.shape[event.name],
+      code: event.code,
+      globals: moduleAPI,
+    });
     return effects;
   }, {} as RuntimeEffects<G>);
 
   const runtimeReducers = gameDefinition.reducers.map((reducer) =>
-    moduleRuntime.addModule(reducerModuleName(reducer), {
+    moduleRuntime.addModule({
+      name: reducerModuleName(reducer),
       type: runtimeDefinition.reducer,
       code: reducer.code,
       globals: moduleAPI,
