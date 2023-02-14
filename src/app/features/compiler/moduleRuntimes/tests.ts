@@ -201,7 +201,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   describe("global functions", () => {
     function test(path: [string, ...string[]]) {
-      return t.testCompiledModule(
+      return t.testRuntimeResult(
         {
           type: z.function(),
           code: `define((...args) => ${path.join(".")}(...args))`,
@@ -236,7 +236,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
         null,
         undefined,
       ];
-      t.testCompiledModule(
+      t.testRuntimeResult(
         {
           type: z.function(),
           globals: t.globalAtPath(path, values),
@@ -346,11 +346,10 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
 
   function testModuleOutputs(
     functionDefinitionCode: string,
-    assertion: RuntimeAssertion<ZodType<ModuleOutputFunction>>,
-    test: typeof testRuntimeResult = testCompiledModule
+    assertion: RuntimeAssertion<ZodType<ModuleOutputFunction>>
   ) {
     it("optional single function (assert bypass)", () =>
-      test(
+      testRuntimeResult(
         {
           code: `define(${functionDefinitionCode})`,
           type: z.function().optional() as ZodType<AnyFunction>,
@@ -359,7 +358,7 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
       ));
 
     it("single function", () =>
-      test(
+      testRuntimeResult(
         {
           code: `define(${functionDefinitionCode})`,
           type: z.function(),
@@ -368,7 +367,7 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
       ));
 
     it("function record", () =>
-      test(
+      testRuntimeResult(
         {
           type: z.object({ first: z.function(), second: z.function() }),
           code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
@@ -380,7 +379,7 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
       ));
 
     it("partial function record", () =>
-      test(
+      testRuntimeResult(
         {
           type: z
             .object({ first: z.function(), second: z.function() })
@@ -388,19 +387,12 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
           code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
         },
         ({ first, second }, result) => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           assertion(first!, result);
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           assertion(second!, result);
         }
       ));
-  }
-
-  function testCompiledModule<Def extends ModuleDefinition>(
-    definition: Def,
-    assertion: RuntimeAssertion<Def["type"]>
-  ) {
-    return testRuntimeResult(definition, (module, result) => {
-      assert(result, () => assertion(module, result));
-    });
   }
 
   function testRuntimeResult<Def extends ModuleDefinition>(
@@ -432,7 +424,6 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
     assert,
     globalAtPath,
     testModuleOutputs,
-    testCompiledModule,
     testRuntimeResult,
     useRuntimeResult,
   };
