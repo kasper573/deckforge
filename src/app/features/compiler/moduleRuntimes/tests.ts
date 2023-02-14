@@ -10,9 +10,9 @@ import type {
 import type { RuntimeCompileResult } from "./types";
 
 export function generateModuleRuntimeTests(
-  createRuntime: () => ModuleCompiler
+  createCompiler: () => ModuleCompiler
 ) {
-  const t = createRuntimeTestUtils(createRuntime);
+  const t = createRuntimeTestUtils(createCompiler);
 
   it("can define a function module without error", () =>
     t.assertValidRuntime((compiler) => {
