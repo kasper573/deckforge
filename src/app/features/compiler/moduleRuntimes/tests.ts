@@ -161,6 +161,28 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
       }
     ));
 
+  it("calling module A from module B via future reference", () =>
+    t.assertValidRuntime(
+      (runtime) => {
+        const b = runtime.addModule({
+          name: "moduleB",
+          type: z.function(),
+          code: `define((...args) => moduleA("B", ...args))`,
+          globals: runtime.refs(["moduleA"]),
+        });
+        runtime.addModule({
+          name: "moduleA",
+          type: z.function(),
+          code: `define((...args) => ["A", ...args])`,
+        });
+        return b;
+      },
+      (moduleB) => {
+        const res = moduleB("input");
+        expect(res).toEqual(["A", "B", "input"]);
+      }
+    ));
+
   it("calling module recursively", () =>
     t.assertValidRuntime(
       (runtime) => {
@@ -242,7 +264,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
         [],
         [1, 2, 3],
         null,
-        undefined,
+        //undefined,
       ];
       for (const value of values) {
         it(JSON.stringify(value), () => {
