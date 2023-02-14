@@ -402,9 +402,10 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
     handle?: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
   ) {
     const runtime = createRuntime();
+    const output = setup(runtime);
+    const result = runtime.compile();
+
     try {
-      const output = setup(runtime);
-      const result = runtime.compile();
       handle?.([result, output]);
     } finally {
       runtime.dispose();
