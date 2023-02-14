@@ -24,6 +24,8 @@ export interface ModuleDefinition<
   code: string;
 }
 
+export type ModuleRuntimeCompileResult = Result<CompiledModules, unknown>;
+
 export interface ModuleRuntime {
   addModule<Name extends string, Definition extends ModuleDefinition>(
     name: Name,
@@ -32,7 +34,7 @@ export interface ModuleRuntime {
 
   refs: typeof ModuleReferences.create;
 
-  compile(): Result<CompiledModules, unknown>;
+  compile(): ModuleRuntimeCompileResult;
 
   dispose(): void;
 }
