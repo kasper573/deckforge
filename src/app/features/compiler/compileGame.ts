@@ -137,8 +137,6 @@ export function compileGame<G extends RuntimeGenerics>(
     return { errors: [moduleCompileResult.error] };
   }
 
-  const moduleRuntime = moduleCompileResult.value;
-
   const initialState = runtimeDefinition.createInitialState({
     decks,
     createPlayer,
@@ -166,7 +164,7 @@ export function compileGame<G extends RuntimeGenerics>(
   return {
     runtime,
     dispose() {
-      moduleRuntime.dispose();
+      moduleCompiler.dispose();
     },
   };
 }

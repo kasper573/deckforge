@@ -1,105 +1,54 @@
-import { ok } from "neverthrow";
-import type { ZodType } from "zod";
-import { z } from "zod";
-import type { QuickJSContext } from "quickjs-emscripten";
+import { err, ok } from "neverthrow";
+import type { QuickJSRuntime } from "quickjs-emscripten";
 import type {
-  ModuleDefinition,
   ModuleCompiler,
-  CompiledModule,
-  ModuleOutput,
+  CompiledModules,
+  RuntimeCompileResult,
 } from "../types";
 import { ModuleReferences } from "../types";
-import { symbols } from "../symbols";
-import { QuickJSModuleRuntime } from "./QuickJSRuntime";
+import { QuickJSModule } from "./QuickJSModule";
 
 export function createQuickJSCompiler(
-  createVM: () => QuickJSContext
+  createRuntime: () => QuickJSRuntime
 ): ModuleCompiler {
-  const definitions = new Map<string, ModuleDefinition>();
-  let combined = combineDefinitions([]);
+  const runtime = createRuntime();
+  const modules = new Map<string, QuickJSModule>();
 
-  let runtime: QuickJSModuleRuntime<unknown>;
   return {
     refs: (...args) => ModuleReferences.create(...args),
 
-    addModule<Definition extends ModuleDefinition>(
-      definition: Definition
-    ): CompiledModule<Definition["type"]> {
-      definitions.set(definition.name, definition);
-      combined = combineDefinitions([...definitions.values()]);
-      type Slice = Record<Definition["name"], Definition>;
-      const rootProxy = QuickJSModuleRuntime.createProxy(
-        combined.type as unknown as ZodType<Slice>,
-        () => runtime as QuickJSModuleRuntime<Slice>
-      );
-      return rootProxy[definition.name as keyof Slice] as never;
+    addModule(definition) {
+      modules.get(definition.name)?.dispose();
+      const m = new QuickJSModule(runtime.newContext(), definition);
+      modules.set(definition.name, m);
+      return m.compiled;
     },
 
-    compile() {
-      runtime?.dispose();
-      runtime = new QuickJSModuleRuntime(
-        createVM,
-        combined.type,
-        combined.code,
-        combined.globals
-      );
-      return ok(runtime as QuickJSModuleRuntime<ModuleOutput>);
-    },
-  };
-}
+    compile(): RuntimeCompileResult {
+      const errors: unknown[] = [];
+      const compiled: CompiledModules = {};
 
-function combineDefinitions(definitions: ModuleDefinition[]): ModuleDefinition {
-  const scopeVariable = "___scope___";
-  const scopeKey = (def: ModuleDefinition) => def.name;
-  const globalVariable = (def: ModuleDefinition) => `${def.name}_globals`;
-  return {
-    name: "combined",
-    code: `
-      const ${scopeVariable} = {};
-      ${definitions
-        .map((def) =>
-          codeWithScopedDefine({
-            code: def.code,
-            scopeKey: scopeKey(def),
-            scopeVariable,
-            globalVariable: globalVariable(def),
-            globalProperties: Object.keys(def.globals ?? {}),
-          })
-        )
-        .join("\n")}
-      ${symbols.define}(${scopeVariable});
-    `,
-    type: z.object(
-      definitions.reduce(
-        (acc, def) => ({ ...acc, [scopeKey(def)]: def.type }),
-        {}
-      )
-    ),
-    globals: definitions.reduce(
-      (acc, def) => ({ ...acc, [globalVariable(def)]: def.globals }),
-      {}
-    ),
-  };
-}
-
-function codeWithScopedDefine(o: {
-  code: string;
-  scopeKey: string;
-  scopeVariable: string;
-  globalVariable: string;
-  globalProperties: string[];
-}) {
-  return `
-    // Module: ${o.scopeKey}
-    // Globals: ${o.globalProperties.join(", ") || "(None)"}
-    (() => {
-      function ${symbols.define} (def) {
-        ${o.scopeVariable}["${o.scopeKey}"] = def;
+      for (const m of modules.values()) {
+        if (m.error) {
+          errors.push(m.error);
+        } else {
+          compiled[m.definition.name] = m.compiled;
+        }
       }
-      ${o.globalProperties
-        ?.map((g) => `const ${g} = ${o.globalVariable}["${g}"];`)
-        .join("\n")}
-      ${o.code};
-    })();
-  `;
+
+      if (errors.length) {
+        return err(new Error(errors.join("\n")));
+      }
+
+      return ok(compiled);
+    },
+
+    dispose() {
+      for (const m of modules.values()) {
+        m.dispose();
+      }
+      modules.clear();
+      runtime.dispose();
+    },
+  };
 }

@@ -3,44 +3,33 @@ import type { z, ZodType } from "zod";
 import type { CompilerOptions } from "typescript";
 import type { Result } from "neverthrow";
 
-export type AnyModuleOutputType = ZodType<ModuleOutput>;
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
 export type ModuleOutputFunction = AnyFunction;
 export type ModuleOutputRecord = Partial<Record<string, ModuleOutputFunction>>;
-export type CompiledModule<
-  Type extends AnyModuleOutputType = AnyModuleOutputType
-> = z.infer<Type>;
-export type CompiledModules<
-  Definitions extends ModuleDefinitions = ModuleDefinitions
-> = {
-  [Name in keyof Definitions]: CompiledModule<Definitions[Name]["type"]>;
-};
 
 export interface ModuleDefinition<
-  T extends AnyModuleOutputType = AnyModuleOutputType,
+  Output extends ModuleOutput = ModuleOutput,
   Name extends string = string
 > {
   name: Name;
-  type: T;
+  type: ZodType<Output>;
   globals?: object;
   code: string;
 }
 
-export type ModuleRuntime<T> = {
-  readonly compiled: T;
-  dispose(): void;
-};
-
-export type RuntimeCompileResult = Result<ModuleRuntime<ModuleOutput>, unknown>;
+export type CompiledModules = Record<string, ModuleOutput>;
+export type RuntimeCompileResult = Result<CompiledModules, unknown>;
 
 export interface ModuleCompiler {
   addModule<Definition extends ModuleDefinition>(
     definition: Definition
-  ): CompiledModule<Definition["type"]>;
+  ): z.infer<Definition["type"]>;
 
   refs: typeof ModuleReferences.create;
 
   compile(): RuntimeCompileResult;
+
+  dispose(): void;
 }
 
 export type ModuleDefinitions = Record<string, ModuleDefinition>;

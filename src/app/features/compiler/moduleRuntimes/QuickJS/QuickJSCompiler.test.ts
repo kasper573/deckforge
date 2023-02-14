@@ -1,4 +1,4 @@
-import type { QuickJSContext } from "quickjs-emscripten";
+import type { QuickJSRuntime } from "quickjs-emscripten";
 import {
   DEBUG_SYNC,
   getQuickJS,
@@ -9,8 +9,8 @@ import { memoizePromiseFactory } from "quickjs-emscripten/dist/variants";
 import { generateModuleRuntimeTests } from "../tests";
 import { createQuickJSCompiler } from "./QuickJSCompiler";
 
-function generateQuickJSTests(vmFactory: () => QuickJSContext) {
-  generateModuleRuntimeTests(() => createQuickJSCompiler(vmFactory));
+function generateQuickJSTests(createRuntime: () => QuickJSRuntime) {
+  generateModuleRuntimeTests(() => createQuickJSCompiler(createRuntime));
 }
 
 type TestStrategy = keyof typeof testStrategies;
@@ -20,26 +20,26 @@ const testStrategies = {
       newQuickJSWASMModule(DEBUG_SYNC)
     );
     let quickJS: TestQuickJSWASMModule;
-    let vmFactory: () => QuickJSContext;
+    let createRuntime: () => QuickJSRuntime;
 
     beforeEach(async () => {
       quickJS = new TestQuickJSWASMModule(await loadDebugModule());
-      vmFactory = () => quickJS.newContext();
+      createRuntime = () => quickJS.newRuntime();
     });
 
     afterEach(() => quickJS.assertNoMemoryAllocated());
 
-    generateQuickJSTests(() => vmFactory());
+    generateQuickJSTests(() => createRuntime());
   },
   release() {
-    let vmFactory: () => QuickJSContext;
+    let createRuntime: () => QuickJSRuntime;
 
     beforeEach(async () => {
       const quickJS = await getQuickJS();
-      vmFactory = () => quickJS.newContext();
+      createRuntime = () => quickJS.newRuntime();
     });
 
-    generateQuickJSTests(() => vmFactory());
+    generateQuickJSTests(() => createRuntime());
   },
 };
 

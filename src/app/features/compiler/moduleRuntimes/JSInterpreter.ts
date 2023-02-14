@@ -5,7 +5,6 @@ import { err, ok } from "neverthrow";
 import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
 import { zodInstanceOf } from "../../../../lib/zod-extensions/zodInstanceOf";
 import type {
-  CompiledModule,
   CompiledModules,
   ModuleCompiler,
   ModuleCompilerOptions,
@@ -53,10 +52,12 @@ export class JSInterpreterCompiler implements ModuleCompiler {
   compile() {
     const result = compileRuntime(this.#definitions, this.options);
     if (result.isOk()) {
-      this.#modules = result.value.compiled as never;
+      this.#modules = result.value;
     }
     return result;
   }
+
+  dispose() {}
 }
 
 function compileRuntime(
@@ -167,7 +168,7 @@ function compileRuntime(
     {} as CompiledModules
   );
 
-  return ok({ compiled: moduleProxies as never, dispose() {} });
+  return ok(moduleProxies);
 }
 
 function createModuleCode(
@@ -380,7 +381,7 @@ function createModuleProxy<Definition extends ModuleDefinition>(
     functionName: string | undefined,
     args: unknown[]
   ) => unknown
-): CompiledModule<Definition["type"]> {
+): z.infer<Definition["type"]> {
   function createFunctionProxy<T extends AnyZodFunction>(
     moduleName: string,
     functionName: string | undefined

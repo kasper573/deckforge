@@ -1,10 +1,8 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
-import type { ZodType } from "zod";
-import type { z } from "zod";
 import { Scope } from "quickjs-emscripten";
 import { ZodFunction, ZodObject } from "zod";
 import { symbols as abstractSymbols } from "../symbols";
-import type { ModuleRuntime } from "../types";
+import type { ModuleDefinition, ModuleOutput } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
 import { createMutateFn } from "../createMutateFn";
 import { zodTypeAtPath } from "../../../../../lib/zod-extensions/zodTypeAtPath";
@@ -13,27 +11,22 @@ import type { Marshal } from "./marshal";
 import { createMarshal } from "./marshal";
 import { coerceError } from "./errorType";
 
-export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
+export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
   private readonly globalsHandle?: QuickJSHandle;
-  private readonly vm: QuickJSContext;
   private readonly marshal: Marshal;
-  readonly compiled: Output;
-  readonly definitionHandle?: QuickJSHandle;
+  readonly compiled: ModuleOutput;
   readonly error?: unknown;
 
   constructor(
-    createVM: () => QuickJSContext,
-    private readonly type: ZodType<Output>,
-    code: string,
-    globals?: object
+    private readonly vm: QuickJSContext,
+    public readonly definition: Readonly<ModuleDefinition<Output>>
   ) {
-    this.vm = createVM();
-    this.marshal = createMarshal(this.vm, this.deferPath.bind(this));
-    this.globalsHandle = globals
-      ? this.marshal.assign(this.vm.global, globals)
+    this.marshal = createMarshal(vm, this.resolvePath.bind(this));
+    this.globalsHandle = this.definition.globals
+      ? this.marshal.assign(vm.global, this.definition.globals)
       : undefined;
 
-    const result = this.vm.evalCode(defineCode(code));
+    const result = vm.evalCode(defineCode(this.definition.code));
 
     if (result.error) {
       this.error = coerceError(
@@ -41,39 +34,27 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
         `Failed to compile modules`
       );
     } else {
-      this.definitionHandle = result.value;
+      result.value.dispose();
     }
 
-    this.compiled = QuickJSModuleRuntime.createProxy(type, () => this);
-  }
-
-  static createProxy<T extends ZodType>(
-    type: T,
-    getRuntime: () => QuickJSModuleRuntime<z.infer<T>>
-  ) {
-    return createZodProxy(
-      type,
+    this.compiled = createZodProxy(
+      definition.type,
       (path) =>
         (...args: unknown[]) =>
-          getRuntime().call(path, args)
+          this.call(path, args)
     );
   }
 
   private resolvePath(path: string[]): QuickJSHandle {
-    if (!this.definitionHandle) {
-      throw new Error(`Cannot get path handles before compiling has finished`);
-    }
-    return path.reduce((target, key) => {
-      const handle = this.vm.getProp(target, key);
-      if (target !== this.definitionHandle) {
-        target.dispose();
-      }
-      return handle;
-    }, this.definitionHandle);
+    return [symbols.definition, ...path].reduce((prev, key) => {
+      const next = this.vm.getProp(prev, key);
+      prev.dispose();
+      return next;
+    }, this.vm.global);
   }
 
   private deferPath(path: string[]): QuickJSHandle {
-    const typeAtPath = zodTypeAtPath(this.type, path);
+    const typeAtPath = zodTypeAtPath(this.definition.type, path);
     if (!typeAtPath) {
       throw new Error(`Unknown path: ${path.join(".")}`);
     }
@@ -97,6 +78,7 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
   call(path: string[], args: unknown[]) {
     return Scope.withScope((scope) => {
       const { vm, marshal } = this;
+      const dump = this.vm.dump(this.vm.global);
       const fnHandle = scope.manage(this.resolvePath(path));
       if (vm.typeof(fnHandle) !== "function") {
         return;
@@ -120,22 +102,23 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
   }
 
   dispose() {
-    this.definitionHandle?.dispose();
     this.globalsHandle?.dispose();
     this.vm.dispose();
   }
 }
 
 function defineCode(definitionCode: string) {
-  const defVar = "___definition___";
   return `
-    let ${defVar} = undefined;
+    globalThis.${symbols.definition} = undefined;
     function ${abstractSymbols.define} (def) {
-      ${defVar} = def;
+      globalThis.${symbols.definition} = def;
     }
-    (() => { ${definitionCode} } )();
-    ${defVar}
+    ${definitionCode}
   `;
 }
 
 const mutate = createMutateFn();
+
+const symbols = {
+  definition: "___definition___",
+};
