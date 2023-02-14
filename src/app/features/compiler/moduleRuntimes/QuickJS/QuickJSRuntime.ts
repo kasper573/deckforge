@@ -26,14 +26,13 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
     code: string,
     globals?: object
   ) {
-    this.code = defineCode(code);
     this.vm = createVM();
     this.marshal = createMarshal(this.vm);
     this.globalsHandle = globals
       ? this.marshal.assign(this.vm.global, globals)
       : undefined;
 
-    const result = this.vm.evalCode(this.code);
+    const result = this.vm.evalCode(defineCode(code));
 
     if (result.error) {
       this.error = coerceError(
@@ -86,7 +85,7 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
       if (callResult?.error) {
         throw coerceError(
           callResult.error.consume(this.vm.dump),
-          `Failed to invoke "${path.join(".")}"\n\n${this.code}`
+          `Failed to invoke "${path.join(".")}"`
         );
       }
 
