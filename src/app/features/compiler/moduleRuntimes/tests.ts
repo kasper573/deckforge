@@ -19,7 +19,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     t.useRuntimeResult((runtime) => {
       runtime.addModule("test", {
         type: z.function(),
-        code: "defines(() => {})",
+        code: "define(() => {})",
       });
     }));
 
@@ -27,7 +27,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     t.useRuntimeResult((runtime) => {
       runtime.addModule("test", {
         type: z.object({ foo: z.function() }),
-        code: "defines({ foo () { } })",
+        code: "define({ foo () { } })",
       });
     }));
 
