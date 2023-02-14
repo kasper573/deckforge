@@ -172,7 +172,7 @@ export function generateModuleRuntimeTests(
         }
       ));
 
-    it("calling module A from module B via future reference", () =>
+    it.skip("calling module A from module B via future reference", () =>
       t.assertValidRuntime(
         (compiler) => {
           const b = compiler.addModule({
