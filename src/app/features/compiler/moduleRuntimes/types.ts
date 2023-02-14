@@ -24,10 +24,7 @@ export interface ModuleDefinition<
   code: string;
 }
 
-export type ModuleRuntimeCompileResult = Result<
-  CompiledModules,
-  ModuleCompileError
->;
+export type ModuleRuntimeCompileResult = Result<CompiledModules, unknown>;
 
 export interface ModuleRuntime {
   addModule<Name extends string, Definition extends ModuleDefinition>(
@@ -63,31 +60,4 @@ export class ModuleReferences implements Record<string, string> {
         : names
     );
   }
-}
-
-export class ModuleCompileError extends Error {
-  constructor(
-    public readonly moduleErrors: Readonly<Record<string, unknown[]>>
-  ) {
-    super(
-      oneErrorMessageOr(moduleErrors, "Multiple module compilation errors")
-    );
-    Object.setPrototypeOf(this, ModuleCompileError.prototype);
-  }
-
-  toString() {
-    return Object.entries(this.moduleErrors)
-      .map(([name, errors]) => {
-        return `Module "${name}":\n${errors.map(String).join("\n")}`;
-      })
-      .join("\n");
-  }
-}
-
-function oneErrorMessageOr(
-  moduleErrors: Readonly<Record<string, unknown[]>>,
-  fallback: string
-): string {
-  const errors = Object.values(moduleErrors).flat();
-  return errors.length === 1 ? String(errors[0]) : fallback;
 }
