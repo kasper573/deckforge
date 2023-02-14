@@ -315,7 +315,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
                   name: "module",
                   type: z.function(),
                   code: `define(() => ${wrapCode(
-                    `typeof window.${symbolName}`
+                    `typeof window !== "undefined" ? typeof window.${symbolName} : "undefined"`
                   )})`,
                 }),
               (getSymbolTypeName) => {
