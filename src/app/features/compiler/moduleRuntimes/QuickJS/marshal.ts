@@ -5,11 +5,11 @@ export type Marshal = ReturnType<typeof createMarshal>;
 
 export function createMarshal(
   vm: QuickJSContext,
-  deferPath: (path: string[]) => QuickJSHandle
+  getModuleReference: (path: string[]) => QuickJSHandle
 ) {
   function create(value: unknown): QuickJSHandle {
     if (hasModuleReference(value)) {
-      return deferPath(value[moduleReferenceSymbol]);
+      return getModuleReference(value[moduleReferenceSymbol]);
     }
     if (Array.isArray(value)) {
       return assign(vm.newArray(), value);
@@ -40,11 +40,7 @@ export function createMarshal(
     throw new Error("Unsupported value type: " + value);
   }
 
-  function assign(
-    target: QuickJSHandle,
-    value: object,
-    _path: string[] = []
-  ): QuickJSHandle {
+  function assign(target: QuickJSHandle, value: object): QuickJSHandle {
     for (const [k, v] of Object.entries(value)) {
       create(v).consume((h) => vm.setProp(target, k, h));
     }

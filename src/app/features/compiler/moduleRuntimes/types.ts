@@ -102,8 +102,7 @@ export const hasModuleReference = (
   return (
     value !== null &&
     typeof value === "object" &&
-    moduleReferenceSymbol in value &&
-    typeof value[moduleReferenceSymbol] === "string"
+    moduleReferenceSymbol in value
   );
 };
 

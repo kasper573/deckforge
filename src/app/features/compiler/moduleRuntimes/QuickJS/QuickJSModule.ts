@@ -12,19 +12,20 @@ import { createMarshal } from "./marshal";
 import { coerceError } from "./errorType";
 
 export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
-  private readonly globalsHandle?: QuickJSHandle;
   private readonly marshal: Marshal;
   readonly compiled: ModuleOutput;
   readonly error?: unknown;
 
   constructor(
     private readonly vm: QuickJSContext,
-    public readonly definition: Readonly<ModuleDefinition<Output>>
+    public readonly definition: Readonly<ModuleDefinition<Output>>,
+    getModuleReference: (path: string[]) => QuickJSHandle
   ) {
-    this.marshal = createMarshal(vm, this.defer.bind(this));
-    this.globalsHandle = this.definition.globals
-      ? this.marshal.assign(vm.global, this.definition.globals)
-      : undefined;
+    this.marshal = createMarshal(vm, getModuleReference);
+
+    if (this.definition.globals) {
+      this.marshal.assign(vm.global, this.definition.globals).dispose();
+    }
 
     const result = vm.evalCode(defineCode(this.definition.code));
 
@@ -65,9 +66,7 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
       const obj = this.vm.newObject();
       for (const key of Object.keys(typeAtPath.shape)) {
         this.vm.defineProp(obj, key, {
-          get: () => {
-            return this.marshal.create(() => this.resolve([...path, key]));
-          },
+          get: () => this.marshal.create(() => this.resolve([...path, key])),
         });
       }
       return obj;
@@ -78,7 +77,6 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
   call(path: string[], args: unknown[]) {
     return Scope.withScope((scope) => {
       const { vm, marshal } = this;
-      const dump = this.vm.dump(this.vm.global);
       const fnHandle = scope.manage(this.resolve(path));
       if (vm.typeof(fnHandle) !== "function") {
         return;
@@ -102,7 +100,6 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
   }
 
   dispose() {
-    this.globalsHandle?.dispose();
     this.vm.dispose();
   }
 }
