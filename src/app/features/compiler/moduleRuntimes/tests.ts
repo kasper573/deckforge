@@ -407,7 +407,9 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
 
   function useRuntimeResult<T extends AnyModuleOutputType, SetupOutput>(
     setup: (runtime: Runtime) => SetupOutput,
-    handle?: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void
+    handle: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void = ([
+      res,
+    ]) => assert(res)
   ) {
     const runtime = createRuntime();
     const output = setup(runtime);
