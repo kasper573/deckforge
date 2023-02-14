@@ -50,6 +50,8 @@ export function createQuickJSCompiler(
 
 function combineDefinitions(definitions: ModuleDefinition[]): ModuleDefinition {
   const scopeVariable = "___scope___";
+  const scopeKey = (def: ModuleDefinition) => def.name;
+  const globalVariable = (def: ModuleDefinition) => `${def.name}_globals`;
   return {
     name: "combined",
     code: `
@@ -58,9 +60,9 @@ function combineDefinitions(definitions: ModuleDefinition[]): ModuleDefinition {
         .map((def) =>
           codeWithScopedDefine({
             code: def.code,
-            scopeKey: def.name,
+            scopeKey: scopeKey(def),
             scopeVariable,
-            globalVariable: def.name,
+            globalVariable: globalVariable(def),
             globalProperties: Object.keys(def.globals ?? {}),
           })
         )
@@ -68,10 +70,13 @@ function combineDefinitions(definitions: ModuleDefinition[]): ModuleDefinition {
       ${symbols.define}(${scopeVariable});
     `,
     type: z.object(
-      definitions.reduce((acc, def) => ({ ...acc, [def.name]: def.type }), {})
+      definitions.reduce(
+        (acc, def) => ({ ...acc, [scopeKey(def)]: def.type }),
+        {}
+      )
     ),
     globals: definitions.reduce(
-      (acc, def) => ({ ...acc, [def.name]: def.globals }),
+      (acc, def) => ({ ...acc, [globalVariable(def)]: def.globals }),
       {}
     ),
   };
@@ -85,6 +90,8 @@ function codeWithScopedDefine(o: {
   globalProperties: string[];
 }) {
   return `
+    // Module: ${o.scopeKey}
+    // Globals: ${o.globalProperties.join(", ") || "(None)"}
     (() => {
       function ${symbols.define} (def) {
         ${o.scopeVariable}["${o.scopeKey}"] = def;

@@ -13,8 +13,10 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
   private readonly globalsHandle?: QuickJSHandle;
   private readonly vm: QuickJSContext;
   private readonly marshal: Marshal;
+  private readonly code: string;
   readonly compiled: Output;
   readonly definitionHandle?: QuickJSHandle;
+
   readonly error?: unknown;
 
   constructor(
@@ -23,13 +25,14 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
     code: string,
     globals?: object
   ) {
+    this.code = defineCode(code);
     this.vm = createVM();
     this.marshal = createMarshal(this.vm, this.getHandleAtPath.bind(this));
     this.globalsHandle = globals
       ? this.marshal.assign(this.vm.global, globals)
       : undefined;
 
-    const result = this.vm.evalCode(defineCode(code));
+    const result = this.vm.evalCode(this.code);
 
     if (result.error) {
       this.error = coerceError(
@@ -38,6 +41,9 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
       );
     } else {
       this.definitionHandle = result.value;
+      if (!this.definitionHandle) {
+        this.error = new Error("Module did define a value");
+      }
     }
 
     this.compiled = QuickJSModuleRuntime.createProxy(type, () => this);
@@ -55,39 +61,45 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
     });
   }
 
-  callUnmanaged(path: string[], argumentHandles: QuickJSHandle[]) {
-    return this.getHandleAtPath(path).consume((fnHandle) =>
-      this.vm.callFunction(fnHandle, this.vm.null, ...argumentHandles)
-    );
+  private getHandleAtPath(path: string[]): QuickJSHandle {
+    if (!this.definitionHandle) {
+      throw new Error(
+        `Could not resolve path "${path.join(".")}" (Module not compiled)\n${
+          this.code
+        }`
+      );
+    }
+    return path.reduce((target, key) => {
+      const handle = this.vm.getProp(target, key);
+      if (target !== this.definitionHandle) {
+        target.dispose();
+      }
+      return handle;
+    }, this.definitionHandle);
   }
 
-  call(path: string[], args: unknown[]) {
+  private callUnmanaged(path: string[], argumentHandles: QuickJSHandle[]) {
+    return this.getHandleAtPath(path).consume((handle) => {
+      if (this.vm.typeof(handle) !== "function") {
+        return;
+      }
+      return this.vm.callFunction(handle, this.vm.null, ...argumentHandles);
+    });
+  }
+
+  call(path: string[], args: unknown[]): unknown {
     const argHandles = args.map(this.marshal.create);
     const result = this.callUnmanaged(path, argHandles);
     argHandles.forEach((a) => a.dispose());
 
-    if (result.error) {
+    if (result?.error) {
       throw coerceError(
         result.error.consume(this.vm.dump),
-        `Failed to invoke "${path.join(".")}"`
+        `Failed to invoke "${path.join(".")}"\n${this.code}`
       );
     }
 
-    return result.value.consume(this.vm.dump);
-  }
-
-  getHandleAtPath(path: string[]): QuickJSHandle {
-    if (!this.definitionHandle) {
-      throw new Error("Module not compiled");
-    }
-    return path.reduce((acc, key, index) => {
-      const handle = this.vm.getProp(acc, key);
-      const isLeaf = index === path.length - 1;
-      if (!isLeaf) {
-        handle.dispose();
-      }
-      return handle;
-    }, this.definitionHandle);
+    return result?.value.consume(this.vm.dump);
   }
 
   dispose() {
@@ -97,14 +109,14 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
   }
 }
 
-function defineCode(code: string) {
-  const def = "___definition___";
+function defineCode(definitionCode: string) {
+  const defVar = "___definition___";
   return `
-    let ${def} = undefined;
+    let ${defVar} = undefined;
     function ${abstractSymbols.define} (def) {
-      ${def} = def;
+      ${defVar} = def;
     }
-    (() => { ${code} } )();
-    ${def}
+    (() => { ${definitionCode} } )();
+    ${defVar}
   `;
 }

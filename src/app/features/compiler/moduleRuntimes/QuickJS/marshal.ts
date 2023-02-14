@@ -40,11 +40,7 @@ export function createMarshal(
   function assign(target: QuickJSHandle, value: object): QuickJSHandle {
     if (getHandleAtPath && value instanceof ModuleReferences) {
       for (const [k, v] of Object.entries(value)) {
-        const handle = getHandleAtPath([v]);
-        if (!handle) {
-          throw new Error(`Failed to resolve module reference: ${v}`);
-        }
-        handle.consume((h) => vm.setProp(target, k, h));
+        vm.defineProp(target, k, { get: () => getHandleAtPath([v]) });
       }
     } else {
       for (const [k, v] of Object.entries(value)) {
