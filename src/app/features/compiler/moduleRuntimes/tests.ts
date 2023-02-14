@@ -399,24 +399,24 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
     setup: (runtime: Runtime) => T,
     assert?: (setupOutput: T) => void
   ) {
-    return useRuntime(setup, (output, result) => {
+    return useRuntime(setup, (result, setupOutput) => {
       if (result.isErr()) {
         throw result.error;
       }
-      assert?.(output);
+      assert?.(setupOutput);
     });
   }
 
   function useRuntime<T>(
     setup: (runtime: Runtime) => T,
-    handle?: (output: T, result: ModuleRuntimeCompileResult) => void
+    handle?: (result: ModuleRuntimeCompileResult, setupOutput: T) => void
   ) {
     const runtime = createRuntime();
-    const output = setup(runtime);
+    const setupOutput = setup(runtime);
     const result = runtime.compile();
 
     try {
-      handle?.(output, result);
+      handle?.(result, setupOutput);
     } finally {
       runtime.dispose();
     }
