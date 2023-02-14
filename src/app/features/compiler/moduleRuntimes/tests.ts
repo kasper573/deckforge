@@ -1,12 +1,8 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import type { ZodType } from "zod";
 import { z } from "zod";
-import type { Result } from "neverthrow";
 import type { AnyFunction } from "js-interpreter";
 import type {
-  AnyModuleOutputType,
-  CompiledModule,
-  CompiledModules,
   ModuleDefinition,
   ModuleOutputFunction,
   ModuleRuntime,
@@ -104,7 +100,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
       }));
 
     function testEmptyInvoke(setup: (runtime: ModuleRuntime) => AnyFunction) {
-      return t.useRuntimeResult(setup, ([, fn]) => {
+      return t.useRuntimeResult(setup, (fn) => {
         function createArgs() {
           return [{ foo: "bar" }, 2, true];
         }
@@ -131,7 +127,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
         });
         return moduleB;
       },
-      ([, moduleB]) => {
+      (moduleB) => {
         const res = moduleB("input");
         expect(res).toEqual(["A", "B", "input"]);
       }
@@ -150,7 +146,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
           globals: runtime.refs(["moduleA"]),
         });
       },
-      ([, moduleB]) => {
+      (moduleB) => {
         const res = moduleB("input");
         expect(res).toEqual(["A", "B", "input"]);
       }
@@ -172,7 +168,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
         });
         return count;
       },
-      ([, count]) => {
+      (count) => {
         const res = count(10, undefined);
         expect(res).toEqual(10);
       }
@@ -192,7 +188,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
           globals: { double },
         });
       },
-      ([, program]) => {
+      (program) => {
         const state = { x: 0 };
         program(state);
         expect(state.x).toEqual(10);
@@ -201,7 +197,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   describe("global functions", () => {
     function test(path: [string, ...string[]]) {
-      return t.testRuntimeResult(
+      return t.testModuleOutput(
         {
           type: z.function(),
           code: `define((...args) => ${path.join(".")}(...args))`,
@@ -236,7 +232,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
         null,
         undefined,
       ];
-      t.testRuntimeResult(
+      t.testModuleOutput(
         {
           type: z.function(),
           globals: t.globalAtPath(path, values),
@@ -292,7 +288,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
                   type: z.function(),
                   code: `define(() => ${wrapCode(symbolName)})`,
                 }),
-              ([, tryToAccessSymbol]) => {
+              (tryToAccessSymbol) => {
                 expect(tryToAccessSymbol).toThrowError(
                   `${symbolName} is not defined`
                 );
@@ -308,7 +304,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
                     `typeof window.${symbolName}`
                   )})`,
                 }),
-              ([, getSymbolTypeName]) => {
+              (getSymbolTypeName) => {
                 expect(getSymbolTypeName()).toBe("undefined");
               }
             ));
@@ -330,13 +326,6 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
   createRuntime: () => Runtime
 ) {
-  function assert<T, E>(res: Result<T, E>, assertion?: (value: T) => unknown) {
-    if (res.isErr()) {
-      throw res.error;
-    }
-    assertion?.(res.value);
-  }
-
   function globalAtPath(path: [string, ...string[]], leafValue: unknown) {
     return path.reduceRight(
       (acc: object, key) => ({ [key]: acc }),
@@ -346,92 +335,88 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
 
   function testModuleOutputs(
     functionDefinitionCode: string,
-    assertion: RuntimeAssertion<ZodType<ModuleOutputFunction>>
+    assert: (output: ModuleOutputFunction) => void
   ) {
     it("optional single function (assert bypass)", () =>
-      testRuntimeResult(
+      testModuleOutput(
         {
           code: `define(${functionDefinitionCode})`,
           type: z.function().optional() as ZodType<AnyFunction>,
         },
-        assertion
+        assert
       ));
 
     it("single function", () =>
-      testRuntimeResult(
+      testModuleOutput(
         {
           code: `define(${functionDefinitionCode})`,
           type: z.function(),
         },
-        assertion
+        assert
       ));
 
     it("function record", () =>
-      testRuntimeResult(
+      testModuleOutput(
         {
           type: z.object({ first: z.function(), second: z.function() }),
           code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
         },
-        ({ first, second }, result) => {
-          assertion(first, result);
-          assertion(second, result);
+        ({ first, second }) => {
+          assert(first);
+          assert(second);
         }
       ));
 
     it("partial function record", () =>
-      testRuntimeResult(
+      testModuleOutput(
         {
           type: z
             .object({ first: z.function(), second: z.function() })
             .partial(),
           code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
         },
-        ({ first, second }, result) => {
+        ({ first, second }) => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          assertion(first!, result);
+          assert(first!);
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          assertion(second!, result);
+          assert(second!);
         }
       ));
   }
 
-  function testRuntimeResult<Def extends ModuleDefinition>(
+  function testModuleOutput<Def extends ModuleDefinition>(
     definition: Def,
-    assertion: RuntimeAssertion<Def["type"]>
+    assert: (output: z.infer<Def["type"]>) => void
   ) {
     return useRuntimeResult(
       (runtime) => runtime.addModule("main", definition),
-      ([result, module]) => assertion(module, result)
+      assert
     );
   }
 
-  function useRuntimeResult<T extends AnyModuleOutputType, SetupOutput>(
-    setup: (runtime: Runtime) => SetupOutput,
-    handle: (res: [Result<CompiledModules, unknown>, SetupOutput]) => void = ([
-      res,
-    ]) => assert(res)
+  function useRuntimeResult<T>(
+    setup: (runtime: Runtime) => T,
+    handle?: (output: T) => void
   ) {
     const runtime = createRuntime();
     const output = setup(runtime);
     const result = runtime.compile();
 
+    if (result.isErr()) {
+      throw result.error;
+    }
+
     try {
-      handle?.([result, output]);
+      handle?.(output);
     } finally {
       runtime.dispose();
     }
   }
 
   return {
-    assert,
     globalAtPath,
     testModuleOutputs,
-    testRuntimeResult,
+    testModuleOutput,
     useRuntimeResult,
   };
 }
-
-export type RuntimeAssertion<T extends AnyModuleOutputType> = (
-  module: CompiledModule<T>,
-  result: Result<CompiledModules, unknown>
-) => unknown;
