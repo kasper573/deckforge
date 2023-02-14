@@ -303,7 +303,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
                 }),
               (tryToAccessSymbol) => {
                 expect(tryToAccessSymbol).toThrowError(
-                  `${symbolName} is not defined`
+                  new RegExp(`${symbolName}['"]? is not defined`)
                 );
               }
             ));
