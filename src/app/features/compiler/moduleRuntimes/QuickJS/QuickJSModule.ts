@@ -54,6 +54,9 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
     }, this.vm.global);
   }
 
+  /**
+   * @deprecated
+   */
   defer(path: string[]): QuickJSHandle {
     const typeAtPath = zodTypeAtPath(this.definition.type, path);
     if (!typeAtPath) {

@@ -47,6 +47,9 @@ export function createMarshal(
     return target;
   }
 
+  /**
+   * @deprecated
+   */
   function deferAssign(
     target: QuickJSHandle,
     keys: string[],
