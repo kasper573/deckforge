@@ -1,6 +1,6 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import type { ZodType } from "zod";
-import { z } from "zod";
+import type { z } from "zod";
 import { Scope } from "quickjs-emscripten";
 import { symbols as abstractSymbols } from "../symbols";
 import type { ModuleRuntime } from "../types";
@@ -75,12 +75,13 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
   call(path: string[], args: unknown[]) {
     return Scope.withScope((scope) => {
       const { vm, marshal } = this;
-      const callResult = vm.callFunction(
-        scope.manage(vm.getProp(vm.global, symbols.invoke)),
-        vm.null,
-        scope.manage(marshal.create(path)),
-        scope.manage(marshal.create(args))
-      );
+      const fnHandle = scope.manage(this.getHandleAtPath(path));
+      if (vm.typeof(fnHandle) !== "function") {
+        return;
+      }
+
+      const argHandles = args.map((a) => scope.manage(marshal.create(a)));
+      const callResult = vm.callFunction(fnHandle, vm.null, ...argHandles);
 
       if (callResult?.error) {
         throw coerceError(
@@ -89,21 +90,10 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
         );
       }
 
-      const rawResponse = callResult.value.consume(this.vm.dump);
-      const jsonResult = safeJsonParse(rawResponse);
-      if (!jsonResult.success) {
-        throw new Error(`Invalid JSON in invocation response: ${rawResponse}`);
-      }
-
-      const parseResult = invocationResponseType.safeParse(jsonResult.data);
-      if (!parseResult.success) {
-        throw new Error(
-          `Invalid data structure in invocation response: ${rawResponse}`
-        );
-      }
-
-      mutate(args, parseResult.data.args);
-      return parseResult.data.returns;
+      const returns = callResult.value.consume(this.vm.dump);
+      const argsAfter = argHandles.map(this.vm.dump);
+      mutate(args, argsAfter);
+      return returns;
     });
   }
 
@@ -121,31 +111,9 @@ function defineCode(definitionCode: string) {
     function ${abstractSymbols.define} (def) {
       ${defVar} = def;
     }
-    function ${symbols.invoke} (path, args) {
-      const fn = path.reduce((acc, key) => acc?.[key], ${defVar});
-      const returns = fn?.(...args);
-      return JSON.stringify({ returns, args });
-    }
     (() => { ${definitionCode} } )();
     ${defVar}
   `;
 }
 
 const mutate = createMutateFn();
-
-const symbols = {
-  invoke: "___invoke___",
-};
-
-const invocationResponseType = z.object({
-  returns: z.unknown(),
-  args: z.array(z.unknown()),
-});
-
-function safeJsonParse(input: string) {
-  try {
-    return { success: true, data: JSON.parse(input) as unknown };
-  } catch (error) {
-    return { success: false, error };
-  }
-}
