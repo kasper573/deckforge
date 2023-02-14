@@ -26,7 +26,7 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
     globals?: object
   ) {
     this.vm = createVM();
-    this.marshal = createMarshal(this.vm);
+    this.marshal = createMarshal(this.vm, this.resolvePath.bind(this));
     this.globalsHandle = globals
       ? this.marshal.assign(this.vm.global, globals)
       : undefined;
@@ -57,7 +57,7 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
     );
   }
 
-  private getHandleAtPath(path: string[]): QuickJSHandle {
+  private resolvePath(path: string[]): QuickJSHandle {
     if (!this.definitionHandle) {
       throw new Error(`Cannot get path handles before compiling has finished`);
     }
@@ -73,7 +73,7 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
   call(path: string[], args: unknown[]) {
     return Scope.withScope((scope) => {
       const { vm, marshal } = this;
-      const fnHandle = scope.manage(this.getHandleAtPath(path));
+      const fnHandle = scope.manage(this.resolvePath(path));
       if (vm.typeof(fnHandle) !== "function") {
         return;
       }

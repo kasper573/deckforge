@@ -1,9 +1,17 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
+import { hasModuleReference, moduleReferenceSymbol } from "../types";
 
 export type Marshal = ReturnType<typeof createMarshal>;
 
-export function createMarshal(vm: QuickJSContext) {
+export function createMarshal(
+  vm: QuickJSContext,
+  resolvePath: (path: string[]) => QuickJSHandle
+) {
   function create(value: unknown): QuickJSHandle {
+    if (hasModuleReference(value)) {
+      const moduleName = value[moduleReferenceSymbol];
+      return resolvePath([moduleName]);
+    }
     if (Array.isArray(value)) {
       return assign(vm.newArray(), value);
     }
@@ -39,7 +47,16 @@ export function createMarshal(vm: QuickJSContext) {
     _path: string[] = []
   ): QuickJSHandle {
     for (const [k, v] of Object.entries(value)) {
-      create(v).consume((h) => vm.setProp(target, k, h));
+      if (hasModuleReference(v)) {
+        vm.defineProp(target, k, {
+          get: () => {
+            const moduleName = v[moduleReferenceSymbol];
+            return resolvePath([moduleName]);
+          },
+        });
+      } else {
+        create(v).consume((h) => vm.setProp(target, k, h));
+      }
     }
     return target;
   }

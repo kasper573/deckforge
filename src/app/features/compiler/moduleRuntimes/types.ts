@@ -50,11 +50,14 @@ export interface ModuleRuntimeOptions {
   compilerOptions?: ModuleCompilerOptions;
 }
 
-export class ModuleReferences implements Record<string, string> {
-  [x: string]: string;
+export class ModuleReferences implements Record<string, ModuleReference> {
+  [x: string]: ModuleReference;
 
-  constructor(definition: Readonly<Record<string, string>>) {
-    Object.assign(this, definition);
+  constructor(definition: Readonly<Record<string, ModuleReference | string>>) {
+    for (const [key, value] of Object.entries(definition)) {
+      this[key] =
+        value instanceof ModuleReference ? value : new ModuleReference(value);
+    }
   }
 
   static create(names: string[] | Record<string, string>) {
@@ -65,3 +68,41 @@ export class ModuleReferences implements Record<string, string> {
     );
   }
 }
+
+export const moduleReferenceSymbol = Symbol("moduleReference");
+
+export class ModuleReference implements ModuleReferenceMeta {
+  [moduleReferenceSymbol] = "";
+
+  constructor(moduleName: string) {
+    this[moduleReferenceSymbol] = moduleName;
+  }
+
+  toString() {
+    return this[moduleReferenceSymbol];
+  }
+}
+
+export function addModuleReference<T extends object>(
+  target: T,
+  moduleName: string
+) {
+  Object.assign(target, {
+    [moduleReferenceSymbol]: moduleName,
+  });
+}
+
+export const hasModuleReference = (
+  value: unknown
+): value is ModuleReferenceMeta => {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    moduleReferenceSymbol in value &&
+    typeof value[moduleReferenceSymbol] === "string"
+  );
+};
+
+type ModuleReferenceMeta = {
+  [moduleReferenceSymbol]: string;
+};
