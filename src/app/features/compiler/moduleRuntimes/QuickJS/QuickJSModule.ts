@@ -21,7 +21,7 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
     private readonly vm: QuickJSContext,
     public readonly definition: Readonly<ModuleDefinition<Output>>
   ) {
-    this.marshal = createMarshal(vm, this.resolvePath.bind(this));
+    this.marshal = createMarshal(vm, this.defer.bind(this));
     this.globalsHandle = this.definition.globals
       ? this.marshal.assign(vm.global, this.definition.globals)
       : undefined;
@@ -45,7 +45,7 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
     );
   }
 
-  private resolvePath(path: string[]): QuickJSHandle {
+  resolve(path: string[]): QuickJSHandle {
     return [symbols.definition, ...path].reduce((prev, key) => {
       const next = this.vm.getProp(prev, key);
       prev.dispose();
@@ -53,7 +53,7 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
     }, this.vm.global);
   }
 
-  private deferPath(path: string[]): QuickJSHandle {
+  defer(path: string[]): QuickJSHandle {
     const typeAtPath = zodTypeAtPath(this.definition.type, path);
     if (!typeAtPath) {
       throw new Error(`Unknown path: ${path.join(".")}`);
@@ -66,20 +66,20 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
       for (const key of Object.keys(typeAtPath.shape)) {
         this.vm.defineProp(obj, key, {
           get: () => {
-            return this.marshal.create(() => this.resolvePath([...path, key]));
+            return this.marshal.create(() => this.resolve([...path, key]));
           },
         });
       }
       return obj;
     }
-    return this.resolvePath(path);
+    return this.resolve(path);
   }
 
   call(path: string[], args: unknown[]) {
     return Scope.withScope((scope) => {
       const { vm, marshal } = this;
       const dump = this.vm.dump(this.vm.global);
-      const fnHandle = scope.manage(this.resolvePath(path));
+      const fnHandle = scope.manage(this.resolve(path));
       if (vm.typeof(fnHandle) !== "function") {
         return;
       }
