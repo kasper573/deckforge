@@ -468,12 +468,42 @@ export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
     handle?: (result: RuntimeCompileResult, setupOutput: T) => void
   ) {
     const compiler = createCompiler();
+
+    let setupOutput: T;
+    let setupError: unknown;
     try {
-      const setupOutput = setup(compiler);
-      const result = compiler.compile();
-      handle?.(result, setupOutput);
-    } finally {
+      setupOutput = setup(compiler);
+    } catch (error) {
+      setupError = error;
+    }
+
+    const result = compiler.compile();
+
+    let handlerError: unknown;
+    if (!setupError) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        handle?.(result, setupOutput!);
+      } catch (error) {
+        handlerError = error;
+      }
+    }
+
+    let disposeError: unknown;
+    try {
       compiler.dispose();
+    } catch (error) {
+      disposeError = error;
+    }
+
+    if (setupError) {
+      throw setupError;
+    }
+    if (handlerError) {
+      throw handlerError;
+    }
+    if (disposeError) {
+      throw disposeError;
     }
   }
 
