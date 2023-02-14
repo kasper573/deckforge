@@ -1,19 +1,22 @@
 import type { QuickJSHandle, QuickJSWASMModule } from "quickjs-emscripten";
 import { err, ok } from "neverthrow";
 import type { QuickJSContext } from "quickjs-emscripten";
-import type { z } from "zod";
+import { z } from "zod";
 import type { ZodType } from "zod";
 import { ZodFunction } from "zod";
 import type { QuickJSRuntime } from "quickjs-emscripten";
 import { zodInstanceOf } from "../../../../lib/zod-extensions/zodInstanceOf";
 import { createZodProxy } from "../../../../lib/zod-extensions/createZodProxy";
-import type { CompiledModule, CompiledModules, ModuleDefinition, ModuleRuntime } from "./types";
+import type {
+  CompiledModule,
+  CompiledModules,
+  ModuleDefinition,
+  ModuleRuntime,
+} from "./types";
 import { ModuleReferences } from "./types";
-import { symbols } from "./symbols";
+import { symbols as abstractSymbols } from "./symbols";
 
-export function createQuickJSModuleRuntime(
-  quick: QuickJSWASMModule
-) {
+export function createQuickJSModuleRuntime(quick: QuickJSWASMModule) {
   const modules = new Map<string, QuickJSModule>();
   const runtime = quick.newRuntime({});
   return {
@@ -28,16 +31,15 @@ export function createQuickJSModuleRuntime(
       return newModule.compiled;
     },
     compile() {
-      const errors: unknown[] = []
       const compiled: CompiledModules = {};
       for (const [name, m] of modules.entries()) {
         if (m.error) {
-          errors.push(m.error);
+          return err(m.error);
         } else {
           compiled[name] = m.compiled;
         }
       }
-      return errors.length > 0 ? err(errors) : ok(compiled)
+      return ok(compiled);
     },
     dispose() {
       modules.forEach((m) => m.dispose());
@@ -62,16 +64,15 @@ class QuickJSModule<Definition extends ModuleDefinition = ModuleDefinition> {
     );
 
     if (result.error) {
-      this.error = this.vm.dump(result.error);
-      result.error.dispose();
+      this.error = coerceError(
+        result.error.consume(this.vm.dump),
+        "Failed to compile module"
+      );
     } else {
       result.value.dispose();
     }
 
-    this.compiled = createQuickJSModuleInterface(
-      this.vm,
-      this.definition.type
-    );
+    this.compiled = createQuickJSModuleInterface(this.vm, this.definition.type);
   }
 
   dispose() {
@@ -89,19 +90,23 @@ function createQuickJSModuleInterface<T extends ZodType>(
       throw new Error("Unsupported type");
     }
     return (...args: unknown[]) => {
-      const result = vm.evalCode(
-        `${path.join(".")}(...${JSON.stringify(args)});`
-      );
-      const handle = vm.unwrapResult(result);
-      return getJSValue(vm, handle);
+      const result = vm.evalCode(invocationCode(path, args));
+      if (result.error) {
+        throw coerceError(
+          result.error.consume(vm.dump),
+          "Failed to invoke " + ["module", ...path].join(".")
+        );
+      }
+      return result.value.consume(vm.dump);
     };
   });
 }
 
-function getJSValue(vm: QuickJSContext, handle: QuickJSHandle): unknown {
-  handle.dispose();
-  return undefined;
-}
+const invocationCode = (path: string[], args: unknown[]) =>
+  `${symbols.select}(${JSON.stringify(path)})(${stringifyArgs(args)});`;
+
+const stringifyArgs = (args: unknown[]) =>
+  args.map((a) => JSON.stringify(a)).join(", ");
 
 function declareGlobals(
   vm: QuickJSContext,
@@ -110,8 +115,33 @@ function declareGlobals(
   return undefined;
 }
 
+const errorType = z.object({
+  message: z.string(),
+  name: z.string(),
+  stack: z.string(),
+});
+
+function coerceError(input: unknown, description: string): Error {
+  const result = errorType.safeParse(input);
+  if (result.success) {
+    const { name, message, stack } = result.data;
+    return new Error(`${description}. ${name}: ${message}\n${stack}`);
+  }
+  return new Error(description + ": " + String(input));
+}
+
+const symbols = {
+  ...abstractSymbols,
+  def: "___definition___",
+  select: "___selectFromDefinition___",
+};
+
 const defineFunctionConventionBindings = `
-function ${symbols.define} (def) {
-  module.exports = def;
-}    
+let ${symbols.def} = undefined;
+function ${abstractSymbols.define} (def) {
+  ${symbols.def} = def;
+}
+function ${symbols.select}(path) {
+  return path.reduce((acc, key) => acc[key], ${symbols.def});
+}
 `;
