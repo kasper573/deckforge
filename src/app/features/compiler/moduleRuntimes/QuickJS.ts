@@ -50,13 +50,15 @@ export function createQuickJSModuleRuntime(quick: QuickJSWASMModule) {
 
 class QuickJSModule<Definition extends ModuleDefinition = ModuleDefinition> {
   readonly compiled: CompiledModule<Definition["type"]>;
-  private readonly globalsHandle?: QuickJSHandle;
+  private readonly globalsHandle?: RecursiveQuickJSHandle;
   private readonly vm: QuickJSContext;
   readonly error?: unknown;
 
   constructor(private runtime: QuickJSRuntime, private definition: Definition) {
     this.vm = runtime.newContext({});
-    this.globalsHandle = declareGlobals(this.vm, definition.globals);
+    this.globalsHandle = definition.globals
+      ? assign(this.vm, this.vm.global, definition.globals)
+      : undefined;
 
     const result = this.vm.evalCode(
       `${defineFunctionConventionBindings}\n${definition.code}`
@@ -75,7 +77,9 @@ class QuickJSModule<Definition extends ModuleDefinition = ModuleDefinition> {
   }
 
   dispose() {
-    this.globalsHandle?.dispose();
+    if (this.globalsHandle) {
+      disposeRecursive(this.globalsHandle);
+    }
     this.vm.dispose();
   }
 }
@@ -107,11 +111,60 @@ const invocationCode = (path: string[], args: unknown[]) =>
 const stringifyArgs = (args: unknown[]) =>
   args.map((a) => JSON.stringify(a)).join(", ");
 
-function declareGlobals(
+function newValue(vm: QuickJSContext, value: unknown): RecursiveQuickJSHandle {
+  if (Array.isArray(value)) {
+    return assign(vm, vm.newArray(), value);
+  }
+  if (value === null) {
+    return { handle: vm.null };
+  }
+  if (value === undefined) {
+    return { handle: vm.undefined };
+  }
+  switch (typeof value) {
+    case "string":
+      return { handle: vm.newString(value) };
+    case "number":
+      return { handle: vm.newNumber(value) };
+    case "boolean":
+      return { handle: value ? vm.true : vm.false };
+    case "object":
+      return assign(vm, vm.newObject(), value);
+    case "function":
+      return {
+        handle: vm.newFunction(value.name, (...argumentHandles) => {
+          const args = argumentHandles.map(vm.dump);
+          const result = value(...args);
+          return newValue(vm, result).handle;
+        }),
+      };
+  }
+
+  throw new Error("Unsupported value type: " + value);
+}
+
+function assign<Target extends QuickJSHandle>(
   vm: QuickJSContext,
-  globals?: object
-): QuickJSHandle | undefined {
-  return undefined;
+  target: Target,
+  props: object
+): RecursiveQuickJSHandle {
+  const children: RecursiveQuickJSHandle[] = [];
+  for (const [k, v] of Object.entries(props)) {
+    const node = newValue(vm, v);
+    vm.setProp(target, k, node.handle);
+    children.push(node);
+  }
+  return { handle: target, children };
+}
+
+type RecursiveQuickJSHandle = {
+  handle: QuickJSHandle;
+  children?: RecursiveQuickJSHandle[];
+};
+
+function disposeRecursive(node: RecursiveQuickJSHandle) {
+  node.children?.forEach(disposeRecursive);
+  node.handle.dispose();
 }
 
 const errorType = z.object({
