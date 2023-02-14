@@ -2,10 +2,13 @@ import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import type { ZodType } from "zod";
 import type { z } from "zod";
 import { Scope } from "quickjs-emscripten";
+import { ZodFunction, ZodObject } from "zod";
 import { symbols as abstractSymbols } from "../symbols";
 import type { ModuleRuntime } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
 import { createMutateFn } from "../createMutateFn";
+import { zodTypeAtPath } from "../../../../../lib/zod-extensions/zodTypeAtPath";
+import { zodInstanceOf } from "../../../../../lib/zod-extensions/zodInstanceOf";
 import type { Marshal } from "./marshal";
 import { createMarshal } from "./marshal";
 import { coerceError } from "./errorType";
@@ -16,17 +19,16 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
   private readonly marshal: Marshal;
   readonly compiled: Output;
   readonly definitionHandle?: QuickJSHandle;
-
   readonly error?: unknown;
 
   constructor(
     createVM: () => QuickJSContext,
-    type: ZodType<Output>,
+    private readonly type: ZodType<Output>,
     code: string,
     globals?: object
   ) {
     this.vm = createVM();
-    this.marshal = createMarshal(this.vm, this.resolvePath.bind(this));
+    this.marshal = createMarshal(this.vm, this.deferPath.bind(this));
     this.globalsHandle = globals
       ? this.marshal.assign(this.vm.global, globals)
       : undefined;
@@ -68,6 +70,28 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
       }
       return handle;
     }, this.definitionHandle);
+  }
+
+  private deferPath(path: string[]): QuickJSHandle {
+    const typeAtPath = zodTypeAtPath(this.type, path);
+    if (!typeAtPath) {
+      throw new Error(`Unknown path: ${path.join(".")}`);
+    }
+    if (zodInstanceOf(typeAtPath, ZodFunction)) {
+      return this.marshal.create((...args: unknown[]) => this.call(path, args));
+    }
+    if (zodInstanceOf(typeAtPath, ZodObject)) {
+      const obj = this.vm.newObject();
+      for (const key of Object.keys(typeAtPath.shape)) {
+        this.vm.defineProp(obj, key, {
+          get: () => {
+            return this.marshal.create(() => this.resolvePath([...path, key]));
+          },
+        });
+      }
+      return obj;
+    }
+    return this.resolvePath(path);
   }
 
   call(path: string[], args: unknown[]) {

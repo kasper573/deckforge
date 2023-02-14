@@ -53,18 +53,27 @@ export interface ModuleRuntimeOptions {
 export class ModuleReferences implements Record<string, ModuleReference> {
   [x: string]: ModuleReference;
 
-  constructor(definition: Readonly<Record<string, ModuleReference | string>>) {
+  constructor(definition: Readonly<Record<string, ModuleReference>>) {
     for (const [key, value] of Object.entries(definition)) {
-      this[key] =
-        value instanceof ModuleReference ? value : new ModuleReference(value);
+      this[key] = value;
     }
   }
 
-  static create(names: string[] | Record<string, string>) {
+  static create(references: string[] | Record<string, string | string[]>) {
+    if (Array.isArray(references)) {
+      return new ModuleReferences(
+        Object.fromEntries(
+          references.map((name) => [name, new ModuleReference([name])])
+        )
+      );
+    }
     return new ModuleReferences(
-      Array.isArray(names)
-        ? Object.fromEntries(names.map((name) => [name, name]))
-        : names
+      Object.fromEntries(
+        Object.entries(references).map(([key, value]) => [
+          key,
+          ModuleReference.create(value),
+        ])
+      )
     );
   }
 }
@@ -72,14 +81,20 @@ export class ModuleReferences implements Record<string, ModuleReference> {
 export const moduleReferenceSymbol = Symbol("moduleReference");
 
 export class ModuleReference implements ModuleReferenceMeta {
-  [moduleReferenceSymbol] = "";
+  [moduleReferenceSymbol]: string[] = [];
 
-  constructor(moduleName: string) {
-    this[moduleReferenceSymbol] = moduleName;
+  constructor(path: string[]) {
+    this[moduleReferenceSymbol] = path;
   }
 
   toString() {
-    return this[moduleReferenceSymbol];
+    return this[moduleReferenceSymbol].join(".");
+  }
+
+  static create(nameOrPath: string | string[]) {
+    return new ModuleReference(
+      Array.isArray(nameOrPath) ? nameOrPath : [nameOrPath]
+    );
   }
 }
 
@@ -104,5 +119,5 @@ export const hasModuleReference = (
 };
 
 type ModuleReferenceMeta = {
-  [moduleReferenceSymbol]: string;
+  [moduleReferenceSymbol]: string[];
 };
