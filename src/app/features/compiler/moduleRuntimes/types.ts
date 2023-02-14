@@ -19,6 +19,7 @@ export type CompiledModules<
 export interface ModuleDefinition<
   T extends AnyModuleOutputType = AnyModuleOutputType
 > {
+  name: string;
   type: T;
   globals?: object;
   code: string;
@@ -27,8 +28,7 @@ export interface ModuleDefinition<
 export type ModuleRuntimeCompileResult = Result<CompiledModules, unknown>;
 
 export interface ModuleRuntime {
-  addModule<Name extends string, Definition extends ModuleDefinition>(
-    name: Name,
+  addModule<Definition extends ModuleDefinition>(
     definition: Definition
   ): CompiledModule<Definition["type"]>;
 

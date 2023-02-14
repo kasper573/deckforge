@@ -14,7 +14,8 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   it("can define a function module without error", () =>
     t.assertValidRuntime((runtime) => {
-      runtime.addModule("test", {
+      runtime.addModule({
+        name: "test",
         type: z.function(),
         code: "define(() => {})",
       });
@@ -22,7 +23,8 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   it("can define a record module without error", () =>
     t.assertValidRuntime((runtime) => {
-      runtime.addModule("test", {
+      runtime.addModule({
+        name: "test",
         type: z.object({ foo: z.function() }),
         code: "define({ foo () { } })",
       });
@@ -51,13 +53,14 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     const addFnModule =
       (name: string, code = "") =>
       (runtime: ModuleRuntime) =>
-        runtime.addModule(name, { type: z.function(), code });
+        runtime.addModule({ name, type: z.function(), code });
 
     const addRecordModule =
       (name: string, code = "") =>
       (runtime: ModuleRuntime) => {
         const functionName = "foo" as const;
-        return runtime.addModule(name, {
+        return runtime.addModule({
+          name,
           type: z.object({ [functionName]: z.function() }),
           code: code ? `define({ ${functionName}: ${code} })` : "",
         })[functionName];
@@ -93,7 +96,8 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
     it("one record module with one empty and one defined function", () =>
       testEmptyInvoke((runtime) => {
-        const record = runtime.addModule("record", {
+        const record = runtime.addModule({
+          name: "record",
           type: z.object({ empty: z.function(), defined: z.function() }),
           code: `define({ defined: define(() => 5) })`,
         });
@@ -117,11 +121,13 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   it("calling module A from module B", () =>
     t.assertValidRuntime(
       (runtime) => {
-        const moduleA = runtime.addModule("moduleA", {
+        const moduleA = runtime.addModule({
+          name: "moduleA",
           type: z.function(),
           code: `define((...args) => ["A", ...args])`,
         });
-        const moduleB = runtime.addModule("moduleB", {
+        const moduleB = runtime.addModule({
+          name: "moduleB",
           type: z.function(),
           code: `define((...args) => moduleA("B", ...args))`,
           globals: { moduleA },
@@ -137,11 +143,13 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   it("calling module A from module B via reference", () =>
     t.assertValidRuntime(
       (runtime) => {
-        runtime.addModule("moduleA", {
+        runtime.addModule({
+          name: "moduleA",
           type: z.function(),
           code: `define((...args) => ["A", ...args])`,
         });
-        return runtime.addModule("moduleB", {
+        return runtime.addModule({
+          name: "moduleB",
           type: z.function(),
           code: `define((...args) => moduleA("B", ...args))`,
           globals: runtime.refs(["moduleA"]),
@@ -157,7 +165,8 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
     t.assertValidRuntime(
       (runtime) => {
         const countProxy = (n: number, calls?: number) => count(n, calls);
-        const count = runtime.addModule("moduleA", {
+        const count = runtime.addModule({
+          name: "moduleA",
           type: z
             .function()
             .args(z.number(), z.number().optional())
@@ -178,12 +187,14 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   it("using arguments mutated by another module during chained function call", () =>
     t.assertValidRuntime(
       (runtime) => {
-        const double = runtime.addModule("double", {
+        const double = runtime.addModule({
+          name: "double",
           type: z.function(),
           code: `define((state) => state.x *= 2)`,
         });
 
-        return runtime.addModule("program", {
+        return runtime.addModule({
+          name: "program",
           type: z.function(),
           code: `define((state) => { state.x = 5; double(state); })`,
           globals: { double },
@@ -285,7 +296,8 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
           it("does not exist", () =>
             t.assertValidRuntime(
               (runtime) =>
-                runtime.addModule("module", {
+                runtime.addModule({
+                  name: "module",
                   type: z.function(),
                   code: `define(() => ${wrapCode(symbolName)})`,
                 }),
@@ -299,7 +311,8 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
           it("does not exist on window object", () =>
             t.assertValidRuntime(
               (runtime) =>
-                runtime.addModule("module", {
+                runtime.addModule({
+                  name: "module",
                   type: z.function(),
                   code: `define(() => ${wrapCode(
                     `typeof window.${symbolName}`
@@ -316,10 +329,7 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
 
   it("can compile empty module without errors", () => {
     t.assertValidRuntime((runtime) => {
-      runtime.addModule("module", {
-        type: z.function(),
-        code: ``,
-      });
+      runtime.addModule({ name: "module", type: z.function(), code: `` });
     });
   });
 }
@@ -385,12 +395,12 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
       ));
   }
 
-  function testModuleOutput<Def extends ModuleDefinition>(
+  function testModuleOutput<Def extends Omit<ModuleDefinition, "name">>(
     definition: Def,
     assert: (output: z.infer<Def["type"]>) => void
   ) {
     return assertValidRuntime(
-      (runtime) => runtime.addModule("main", definition),
+      (runtime) => runtime.addModule({ name: "main", ...definition }),
       assert
     );
   }

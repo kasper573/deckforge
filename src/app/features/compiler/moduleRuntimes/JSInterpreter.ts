@@ -24,26 +24,27 @@ export class JSInterpreterModuleRuntime implements ModuleRuntime {
 
   constructor(private options: ModuleRuntimeOptions = {}) {}
 
-  addModule<Name extends string, Definition extends ModuleDefinition>(
-    name: Name,
-    definition: Definition
-  ) {
-    assertValidIdentifier(name);
-    this.#definitions[name] = definition;
+  addModule<Definition extends ModuleDefinition>(definition: Definition) {
+    assertValidIdentifier(definition.name);
+    this.#definitions[definition.name] = definition;
 
-    return createModuleProxy(name, definition, (_, functionName, args) => {
-      const m = this.#modules?.[name];
-      if (!m) {
-        throw new Error("Module not compiled");
+    return createModuleProxy(
+      definition.name,
+      definition,
+      (_, functionName, args) => {
+        const m = this.#modules?.[definition.name];
+        if (!m) {
+          throw new Error("Module not compiled");
+        }
+        const f = functionName ? m[functionName as keyof typeof m] : m;
+        if (typeof f !== "function") {
+          throw new Error(
+            `Property "${functionName}" is not a function on module "${definition.name}"`
+          );
+        }
+        return f(...args);
       }
-      const f = functionName ? m[functionName as keyof typeof m] : m;
-      if (typeof f !== "function") {
-        throw new Error(
-          `Property "${functionName}" is not a function on module "${name}"`
-        );
-      }
-      return f(...args);
-    });
+    );
   }
 
   refs = ModuleReferences.create;
