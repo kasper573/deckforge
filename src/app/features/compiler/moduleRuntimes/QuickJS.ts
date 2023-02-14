@@ -1,5 +1,5 @@
 import type { QuickJSHandle, QuickJSWASMModule } from "quickjs-emscripten";
-import { ok } from "neverthrow";
+import { err, ok } from "neverthrow";
 import type { QuickJSContext } from "quickjs-emscripten";
 import type { z } from "zod";
 import type { ZodType } from "zod";
@@ -7,7 +7,7 @@ import { ZodFunction } from "zod";
 import type { QuickJSRuntime } from "quickjs-emscripten";
 import { zodInstanceOf } from "../../../../lib/zod-extensions/zodInstanceOf";
 import { createZodProxy } from "../../../../lib/zod-extensions/createZodProxy";
-import type { CompiledModule, ModuleDefinition, ModuleRuntime } from "./types";
+import type { CompiledModule, CompiledModules, ModuleDefinition, ModuleRuntime } from "./types";
 import { ModuleReferences } from "./types";
 import { symbols } from "./symbols";
 
@@ -25,14 +25,19 @@ export function createQuickJSModuleRuntime(
       }
       const newModule = new QuickJSModule(runtime, definition);
       modules.set(name, newModule);
-      return newModule.interface;
+      return newModule.compiled;
     },
     compile() {
-      return ok(
-        Object.fromEntries(
-          Array.from(modules.entries()).map(([name, m]) => [name, m.interface])
-        )
-      );
+      const errors: unknown[] = []
+      const compiled: CompiledModules = {};
+      for (const [name, m] of modules.entries()) {
+        if (m.error) {
+          errors.push(m.error);
+        } else {
+          compiled[name] = m.compiled;
+        }
+      }
+      return errors.length > 0 ? err(errors) : ok(compiled)
     },
     dispose() {
       modules.forEach((m) => m.dispose());
@@ -43,31 +48,34 @@ export function createQuickJSModuleRuntime(
 }
 
 class QuickJSModule<Definition extends ModuleDefinition = ModuleDefinition> {
-  readonly interface: CompiledModule<Definition["type"]>;
+  readonly compiled: CompiledModule<Definition["type"]>;
   private readonly globalsHandle?: QuickJSHandle;
   private readonly vm: QuickJSContext;
+  readonly error?: unknown;
 
   constructor(private runtime: QuickJSRuntime, private definition: Definition) {
     this.vm = runtime.newContext({});
     this.globalsHandle = declareGlobals(this.vm, definition.globals);
 
-    const definitionEvaluation = this.vm.evalCode(
+    const result = this.vm.evalCode(
       `${definition.code}\n${defineFunctionConventionBindings}`
     );
 
-    // Evaluation output not used and can be disposed immediately
-    this.vm.unwrapResult(definitionEvaluation).dispose();
+    if (result.error) {
+      this.error = this.vm.dump(result.error);
+      result.error.dispose();
+    } else {
+      result.value.dispose();
+    }
 
-    this.interface = createQuickJSModuleInterface(
+    this.compiled = createQuickJSModuleInterface(
       this.vm,
       this.definition.type
     );
   }
 
   dispose() {
-    if (this.globalsHandle) {
-      this.globalsHandle.dispose();
-    }
+    this.globalsHandle?.dispose();
     this.vm.dispose();
   }
 }
