@@ -15,6 +15,22 @@ import type {
 export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
   const t = createRuntimeTestUtils(createRuntime);
 
+  it("can define a function module without error", () =>
+    t.useRuntimeResult((runtime) => {
+      runtime.addModule("test", {
+        type: z.function(),
+        code: "defines(() => {})",
+      });
+    }));
+
+  it("can define a record module without error", () =>
+    t.useRuntimeResult((runtime) => {
+      runtime.addModule("test", {
+        type: z.object({ foo: z.function() }),
+        code: "defines({ foo () { } })",
+      });
+    }));
+
   describe("return value", () =>
     t.testModuleOutputs("() => 5", (fn) => {
       expect(fn()).toEqual(5);
