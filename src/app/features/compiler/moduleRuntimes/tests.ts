@@ -244,20 +244,38 @@ export function generateModuleRuntimeTests(createRuntime: () => ModuleRuntime) {
         null,
         undefined,
       ];
-      t.testModuleOutput(
-        {
-          type: z.function(),
-          globals: t.globalAtPath(path, values),
-          code: `define(() => ${path.join(".")})`,
-        },
-        (fn) => {
-          expect(fn()).toEqual(values);
-        }
-      );
+      for (const value of values) {
+        it(JSON.stringify(value), () => {
+          t.testModuleOutput(
+            {
+              type: z.function(),
+              globals: t.globalAtPath(path, value),
+              code: `define(() => ${path.join(".")})`,
+            },
+            (fn) => {
+              expect(fn()).toEqual(value);
+            }
+          );
+        });
+
+        it(`${JSON.stringify(value)} in array`, () => {
+          t.testModuleOutput(
+            {
+              type: z.function(),
+              globals: t.globalAtPath(path, [value]),
+              code: `define(() => ${path.join(".")})`,
+            },
+            (fn) => {
+              expect(fn()).toEqual([value]);
+            }
+          );
+        });
+      }
     }
-    it("in root", () => test(["root"]));
-    it("in nested object", () => test(["root", "nested"]));
-    it("in deeply nested object", () => test(["root", "nested", "deeply"]));
+    describe("in root", () => test(["root"]));
+    describe("in nested object", () => test(["root", "nested"]));
+    describe("in deeply nested object", () =>
+      test(["root", "nested", "deeply"]));
   });
 
   describe("sandboxing", () => {
