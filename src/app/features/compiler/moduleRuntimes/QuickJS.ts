@@ -59,7 +59,7 @@ class QuickJSModule<Definition extends ModuleDefinition = ModuleDefinition> {
     this.globalsHandle = declareGlobals(this.vm, definition.globals);
 
     const result = this.vm.evalCode(
-      `${definition.code}\n${defineFunctionConventionBindings}`
+      `${defineFunctionConventionBindings}\n${definition.code}`
     );
 
     if (result.error) {
