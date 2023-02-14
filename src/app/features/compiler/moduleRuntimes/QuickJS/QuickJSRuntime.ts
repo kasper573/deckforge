@@ -37,13 +37,10 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
     if (result.error) {
       this.error = coerceError(
         result.error.consume(this.vm.dump),
-        `Failed to compile module`
+        `Failed to compile modules`
       );
     } else {
       this.definitionHandle = result.value;
-      if (!this.definitionHandle) {
-        this.error = new Error("Module did define a value");
-      }
     }
 
     this.compiled = QuickJSModuleRuntime.createProxy(type, () => this);
@@ -63,11 +60,7 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
 
   private getHandleAtPath(path: string[]): QuickJSHandle {
     if (!this.definitionHandle) {
-      throw new Error(
-        `Could not resolve path "${path.join(".")}" (Module not compiled)\n${
-          this.code
-        }`
-      );
+      throw new Error(`Cannot get path handles before compiling has finished`);
     }
     return path.reduce((target, key) => {
       const handle = this.vm.getProp(target, key);
@@ -95,7 +88,7 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
     if (result?.error) {
       throw coerceError(
         result.error.consume(this.vm.dump),
-        `Failed to invoke "${path.join(".")}"\n${this.code}`
+        `Failed to invoke "${path.join(".")}"`
       );
     }
 
