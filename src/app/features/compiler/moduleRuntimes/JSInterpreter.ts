@@ -1,7 +1,6 @@
 import JSInterpreter from "js-interpreter";
 import type { ZodRawShape, ZodType } from "zod";
 import { z, ZodFunction, ZodObject } from "zod";
-import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
 import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
 import { zodInstanceOf } from "../../../../lib/zod-extensions/zodInstanceOf";
@@ -10,15 +9,16 @@ import type {
   ModuleCompilerOptions,
   ModuleDefinition,
   ModuleDefinitions,
-  ModuleErrorFactory,
   ModuleRuntimeOptions,
   CompiledModule,
   ModuleOutputRecord,
+  ModuleRuntime,
+  ModuleRuntimeCompileResult,
 } from "./types";
-import { ModuleReferences } from "./types";
+import { ModuleCompileError, ModuleReferences } from "./types";
 import { symbols as moduleRuntimeSymbols } from "./symbols";
 
-export class JSInterpreterModuleRuntime {
+export class JSInterpreterModuleRuntime implements ModuleRuntime {
   #modules?: CompiledModules;
   #definitions: ModuleDefinitions = {};
 
@@ -59,15 +59,14 @@ export class JSInterpreterModuleRuntime {
   dispose() {}
 }
 
-function compileModules<Definitions extends ModuleDefinitions>(
-  definitions: Definitions,
-  {
-    compilerOptions,
-    createError: createErrorImpl = (error) => error,
-  }: ModuleRuntimeOptions = {}
-): Result<CompiledModules<Definitions>, unknown> {
-  const createError: ModuleErrorFactory = (error) =>
-    createErrorImpl(bridgeErrorProtocol.parse(error));
+function compileModules(
+  definitions: ModuleDefinitions,
+  { compilerOptions }: ModuleRuntimeOptions = {}
+): ModuleRuntimeCompileResult {
+  const createError = (error: unknown) =>
+    new ModuleCompileError({
+      unknownModule: [bridgeErrorProtocol.parse(error)],
+    });
 
   let code: string;
   try {
@@ -111,7 +110,7 @@ function compileModules<Definitions extends ModuleDefinitions>(
       string[],
       unknown[]
     ];
-    const globals = definitions[moduleName as keyof Definitions]?.globals ?? {};
+    const globals = definitions[moduleName]?.globals ?? {};
     const fn = path.reduce(
       (obj, key) => obj[key as keyof typeof obj],
       globals as object
@@ -168,7 +167,7 @@ function compileModules<Definitions extends ModuleDefinitions>(
       ...acc,
       [moduleName]: createModuleProxy(moduleName, definition, callDefined),
     }),
-    {} as CompiledModules<Definitions>
+    {} as CompiledModules
   );
 
   return ok(moduleProxies);
