@@ -14,23 +14,31 @@ export function generateModuleRuntimeTests(
 ) {
   const t = createRuntimeTestUtils(createCompiler);
 
-  it("can define a function module without error", () =>
-    t.assertValidRuntime((compiler) => {
-      compiler.addModule({
-        name: "test",
-        type: z.function(),
-        code: "define(() => {})",
-      });
-    }));
+  describe("empty definitions", () => {
+    it("can define a function module without error", () =>
+      t.assertValidRuntime((compiler) => {
+        compiler.addModule({
+          name: "test",
+          type: z.function(),
+          code: "define(() => {})",
+        });
+      }));
 
-  it("can define a record module without error", () =>
-    t.assertValidRuntime((compiler) => {
-      compiler.addModule({
-        name: "test",
-        type: z.object({ foo: z.function() }),
-        code: "define({ foo () { } })",
+    it("can define a record module without error", () =>
+      t.assertValidRuntime((compiler) => {
+        compiler.addModule({
+          name: "test",
+          type: z.object({ foo: z.function() }),
+          code: "define({ foo () { } })",
+        });
+      }));
+
+    it("can compile empty module without errors", () => {
+      t.assertValidRuntime((compiler) => {
+        compiler.addModule({ name: "module", type: z.function(), code: `` });
       });
-    }));
+    });
+  });
 
   describe("return value", () =>
     t.testModuleOutputs("() => 5", (fn) => {
@@ -120,116 +128,118 @@ export function generateModuleRuntimeTests(
     }
   });
 
-  it("calling module A from module B", () =>
-    t.assertValidRuntime(
-      (compiler) => {
-        const moduleA = compiler.addModule({
-          name: "moduleA",
-          type: z.function(),
-          code: `define((...args) => ["A", ...args])`,
-        });
-        const moduleB = compiler.addModule({
-          name: "moduleB",
-          type: z.function(),
-          code: `define((...args) => moduleA("B", ...args))`,
-          globals: { moduleA },
-        });
-        return moduleB;
-      },
-      (moduleB) => {
-        const res = moduleB("input");
-        expect(res).toEqual(["A", "B", "input"]);
-      }
-    ));
+  describe("module relationships", () => {
+    it("calling module A from module B", () =>
+      t.assertValidRuntime(
+        (compiler) => {
+          const moduleA = compiler.addModule({
+            name: "moduleA",
+            type: z.function(),
+            code: `define((...args) => ["A", ...args])`,
+          });
+          const moduleB = compiler.addModule({
+            name: "moduleB",
+            type: z.function(),
+            code: `define((...args) => moduleA("B", ...args))`,
+            globals: { moduleA },
+          });
+          return moduleB;
+        },
+        (moduleB) => {
+          const res = moduleB("input");
+          expect(res).toEqual(["A", "B", "input"]);
+        }
+      ));
 
-  it("calling module A from module B via reference", () =>
-    t.assertValidRuntime(
-      (compiler) => {
-        compiler.addModule({
-          name: "moduleA",
-          type: z.function(),
-          code: `define((...args) => ["A", ...args])`,
-        });
-        return compiler.addModule({
-          name: "moduleB",
-          type: z.function(),
-          code: `define((...args) => moduleA("B", ...args))`,
-          globals: compiler.refs(["moduleA"]),
-        });
-      },
-      (moduleB) => {
-        const res = moduleB("input");
-        expect(res).toEqual(["A", "B", "input"]);
-      }
-    ));
+    it("calling module A from module B via reference", () =>
+      t.assertValidRuntime(
+        (compiler) => {
+          compiler.addModule({
+            name: "moduleA",
+            type: z.function(),
+            code: `define((...args) => ["A", ...args])`,
+          });
+          return compiler.addModule({
+            name: "moduleB",
+            type: z.function(),
+            code: `define((...args) => moduleA("B", ...args))`,
+            globals: compiler.refs(["moduleA"]),
+          });
+        },
+        (moduleB) => {
+          const res = moduleB("input");
+          expect(res).toEqual(["A", "B", "input"]);
+        }
+      ));
 
-  it("calling module A from module B via future reference", () =>
-    t.assertValidRuntime(
-      (compiler) => {
-        const b = compiler.addModule({
-          name: "moduleB",
-          type: z.function(),
-          code: `define((...args) => moduleA("B", ...args))`,
-          globals: compiler.refs(["moduleA"]),
-        });
-        compiler.addModule({
-          name: "moduleA",
-          type: z.function(),
-          code: `define((...args) => ["A", ...args])`,
-        });
-        return b;
-      },
-      (moduleB) => {
-        const res = moduleB("input");
-        expect(res).toEqual(["A", "B", "input"]);
-      }
-    ));
+    it("calling module A from module B via future reference", () =>
+      t.assertValidRuntime(
+        (compiler) => {
+          const b = compiler.addModule({
+            name: "moduleB",
+            type: z.function(),
+            code: `define((...args) => moduleA("B", ...args))`,
+            globals: compiler.refs(["moduleA"]),
+          });
+          compiler.addModule({
+            name: "moduleA",
+            type: z.function(),
+            code: `define((...args) => ["A", ...args])`,
+          });
+          return b;
+        },
+        (moduleB) => {
+          const res = moduleB("input");
+          expect(res).toEqual(["A", "B", "input"]);
+        }
+      ));
 
-  it("calling module recursively", () =>
-    t.assertValidRuntime(
-      (compiler) => {
-        const countProxy = (n: number, calls?: number) => count(n, calls);
-        const count = compiler.addModule({
-          name: "moduleA",
-          type: z
-            .function()
-            .args(z.number(), z.number().optional())
-            .returns(z.number()),
-          code: `define((n, calls = 0) => {
+    it("calling module recursively", () =>
+      t.assertValidRuntime(
+        (compiler) => {
+          const countProxy = (n: number, calls?: number) => count(n, calls);
+          const count = compiler.addModule({
+            name: "moduleA",
+            type: z
+              .function()
+              .args(z.number(), z.number().optional())
+              .returns(z.number()),
+            code: `define((n, calls = 0) => {
         return n > 0 ? count(n - 1, calls + 1) : calls;
       })`,
-          globals: { count: countProxy },
-        });
-        return count;
-      },
-      (count) => {
-        const res = count(10, undefined);
-        expect(res).toEqual(10);
-      }
-    ));
+            globals: { count: countProxy },
+          });
+          return count;
+        },
+        (count) => {
+          const res = count(10, undefined);
+          expect(res).toEqual(10);
+        }
+      ));
 
-  it("using arguments mutated by another module during chained function call", () =>
-    t.assertValidRuntime(
-      (compiler) => {
-        const double = compiler.addModule({
-          name: "double",
-          type: z.function(),
-          code: `define((state) => state.x *= 2)`,
-        });
+    it("using arguments mutated by another module during chained function call", () =>
+      t.assertValidRuntime(
+        (compiler) => {
+          const double = compiler.addModule({
+            name: "double",
+            type: z.function(),
+            code: `define((state) => state.x *= 2)`,
+          });
 
-        return compiler.addModule({
-          name: "program",
-          type: z.function(),
-          code: `define((state) => { state.x = 5; double(state); })`,
-          globals: { double },
-        });
-      },
-      (program) => {
-        const state = { x: 0 };
-        program(state);
-        expect(state.x).toEqual(10);
-      }
-    ));
+          return compiler.addModule({
+            name: "program",
+            type: z.function(),
+            code: `define((state) => { state.x = 5; double(state); })`,
+            globals: { double },
+          });
+        },
+        (program) => {
+          const state = { x: 0 };
+          program(state);
+          expect(state.x).toEqual(10);
+        }
+      ));
+  });
 
   describe("global functions", () => {
     function test(path: [string, ...string[]]) {
@@ -367,12 +377,6 @@ export function generateModuleRuntimeTests(
         });
       }
     }
-  });
-
-  it("can compile empty module without errors", () => {
-    t.assertValidRuntime((compiler) => {
-      compiler.addModule({ name: "module", type: z.function(), code: `` });
-    });
   });
 }
 
