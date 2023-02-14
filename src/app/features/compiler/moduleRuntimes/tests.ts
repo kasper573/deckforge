@@ -412,13 +412,42 @@ export function createRuntimeTestUtils<Runtime extends ModuleRuntime>(
     handle?: (result: ModuleRuntimeCompileResult, setupOutput: T) => void
   ) {
     const runtime = createRuntime();
-    const setupOutput = setup(runtime);
+
+    let setupOutput: T;
+    let setupError: unknown;
+    try {
+      setupOutput = setup(runtime);
+    } catch (error) {
+      setupError = error;
+    }
+
     const result = runtime.compile();
 
+    let handlerError: unknown;
+    if (!setupError) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        handle?.(result, setupOutput!);
+      } catch (error) {
+        handlerError = error;
+      }
+    }
+
+    let disposeError: unknown;
     try {
-      handle?.(result, setupOutput);
-    } finally {
       runtime.dispose();
+    } catch (error) {
+      disposeError = error;
+    }
+
+    if (setupError) {
+      throw setupError;
+    }
+    if (handlerError) {
+      throw handlerError;
+    }
+    if (disposeError) {
+      throw disposeError;
     }
   }
 
