@@ -1,10 +1,11 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
-import type { ZodType, z } from "zod";
-import { ZodFunction } from "zod";
+import type { ZodType } from "zod";
+import { z } from "zod";
+import { Scope } from "quickjs-emscripten";
 import { symbols as abstractSymbols } from "../symbols";
 import type { ModuleRuntime } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
-import { zodInstanceOf } from "../../../../../lib/zod-extensions/zodInstanceOf";
+import { createMutateFn } from "../createMutateFn";
 import type { Marshal } from "./marshal";
 import { createMarshal } from "./marshal";
 import { coerceError } from "./errorType";
@@ -50,12 +51,12 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
     type: T,
     getRuntime: () => QuickJSModuleRuntime<z.infer<T>>
   ) {
-    return createZodProxy(type, (path, typeAtPath) => {
-      if (!zodInstanceOf(typeAtPath, ZodFunction)) {
-        throw new Error(`Not a function: "${path.join(".")}"`);
-      }
-      return (...args: unknown[]) => getRuntime().call(path, args);
-    });
+    return createZodProxy(
+      type,
+      (path) =>
+        (...args: unknown[]) =>
+          getRuntime().call(path, args)
+    );
   }
 
   private getHandleAtPath(path: string[]): QuickJSHandle {
@@ -71,28 +72,39 @@ export class QuickJSModuleRuntime<Output> implements ModuleRuntime<Output> {
     }, this.definitionHandle);
   }
 
-  private callUnmanaged(path: string[], argumentHandles: QuickJSHandle[]) {
-    return this.getHandleAtPath(path).consume((handle) => {
-      if (this.vm.typeof(handle) !== "function") {
-        return;
-      }
-      return this.vm.callFunction(handle, this.vm.null, ...argumentHandles);
-    });
-  }
-
-  call(path: string[], args: unknown[]): unknown {
-    const argHandles = args.map(this.marshal.create);
-    const result = this.callUnmanaged(path, argHandles);
-    argHandles.forEach((a) => a.dispose());
-
-    if (result?.error) {
-      throw coerceError(
-        result.error.consume(this.vm.dump),
-        `Failed to invoke "${path.join(".")}"`
+  call(path: string[], args: unknown[]) {
+    return Scope.withScope((scope) => {
+      const { vm, marshal } = this;
+      const callResult = vm.callFunction(
+        scope.manage(vm.getProp(vm.global, symbols.invoke)),
+        vm.null,
+        scope.manage(marshal.create(path)),
+        scope.manage(marshal.create(args))
       );
-    }
 
-    return result?.value.consume(this.vm.dump);
+      if (callResult?.error) {
+        throw coerceError(
+          callResult.error.consume(this.vm.dump),
+          `Failed to invoke "${path.join(".")}"\n\n${this.code}`
+        );
+      }
+
+      const rawResponse = callResult.value.consume(this.vm.dump);
+      const jsonResult = safeJsonParse(rawResponse);
+      if (!jsonResult.success) {
+        throw new Error(`Invalid JSON in invocation response: ${rawResponse}`);
+      }
+
+      const parseResult = invocationResponseType.safeParse(jsonResult.data);
+      if (!parseResult.success) {
+        throw new Error(
+          `Invalid data structure in invocation response: ${rawResponse}`
+        );
+      }
+
+      mutate(args, parseResult.data.args);
+      return parseResult.data.returns;
+    });
   }
 
   dispose() {
@@ -109,7 +121,31 @@ function defineCode(definitionCode: string) {
     function ${abstractSymbols.define} (def) {
       ${defVar} = def;
     }
+    function ${symbols.invoke} (path, args) {
+      const fn = path.reduce((acc, key) => acc?.[key], ${defVar});
+      const returns = fn?.(...args);
+      return JSON.stringify({ returns, args });
+    }
     (() => { ${definitionCode} } )();
     ${defVar}
   `;
+}
+
+const mutate = createMutateFn();
+
+const symbols = {
+  invoke: "___invoke___",
+};
+
+const invocationResponseType = z.object({
+  returns: z.unknown(),
+  args: z.array(z.unknown()),
+});
+
+function safeJsonParse(input: string) {
+  try {
+    return { success: true, data: JSON.parse(input) as unknown };
+  } catch (error) {
+    return { success: false, error };
+  }
 }
