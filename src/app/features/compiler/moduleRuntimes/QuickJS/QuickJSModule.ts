@@ -12,7 +12,7 @@ import { createMarshal } from "./marshal";
 import { coerceError } from "./errorType";
 
 export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
-  private readonly marshal: Marshal;
+  readonly marshal: Marshal;
   readonly compiled: ModuleOutput;
   readonly error?: unknown;
 
@@ -63,13 +63,11 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
       return this.marshal.create((...args: unknown[]) => this.call(path, args));
     }
     if (zodInstanceOf(typeAtPath, ZodObject)) {
-      const obj = this.vm.newObject();
-      for (const key of Object.keys(typeAtPath.shape)) {
-        this.vm.defineProp(obj, key, {
-          get: () => this.marshal.create(() => this.resolve([...path, key])),
-        });
-      }
-      return obj;
+      return this.marshal.deferAssign(
+        this.vm.newObject(),
+        Object.keys(typeAtPath.shape),
+        (key) => this.resolve([...path, key])
+      );
     }
     return this.resolve(path);
   }

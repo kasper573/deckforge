@@ -47,8 +47,23 @@ export function createMarshal(
     return target;
   }
 
+  function deferAssign(
+    target: QuickJSHandle,
+    keys: string[],
+    resolve: (key: string) => QuickJSHandle
+  ): QuickJSHandle {
+    const obj = vm.newObject();
+    for (const key of keys) {
+      vm.defineProp(obj, key, {
+        get: () => create(() => resolve(key)),
+      });
+    }
+    return obj;
+  }
+
   return {
     create,
     assign,
+    deferAssign,
   };
 }
