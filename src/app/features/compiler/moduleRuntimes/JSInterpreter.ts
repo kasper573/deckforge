@@ -52,7 +52,7 @@ export class JSInterpreterCompiler implements ModuleCompiler {
   compile() {
     const result = compileRuntime(this.#definitions, this.options);
     if (result.isOk()) {
-      this.#modules = result.value.modules;
+      this.#modules = result.value.compiled;
     }
     return result;
   }
@@ -166,7 +166,7 @@ function compileRuntime(
     {} as CompiledModules
   );
 
-  return ok({ modules: moduleProxies, dispose() {} });
+  return ok({ compiled: moduleProxies, dispose() {} });
 }
 
 function createModuleCode(

@@ -26,7 +26,7 @@ export interface ModuleDefinition<
 }
 
 export type ModuleRuntime = {
-  readonly modules: CompiledModules;
+  readonly compiled: CompiledModules;
   dispose(): void;
 };
 
