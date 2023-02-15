@@ -1,6 +1,7 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import { Scope } from "quickjs-emscripten";
 import { z } from "zod";
+import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
 import { symbols as abstractSymbols } from "../symbols";
 import type { ModuleDefinition, ModuleOutput } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
@@ -24,15 +25,30 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
       this.marshal.assign(vm.global, this.definition.globals).dispose();
     }
 
-    const result = vm.evalCode(defineCode(this.definition.code));
-
-    if (result.error) {
-      this.error = coerceError(
-        result.error.consume(this.vm.dump),
-        `Failed to compile module "${definition.name}"`
+    let transpiledCode: string | undefined;
+    try {
+      transpiledCode = transpileModule(definition.code, {
+        compilerOptions: {
+          target: ScriptTarget.ES2020,
+          module: ModuleKind.ES2020,
+        },
+      }).outputText;
+    } catch (error) {
+      this.error = new Error(
+        "Failed to transpile module as typescript:\n" + error
       );
-    } else {
-      result.value.dispose();
+    }
+
+    if (transpiledCode) {
+      const evalResult = vm.evalCode(defineCode(transpiledCode));
+      if (evalResult.error) {
+        this.error = coerceError(
+          evalResult.error.consume(this.vm.dump),
+          `Failed to compile module "${definition.name}"`
+        );
+      } else {
+        evalResult.value.dispose();
+      }
     }
 
     this.compiled = createZodProxy(
