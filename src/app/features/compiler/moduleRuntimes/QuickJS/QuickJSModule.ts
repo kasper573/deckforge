@@ -29,7 +29,7 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
     if (result.error) {
       this.error = coerceError(
         result.error.consume(this.vm.dump),
-        `Failed to compile modules`
+        `Failed to compile module "${definition.name}"`
       );
     } else {
       result.value.dispose();
