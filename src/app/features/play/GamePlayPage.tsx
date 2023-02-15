@@ -7,22 +7,28 @@ import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import { trpc } from "../../trpc";
 import { GameRenderer } from "../compiler/GameRenderer";
 import { gameTypes } from "../gameTypes";
+import { useDisposable } from "../../hooks/useDisposable";
+import { useAsyncMemo } from "../../hooks/useAsyncMemo";
+import { moduleCompiler } from "../compiler/moduleRuntimes";
 
 export default function GamePlayPage() {
   const { slug } = useRouteParams(router.play);
   const { data: game } = trpc.game.read.useQuery({ type: "slug", slug });
 
+  const createModuleCompiler = useAsyncMemo(moduleCompiler.loadCompilerFactory);
   const compiled = useMemo(() => {
-    if (game) {
+    if (game && createModuleCompiler) {
       const baseDefinition = gameTypes.get(game.type)?.runtimeDefinition;
       if (baseDefinition) {
         return compileGame(
           deriveRuntimeDefinition(game.definition, baseDefinition),
-          game.definition
+          game.definition,
+          { moduleCompiler: createModuleCompiler() }
         );
       }
     }
-  }, [game]);
+  }, [game, createModuleCompiler]);
+  useDisposable(compiled);
 
   if (!compiled || compiled?.errors || !compiled.runtime) {
     throw new Error(

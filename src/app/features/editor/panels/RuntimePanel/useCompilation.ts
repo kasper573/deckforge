@@ -8,6 +8,9 @@ import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 import { compileGame } from "../../../compiler/compileGame";
 import { useReaction } from "../../../../../lib/useReaction";
+import { moduleCompiler } from "../../../compiler/moduleRuntimes";
+import { useAsyncMemo } from "../../../../hooks/useAsyncMemo";
+import { useDisposable } from "../../../../hooks/useDisposable";
 import { colors } from "./colors";
 
 export function useCompilation(
@@ -17,11 +20,13 @@ export function useCompilation(
   const [resetCount, increaseResetCount] = useReducer((c) => c + 1, 0);
   const [definitions, { isPending }] = useDebouncedDefinitions();
   const isCompiling = isPending();
+  const createModuleCompiler = useAsyncMemo(moduleCompiler.loadCompilerFactory);
   const compiled = useMemo(() => {
     const [game, runtime] = definitions;
-    if (game && runtime) {
+    if (game && runtime && createModuleCompiler) {
       return compileGame(runtime, game, {
         seed,
+        moduleCompiler: createModuleCompiler(),
         middlewares: (defaults) => [
           createEventLoggerReducer(log),
           createFailSafeReducer(log),
@@ -30,7 +35,8 @@ export function useCompilation(
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [definitions, resetCount, seed, log]);
+  }, [createModuleCompiler, definitions, resetCount, seed, log]);
+  useDisposable(compiled);
 
   useReaction(() => {
     if (compiled?.errors) {

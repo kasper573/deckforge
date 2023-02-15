@@ -3,7 +3,6 @@ import type { ComponentProps, MutableRefObject } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import { v4 } from "uuid";
 import type { editor, languages } from "monaco-editor";
-import { moduleCompilerOptions } from "../features/compiler/settings";
 
 export type CodeEditorTypeDefs = string;
 
@@ -11,17 +10,19 @@ export interface CodeEditorProps {
   value?: string;
   onChange: (value: string) => void;
   typeDefs?: CodeEditorTypeDefs;
+  compilerOptions?: Partial<languages.typescript.CompilerOptions>;
 }
 
 export function CodeEditor({
   value = "",
   typeDefs,
   onChange,
+  compilerOptions,
 }: CodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor>();
   const [isRefreshingRef, refreshEditor] = useRefreshEditor(editorRef);
   useTypeDefs(typeDefs, refreshEditor);
-  useCompilerOptions(moduleCompilerOptions);
+  useCompilerOptions(compilerOptions);
   return (
     <CodeEditorWithoutTypedefs
       onMount={(editor) => (editorRef.current = editor)}
@@ -93,7 +94,7 @@ function useTypeDefs(
 }
 
 function useCompilerOptions(
-  changedOptions: Partial<languages.typescript.CompilerOptions>
+  changedOptions?: Partial<languages.typescript.CompilerOptions>
 ) {
   const monaco = useMonaco();
   const defaultOptions = useMemo(

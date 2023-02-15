@@ -19,7 +19,13 @@ export interface ModuleDefinition<
 
 export type CompiledModules = Record<string, ModuleOutput>;
 export type ModuleCompilerResult = Result<CompiledModules, unknown>;
-export type ModuleCompilerOptions = Pick<CompilerOptions, "lib">;
+
+export interface ModuleCompilerInfo {
+  name: string;
+  tsCompilerOptions: Pick<CompilerOptions, "lib">;
+  loadCompilerFactory: () => Promise<() => ModuleCompiler>;
+}
+
 export interface ModuleCompiler {
   addModule<Definition extends ModuleDefinition>(
     definition: Definition
@@ -30,10 +36,6 @@ export interface ModuleCompiler {
   compile(): ModuleCompilerResult;
 
   dispose(): void;
-}
-
-export interface ModuleRuntimeOptions {
-  compilerOptions?: ModuleCompilerOptions;
 }
 
 export class ModuleReferences implements Record<string, ModuleReference> {

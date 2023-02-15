@@ -29,18 +29,12 @@ import type {
   RuntimeReducer,
 } from "./types";
 import type { ModuleCompiler } from "./moduleRuntimes/types";
-import { JSInterpreterCompiler } from "./moduleRuntimes/JSInterpreter";
-import { moduleCompilerOptions } from "./settings";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;
   errors?: unknown[];
   dispose?: () => void;
 }
-
-new JSInterpreterCompiler({
-  compilerOptions: moduleCompilerOptions,
-});
 
 export interface CompileGameOptions<G extends RuntimeGenerics> {
   moduleCompiler: ModuleCompiler;

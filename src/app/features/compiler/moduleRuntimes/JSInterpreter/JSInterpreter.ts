@@ -3,26 +3,22 @@ import type { ZodRawShape, ZodType } from "zod";
 import { z, ZodFunction, ZodObject } from "zod";
 import { err, ok } from "neverthrow";
 import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
-import { zodInstanceOf } from "../../../../lib/zod-extensions/zodInstanceOf";
+import { zodInstanceOf } from "../../../../../lib/zod-extensions/zodInstanceOf";
 import type {
   CompiledModules,
-  ModuleCompiler,
-  ModuleCompilerOptions,
   ModuleDefinition,
   ModuleDefinitions,
   ModuleOutputRecord,
-  ModuleRuntimeOptions,
   ModuleCompilerResult,
-} from "./types";
-import { ModuleReferences } from "./types";
-import { symbols as moduleRuntimeSymbols } from "./symbols";
-import { createMutateFn } from "./createMutateFn";
+  ModuleCompiler,
+} from "../types";
+import { ModuleReferences } from "../types";
+import { symbols as moduleRuntimeSymbols } from "../symbols";
+import { createMutateFn } from "../createMutateFn";
 
 export class JSInterpreterCompiler implements ModuleCompiler {
   #modules?: CompiledModules;
   #definitions: ModuleDefinitions = {};
-
-  constructor(private options: ModuleRuntimeOptions = {}) {}
 
   addModule<Definition extends ModuleDefinition>(definition: Definition) {
     assertValidIdentifier(definition.name);
@@ -50,7 +46,7 @@ export class JSInterpreterCompiler implements ModuleCompiler {
   refs = ModuleReferences.create;
 
   compile() {
-    const result = compileRuntime(this.#definitions, this.options);
+    const result = compileRuntime(this.#definitions);
     if (result.isOk()) {
       this.#modules = result.value;
     }
@@ -58,12 +54,13 @@ export class JSInterpreterCompiler implements ModuleCompiler {
   }
 
   dispose() {}
+
+  readonly info = {
+    lib: ["es5"],
+  } as const;
 }
 
-function compileRuntime(
-  definitions: ModuleDefinitions,
-  { compilerOptions }: ModuleRuntimeOptions = {}
-): ModuleCompilerResult {
+function compileRuntime(definitions: ModuleDefinitions): ModuleCompilerResult {
   const createError = (error: unknown) => bridgeErrorProtocol.parse(error);
 
   let code: string;
@@ -74,8 +71,7 @@ function compileRuntime(
     ${Object.entries(definitions)
       .map((args) => createModuleCode(...args))
       .join("\n")}
-  `,
-      compilerOptions
+  `
     );
   } catch (error) {
     return err(createError(error));
@@ -321,12 +317,11 @@ function bridgeJSValue(
   return JSON.stringify(value);
 }
 
-function transpile(code: string, options?: ModuleCompilerOptions) {
+function transpile(code: string) {
   const result = transpileModule(`${polyfill}${code}`, {
     compilerOptions: {
       target: ScriptTarget.ES5,
       module: ModuleKind.CommonJS,
-      ...options,
     },
   });
   return result.outputText;
