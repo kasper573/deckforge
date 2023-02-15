@@ -1,12 +1,9 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import { Scope } from "quickjs-emscripten";
-import { ZodFunction, ZodObject } from "zod";
 import { symbols as abstractSymbols } from "../symbols";
 import type { ModuleDefinition, ModuleOutput } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
 import { createMutateFn } from "../createMutateFn";
-import { zodTypeAtPath } from "../../../../../lib/zod-extensions/zodTypeAtPath";
-import { zodInstanceOf } from "../../../../../lib/zod-extensions/zodInstanceOf";
 import type { Marshal } from "./marshal";
 import { createMarshal } from "./marshal";
 import { coerceError } from "./errorType";
@@ -52,27 +49,6 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
       prev.dispose();
       return next;
     }, this.vm.global);
-  }
-
-  /**
-   * @deprecated
-   */
-  defer(path: string[]): QuickJSHandle {
-    const typeAtPath = zodTypeAtPath(this.definition.type, path);
-    if (!typeAtPath) {
-      throw new Error(`Unknown path: ${path.join(".")}`);
-    }
-    if (zodInstanceOf(typeAtPath, ZodFunction)) {
-      return this.marshal.create((...args: unknown[]) => this.call(path, args));
-    }
-    if (zodInstanceOf(typeAtPath, ZodObject)) {
-      return this.marshal.deferAssign(
-        this.vm.newObject(),
-        Object.keys(typeAtPath.shape),
-        (key) => this.resolve([...path, key])
-      );
-    }
-    return this.resolve(path);
   }
 
   call(path: string[], args: unknown[]) {
