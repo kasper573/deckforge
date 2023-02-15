@@ -1,6 +1,8 @@
 import { v4 } from "uuid";
 import Rand from "rand-seed";
 import produce from "immer";
+import type { Result } from "neverthrow";
+import { err, ok } from "neverthrow";
 import type {
   Card,
   CardId,
@@ -35,11 +37,15 @@ import type {
 } from "./types";
 import type { ModuleCompiler } from "./moduleRuntimes/types";
 
-export interface CompileGameResult<G extends RuntimeGenerics> {
-  runtime?: GameRuntime<G>;
-  errors?: unknown[];
-  dispose?: () => void;
+export interface CompiledGame<G extends RuntimeGenerics> {
+  runtime: GameRuntime<G>;
+  dispose: () => void;
 }
+
+export type CompileGameResult<G extends RuntimeGenerics> = Result<
+  CompiledGame<G>,
+  unknown[]
+>;
 
 export interface CompileGameOptions<G extends RuntimeGenerics> {
   moduleCompiler: ModuleCompiler;
@@ -135,9 +141,13 @@ export function compileGame<G extends RuntimeGenerics>(
     };
   }
 
+  function dispose() {
+    moduleCompiler.dispose();
+  }
+
   const moduleCompileResult = moduleCompiler.compile();
   if (moduleCompileResult.isErr()) {
-    return { errors: [moduleCompileResult.error] };
+    return err([moduleCompileResult.error]);
   }
 
   const initialState = runtimeDefinition.createInitialState({
@@ -164,12 +174,8 @@ export function compileGame<G extends RuntimeGenerics>(
   );
 
   const runtime = builder.build();
-  return {
-    runtime,
-    dispose() {
-      moduleCompiler.dispose();
-    },
-  };
+
+  return ok({ runtime, dispose });
 }
 
 function compileCard<G extends RuntimeGenerics>(

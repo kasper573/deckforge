@@ -21,10 +21,12 @@ export default function GamePlayPage() {
 
   const compiled = useGameCompiler(runtimeDefinition, game?.definition);
 
-  if (!compiled || compiled?.errors || !compiled.runtime) {
-    throw new Error(
-      compiled?.errors ? compiled.errors.join(", ") : "Could not compile game"
-    );
+  if (compiled.isErr()) {
+    throw new Error(compiled.error.join(", "));
+  }
+
+  if (compiled.value.status === "pending") {
+    throw new Promise(() => {}); // Hack to suspend
   }
 
   return (
@@ -32,7 +34,7 @@ export default function GamePlayPage() {
       {game && (
         <GameRenderer
           type={game.type}
-          runtime={compiled.runtime}
+          runtime={compiled.value.runtime}
           style={{ width: "100%", height: "100%" }}
         />
       )}

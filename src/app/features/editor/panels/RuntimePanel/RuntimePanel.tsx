@@ -32,7 +32,7 @@ export function RuntimePanel(props: PanelProps) {
   const [seed, setSeed] = useState("");
   const gameType = useSelector(selectors.gameType);
   const [compiled, recompile, isCompiling] = useEditorGameCompiler(seed, log);
-  const hasErrors = !!compiled?.errors?.length;
+  const hasErrors = compiled.isErr();
 
   function onRenderError(error: unknown) {
     log([logIdentifier("[Renderer Error]", { color: colors.error }), error]);
@@ -71,7 +71,7 @@ export function RuntimePanel(props: PanelProps) {
       }
       {...props}
     >
-      {compiled?.runtime && (
+      {compiled.isOk() && (
         <ErrorBoundary fallback={RuntimeErrorFallback} onError={onRenderError}>
           {gameType ? (
             <Suspense
@@ -81,15 +81,17 @@ export function RuntimePanel(props: PanelProps) {
                 </Center>
               }
             >
-              <GameRenderer
-                type={gameType}
-                runtime={compiled.runtime}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  background: theme.palette.secondary.dark,
-                }}
-              />
+              {compiled.value.status === "ready" && (
+                <GameRenderer
+                  type={gameType}
+                  runtime={compiled.value.runtime}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    background: theme.palette.secondary.dark,
+                  }}
+                />
+              )}
             </Suspense>
           ) : (
             <PanelEmptyState>Game type missing</PanelEmptyState>

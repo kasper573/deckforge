@@ -44,9 +44,8 @@ describe("compileGame", () => {
     useGameCompiler(
       defineTestRuntime(gameDefinition),
       gameDefinition,
-      ({ errors, runtime }) => {
-        expect(errors).toBeUndefined();
-        expect(runtime).toBeDefined();
+      (result) => {
+        expect(result).toEqual({ value: expect.any(Object) });
       }
     );
   });
@@ -475,10 +474,10 @@ function useGameRuntime<G extends RuntimeGenerics>(
   handle: (runtime: GameRuntime<G>) => void
 ) {
   useGameCompiler(runtimeDefinition, gameDefinition, (result) => {
-    if (result.errors) {
-      throw new Error(result.errors.join(", "));
+    if (result.isErr()) {
+      throw new Error(result.error.join(", "));
     }
-    handle(result.runtime!);
+    handle(result.value.runtime);
   });
 }
 
@@ -493,7 +492,9 @@ function useGameCompiler<G extends RuntimeGenerics>(
   try {
     handle(result);
   } finally {
-    result.dispose?.();
+    if (result.isOk()) {
+      result.value.dispose();
+    }
   }
 }
 

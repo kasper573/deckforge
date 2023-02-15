@@ -33,12 +33,12 @@ export function useEditorGameCompiler(
   const compiled = useGameCompiler(...definitions, options);
 
   useReaction(() => {
-    if (compiled?.errors) {
+    if (compiled.isErr()) {
       log([
         logIdentifier("[Compiler Error]", { color: colors.error }),
-        ...compiled.errors,
+        ...compiled.error,
       ]);
-    } else if (compiled?.runtime) {
+    } else {
       log(["Game compiled successfully"]);
     }
   }, [compiled]);
