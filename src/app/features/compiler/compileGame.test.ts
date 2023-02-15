@@ -310,7 +310,7 @@ define({
     });
   });
 
-  it.skip("compiled runtime can reuse events inside events", () => {
+  it("compiled runtime can reuse events inside events", () => {
     const gameDefinition: GameDefinition = {
       properties: [],
       reducers: [],
@@ -360,7 +360,7 @@ define({
     });
   });
 
-  it.skip("compiled runtime can recurse events ", () => {
+  it("compiled runtime can recurse events ", () => {
     const gameDefinition: GameDefinition = {
       properties: [],
       reducers: [],

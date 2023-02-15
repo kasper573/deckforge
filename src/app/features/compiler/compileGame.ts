@@ -12,7 +12,11 @@ import type {
   Reducer,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
-import type { MachineMiddleware } from "../../../lib/machine/MachineAction";
+import type {
+  MachineAction,
+  MachineActionPayload,
+  MachineMiddleware,
+} from "../../../lib/machine/MachineAction";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -27,6 +31,7 @@ import type {
   RuntimePlayer,
   RuntimePlayerId,
   RuntimeReducer,
+  RuntimeState,
 } from "./types";
 import type { ModuleCompiler } from "./moduleRuntimes/types";
 
@@ -59,13 +64,17 @@ export function compileGame<G extends RuntimeGenerics>(
   const moduleAPI: RuntimeModuleAPI<G> = {
     random: createRandomFn(seed),
     cloneCard,
-    events: moduleCompiler.refs(
-      Object.fromEntries(
-        gameDefinition.events.map((event) => [
-          event.name,
-          eventModuleName(event),
-        ])
-      )
+    events: Object.fromEntries(
+      gameDefinition.events.map((event) => [
+        event.name,
+        (
+          state: RuntimeState<G>,
+          payload: MachineActionPayload<MachineAction>
+        ) => {
+          const fn = effects[event.name];
+          return fn(state, payload);
+        },
+      ])
     ) as unknown as RuntimeEffects<G>,
   };
   const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();

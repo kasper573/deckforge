@@ -1,11 +1,10 @@
 import { err, ok } from "neverthrow";
-import type { QuickJSHandle, QuickJSRuntime } from "quickjs-emscripten";
+import type { QuickJSRuntime } from "quickjs-emscripten";
 import type {
   ModuleCompiler,
   CompiledModules,
   ModuleCompilerResult,
 } from "../types";
-import { ModuleReferences } from "../types";
 import { QuickJSModule } from "./QuickJSModule";
 
 export function createQuickJSCompiler(
@@ -14,24 +13,10 @@ export function createQuickJSCompiler(
   const runtime = createRuntime();
   const modules = new Map<string, QuickJSModule>();
 
-  function resolveModule([moduleName, ...path]: string[]): QuickJSHandle {
-    const m = modules.get(moduleName);
-    if (m) {
-      return m.resolve(path);
-    }
-    throw new Error(`Module "${moduleName}" not found`);
-  }
-
   return {
-    refs: (...args) => ModuleReferences.create(...args),
-
     addModule(definition) {
       modules.get(definition.name)?.dispose();
-      const m = new QuickJSModule(
-        runtime.newContext(),
-        definition,
-        resolveModule
-      );
+      const m = new QuickJSModule(runtime.newContext(), definition);
       modules.set(definition.name, m);
       return m.compiled;
     },

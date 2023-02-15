@@ -12,7 +12,6 @@ import type {
   ModuleCompilerResult,
   ModuleCompiler,
 } from "../types";
-import { ModuleReferences } from "../types";
 import { symbols as moduleRuntimeSymbols } from "../symbols";
 import { createMutateFn } from "../createMutateFn";
 
@@ -42,8 +41,6 @@ export class JSInterpreterCompiler implements ModuleCompiler {
       }
     );
   }
-
-  refs = ModuleReferences.create;
 
   compile() {
     const result = compileRuntime(this.#definitions);
@@ -291,16 +288,6 @@ function bridgeJSValue(
   const chain = (child: unknown, step: string | number) =>
     bridgeJSValue(moduleName, child, [...path, step]);
 
-  if (value instanceof ModuleReferences) {
-    return `{${Object.entries(value)
-      .map(
-        ([moduleIdentifier, moduleName]) =>
-          `get ${assertValidIdentifier(moduleIdentifier)} () { 
-            return ${symbols.modules}["${moduleName}"];
-          }`
-      )
-      .join(", ")}}`;
-  }
   if (Array.isArray(value)) {
     return `[${value.map(chain).join(", ")}]`;
   }

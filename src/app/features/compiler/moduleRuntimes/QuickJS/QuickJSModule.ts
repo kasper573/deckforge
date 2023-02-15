@@ -16,10 +16,9 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
 
   constructor(
     private readonly vm: QuickJSContext,
-    public readonly definition: Readonly<ModuleDefinition<Output>>,
-    getModuleReference: (path: string[]) => QuickJSHandle
+    public readonly definition: Readonly<ModuleDefinition<Output>>
   ) {
-    this.marshal = createMarshal(vm, getModuleReference);
+    this.marshal = createMarshal(vm);
 
     if (this.definition.globals) {
       this.marshal.assign(vm.global, this.definition.globals);

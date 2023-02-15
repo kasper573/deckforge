@@ -15,7 +15,8 @@ export function createZodProxy<RootType extends ZodType>(
     if (!typeAtPath) {
       throw new Error("Could not find type at path: " + path.join("."));
     }
-    return typeAtPath.parse(resolver(path, typeAtPath));
+    return resolver(path, typeAtPath);
+    //return typeAtPath.parse(resolver(path, typeAtPath));
   }
 
   if (zodInstanceOf(rootType, ZodObject)) {
