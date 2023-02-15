@@ -28,9 +28,9 @@ import type {
   RuntimePlayerId,
   RuntimeReducer,
 } from "./types";
+import type { ModuleCompiler } from "./moduleRuntimes/types";
 import { JSInterpreterCompiler } from "./moduleRuntimes/JSInterpreter";
 import { moduleCompilerOptions } from "./settings";
-import type { ModuleCompiler } from "./moduleRuntimes/types";
 
 export interface CompileGameResult<G extends RuntimeGenerics> {
   runtime?: GameRuntime<G>;
@@ -38,22 +38,22 @@ export interface CompileGameResult<G extends RuntimeGenerics> {
   dispose?: () => void;
 }
 
+new JSInterpreterCompiler({
+  compilerOptions: moduleCompilerOptions,
+});
+
+export interface CompileGameOptions<G extends RuntimeGenerics> {
+  moduleCompiler: ModuleCompiler;
+  seed?: string;
+  middlewares?: (
+    defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
+  ) => MachineMiddleware<RuntimeMachineContext<G>>[];
+}
+
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
-  {
-    moduleCompiler = new JSInterpreterCompiler({
-      compilerOptions: moduleCompilerOptions,
-    }),
-    seed,
-    middlewares,
-  }: {
-    moduleCompiler?: ModuleCompiler;
-    seed?: string;
-    middlewares?: (
-      defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
-    ) => MachineMiddleware<RuntimeMachineContext<G>>[];
-  } = {}
+  { moduleCompiler, seed, middlewares }: CompileGameOptions<G>
 ): CompileGameResult<G> {
   const cardProperties = gameDefinition.properties.filter(
     (p) => p.entityId === "card"
