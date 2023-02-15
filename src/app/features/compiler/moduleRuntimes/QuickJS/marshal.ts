@@ -1,4 +1,5 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
+import { isPlainObject } from "lodash";
 import { hasModuleReference, moduleReferenceSymbol } from "../types";
 
 export type Marshal = ReturnType<typeof createMarshal>;
@@ -30,9 +31,10 @@ export function createMarshal(
       case "object":
         return assign(vm.newObject(), value);
       case "function":
-        return vm.newFunction(value.name, (...argumentHandles) => {
-          const args = argumentHandles.map(vm.dump);
+        return vm.newFunction(value.name, (...argHandles) => {
+          const args = argHandles.map(vm.dump);
           const result = value(...args);
+          mutateArrayElements(argHandles, args);
           return create(result);
         });
     }
@@ -45,6 +47,16 @@ export function createMarshal(
       create(v).consume((h) => vm.setProp(target, k, h));
     }
     return target;
+  }
+
+  function mutateArrayElements(elements: QuickJSHandle[], values: unknown[]) {
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      const value = values[i];
+      if (isPlainObject(value)) {
+        assign(element, value as object);
+      }
+    }
   }
 
   /**
