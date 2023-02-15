@@ -70,13 +70,12 @@ export function createMarshal(
     keys: string[],
     resolve: (key: string) => QuickJSHandle
   ): QuickJSHandle {
-    const obj = vm.newObject();
     for (const key of keys) {
-      vm.defineProp(obj, key, {
+      vm.defineProp(target, key, {
         get: () => create(() => resolve(key)),
       });
     }
-    return obj;
+    return target;
   }
 
   return {

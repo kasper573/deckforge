@@ -22,7 +22,7 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
     this.marshal = createMarshal(vm, getModuleReference);
 
     if (this.definition.globals) {
-      this.marshal.assign(vm.global, this.definition.globals).dispose();
+      this.marshal.assign(vm.global, this.definition.globals);
     }
 
     let transpiledCode: string | undefined;
