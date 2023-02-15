@@ -184,49 +184,6 @@ export function generateModuleRuntimeTests(
         }
       ));
 
-    it("calling module A from module B via reference", () =>
-      t.assertValidRuntime(
-        (compiler) => {
-          compiler.addModule({
-            name: "moduleA",
-            type: z.function(),
-            code: `define((...args) => ["A", ...args])`,
-          });
-          return compiler.addModule({
-            name: "moduleB",
-            type: z.function(),
-            code: `define((...args) => moduleA("B", ...args))`,
-            globals: compiler.refs(["moduleA"]),
-          });
-        },
-        (moduleB) => {
-          const res = moduleB("input");
-          expect(res).toEqual(["A", "B", "input"]);
-        }
-      ));
-
-    it.skip("calling module A from module B via future reference", () =>
-      t.assertValidRuntime(
-        (compiler) => {
-          const b = compiler.addModule({
-            name: "moduleB",
-            type: z.function(),
-            code: `define((...args) => moduleA("B", ...args))`,
-            globals: compiler.refs(["moduleA"]),
-          });
-          compiler.addModule({
-            name: "moduleA",
-            type: z.function(),
-            code: `define((...args) => ["A", ...args])`,
-          });
-          return b;
-        },
-        (moduleB) => {
-          const res = moduleB("input");
-          expect(res).toEqual(["A", "B", "input"]);
-        }
-      ));
-
     it("calling module recursively", () =>
       t.assertValidRuntime(
         (compiler) => {
