@@ -23,7 +23,7 @@ import type { PanelProps } from "../definition";
 import { RuntimeErrorFallback } from "./RuntimeErrorFallback";
 import { CompilingIndicator } from "./CompilingIndicator";
 import { colors } from "./colors";
-import { useCompilation } from "./useCompilation";
+import { useEditorGameCompiler } from "./useEditorGameCompiler";
 
 export function RuntimePanel(props: PanelProps) {
   const theme = useTheme();
@@ -31,7 +31,7 @@ export function RuntimePanel(props: PanelProps) {
   const prompt = useModal(PromptDialog);
   const [seed, setSeed] = useState("");
   const gameType = useSelector(selectors.gameType);
-  const [compiled, recompile, isCompiling] = useCompilation(seed, log);
+  const [compiled, recompile, isCompiling] = useEditorGameCompiler(seed, log);
   const hasErrors = !!compiled?.errors?.length;
 
   function onRenderError(error: unknown) {

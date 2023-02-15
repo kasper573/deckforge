@@ -2,33 +2,24 @@ import { useRouteParams } from "react-typesafe-routes";
 import { useMemo } from "react";
 import { Page } from "../layout/Page";
 import { router } from "../../router";
-import { compileGame } from "../compiler/compileGame";
-import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import { trpc } from "../../trpc";
 import { GameRenderer } from "../compiler/GameRenderer";
+import { useGameCompiler } from "../compiler/useGameCompiler";
 import { gameTypes } from "../gameTypes";
-import { useDisposable } from "../../hooks/useDisposable";
-import { useAsyncMemo } from "../../hooks/useAsyncMemo";
-import { moduleCompiler } from "../compiler/moduleRuntimes";
+import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 
 export default function GamePlayPage() {
   const { slug } = useRouteParams(router.play);
   const { data: game } = trpc.game.read.useQuery({ type: "slug", slug });
 
-  const createModuleCompiler = useAsyncMemo(moduleCompiler.loadCompilerFactory);
-  const compiled = useMemo(() => {
-    if (game && createModuleCompiler) {
+  const runtimeDefinition = useMemo(() => {
+    if (game) {
       const baseDefinition = gameTypes.get(game.type)?.runtimeDefinition;
-      if (baseDefinition) {
-        return compileGame(
-          deriveRuntimeDefinition(game.definition, baseDefinition),
-          game.definition,
-          { moduleCompiler: createModuleCompiler() }
-        );
-      }
+      return deriveRuntimeDefinition(game.definition, baseDefinition);
     }
-  }, [game, createModuleCompiler]);
-  useDisposable(compiled);
+  }, [game]);
+
+  const compiled = useGameCompiler(runtimeDefinition, game?.definition);
 
   if (!compiled || compiled?.errors || !compiled.runtime) {
     throw new Error(

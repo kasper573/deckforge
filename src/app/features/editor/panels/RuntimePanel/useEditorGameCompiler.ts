@@ -6,37 +6,31 @@ import type { LogContent } from "../../types";
 import { logIdentifier } from "../../types";
 import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
-import { compileGame } from "../../../compiler/compileGame";
 import { useReaction } from "../../../../../lib/useReaction";
-import { moduleCompiler } from "../../../compiler/moduleRuntimes";
-import { useAsyncMemo } from "../../../../hooks/useAsyncMemo";
-import { useDisposable } from "../../../../hooks/useDisposable";
+import { useGameCompiler } from "../../../compiler/useGameCompiler";
 import { colors } from "./colors";
 
-export function useCompilation(
+export function useEditorGameCompiler(
   seed: string,
   log: (args: LogContent[]) => void
 ) {
   const [resetCount, increaseResetCount] = useReducer((c) => c + 1, 0);
   const [definitions, { isPending }] = useDebouncedDefinitions();
   const isCompiling = isPending();
-  const createModuleCompiler = useAsyncMemo(moduleCompiler.loadCompilerFactory);
-  const compiled = useMemo(() => {
-    const [game, runtime] = definitions;
-    if (game && runtime && createModuleCompiler) {
-      return compileGame(runtime, game, {
-        seed,
-        moduleCompiler: createModuleCompiler(),
-        middlewares: (defaults) => [
-          createEventLoggerReducer(log),
-          createFailSafeReducer(log),
-          ...defaults,
-        ],
-      });
-    }
+  const options = useMemo(
+    () => ({
+      seed,
+      middlewares: <T>(defaults: T[]) => [
+        createEventLoggerReducer(log),
+        createFailSafeReducer(log),
+        ...defaults,
+      ],
+    }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createModuleCompiler, definitions, resetCount, seed, log]);
-  useDisposable(compiled);
+    [seed, log, resetCount]
+  );
+
+  const compiled = useGameCompiler(...definitions, options);
 
   useReaction(() => {
     if (compiled?.errors) {
@@ -58,9 +52,9 @@ export function useCompilation(
 }
 
 function useDebouncedDefinitions() {
-  const game = useSelector(selectors.gameDefinition);
   const runtime = useSelector(selectors.runtimeDefinition);
-  const defs = useMemo(() => [game, runtime] as const, [game, runtime]);
+  const game = useSelector(selectors.gameDefinition);
+  const defs = useMemo(() => [runtime, game] as const, [runtime, game]);
   return useDebounce(defs, 1500);
 }
 
