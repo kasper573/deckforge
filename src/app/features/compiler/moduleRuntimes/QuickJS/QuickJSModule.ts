@@ -1,12 +1,12 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import { Scope } from "quickjs-emscripten";
+import { z } from "zod";
 import { symbols as abstractSymbols } from "../symbols";
 import type { ModuleDefinition, ModuleOutput } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
 import { createMutateFn } from "../createMutateFn";
 import type { Marshal } from "./marshal";
 import { createMarshal } from "./marshal";
-import { coerceError } from "./errorType";
 
 export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
   readonly marshal: Marshal;
@@ -96,3 +96,18 @@ const mutate = createMutateFn();
 const symbols = {
   definition: "___definition___",
 };
+
+function coerceError(input: unknown, description: string): Error {
+  const result = errorType.safeParse(input);
+  if (result.success) {
+    const { name, message, stack } = result.data;
+    return new Error(`${description}. ${name}: ${message}\n${stack}`);
+  }
+  return new Error(description + ": " + String(input));
+}
+
+const errorType = z.object({
+  message: z.string(),
+  name: z.string(),
+  stack: z.string(),
+});
