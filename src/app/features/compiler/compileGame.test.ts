@@ -21,7 +21,7 @@ import { moduleCompilerInfo } from "./moduleRuntimes";
 let moduleCompiler: ModuleCompiler;
 
 describe("compileGame", () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
     const createModuleCompiler = await moduleCompilerInfo.loadCompilerFactory();
     moduleCompiler = createModuleCompiler();
   });
