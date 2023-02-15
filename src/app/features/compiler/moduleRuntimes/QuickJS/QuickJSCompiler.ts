@@ -3,7 +3,7 @@ import type { QuickJSHandle, QuickJSRuntime } from "quickjs-emscripten";
 import type {
   ModuleCompiler,
   CompiledModules,
-  RuntimeCompileResult,
+  ModuleCompilerResult,
 } from "../types";
 import { ModuleReferences } from "../types";
 import { QuickJSModule } from "./QuickJSModule";
@@ -36,7 +36,7 @@ export function createQuickJSCompiler(
       return m.compiled;
     },
 
-    compile(): RuntimeCompileResult {
+    compile(): ModuleCompilerResult {
       const errors: unknown[] = [];
       const compiled: CompiledModules = {};
 

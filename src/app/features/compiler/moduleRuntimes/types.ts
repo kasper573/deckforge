@@ -6,7 +6,7 @@ import type { Result } from "neverthrow";
 export type ModuleOutput = ModuleOutputRecord | ModuleOutputFunction;
 export type ModuleOutputFunction = AnyFunction;
 export type ModuleOutputRecord = Partial<Record<string, ModuleOutputFunction>>;
-
+export type ModuleDefinitions = Record<string, ModuleDefinition>;
 export interface ModuleDefinition<
   Output extends ModuleOutput = ModuleOutput,
   Name extends string = string
@@ -18,8 +18,8 @@ export interface ModuleDefinition<
 }
 
 export type CompiledModules = Record<string, ModuleOutput>;
-export type RuntimeCompileResult = Result<CompiledModules, unknown>;
-
+export type ModuleCompilerResult = Result<CompiledModules, unknown>;
+export type ModuleCompilerOptions = Pick<CompilerOptions, "lib">;
 export interface ModuleCompiler {
   addModule<Definition extends ModuleDefinition>(
     definition: Definition
@@ -27,13 +27,10 @@ export interface ModuleCompiler {
 
   refs: typeof ModuleReferences.create;
 
-  compile(): RuntimeCompileResult;
+  compile(): ModuleCompilerResult;
 
   dispose(): void;
 }
-
-export type ModuleDefinitions = Record<string, ModuleDefinition>;
-export type ModuleCompilerOptions = Pick<CompilerOptions, "lib">;
 
 export interface ModuleRuntimeOptions {
   compilerOptions?: ModuleCompilerOptions;
@@ -67,17 +64,11 @@ export class ModuleReferences implements Record<string, ModuleReference> {
   }
 }
 
-export const moduleReferenceSymbol = Symbol("moduleReference");
-
-export class ModuleReference implements ModuleReferenceMeta {
-  [moduleReferenceSymbol]: string[] = [];
-
-  constructor(path: string[]) {
-    this[moduleReferenceSymbol] = path;
-  }
+export class ModuleReference {
+  constructor(public readonly path: string[]) {}
 
   toString() {
-    return this[moduleReferenceSymbol].join(".");
+    return this.path.join(".");
   }
 
   static create(nameOrPath: string | string[]) {
@@ -86,26 +77,3 @@ export class ModuleReference implements ModuleReferenceMeta {
     );
   }
 }
-
-export function addModuleReference<T extends object>(
-  target: T,
-  moduleName: string
-) {
-  Object.assign(target, {
-    [moduleReferenceSymbol]: moduleName,
-  });
-}
-
-export const hasModuleReference = (
-  value: unknown
-): value is ModuleReferenceMeta => {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    moduleReferenceSymbol in value
-  );
-};
-
-type ModuleReferenceMeta = {
-  [moduleReferenceSymbol]: string[];
-};

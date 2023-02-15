@@ -7,7 +7,7 @@ import type {
   ModuleOutputFunction,
   ModuleCompiler,
 } from "./types";
-import type { RuntimeCompileResult } from "./types";
+import type { ModuleCompilerResult } from "./types";
 
 export function generateModuleRuntimeTests(
   createCompiler: () => ModuleCompiler
@@ -465,7 +465,7 @@ export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
 
   function useRuntime<T>(
     setup: (compiler: Compiler) => T,
-    handle?: (result: RuntimeCompileResult, setupOutput: T) => void
+    handle?: (result: ModuleCompilerResult, setupOutput: T) => void
   ) {
     const compiler = createCompiler();
 

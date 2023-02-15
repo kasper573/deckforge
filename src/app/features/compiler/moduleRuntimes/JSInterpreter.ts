@@ -12,7 +12,7 @@ import type {
   ModuleDefinitions,
   ModuleOutputRecord,
   ModuleRuntimeOptions,
-  RuntimeCompileResult,
+  ModuleCompilerResult,
 } from "./types";
 import { ModuleReferences } from "./types";
 import { symbols as moduleRuntimeSymbols } from "./symbols";
@@ -63,7 +63,7 @@ export class JSInterpreterCompiler implements ModuleCompiler {
 function compileRuntime(
   definitions: ModuleDefinitions,
   { compilerOptions }: ModuleRuntimeOptions = {}
-): RuntimeCompileResult {
+): ModuleCompilerResult {
   const createError = (error: unknown) => bridgeErrorProtocol.parse(error);
 
   let code: string;

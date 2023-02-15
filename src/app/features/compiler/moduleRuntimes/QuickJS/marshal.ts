@@ -1,20 +1,16 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import { isPlainObject } from "lodash";
-import {
-  hasModuleReference,
-  ModuleReferences,
-  moduleReferenceSymbol,
-} from "../types";
+import { ModuleReference, ModuleReferences } from "../types";
 
 export type Marshal = ReturnType<typeof createMarshal>;
 
 export function createMarshal(
   vm: QuickJSContext,
-  getModuleReference?: (path: string[]) => QuickJSHandle
+  getModuleReference: (path: string[]) => QuickJSHandle
 ) {
   function create(value: unknown): QuickJSHandle {
-    if (getModuleReference && hasModuleReference(value)) {
-      return getModuleReference(value[moduleReferenceSymbol]);
+    if (value instanceof ModuleReference) {
+      return getModuleReference(value.path);
     }
     if (Array.isArray(value)) {
       return assign(vm.newArray(), value);
@@ -47,9 +43,9 @@ export function createMarshal(
   }
 
   function assign(target: QuickJSHandle, value: object): QuickJSHandle {
-    if (getModuleReference && value instanceof ModuleReferences) {
+    if (value instanceof ModuleReferences) {
       return deferAssign(target, Object.keys(value), (key) =>
-        getModuleReference(value[key][moduleReferenceSymbol])
+        getModuleReference(value[key].path)
       );
     }
 
