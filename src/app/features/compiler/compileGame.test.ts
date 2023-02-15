@@ -16,14 +16,13 @@ import { compileGame } from "./compileGame";
 import type { GameRuntime, RuntimeGenerics } from "./types";
 import type { RuntimeDefinition } from "./types";
 import type { ModuleCompiler } from "./moduleRuntimes/types";
-import { moduleCompiler as selectedModuleCompilerInfo } from "./moduleRuntimes";
+import { moduleCompilerInfo } from "./moduleRuntimes";
 
 let moduleCompiler: ModuleCompiler;
 
 describe("compileGame", () => {
   beforeAll(async () => {
-    const createModuleCompiler =
-      await selectedModuleCompilerInfo.loadCompilerFactory();
+    const createModuleCompiler = await moduleCompilerInfo.loadCompilerFactory();
     moduleCompiler = createModuleCompiler();
   });
 

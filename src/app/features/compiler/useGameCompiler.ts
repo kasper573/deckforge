@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useAsyncMemo } from "../../hooks/useAsyncMemo";
 import { useDisposable } from "../../hooks/useDisposable";
 import type { GameDefinition } from "../../../api/services/game/types";
-import { moduleCompiler } from "./moduleRuntimes";
+import { moduleCompilerInfo } from "./moduleRuntimes";
 import type { CompileGameOptions } from "./compileGame";
 import { compileGame } from "./compileGame";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
@@ -12,7 +12,7 @@ export function useGameCompiler<G extends RuntimeGenerics>(
   gameDefinition?: GameDefinition,
   options?: Omit<CompileGameOptions<G>, "moduleCompiler">
 ) {
-  const createModuleCompiler = useAsyncMemo(moduleCompiler.loadCompilerFactory);
+  const createModuleCompiler = useAsyncMemo(moduleCompilerInfo.loadCompilerFactory);
   const compiled = useMemo(() => {
     if (gameDefinition && runtimeDefinition && createModuleCompiler) {
       return compileGame(runtimeDefinition, gameDefinition, {
