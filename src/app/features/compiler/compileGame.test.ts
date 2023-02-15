@@ -1,6 +1,5 @@
 import { v4 } from "uuid";
 import { z } from "zod";
-import { getQuickJS } from "quickjs-emscripten";
 import type {
   CardId,
   DeckId,
@@ -17,14 +16,15 @@ import { compileGame } from "./compileGame";
 import type { GameRuntime, RuntimeGenerics } from "./types";
 import type { RuntimeDefinition } from "./types";
 import type { ModuleCompiler } from "./moduleRuntimes/types";
-import { createQuickJSCompiler } from "./moduleRuntimes/QuickJS/QuickJSCompiler";
+import { moduleCompiler as selectedModuleCompilerInfo } from "./moduleRuntimes";
 
 let moduleCompiler: ModuleCompiler;
 
 describe("compileGame", () => {
   beforeAll(async () => {
-    const quickJS = await getQuickJS();
-    moduleCompiler = createQuickJSCompiler(() => quickJS.newRuntime());
+    const createModuleCompiler =
+      await selectedModuleCompilerInfo.loadCompilerFactory();
+    moduleCompiler = createModuleCompiler();
   });
 
   it("can compile game with a single event without errors", () => {
