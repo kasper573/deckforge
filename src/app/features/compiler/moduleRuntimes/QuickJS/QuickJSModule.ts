@@ -81,7 +81,9 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
       if (callResult?.error) {
         throw coerceError(
           callResult.error.consume(this.vm.dump),
-          `Failed to invoke "${path.join(".")}"`
+          `Failed to invoke "${path.join(".")}" in module "${
+            this.definition.name
+          }"`
         );
       }
 
