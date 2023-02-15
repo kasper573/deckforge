@@ -14,6 +14,39 @@ export function generateModuleRuntimeTests(
 ) {
   const t = createRuntimeTestUtils(createCompiler);
 
+  it("supports typescript", () =>
+    t.assertValidRuntime(
+      (compiler) =>
+        compiler.addModule({
+          name: "getSorted",
+          type: z.function().returns(
+            z.object({
+              sortedNumbers: z.array(z.number()),
+              sortedStrings: z.array(z.string()),
+            })
+          ),
+          code: `
+          define(() => {
+            const numbers: number[] = [3,1,2];
+            const strings: string[] = ["c", "a", "b"];
+            const sortedNumbers = numbers.sort(compare);
+            const sortedStrings = strings.sort(compare);
+            return { sortedNumbers, sortedStrings };
+          });
+          
+          function compare <T> (a: T, b: T) {
+            return a < b ? -1 : a > b ? 1 : 0;
+          }
+        `,
+        }),
+      (fn) => {
+        expect(fn()).toEqual({
+          sortedNumbers: [1, 2, 3],
+          sortedStrings: ["a", "b", "c"],
+        });
+      }
+    ));
+
   describe("empty definitions", () => {
     it("can define a function module without error", () =>
       t.assertValidRuntime((compiler) => {
