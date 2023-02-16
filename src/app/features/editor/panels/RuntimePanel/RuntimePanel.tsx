@@ -1,7 +1,7 @@
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import Yard from "@mui/icons-material/Yard";
 import useTheme from "@mui/material/styles/useTheme";
 import { useSelector } from "../../store";
@@ -15,9 +15,7 @@ import { useModal } from "../../../../../lib/useModal";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { useActions } from "../../../../../lib/useActions";
 import { editorActions } from "../../actions";
-import { GameRenderer } from "../../../compiler/GameRenderer";
-import { Center } from "../../../../components/Center";
-import { LoadingIndicator } from "../../../../components/LoadingIndicator";
+import { PendingGameRenderer } from "../../../compiler/GameRenderer";
 import { logIdentifier } from "../../types";
 import type { PanelProps } from "../definition";
 import { RuntimeErrorFallback } from "./RuntimeErrorFallback";
@@ -73,29 +71,15 @@ export function RuntimePanel(props: PanelProps) {
     >
       {compiled.isOk() && (
         <ErrorBoundary fallback={RuntimeErrorFallback} onError={onRenderError}>
-          {gameType ? (
-            <Suspense
-              fallback={
-                <Center>
-                  <LoadingIndicator />
-                </Center>
-              }
-            >
-              {compiled.value.status === "ready" && (
-                <GameRenderer
-                  type={gameType}
-                  runtime={compiled.value.runtime}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    background: theme.palette.secondary.dark,
-                  }}
-                />
-              )}
-            </Suspense>
-          ) : (
-            <PanelEmptyState>Game type missing</PanelEmptyState>
-          )}
+          <PendingGameRenderer
+            result={compiled}
+            type={gameType}
+            style={{
+              width: "100%",
+              height: "100%",
+              background: theme.palette.secondary.dark,
+            }}
+          />
         </ErrorBoundary>
       )}
       {hasErrors && (

@@ -6,16 +6,14 @@ import type { GameDefinition } from "../../../api/services/game/types";
 import { moduleCompilerInfo } from "./moduleRuntimes";
 import type { CompileGameOptions } from "./compileGame";
 import { compileGame } from "./compileGame";
-import type { GameRuntime, RuntimeDefinition, RuntimeGenerics } from "./types";
+import type { RuntimeDefinition, RuntimeGenerics } from "./types";
+import type { PendingGameRuntime } from "./GameRenderer";
 
 export function useGameCompiler<G extends RuntimeGenerics>(
   runtimeDefinition?: RuntimeDefinition<G>,
   gameDefinition?: GameDefinition,
   options?: Omit<CompileGameOptions<G>, "moduleCompiler">
-): Result<
-  { status: "ready"; runtime: GameRuntime<G> } | { status: "pending" },
-  unknown[]
-> {
+): Result<PendingGameRuntime<G>, unknown[]> {
   const [disposeError, setDisposeError] = useState<unknown>();
 
   const createModuleCompiler = useAsyncMemo(

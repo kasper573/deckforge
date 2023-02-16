@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { Page } from "../layout/Page";
 import { router } from "../../router";
 import { trpc } from "../../trpc";
-import { GameRenderer } from "../compiler/GameRenderer";
+import { PendingGameRenderer } from "../compiler/GameRenderer";
 import { useGameCompiler } from "../compiler/useGameCompiler";
 import { gameTypes } from "../gameTypes";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
@@ -19,22 +19,14 @@ export default function GamePlayPage() {
     }
   }, [game]);
 
-  const compiled = useGameCompiler(runtimeDefinition, game?.definition);
-
-  if (compiled.isErr()) {
-    throw new Error(compiled.error.join(", "));
-  }
-
-  if (compiled.value.status === "pending") {
-    throw new Promise(() => {}); // Hack to suspend
-  }
+  const result = useGameCompiler(runtimeDefinition, game?.definition);
 
   return (
     <Page>
       {game && (
-        <GameRenderer
+        <PendingGameRenderer
           type={game.type}
-          runtime={compiled.value.runtime}
+          result={result}
           style={{ width: "100%", height: "100%" }}
         />
       )}
