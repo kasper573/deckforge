@@ -78,7 +78,7 @@ export function LogValue({
         );
       }
       if (value instanceof Error) {
-        return <LogValue value={value.stack} {...props} />;
+        return <LogValue value={value.message} {...props} />;
       }
       if (isLogIdentifier(value)) {
         return (
