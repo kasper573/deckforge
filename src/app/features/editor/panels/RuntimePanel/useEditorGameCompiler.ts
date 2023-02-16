@@ -1,5 +1,6 @@
 import { useMemo, useReducer } from "react";
 import { useDebounce } from "use-debounce";
+import { cloneDeep } from "lodash";
 import type { MachineMiddleware } from "../../../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../../../lib/machine/MachineContext";
 import type { LogContent } from "../../types";
@@ -62,14 +63,21 @@ function createEventLoggerReducer(
   log: (args: unknown[]) => void
 ): MachineMiddleware<MachineContext> {
   return (state, action, next) => {
+    const beforeState = cloneDeep(state);
+    next();
+    const afterState = cloneDeep(state);
     log([
       logIdentifier("[Event]", { color: colors.info }),
       action.name,
       "(",
       logIdentifier(action.payload, { name: "input" }),
+      ",",
+      "state:",
+      logIdentifier(beforeState, { name: "before" }),
+      "=>",
+      logIdentifier(afterState, { name: "after" }),
       ")",
     ]);
-    next();
   };
 }
 
