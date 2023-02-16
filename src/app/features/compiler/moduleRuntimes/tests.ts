@@ -2,7 +2,7 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
 import type { AnyFunction } from "js-interpreter";
-import { range } from "lodash";
+import { get, range } from "lodash";
 import type {
   ModuleDefinition,
   ModuleOutputFunction,
@@ -85,33 +85,108 @@ export function generateModuleRuntimeTests(
     }));
 
   describe.only("argument mutation", () => {
-    describe("object property assign", () =>
-      testParameterMutations(
-        (v) => `${v}.x = 10`,
-        () => ({ x: 0 }),
-        (o) => o.x,
-        10
-      ));
+    describe("root", () => {
+      testMutationsFor();
+    });
 
-    describe("index of empty array", () =>
-      testParameterMutations(
-        (v) => `${v}[0] = 10`,
-        () => [],
-        (o) => o[0],
-        10
-      ));
+    function testMutationsFor(path?: string[]) {
+      const testMutations = createMutationsTesterFor(path);
 
-    describe("index of array with existing items", () =>
-      testParameterMutations(
-        (v) => `${v}[1] = 10`,
-        () => [1, 2, 3],
-        (o) => o,
-        [1, 10, 3]
-      ));
+      describe("object property assign", () =>
+        testMutations(
+          (v) => `${v}.x = 10`,
+          () => ({ x: 0 }),
+          (o) => o.x,
+          10
+        ));
 
-    function testParameterMutations<T, R>(
-      createMutationCode: (v: string) => string,
-      createParameterInitializer: () => T,
+      describe("index of empty array", () =>
+        testMutations(
+          (v) => `${v}[0] = 10`,
+          () => [],
+          (o) => o[0],
+          10
+        ));
+
+      describe("index of array with existing items", () =>
+        testMutations(
+          (v) => `${v}[1] = 10`,
+          () => [1, 2, 3],
+          (o) => o,
+          [1, 10, 3]
+        ));
+
+      describe("push to empty array", () =>
+        testMutations(
+          (v) => `${v}.push(10)`,
+          () => [],
+          (array) => array,
+          [10]
+        ));
+
+      describe("push to array with existing items", () =>
+        testMutations(
+          (v) => `${v}.push(10)`,
+          () => [1, 2, 3],
+          (array) => array,
+          [1, 2, 3, 10]
+        ));
+
+      describe("pop array", () =>
+        testMutations(
+          (v) => `${v}.pop()`,
+          () => [1, 2, 3],
+          (array) => array,
+          [1, 2]
+        ));
+
+      describe("shift array", () =>
+        testMutations(
+          (v) => `${v}.shift()`,
+          () => [1, 2, 3],
+          (array) => array,
+          [2, 3]
+        ));
+
+      describe("unshift array", () =>
+        testMutations(
+          (v) => `${v}.unshift(10)`,
+          () => [1, 2, 3],
+          (array) => array,
+          [10, 1, 2, 3]
+        ));
+
+      describe("unshift array", () =>
+        testMutations(
+          (v) => `${v}.splice(1, 2, 10, 20)`,
+          () => [1, 2, 3, 4],
+          (array) => array,
+          [1, 10, 20, 4]
+        ));
+    }
+
+    function createMutationsTesterFor(
+      path: string[] = []
+    ): typeof testMutations {
+      const pathAccessCode = path.length ? `.${path.join(".")}` : "";
+      return (
+        createMutationCode,
+        createInitializer,
+        getCurrentValue,
+        ...rest
+      ) =>
+        testMutations(
+          (paramName) => createMutationCode(paramName + pathAccessCode),
+          () => valueAtPath(path, createInitializer()),
+          (root) =>
+            getCurrentValue(path.length ? get(root, path.join(".")) : root),
+          ...rest
+        );
+    }
+
+    function testMutations<T, R>(
+      createMutationCode: (parameterName: string) => string,
+      createInitializer: () => T,
       getCurrentValue: (o: T) => R,
       expectedValue: R
     ) {
@@ -123,7 +198,7 @@ export function generateModuleRuntimeTests(
             ${variableNames.map(createMutationCode).join(";")} 
             }`,
             (fn) => {
-              const values = variableNames.map(createParameterInitializer);
+              const values = variableNames.map(createInitializer);
               fn(...values);
               const updatedValues = values.map(getCurrentValue);
               const expectedValues = new Array(n).fill(expectedValue);
@@ -139,13 +214,13 @@ export function generateModuleRuntimeTests(
             ${createMutationCode("a")};
           }`,
           (fn) => {
-            const a = createParameterInitializer();
-            const b = createParameterInitializer();
+            const a = createInitializer();
+            const b = createInitializer();
             fn(a, b);
             const updatedValues = [getCurrentValue(a), getCurrentValue(b)];
             expect(updatedValues).toEqual([
               expectedValue,
-              getCurrentValue(createParameterInitializer()),
+              getCurrentValue(createInitializer()),
             ]);
           }
         ));
@@ -297,10 +372,7 @@ export function generateModuleRuntimeTests(
         {
           type: z.function(),
           code: `define((...args) => ${path.join(".")}(...args))`,
-          globals: t.globalAtPath(path, (...args: unknown[]) => [
-            path,
-            ...args,
-          ]),
+          globals: valueAtPath(path, (...args: unknown[]) => [path, ...args]),
         },
         (fn) => {
           expect(fn(1, 2)).toEqual([path, 1, 2]);
@@ -333,7 +405,7 @@ export function generateModuleRuntimeTests(
           t.testModuleOutput(
             {
               type: z.function(),
-              globals: t.globalAtPath(path, value),
+              globals: valueAtPath(path, value),
               code: `define(() => ${path.join(".")})`,
             },
             (fn) => {
@@ -346,7 +418,7 @@ export function generateModuleRuntimeTests(
           t.testModuleOutput(
             {
               type: z.function(),
-              globals: t.globalAtPath(path, [value]),
+              globals: valueAtPath(path, [value]),
               code: `define(() => ${path.join(".")})`,
             },
             (fn) => {
@@ -433,13 +505,6 @@ export function generateModuleRuntimeTests(
 export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
   createCompiler: () => Compiler
 ) {
-  function globalAtPath(path: [string, ...string[]], leafValue: unknown) {
-    return path.reduceRight(
-      (acc: object, key) => ({ [key]: acc }),
-      leafValue as object
-    );
-  }
-
   function testModuleOutputs(
     functionDefinitionCode: string,
     assert: (output: ModuleOutputFunction) => void
@@ -558,10 +623,16 @@ export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
   }
 
   return {
-    globalAtPath,
     testModuleOutputs,
     testModuleOutput,
     assertValidRuntime,
     useRuntime,
   };
+}
+
+function valueAtPath(path: string[], leafValue: unknown) {
+  return path.reduceRight(
+    (acc: object, key) => ({ [key]: acc }),
+    leafValue as object
+  );
 }
