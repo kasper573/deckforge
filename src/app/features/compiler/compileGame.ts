@@ -73,24 +73,25 @@ export function compileGame<G extends RuntimeGenerics>(
     (p) => p.entityId === "player"
   );
 
+  const deferredEvents = Object.fromEntries(
+    gameDefinition.events.map((event) => [
+      event.name,
+      (
+        state: RuntimeState<G>,
+        payload: MachineActionPayload<MachineAction>
+      ) => {
+        const fn = eventModules[event.name];
+        return fn(state, payload);
+      },
+    ])
+  ) as unknown as RuntimeEffects<G>;
+
   const moduleAPI: RuntimeModuleAPI<G> = {
     log,
     random: createRandomFn(seed),
     cloneCard,
-    events: Object.fromEntries(
-      gameDefinition.events.map((event) => [
-        event.name,
-        (
-          state: RuntimeState<G>,
-          payload: MachineActionPayload<MachineAction>
-        ) => {
-          const fn = effects[event.name];
-          return fn(state, payload);
-        },
-      ])
-    ) as unknown as RuntimeEffects<G>,
+    events: deferredEvents,
   };
-  const cardEffects = new Map<CardId, Partial<RuntimeEffects<G>>>();
 
   const decks = gameDefinition.decks.map(
     (deck): RuntimeDeck<G> => ({
@@ -98,31 +99,32 @@ export function compileGame<G extends RuntimeGenerics>(
       name: deck.name,
       cards: gameDefinition.cards
         .filter((c) => c.deckId === deck.deckId)
-        .map((def) => {
-          const card = compileCard<G>(def, cardProperties);
-          const effects = moduleCompiler.addModule({
-            name: cardModuleName(deck, def),
-            type: runtimeDefinition.cardEffects,
-            code: def.code,
-            globals: { ...moduleAPI, thisCardId: card.typeId },
-          });
-          cardEffects.set(def.cardId, effects);
-          return card;
-        }),
+        .map((def) => compileCard<G>(def, cardProperties)),
     })
   );
 
-  const effects = gameDefinition.events.reduce((effects, event) => {
-    effects[event.name as keyof typeof effects] = moduleCompiler.addModule({
+  const cardModules = gameDefinition.cards.reduce((modules, card) => {
+    const deck = gameDefinition.decks.find((d) => d.deckId === card.deckId);
+    modules[card.cardId] = moduleCompiler.addModule({
+      name: cardModuleName(deck, card),
+      type: runtimeDefinition.cardEffects,
+      code: card.code,
+      globals: { ...moduleAPI, thisCardId: card.cardId },
+    });
+    return modules;
+  }, {} as Record<CardId, Partial<RuntimeEffects<G>>>);
+
+  const eventModules = gameDefinition.events.reduce((modules, event) => {
+    modules[event.name as keyof typeof modules] = moduleCompiler.addModule({
       name: eventModuleName(event),
       type: runtimeDefinition.effects.shape[event.name],
       code: event.code,
       globals: moduleAPI,
     });
-    return effects;
+    return modules;
   }, {} as RuntimeEffects<G>);
 
-  const runtimeReducers = gameDefinition.reducers.map((reducer) =>
+  const reducerModules = gameDefinition.reducers.map((reducer) =>
     moduleCompiler.addModule({
       name: reducerModuleName(reducer),
       type: runtimeDefinition.reducer,
@@ -162,17 +164,17 @@ export function compileGame<G extends RuntimeGenerics>(
     createPlayer,
   });
 
-  const defaultMiddlewares = runtimeReducers.length
-    ? [createReducerMiddleware(...runtimeReducers)]
+  const defaultMiddlewares = reducerModules.length
+    ? [createReducerMiddleware(...reducerModules)]
     : [];
 
   const allMiddlewares =
     middlewares?.(defaultMiddlewares) ?? defaultMiddlewares;
 
   let builder = deriveMachine<G>(
-    effects,
+    eventModules,
     initialState,
-    (id, effectName) => cardEffects.get(id)?.[effectName]
+    (id, effectName) => cardModules[id][effectName]
   );
 
   builder = allMiddlewares.reduce(
@@ -210,8 +212,8 @@ const moduleName = (str: string) => str.replace(/[^a-zA-Z0-9_]/g, "_");
 const eventModuleName = (event: Event) => moduleName(`Event_${event.name}`);
 const reducerModuleName = (reducer: Reducer) =>
   moduleName(`Reducer_${reducer.name}`);
-const cardModuleName = (deck: Deck, card: Card) =>
-  moduleName(`Card_${deck.name}_${card.name}`);
+const cardModuleName = (deck: Deck | undefined, card: Card) =>
+  moduleName(`Card_${deck?.name ?? "UnknownDeck"}_${card.name}`);
 
 function namedPropertyDefaults(
   properties: Property[],
