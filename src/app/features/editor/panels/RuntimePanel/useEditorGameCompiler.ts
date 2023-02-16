@@ -21,10 +21,7 @@ export function useEditorGameCompiler(
   const options = useMemo(
     () => ({
       seed,
-      log: (...args: unknown[]) => {
-        const staleArgs = cloneDeep(args);
-        setTimeout(() => log(staleArgs), 0);
-      },
+      log: (...args: unknown[]) => log(args),
       middlewares: <T>(defaults: T[]) => [
         createEventLoggerReducer(log),
         createFailSafeReducer(log),
