@@ -50,6 +50,7 @@ export type CompileGameResult<G extends RuntimeGenerics> = Result<
 export interface CompileGameOptions<G extends RuntimeGenerics> {
   moduleCompiler: ModuleCompiler;
   seed?: string;
+  log?: (...args: unknown[]) => void;
   middlewares?: (
     defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
   ) => MachineMiddleware<RuntimeMachineContext<G>>[];
@@ -58,7 +59,12 @@ export interface CompileGameOptions<G extends RuntimeGenerics> {
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
-  { moduleCompiler, seed, middlewares }: CompileGameOptions<G>
+  {
+    moduleCompiler,
+    seed,
+    middlewares,
+    log = console.log.bind(console),
+  }: CompileGameOptions<G>
 ): CompileGameResult<G> {
   const cardProperties = gameDefinition.properties.filter(
     (p) => p.entityId === "card"
@@ -68,6 +74,7 @@ export function compileGame<G extends RuntimeGenerics>(
   );
 
   const moduleAPI: RuntimeModuleAPI<G> = {
+    log,
     random: createRandomFn(seed),
     cloneCard,
     events: Object.fromEntries(

@@ -21,6 +21,10 @@ export function useEditorGameCompiler(
   const options = useMemo(
     () => ({
       seed,
+      log: (...args: unknown[]) => {
+        const staleArgs = cloneDeep(args);
+        setTimeout(() => log(staleArgs), 0);
+      },
       middlewares: <T>(defaults: T[]) => [
         createEventLoggerReducer(log),
         createFailSafeReducer(log),
@@ -32,17 +36,26 @@ export function useEditorGameCompiler(
   );
 
   const compiled = useGameCompiler(...definitions, options);
+  const runtime =
+    compiled.isOk() && compiled.value.status === "ready"
+      ? compiled.value.runtime
+      : undefined;
+  const error = compiled.isErr() ? compiled.error : undefined;
 
   useReaction(() => {
-    if (compiled.isErr()) {
-      log([
-        logIdentifier("[Compiler Error]", { color: colors.error }),
-        ...compiled.error,
-      ]);
-    } else {
+    if (runtime) {
       log(["Game compiled successfully"]);
     }
-  }, [compiled]);
+  }, [runtime]);
+
+  useReaction(() => {
+    if (error) {
+      log([
+        logIdentifier("[Compiler Error]", { color: colors.error }),
+        ...error,
+      ]);
+    }
+  }, [error]);
 
   function forceRecompile() {
     log(["Runtime was reset manually"]);

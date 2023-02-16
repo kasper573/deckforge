@@ -113,6 +113,7 @@ export type RuntimeModuleAPI<G extends RuntimeGenerics> = {
   events: RuntimeEffects<G>;
   thisCardId?: CardId;
   cloneCard: (card: RuntimeCard<G>) => RuntimeCard<G>;
+  log: (...args: unknown[]) => void;
   random: () => number;
 };
 

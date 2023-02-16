@@ -16,6 +16,7 @@ import {
 import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded";
 import { createMachine } from "../../../lib/machine/Machine";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
+import { zodSpreadArgs } from "../../../lib/zod-extensions/zodToTS";
 import type {
   PropRecord,
   RuntimeDefinition,
@@ -267,7 +268,8 @@ export function createModuleApiDefinition<G extends RuntimeGenerics>(
     cloneCard,
     events,
     thisCardId: card.shape.typeId,
-    random: z.function().args(z.void()).returns(z.number()),
+    random: z.function().returns(z.number()),
+    log: zodSpreadArgs(z.function().args(z.unknown()).returns(z.void())),
   };
 
   return {
