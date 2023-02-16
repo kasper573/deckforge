@@ -1,10 +1,11 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import { isPlainObject } from "lodash";
+import { Scope } from "quickjs-emscripten";
 
 export type Marshal = ReturnType<typeof createMarshal>;
 
 export function createMarshal(vm: QuickJSContext) {
-  function create(value: unknown): QuickJSHandle {
+  function create(value: unknown, target?: QuickJSHandle): QuickJSHandle {
     if (Array.isArray(value)) {
       return assign(vm.newArray(), value);
     }
@@ -22,7 +23,9 @@ export function createMarshal(vm: QuickJSContext) {
       case "boolean":
         return value ? vm.true : vm.false;
       case "object":
-        return assign(vm.newObject(), value);
+        const isTargetAnObject =
+          target && vm.null !== target && vm.typeof(target) === "object";
+        return assign(isTargetAnObject ? target : vm.newObject(), value);
       case "function":
         return vm.newFunction(value.name, (...argHandles) => {
           const args = argHandles.map(vm.dump);
@@ -35,11 +38,19 @@ export function createMarshal(vm: QuickJSContext) {
     throw new Error("Unsupported value type: " + value);
   }
 
-  function assign(target: QuickJSHandle, value: object): QuickJSHandle {
-    for (const [k, v] of Object.entries(value)) {
-      create(v).consume((h) => vm.setProp(target, k, h));
+  function assign(objHandle: QuickJSHandle, obj: object): QuickJSHandle {
+    for (const [propName, propValue] of Object.entries(obj)) {
+      Scope.withScope((scope) => {
+        const existingPropValueHandle = scope.manage(
+          vm.getProp(objHandle, propName)
+        );
+        const newPropValueHandle = scope.manage(
+          create(propValue, existingPropValueHandle)
+        );
+        vm.setProp(objHandle, propName, newPropValueHandle);
+      });
     }
-    return target;
+    return objHandle;
   }
 
   function mutateArrayElements(elements: QuickJSHandle[], values: unknown[]) {
@@ -53,7 +64,7 @@ export function createMarshal(vm: QuickJSContext) {
   }
 
   return {
-    create,
+    create: (value: unknown) => create(value),
     assign,
   };
 }

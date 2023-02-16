@@ -445,6 +445,34 @@ export function generateModuleRuntimeTests(
       test(["root", "nested", "deeply"]));
   });
 
+  describe("global builtin overrides", () => {
+    it("can override Math.random", () => {
+      t.testModuleOutput(
+        {
+          type: z.function(),
+          globals: { Math: { random: () => 0.5 } },
+          code: `define(() => Math.random())`,
+        },
+        (fn) => {
+          expect(fn()).toEqual(0.5);
+        }
+      );
+    });
+
+    it("can override Math.random without affecting other Math members", () => {
+      t.testModuleOutput(
+        {
+          type: z.function(),
+          globals: { Math: { random: () => 0.5 } },
+          code: `define(() => Math.abs(-5))`,
+        },
+        (fn) => {
+          expect(fn()).toEqual(5);
+        }
+      );
+    });
+  });
+
   describe("sandboxing", () => {
     generateMaliciousCodeTests();
 
