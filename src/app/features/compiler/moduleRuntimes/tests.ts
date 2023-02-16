@@ -84,15 +84,15 @@ export function generateModuleRuntimeTests(
       expect(fn(1, 2)).toEqual(3);
     }));
 
-  describe.only("argument mutation", () => {
-    describe("root", () => {
-      testMutationsFor();
-    });
+  describe("argument mutation", () => {
+    describe("root", () => testMutationsFor());
+    describe("child", () => testMutationsFor(["child"]));
+    describe("leaf", () => testMutationsFor(["child", "leaf"]));
 
     function testMutationsFor(path?: string[]) {
       const testMutations = createMutationsTesterFor(path);
 
-      describe("object property assign", () =>
+      describe("object property", () =>
         testMutations(
           (v) => `${v}.x = 10`,
           () => ({ x: 0 }),
@@ -100,7 +100,7 @@ export function generateModuleRuntimeTests(
           10
         ));
 
-      describe("index of empty array", () =>
+      describe("array index (out of bounds)", () =>
         testMutations(
           (v) => `${v}[0] = 10`,
           () => [],
@@ -108,7 +108,7 @@ export function generateModuleRuntimeTests(
           10
         ));
 
-      describe("index of array with existing items", () =>
+      describe("array index (within bounds)", () =>
         testMutations(
           (v) => `${v}[1] = 10`,
           () => [1, 2, 3],
@@ -116,7 +116,7 @@ export function generateModuleRuntimeTests(
           [1, 10, 3]
         ));
 
-      describe("push to empty array", () =>
+      describe("array push (empty array)", () =>
         testMutations(
           (v) => `${v}.push(10)`,
           () => [],
@@ -124,7 +124,7 @@ export function generateModuleRuntimeTests(
           [10]
         ));
 
-      describe("push to array with existing items", () =>
+      describe("array push (has existing items)", () =>
         testMutations(
           (v) => `${v}.push(10)`,
           () => [1, 2, 3],
@@ -132,7 +132,7 @@ export function generateModuleRuntimeTests(
           [1, 2, 3, 10]
         ));
 
-      describe("pop array", () =>
+      describe("array pop", () =>
         testMutations(
           (v) => `${v}.pop()`,
           () => [1, 2, 3],
@@ -140,7 +140,7 @@ export function generateModuleRuntimeTests(
           [1, 2]
         ));
 
-      describe("shift array", () =>
+      describe("array shift", () =>
         testMutations(
           (v) => `${v}.shift()`,
           () => [1, 2, 3],
@@ -148,7 +148,7 @@ export function generateModuleRuntimeTests(
           [2, 3]
         ));
 
-      describe("unshift array", () =>
+      describe("array unshift", () =>
         testMutations(
           (v) => `${v}.unshift(10)`,
           () => [1, 2, 3],
@@ -156,7 +156,7 @@ export function generateModuleRuntimeTests(
           [10, 1, 2, 3]
         ));
 
-      describe("unshift array", () =>
+      describe("array splice", () =>
         testMutations(
           (v) => `${v}.splice(1, 2, 10, 20)`,
           () => [1, 2, 3, 4],
