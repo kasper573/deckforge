@@ -1,5 +1,6 @@
 import type { ZodRawShape, ZodType } from "zod";
 import {
+  z,
   ZodAny,
   ZodArray,
   ZodBigInt,
@@ -155,13 +156,27 @@ function zodToTSImpl(
   }
   if (type instanceof ZodFunction) {
     const args = type._def.args as ZodTuple;
-    const argsString =
-      args.items.length === 0
-        ? ""
-        : args.items
-            .map((argType, argIndex) => `arg${argIndex}: ${zodToTS(argType)}`)
-            .join(", ");
-    return `(${argsString}) => ${zodToTS(type._def.returns, "returns")}`;
+    const argTypeStrings = args.items.map((t, i) => zodToTS(t, String(i)));
+    const paramStrings = argTypeStrings.map(
+      (argTypeString, argIndex) => `arg${argIndex}: ${argTypeString}`
+    );
+
+    const spreadAtIndex = getSpreadIndex(type);
+    if (spreadAtIndex !== undefined) {
+      const typeStr = argTypeStrings[spreadAtIndex] ?? zodToTS(z.unknown());
+      const paramStr = `...rest: ${typeStr}`;
+      if (paramStrings[spreadAtIndex] === undefined) {
+        throw new Error(
+          "Spread not possible: No parameter defined at index " + spreadAtIndex
+        );
+      }
+      paramStrings[spreadAtIndex] = paramStr;
+    }
+
+    return `(${paramStrings.join(", ")}) => ${zodToTS(
+      type._def.returns,
+      "returns"
+    )}`;
   }
   if (type instanceof ZodPromise) {
     return `Promise<${zodToTS(type._def.type)}>`;
@@ -271,3 +286,16 @@ function recordToInverseMap<T>(record: Record<string, T>) {
   }
   return inverseMap;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function zodSpreadArgs<T extends ZodFunction<any, any>>(
+  fnType: T,
+  spreadAtIndex = (fnType._def.args as ZodTuple).items.length - 1
+) {
+  Object.assign(fnType, { [spreadSymbol]: spreadAtIndex });
+  return fnType;
+}
+
+const spreadSymbol = Symbol("zodSpread");
+const getSpreadIndex = (type: ZodType) =>
+  spreadSymbol in type ? (type[spreadSymbol] as number) : undefined;
