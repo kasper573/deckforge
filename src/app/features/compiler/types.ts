@@ -114,7 +114,6 @@ export type RuntimeModuleAPI<G extends RuntimeGenerics> = {
   thisCardId?: CardId;
   cloneCard: (card: RuntimeCard<G>) => RuntimeCard<G>;
   log: (...args: unknown[]) => void;
-  random: () => number;
 };
 
 export type GameRuntime<G extends RuntimeGenerics> = Machine<

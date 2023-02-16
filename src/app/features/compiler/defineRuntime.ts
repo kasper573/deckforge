@@ -268,7 +268,6 @@ export function createModuleApiDefinition<G extends RuntimeGenerics>(
     cloneCard,
     events,
     thisCardId: card.shape.typeId,
-    random: z.function().returns(z.number()),
     log: zodSpreadArgs(z.function().args(z.unknown()).returns(z.void())),
   };
 

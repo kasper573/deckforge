@@ -107,9 +107,19 @@ export function compileGame<G extends RuntimeGenerics>(
 
   const moduleAPI: RuntimeModuleAPI<G> = {
     log,
-    random: createRandomFn(seed),
     cloneCard,
     events: deferredEvents,
+  };
+
+  const overrides: BuiltinOverrides = {
+    Math: {
+      random: createRandomFn(seed),
+    },
+  };
+
+  const globals = {
+    ...moduleAPI,
+    ...overrides,
   };
 
   const cardLookup = groupBy(gameDefinition.cards, (c) => c.deckId);
@@ -118,6 +128,10 @@ export function compileGame<G extends RuntimeGenerics>(
   for (const deck of gameDefinition.decks) {
     const cards: RuntimeCard<G>[] = [];
     for (const def of cardLookup[deck.deckId] ?? []) {
+      const cardGlobals: RuntimeModuleAPI<G> = {
+        ...globals,
+        thisCardId: def.cardId,
+      };
       cards.push(compileCard<G>(def, cardProperties));
       cardModules[def.cardId] = enhanceCardModule(
         [def, deck],
@@ -125,7 +139,7 @@ export function compileGame<G extends RuntimeGenerics>(
           name: cardModuleName(deck, def),
           type: runtimeDefinition.cardEffects,
           code: def.code,
-          globals: { ...moduleAPI, thisCardId: def.cardId },
+          globals: cardGlobals,
         })
       );
     }
@@ -139,7 +153,7 @@ export function compileGame<G extends RuntimeGenerics>(
         name: eventModuleName(event),
         type: runtimeDefinition.effects.shape[event.name],
         code: event.code,
-        globals: moduleAPI,
+        globals,
       })
     );
     return modules;
@@ -152,7 +166,7 @@ export function compileGame<G extends RuntimeGenerics>(
         name: reducerModuleName(reducer),
         type: runtimeDefinition.reducer,
         code: reducer.code,
-        globals: moduleAPI,
+        globals,
       })
     )
   );
@@ -270,3 +284,7 @@ function createReducerMiddleware<G extends RuntimeGenerics>(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const noEnhance: ModuleEnhancer<any, any> = (info, mod) => mod;
+
+type BuiltinOverrides<T = typeof window> = {
+  [K in keyof T]?: Partial<T[K]>;
+};
