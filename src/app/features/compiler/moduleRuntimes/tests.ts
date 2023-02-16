@@ -3,6 +3,7 @@ import type { ZodType } from "zod";
 import { z } from "zod";
 import type { AnyFunction } from "js-interpreter";
 import { get, range } from "lodash";
+import produce from "immer";
 import type {
   ModuleDefinition,
   ModuleOutputFunction,
@@ -86,11 +87,13 @@ export function generateModuleRuntimeTests(
 
   describe("argument mutation", () => {
     describe("root", () => testMutationsFor());
-    describe("child", () => testMutationsFor(["child"]));
-    describe("leaf", () => testMutationsFor(["child", "leaf"]));
+    describe("nested", () => testMutationsFor(["a", "b", "c"]));
+    describe("nested proxy", () => testMutationsFor(["a", "b", "c"], produce));
 
-    function testMutationsFor(path?: string[]) {
-      const testMutations = createMutationsTesterFor(path);
+    function testMutationsFor(
+      ...args: Parameters<typeof createMutationsTesterFor>
+    ) {
+      const testMutations = createMutationsTesterFor(...args);
 
       describe("object property", () =>
         testMutations(
@@ -166,29 +169,38 @@ export function generateModuleRuntimeTests(
     }
 
     function createMutationsTesterFor(
-      path: string[] = []
+      path: string[] = [],
+      produce?: Producer
     ): typeof testMutations {
       const pathAccessCode = path.length ? `.${path.join(".")}` : "";
       return (
         createMutationCode,
         createInitializer,
         getCurrentValue,
-        ...rest
+        expectedValue,
+        specificProducer = produce
       ) =>
         testMutations(
           (paramName) => createMutationCode(paramName + pathAccessCode),
           () => valueAtPath(path, createInitializer()),
           (root) =>
             getCurrentValue(path.length ? get(root, path.join(".")) : root),
-          ...rest
+          expectedValue,
+          specificProducer
         );
     }
+
+    type Producer = <V>(values: V, mutate: (values: V) => V) => V;
 
     function testMutations<T, R>(
       createMutationCode: (parameterName: string) => string,
       createInitializer: () => T,
       getCurrentValue: (o: T) => R,
-      expectedValue: R
+      expectedValue: R,
+      produce: Producer = (values, mutate) => {
+        mutate(values);
+        return values;
+      }
     ) {
       for (const n of [1, 2, 3]) {
         describe(`${n} parameter${n ? "s" : ""} mutated`, () => {
@@ -198,8 +210,8 @@ export function generateModuleRuntimeTests(
             ${variableNames.map(createMutationCode).join(";")} 
             }`,
             (fn) => {
-              const values = variableNames.map(createInitializer);
-              fn(...values);
+              let values = variableNames.map(createInitializer);
+              values = produce(values, (draft) => fn(...draft));
               const updatedValues = values.map(getCurrentValue);
               const expectedValues = new Array(n).fill(expectedValue);
               expect(updatedValues).toEqual(expectedValues);
@@ -214,10 +226,9 @@ export function generateModuleRuntimeTests(
             ${createMutationCode("a")};
           }`,
           (fn) => {
-            const a = createInitializer();
-            const b = createInitializer();
-            fn(a, b);
-            const updatedValues = [getCurrentValue(a), getCurrentValue(b)];
+            let values = [createInitializer(), createInitializer()];
+            values = produce(values, (draft) => fn(...draft));
+            const updatedValues = values.map(getCurrentValue);
             expect(updatedValues).toEqual([
               expectedValue,
               getCurrentValue(createInitializer()),
