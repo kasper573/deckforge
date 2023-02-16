@@ -84,13 +84,29 @@ export function generateModuleRuntimeTests(
       expect(fn(1, 2)).toEqual(3);
     }));
 
-  describe("argument mutation", () => {
-    describe("object property", () =>
+  describe.only("argument mutation", () => {
+    describe("object property assign", () =>
       testParameterMutations(
         (v) => `${v}.x = 10`,
         () => ({ x: 0 }),
         (o) => o.x,
         10
+      ));
+
+    describe("index of empty array", () =>
+      testParameterMutations(
+        (v) => `${v}[0] = 10`,
+        () => [],
+        (o) => o[0],
+        10
+      ));
+
+    describe("index of array with existing items", () =>
+      testParameterMutations(
+        (v) => `${v}[1] = 10`,
+        () => [1, 2, 3],
+        (o) => o,
+        [1, 10, 3]
       ));
 
     function testParameterMutations<T, R>(
