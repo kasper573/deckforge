@@ -6,8 +6,8 @@ import {
   cardIdType,
   deckIdType,
   eventIdType,
-  reducerIdType,
   propertyIdType,
+  reducerIdType,
 } from "../../../api/services/game/types";
 
 export const editorObjectIdType = z
@@ -57,26 +57,23 @@ export interface LogEntry {
   content: LogContent[];
 }
 
-export const logIdentifierSymbol = Symbol("logIdentifier");
-export const logIdentifier = (
-  value: LogValue,
-  options: Pick<LogIdentifier, "name" | "color"> = {}
-): LogIdentifier => ({
-  [logIdentifierSymbol]: true,
-  value,
-  ...options,
-});
+export class LogIdentifier {
+  constructor(
+    public readonly value: LogValue,
+    public readonly name?: string,
+    public readonly color?: string
+  ) {}
+
+  static create(
+    value: string,
+    { name, color }: Pick<LogIdentifier, "name" | "color"> = {}
+  ) {
+    return new LogIdentifier(value, name, color);
+  }
+}
 
 export type LogValue = unknown;
-export type LogIdentifier = {
-  [logIdentifierSymbol]: true;
-  value: LogValue;
-  name?: string;
-  color?: string;
-};
 export type LogContent = LogValue | LogIdentifier;
-export const isLogIdentifier = (value: unknown): value is LogIdentifier =>
-  typeof value === "object" && value !== null && logIdentifierSymbol in value;
 
 export type PanelId = z.infer<typeof panelIdType>;
 export const panelIdType = z.enum([

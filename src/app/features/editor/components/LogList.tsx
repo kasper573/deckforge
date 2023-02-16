@@ -6,7 +6,7 @@ import Rand from "rand-seed";
 import Box from "@mui/material/Box";
 import { isEqual } from "lodash";
 import { InspectorDialog } from "../../../dialogs/InspectorDialog";
-import { isLogIdentifier } from "../types";
+import { LogIdentifier } from "../types";
 import type { LogEntry } from "../types";
 import { createModalId, useModal } from "../../../../lib/useModal";
 import { joinNodes } from "../../../../lib/joinNodes";
@@ -80,7 +80,7 @@ export function LogValue({
       if (value instanceof Error) {
         return <LogValue value={value.message} {...props} />;
       }
-      if (isLogIdentifier(value)) {
+      if (value instanceof LogIdentifier) {
         return (
           <LogValue
             value={value.value}

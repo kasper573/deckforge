@@ -2,7 +2,7 @@ import { useMemo, useReducer } from "react";
 import { useDebounce } from "use-debounce";
 import { cloneDeep } from "lodash";
 import type { LogContent } from "../../types";
-import { logIdentifier } from "../../types";
+import { LogIdentifier } from "../../types";
 import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 import { useReaction } from "../../../../../lib/useReaction";
@@ -49,7 +49,7 @@ export function useEditorGameCompiler(
   useReaction(() => {
     if (error) {
       log([
-        logIdentifier("[Compiler Error]", { color: colors.error }),
+        LogIdentifier.create("[Compiler Error]", { color: colors.error }),
         ...error,
       ]);
     }
@@ -79,12 +79,12 @@ function enhanceModule<T extends ModuleOutput>(
   if (typeof mod === "function") {
     return ((state, payload) => {
       log([
-        logIdentifier(`[${moduleType}]`),
+        LogIdentifier.create(`[${moduleType}]`),
         moduleName,
         "(",
-        logIdentifier(cloneDeep(state), { name: "state" }),
+        LogIdentifier.create(cloneDeep(state), { name: "state" }),
         ...(payload !== undefined
-          ? [",", logIdentifier(payload, { name: "input" })]
+          ? [",", LogIdentifier.create(payload, { name: "input" })]
           : []),
         ")",
       ]);
@@ -93,7 +93,10 @@ function enhanceModule<T extends ModuleOutput>(
       try {
         res = mod(state, payload);
       } catch (error) {
-        log([logIdentifier("[Runtime Error]", { color: colors.error }), error]);
+        log([
+          LogIdentifier.create("[Runtime Error]", { color: colors.error }),
+          error,
+        ]);
         return;
       }
 

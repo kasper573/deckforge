@@ -16,7 +16,7 @@ import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { useActions } from "../../../../../lib/useActions";
 import { editorActions } from "../../actions";
 import { PendingGameRenderer } from "../../../compiler/GameRenderer";
-import { logIdentifier } from "../../types";
+import { LogIdentifier } from "../../types";
 import type { PanelProps } from "../definition";
 import { RuntimeErrorFallback } from "./RuntimeErrorFallback";
 import { CompilingIndicator } from "./CompilingIndicator";
@@ -33,7 +33,10 @@ export function RuntimePanel(props: PanelProps) {
   const hasErrors = compiled.isErr();
 
   function onRenderError(error: unknown) {
-    log([logIdentifier("[Renderer Error]", { color: colors.error }), error]);
+    log([
+      LogIdentifier.create("[Renderer Error]", { color: colors.error }),
+      error,
+    ]);
   }
 
   async function tryEditSeed() {
