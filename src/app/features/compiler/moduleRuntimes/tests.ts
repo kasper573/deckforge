@@ -2,6 +2,7 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
 import type { AnyFunction } from "js-interpreter";
+import { range } from "lodash";
 import type {
   ModuleDefinition,
   ModuleOutputFunction,
@@ -83,14 +84,57 @@ export function generateModuleRuntimeTests(
       expect(fn(1, 2)).toEqual(3);
     }));
 
-  describe("argument mutation", () =>
-    t.testModuleOutputs("(a, b) => { a.x = 1; b.x = 2; }", (fn) => {
-      const a = { x: 0 };
-      const b = { x: 0 };
-      fn(a, b);
-      expect(a.x).toEqual(1);
-      expect(b.x).toEqual(2);
-    }));
+  describe("argument mutation", () => {
+    describe("object property", () =>
+      testParameterMutations(
+        (v) => `${v}.x = 10`,
+        () => ({ x: 0 }),
+        (o) => o.x,
+        10
+      ));
+
+    function testParameterMutations<T, R>(
+      createMutationCode: (v: string) => string,
+      createParameterInitializer: () => T,
+      getCurrentValue: (o: T) => R,
+      expectedValue: R
+    ) {
+      for (const n of [1, 2, 3]) {
+        describe(`${n} parameter${n ? "s" : ""} mutated`, () => {
+          const variableNames = range(n).map((i) => `a${i}`);
+          return t.testModuleOutputs(
+            `(${variableNames.join(",")}) => { 
+            ${variableNames.map(createMutationCode).join(";")} 
+            }`,
+            (fn) => {
+              const values = variableNames.map(createParameterInitializer);
+              fn(...values);
+              const updatedValues = values.map(getCurrentValue);
+              const expectedValues = new Array(n).fill(expectedValue);
+              expect(updatedValues).toEqual(expectedValues);
+            }
+          );
+        });
+      }
+
+      describe(`two parameters: first mutated, second untouched`, () =>
+        t.testModuleOutputs(
+          `(a, b) => { 
+            ${createMutationCode("a")};
+          }`,
+          (fn) => {
+            const a = createParameterInitializer();
+            const b = createParameterInitializer();
+            fn(a, b);
+            const updatedValues = [getCurrentValue(a), getCurrentValue(b)];
+            expect(updatedValues).toEqual([
+              expectedValue,
+              getCurrentValue(createParameterInitializer()),
+            ]);
+          }
+        ));
+    }
+  });
 
   describe("calling empty modules", () => {
     const addFnModule =
