@@ -11,7 +11,7 @@ import { createMarshal } from "./marshal";
 
 export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
   readonly marshal: Marshal;
-  readonly compiled: ModuleOutput;
+  readonly proxy: ModuleOutput;
   readonly error?: unknown;
 
   constructor(
@@ -50,7 +50,7 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
       }
     }
 
-    this.compiled = createZodProxy(
+    this.proxy = createZodProxy(
       definition.type,
       (path) =>
         (...args: unknown[]) =>

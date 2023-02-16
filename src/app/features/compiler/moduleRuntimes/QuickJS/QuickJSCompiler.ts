@@ -18,7 +18,7 @@ export function createQuickJSCompiler(
       modules.get(definition.name)?.dispose();
       const m = new QuickJSModule(runtime.newContext(), definition);
       modules.set(definition.name, m);
-      return m.compiled;
+      return m.proxy;
     },
 
     compile(): ModuleCompilerResult {
@@ -29,7 +29,7 @@ export function createQuickJSCompiler(
         if (m.error) {
           errors.push(m.error);
         } else {
-          compiled[m.definition.name] = m.compiled;
+          compiled[m.definition.name] = m.proxy;
         }
       }
 
