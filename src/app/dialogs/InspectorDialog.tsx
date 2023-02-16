@@ -13,12 +13,13 @@ export type InspectorDialogProps = ModalProps<
     title?: ReactNode;
     value: unknown;
     closeLabel?: ReactNode;
+    expandLevel?: number;
   }
 >;
 
 export function InspectorDialog({
   open,
-  input: { title = "Inspector", value, closeLabel = "Close" },
+  input: { title = "Inspector", value, closeLabel = "Close", expandLevel = 3 },
   resolve,
 }: InspectorDialogProps) {
   const close = () => resolve();
@@ -27,7 +28,11 @@ export function InspectorDialog({
     <Dialog disableRestoreFocus fullWidth open={open} onClose={close}>
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
-        <ObjectInspector data={value} theme="chromeDark" expandLevel={1} />
+        <ObjectInspector
+          data={value}
+          theme="chromeDark"
+          expandLevel={expandLevel}
+        />
       </DialogContent>
       <DialogActions>
         <Button type="submit" variant="contained" autoFocus onClick={close}>

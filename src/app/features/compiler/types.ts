@@ -68,7 +68,7 @@ export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<
 
 export type RuntimeEffect<
   G extends RuntimeGenerics,
-  EffectName extends keyof G["actions"]
+  EffectName extends keyof G["actions"] = keyof G["actions"]
 > = RuntimeEffects<G>[EffectName];
 
 export interface RuntimeDefinition<

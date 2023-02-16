@@ -3,6 +3,7 @@ import Rand from "rand-seed";
 import produce from "immer";
 import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
+import { groupBy } from "lodash";
 import type {
   Card,
   CardId,
@@ -35,7 +36,8 @@ import type {
   RuntimeReducer,
   RuntimeState,
 } from "./types";
-import type { ModuleCompiler } from "./moduleRuntimes/types";
+import type { ModuleCompiler, ModuleOutput } from "./moduleRuntimes/types";
+import type { RuntimeEffect } from "./types";
 
 export interface CompiledGame<G extends RuntimeGenerics> {
   runtime: GameRuntime<G>;
@@ -47,10 +49,22 @@ export type CompileGameResult<G extends RuntimeGenerics> = Result<
   unknown[]
 >;
 
-export interface CompileGameOptions<G extends RuntimeGenerics> {
-  moduleCompiler: ModuleCompiler;
+export type ModuleEnhancer<Info, Module extends ModuleOutput> = (
+  info: Info,
+  mod: Module
+) => Module;
+
+export interface CompileGameOptions<
+  G extends RuntimeGenerics = RuntimeGenerics
+> {
   seed?: string;
   log?: (...args: unknown[]) => void;
+  moduleCompiler: ModuleCompiler;
+  moduleEnhancers?: {
+    reducer?: ModuleEnhancer<Reducer, RuntimeReducer<G>>;
+    event?: ModuleEnhancer<Event, RuntimeEffect<G>>;
+    card?: ModuleEnhancer<[Card, Deck], Partial<RuntimeEffects<G>>>;
+  };
   middlewares?: (
     defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
   ) => MachineMiddleware<RuntimeMachineContext<G>>[];
@@ -63,7 +77,12 @@ export function compileGame<G extends RuntimeGenerics>(
     moduleCompiler,
     seed,
     middlewares,
-    log = console.log.bind(console),
+    log = () => {},
+    moduleEnhancers: {
+      reducer: enhanceReducerModule = noEnhance,
+      event: enhanceEventModule = noEnhance,
+      card: enhanceCardModule = noEnhance,
+    } = {},
   }: CompileGameOptions<G>
 ): CompileGameResult<G> {
   const cardProperties = gameDefinition.properties.filter(
@@ -93,44 +112,49 @@ export function compileGame<G extends RuntimeGenerics>(
     events: deferredEvents,
   };
 
-  const decks = gameDefinition.decks.map(
-    (deck): RuntimeDeck<G> => ({
-      id: deck.deckId,
-      name: deck.name,
-      cards: gameDefinition.cards
-        .filter((c) => c.deckId === deck.deckId)
-        .map((def) => compileCard<G>(def, cardProperties)),
-    })
-  );
-
-  const cardModules = gameDefinition.cards.reduce((modules, card) => {
-    const deck = gameDefinition.decks.find((d) => d.deckId === card.deckId);
-    modules[card.cardId] = moduleCompiler.addModule({
-      name: cardModuleName(deck, card),
-      type: runtimeDefinition.cardEffects,
-      code: card.code,
-      globals: { ...moduleAPI, thisCardId: card.cardId },
-    });
-    return modules;
-  }, {} as Record<CardId, Partial<RuntimeEffects<G>>>);
+  const cardLookup = groupBy(gameDefinition.cards, (c) => c.deckId);
+  const cardModules = {} as Record<CardId, Partial<RuntimeEffects<G>>>;
+  const decks: RuntimeDeck<G>[] = [];
+  for (const deck of gameDefinition.decks) {
+    const cards: RuntimeCard<G>[] = [];
+    for (const def of cardLookup[deck.deckId] ?? []) {
+      cards.push(compileCard<G>(def, cardProperties));
+      cardModules[def.cardId] = enhanceCardModule(
+        [def, deck],
+        moduleCompiler.addModule({
+          name: cardModuleName(deck, def),
+          type: runtimeDefinition.cardEffects,
+          code: def.code,
+          globals: { ...moduleAPI, thisCardId: def.cardId },
+        })
+      );
+    }
+    decks.push({ id: deck.deckId, name: deck.name, cards });
+  }
 
   const eventModules = gameDefinition.events.reduce((modules, event) => {
-    modules[event.name as keyof typeof modules] = moduleCompiler.addModule({
-      name: eventModuleName(event),
-      type: runtimeDefinition.effects.shape[event.name],
-      code: event.code,
-      globals: moduleAPI,
-    });
+    modules[event.name as keyof typeof modules] = enhanceEventModule(
+      event,
+      moduleCompiler.addModule({
+        name: eventModuleName(event),
+        type: runtimeDefinition.effects.shape[event.name],
+        code: event.code,
+        globals: moduleAPI,
+      })
+    );
     return modules;
   }, {} as RuntimeEffects<G>);
 
   const reducerModules = gameDefinition.reducers.map((reducer) =>
-    moduleCompiler.addModule({
-      name: reducerModuleName(reducer),
-      type: runtimeDefinition.reducer,
-      code: reducer.code,
-      globals: moduleAPI,
-    })
+    enhanceReducerModule(
+      reducer,
+      moduleCompiler.addModule({
+        name: reducerModuleName(reducer),
+        type: runtimeDefinition.reducer,
+        code: reducer.code,
+        globals: moduleAPI,
+      })
+    )
   );
 
   function createPlayer(): RuntimePlayer<G> {
@@ -212,8 +236,8 @@ const moduleName = (str: string) => str.replace(/[^a-zA-Z0-9_]/g, "_");
 const eventModuleName = (event: Event) => moduleName(`Event_${event.name}`);
 const reducerModuleName = (reducer: Reducer) =>
   moduleName(`Reducer_${reducer.name}`);
-const cardModuleName = (deck: Deck | undefined, card: Card) =>
-  moduleName(`Card_${deck?.name ?? "UnknownDeck"}_${card.name}`);
+const cardModuleName = (deck: Deck, card: Card) =>
+  moduleName(`Card_${deck.name}_${card.name}`);
 
 function namedPropertyDefaults(
   properties: Property[],
@@ -243,3 +267,6 @@ function createReducerMiddleware<G extends RuntimeGenerics>(
     }
   };
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const noEnhance: ModuleEnhancer<any, any> = (info, mod) => mod;

@@ -1,14 +1,14 @@
 import { useMemo, useReducer } from "react";
 import { useDebounce } from "use-debounce";
 import { cloneDeep } from "lodash";
-import type { MachineMiddleware } from "../../../../../lib/machine/MachineAction";
-import type { MachineContext } from "../../../../../lib/machine/MachineContext";
 import type { LogContent } from "../../types";
 import { logIdentifier } from "../../types";
 import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 import { useReaction } from "../../../../../lib/useReaction";
 import { useGameCompiler } from "../../../compiler/useGameCompiler";
+import type { CompileGameOptions } from "../../../compiler/compileGame";
+import type { ModuleOutput } from "../../../compiler/moduleRuntimes/types";
 import { colors } from "./colors";
 
 export function useEditorGameCompiler(
@@ -19,14 +19,15 @@ export function useEditorGameCompiler(
   const [definitions, { isPending }] = useDebouncedDefinitions();
   const isCompiling = isPending();
   const options = useMemo(
-    () => ({
+    (): Partial<CompileGameOptions> => ({
       seed,
       log: (...args: unknown[]) => log(args),
-      middlewares: <T>(defaults: T[]) => [
-        createEventLoggerReducer(log),
-        createFailSafeReducer(log),
-        ...defaults,
-      ],
+      moduleEnhancers: {
+        event: (e, m) => enhanceModule("Event", e.name, m, log),
+        reducer: (r, m) => enhanceModule("Reducer", r.name, m, log),
+        card: ([c, d], m) =>
+          enhanceModule("Card", `${d.name} > ${c.name}`, m, log),
+      },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [seed, log, resetCount]
@@ -69,36 +70,47 @@ function useDebouncedDefinitions() {
   return useDebounce(defs, 1500);
 }
 
-function createEventLoggerReducer(
+function enhanceModule<T extends ModuleOutput>(
+  moduleType: string,
+  moduleName: string,
+  mod: T,
   log: (args: unknown[]) => void
-): MachineMiddleware<MachineContext> {
-  return (state, action, next) => {
-    const beforeState = cloneDeep(state);
-    next();
-    const afterState = cloneDeep(state);
-    log([
-      logIdentifier("[Event]", { color: colors.info }),
-      action.name,
-      "(",
-      logIdentifier(action.payload, { name: "input" }),
-      ",",
-      "state:",
-      logIdentifier(beforeState, { name: "before" }),
-      "=>",
-      logIdentifier(afterState, { name: "after" }),
-      ")",
-    ]);
-  };
+): T {
+  if (typeof mod === "function") {
+    return ((state, payload) => {
+      log([
+        logIdentifier(`[${moduleType}]`),
+        moduleName,
+        "(",
+        logIdentifier(cloneDeep(state), { name: "state" }),
+        ...(payload !== undefined
+          ? [",", logIdentifier(payload, { name: "input" })]
+          : []),
+        ")",
+      ]);
+
+      let res;
+      try {
+        res = mod(state, payload);
+      } catch (error) {
+        log([logIdentifier("[Runtime Error]", { color: colors.error }), error]);
+        return;
+      }
+
+      return res;
+    }) as T;
+  }
+
+  if (typeof mod === "object") {
+    return Object.fromEntries(
+      Object.entries(mod).map(([key, value]) => [
+        key,
+        enhanceModule(moduleType, `${moduleName}_${key}`, value ?? noop, log),
+      ])
+    ) as T;
+  }
+
+  throw new Error("Unexpected module type");
 }
 
-function createFailSafeReducer(
-  log: (args: unknown[]) => void
-): MachineMiddleware<MachineContext> {
-  return (state, action, next) => {
-    try {
-      next();
-    } catch (error) {
-      log([logIdentifier("[Runtime Error]", { color: colors.error }), error]);
-    }
-  };
-}
+const noop = () => {};
