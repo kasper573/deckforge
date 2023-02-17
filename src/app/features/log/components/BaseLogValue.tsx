@@ -49,7 +49,7 @@ const determineColor = (
   colorStringValues?: boolean
 ): string | undefined => {
   if (typeof value === "string") {
-    return colorStringValues ? colors.string : undefined;
+    return colorStringValues ? colors.primitive : undefined;
   }
   if (isPrimitive(value)) {
     return colors.primitive;
