@@ -43,13 +43,18 @@ export function PanelVisibilityMenu({
       {[
         ...checkboxItems,
         <Divider key="divider" />,
-        <MenuItem
-          key="reset"
-          onClick={() => setPanelLayout(defaultPanelLayout)}
-          sx={{ mt: 1 }}
-        >
-          Reset to default layout
-        </MenuItem>,
+        (close) => (
+          <MenuItem
+            key="reset"
+            onClick={(e) => {
+              setPanelLayout(defaultPanelLayout);
+              close?.(e, "backdropClick");
+            }}
+            sx={{ mt: 1 }}
+          >
+            Reset to default layout
+          </MenuItem>
+        ),
       ]}
     </MenuFor>
   );
