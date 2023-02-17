@@ -40,8 +40,15 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-runtime",
       content: (
         <>
-          The runtime panel shows the current state of the game and allows you
-          to interact with it.
+          <Typography paragraph>
+            The runtime panel shows the current state of the game and allows you
+            to interact with it.
+          </Typography>
+          <Typography>
+            Whenever you make a change to the game code or settings, the game
+            will recompile automatically and restart (you can also manually
+            trigger a recompile by using the runtime {`panel's`} toolbar).
+          </Typography>
         </>
       ),
     },
@@ -96,13 +103,19 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
             selected event, reducer or card.
           </Typography>
           <Typography paragraph>
-            Deck forge uses javascript, with type hints provided by typescript
-            types. Click the API Reference button to see definitions of all
-            types and functions available for the currently selected object.
+            Deck Forge uses TypeScript. Click the <code>API Reference</code>{" "}
+            button in the code panel toolbar to see definitions of all types and
+            functions available for the currently selected object.
+          </Typography>
+          <Typography paragraph>
+            In your code, call the <code>{symbols.define}</code> to describe
+            what your object does.
           </Typography>
           <Typography>
-            In your code, call the <code>${symbols.define}</code> to describe
-            what your object does.
+            Your code runs sandboxed, so you only have access to the native{" "}
+            {`APIs`} provided by Deck Forge. {"There's"} also security limits.
+            If you overflow the stack, exhaust your memory limit, or try to
+            stall the CPU, your code will halt.
           </Typography>
         </>
       ),
