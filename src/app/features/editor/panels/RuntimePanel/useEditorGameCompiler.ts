@@ -1,15 +1,13 @@
 import { useMemo, useReducer } from "react";
 import { useDebounce } from "use-debounce";
-import { cloneDeep } from "lodash";
 import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 import { useReaction } from "../../../../../lib/useReaction";
 import { useGameCompiler } from "../../../compiler/useGameCompiler";
 import type { CompileGameOptions } from "../../../compiler/compileGame";
 import type { ModuleOutput } from "../../../compiler/moduleRuntimes/types";
-import { colors } from "../../../log/colors";
 import type { LogContent } from "../../../log/types";
-import { LogIdentifier } from "../../../log/types";
+import { logIdentifiers } from "./logIdentifiers";
 
 export function useEditorGameCompiler(
   seed: string,
@@ -61,20 +59,6 @@ export function useEditorGameCompiler(
   return [compiled, forceRecompile, isCompiling] as const;
 }
 
-const logIdentifiers = {
-  event: LogIdentifier.create(`[Event]`, { color: "#0c9d5b" }),
-  reducer: LogIdentifier.create(`[Reducer]`, { color: "#aa3fd0" }),
-  card: LogIdentifier.create(`[Card]`, { color: "#a99326" }),
-  errors: {
-    runtime: LogIdentifier.create(`[Runtime Error]`, {
-      color: colors.error,
-    }),
-    compiler: LogIdentifier.create(`[Compiler Error]`, {
-      color: colors.error,
-    }),
-  },
-};
-
 function useDebouncedDefinitions() {
   const runtime = useSelector(selectors.runtimeDefinition);
   const game = useSelector(selectors.gameDefinition);
@@ -94,18 +78,9 @@ function enhanceModule<T extends ModuleOutput>(
         typeIdentifier,
         moduleName,
         "(",
-        LogIdentifier.create(cloneDeep(state), {
-          text: "state",
-          highlight: true,
-        }),
+        logIdentifiers.variable("state", state),
         ...(payload !== undefined
-          ? [
-              ",",
-              LogIdentifier.create(payload, {
-                text: "input",
-                highlight: true,
-              }),
-            ]
+          ? [",", logIdentifiers.variable("input", payload)]
           : []),
         ")",
       ]);
