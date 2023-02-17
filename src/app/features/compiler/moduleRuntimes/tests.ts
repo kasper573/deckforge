@@ -389,6 +389,35 @@ export function generateModuleRuntimeTests(
           );
         });
 
+        it("for loop (IIFE)", () => {
+          testOne(
+            (arrayRef, varName, blockCode) => `
+            for (let i = 0; i < ${arrayRef}.length; i++) {
+              ((${varName}) => {
+                ${blockCode}
+              })(${arrayRef}[i]);
+            }
+          `
+          );
+        });
+
+        it("looped recursion", () => {
+          testOne(
+            (arrayRef, varName, blockCode) => `
+            loop(0);
+            
+            function loop(i) {
+              if (i < ${arrayRef}.length) {
+                ((${varName}) => {
+                  ${blockCode}
+                })(${arrayRef}[i]);
+                loop(i + 1);
+              }
+            }
+          `
+          );
+        });
+
         it("for in", () => {
           testOne(
             (arrayRef, varName, blockCode) => `
@@ -413,7 +442,7 @@ export function generateModuleRuntimeTests(
         it(".forEach", () => {
           testOne(
             (arrayRef, varName, blockCode) => `
-            ${arrayRef}.forEach(${varName} => {
+            ${arrayRef}.forEach((${varName}) => {
               ${blockCode}
             });
           `
