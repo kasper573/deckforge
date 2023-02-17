@@ -9,9 +9,22 @@ import Close from "@mui/icons-material/Close";
 import Reload from "@mui/icons-material/Replay";
 import Help from "@mui/icons-material/HelpOutline";
 import Error from "@mui/icons-material/ErrorOutline";
+import Copy from "@mui/icons-material/FileCopy";
 import { styled } from "@mui/material/styles";
 
-export { Delete, Edit, Play, Add, More, Menu, Close, Reload, Help, Error };
+export {
+  Delete,
+  Edit,
+  Play,
+  Add,
+  More,
+  Menu,
+  Close,
+  Reload,
+  Help,
+  Error,
+  Copy,
+};
 
 export const ExitToApp = styled(MuiExitToApp)`
   transform: rotate(180deg);
