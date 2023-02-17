@@ -79,10 +79,7 @@ export function createMarshal(
       const deferredModuleShape = vm.newObject();
       for (const key of Object.keys(outputType.shape)) {
         vm.defineProp(deferredModuleShape, key, {
-          get: () =>
-            vm.newFunction(`defer_key_${key}_in_module_${name}`, () =>
-              resolveModule(name).resolve([key])
-            ),
+          get: () => resolveModule(name).resolve([key]),
         });
       }
       return deferredModuleShape;

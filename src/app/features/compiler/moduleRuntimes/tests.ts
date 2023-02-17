@@ -10,6 +10,7 @@ import type {
   ModuleCompiler,
 } from "./types";
 import type { ModuleCompilerResult } from "./types";
+import { ModuleReference } from "./types";
 
 export function generateModuleRuntimeTests(
   createCompiler: () => ModuleCompiler
@@ -321,6 +322,51 @@ export function generateModuleRuntimeTests(
             type: z.function(),
             code: `define((...args) => moduleA("B", ...args))`,
             globals: { moduleA },
+          });
+          return moduleB;
+        },
+        (moduleB) => {
+          const res = moduleB("input");
+          expect(res).toEqual(["A", "B", "input"]);
+        }
+      ));
+
+    it("calling module A from module B via function reference", () =>
+      t.assertValidRuntime(
+        (compiler) => {
+          compiler.addModule({
+            name: "moduleA",
+            type: z.function(),
+            code: `define((...args) => ["A", ...args])`,
+          });
+          const moduleB = compiler.addModule({
+            name: "moduleB",
+            type: z.function(),
+            code: `define((...args) => moduleA("B", ...args))`,
+            globals: { moduleA: new ModuleReference("moduleA", z.function()) },
+          });
+          return moduleB;
+        },
+        (moduleB) => {
+          const res = moduleB("input");
+          expect(res).toEqual(["A", "B", "input"]);
+        }
+      ));
+
+    it("calling module A from module B via object reference", () =>
+      t.assertValidRuntime(
+        (compiler) => {
+          const moduleAType = z.object({ foo: z.function() });
+          compiler.addModule({
+            name: "moduleA",
+            type: moduleAType,
+            code: `define({ foo: (...args) => ["A", ...args]})`,
+          });
+          const moduleB = compiler.addModule({
+            name: "moduleB",
+            type: z.function(),
+            code: `define((...args) => moduleA.foo("B", ...args))`,
+            globals: { moduleA: new ModuleReference("moduleA", moduleAType) },
           });
           return moduleB;
         },
