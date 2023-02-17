@@ -353,28 +353,122 @@ export function generateModuleRuntimeTests(
         }
       ));
 
-    it("using arguments mutated by another module during chained function call", () =>
-      t.assertValidRuntime(
-        (compiler) => {
-          const double = compiler.addModule({
-            name: "double",
-            type: z.function(),
-            code: `define((state) => state.x *= 2)`,
-          });
+    describe("argument mutation", () => {
+      it("module A arguments being mutated by module B", () =>
+        t.assertValidRuntime(
+          (compiler) => {
+            const double = compiler.addModule({
+              name: "double",
+              type: z.function(),
+              code: `define((state) => state.x *= 2)`,
+            });
 
-          return compiler.addModule({
-            name: "program",
-            type: z.function(),
-            code: `define((state) => { state.x = 5; double(state); })`,
-            globals: { double },
-          });
-        },
-        (program) => {
-          const state = { x: 0 };
-          program(state);
-          expect(state.x).toEqual(10);
+            return compiler.addModule({
+              name: "program",
+              type: z.function(),
+              code: `define((state) => { state.x = 5; double(state); })`,
+              globals: { double },
+            });
+          },
+          (program) => {
+            const state = { x: 0 };
+            program(state);
+            expect(state.x).toEqual(10);
+          }
+        ));
+
+      describe("when called from", () => {
+        it("for loop", () => {
+          testOne(
+            (arrayRef, varName, blockCode) => `
+            for (let i = 0; i < ${arrayRef}.length; i++) {
+              const ${varName} = ${arrayRef}[i];
+              ${blockCode}
+            }
+          `
+          );
+        });
+
+        it("for in", () => {
+          testOne(
+            (arrayRef, varName, blockCode) => `
+            for (let i in ${arrayRef}) {
+              const ${varName} = ${arrayRef}[i];
+              ${blockCode}
+            }
+          `
+          );
+        });
+
+        it("for of", () => {
+          testOne(
+            (arrayRef, varName, blockCode) => `
+            for (const ${varName} of ${arrayRef}) {
+              ${blockCode}
+            }
+          `
+          );
+        });
+
+        it(".forEach", () => {
+          testOne(
+            (arrayRef, varName, blockCode) => `
+            ${arrayRef}.forEach(${varName} => {
+              ${blockCode}
+            });
+          `
+          );
+        });
+
+        function testOne(
+          createLoopCode: (
+            arrayRef: string,
+            varName: string,
+            blockCode: string
+          ) => string
+        ) {
+          t.assertValidRuntime(
+            (compiler) => {
+              const damage = compiler.addModule({
+                name: "damage",
+                type: z.function(),
+                code: `define((state, playerId, amount) => {
+                  const player = state.players.find(p => p.id === playerId);
+                  player.properties.health -= amount;
+                })`,
+              });
+
+              return compiler.addModule({
+                name: "program",
+                type: z.function(),
+                code: `define((state, health) => {
+                  ${createLoopCode(
+                    "state.players",
+                    "player",
+                    `
+                    player.properties.health = health.initial;
+                    damage(state, player.id, health.damage);
+                  `
+                  )}
+                })`,
+                globals: { damage },
+              });
+            },
+            (program) => {
+              const create = (health: number) => ({
+                players: [
+                  { id: 0, properties: { health } },
+                  { id: 1, properties: { health } },
+                ],
+              });
+              const state = create(0);
+              program(state, { initial: 10, damage: 3 });
+              expect(state).toEqual(create(7));
+            }
+          );
         }
-      ));
+      });
+    });
   });
 
   describe("global functions", () => {
