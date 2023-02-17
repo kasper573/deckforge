@@ -7,9 +7,9 @@ import { useReaction } from "../../../../../lib/useReaction";
 import { useGameCompiler } from "../../../compiler/useGameCompiler";
 import type { CompileGameOptions } from "../../../compiler/compileGame";
 import type { ModuleOutput } from "../../../compiler/moduleRuntimes/types";
-import { colors } from "../../components/Log/colors";
-import type { LogContent } from "../../components/Log/types";
-import { LogIdentifier } from "../../components/Log/types";
+import { colors } from "../../../log/colors";
+import type { LogContent } from "../../../log/types";
+import { LogIdentifier } from "../../../log/types";
 
 export function useEditorGameCompiler(
   seed: string,

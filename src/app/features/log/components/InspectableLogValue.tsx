@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
-import { createModalId, useModal } from "../../../../../../../lib/useModal";
-import { InspectorDialog } from "../../../../../../dialogs/InspectorDialog";
+import { createModalId, useModal } from "../../../../lib/useModal";
+import { InspectorDialog } from "../../../dialogs/InspectorDialog";
 import { BaseLogValue } from "./BaseLogValue";
 
 // Use a shared ID so each inspectable value doesn't allocate a new dialog

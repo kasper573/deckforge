@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import { omit } from "lodash";
-import { isPrimitive } from "../../isPrimitive";
-import { LogIdentifier, LogSpreadError } from "../../types";
+import { isPrimitive } from "../isPrimitive";
+import { LogIdentifier, LogSpreadError } from "../types";
 import { BaseLogValue } from "./BaseLogValue";
 import { SpreadLogValue } from "./SpreadLogValue";
 import { InspectableLogValue } from "./InspectableLogValue";

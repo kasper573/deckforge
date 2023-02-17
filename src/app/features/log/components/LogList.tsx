@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import Box from "@mui/material/Box";
 import { isEqual } from "lodash";
 import type { LogEntry } from "../types";
-import { BaseLogValue } from "./values/BaseLogValue";
-import { DynamicLogValue } from "./values/DynamicLogValue";
+import { BaseLogValue } from "./BaseLogValue";
+import { DynamicLogValue } from "./DynamicLogValue";
 
 export function LogList({ entries = [] }: { entries?: LogEntry[] }) {
   const collapsed = useMemo(() => collapsedLogEntries(entries), [entries]);

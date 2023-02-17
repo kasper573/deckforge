@@ -9,7 +9,7 @@ import {
   propertyIdType,
   reducerIdType,
 } from "../../../api/services/game/types";
-import type { LogEntry } from "./components/Log/types";
+import type { LogEntry } from "../log/types";
 
 export const editorObjectIdType = z
   .object({

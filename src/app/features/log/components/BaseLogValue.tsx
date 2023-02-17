@@ -1,10 +1,10 @@
 import { styled } from "@mui/material/styles";
 import type { ComponentProps, ReactNode } from "react";
-import { createHighlighter } from "../../../../../../hooks/useHighlighter";
-import { joinNodes } from "../../../../../../../lib/joinNodes";
-import { colors } from "../../colors";
-import { isPrimitive } from "../../isPrimitive";
-import type { LogIdentifier } from "../../types";
+import { createHighlighter } from "../../../hooks/useHighlighter";
+import { joinNodes } from "../../../../lib/joinNodes";
+import { colors } from "../colors";
+import { isPrimitive } from "../isPrimitive";
+import type { LogIdentifier } from "../types";
 
 const highlighter = createHighlighter("data-log-highlight");
 

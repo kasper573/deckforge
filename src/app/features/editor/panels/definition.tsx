@@ -9,7 +9,7 @@ import { useModal } from "../../../../lib/useModal";
 import { AlertDialog } from "../../../dialogs/AlertDialog";
 import type { TourStep } from "../../../components/Tour";
 import { symbols } from "../../compiler/moduleRuntimes/symbols";
-import { colors } from "../components/Log/colors";
+import { colors } from "../../log/colors";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel/CodePanel";
