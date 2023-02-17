@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { isEqual } from "lodash";
 import { defined } from "../../lib/ts-extensions/defined";
+
+export type Highlighter<Value, Id extends string> = ReturnType<
+  typeof createHighlighter<Value, Id>
+>;
 
 export function createHighlighter<Value, Id extends string>(
   idAttributePrefix: string
 ) {
   let idCounter = 0;
-  const idMap = new Map<string, Id>();
+
+  // Using an array for linear lookup to support isEqual comparisons,
+  // This is not a performance problem, since results are memoized.
+  type LookupItem = { value: Value; id: Id };
+  const idLookup: LookupItem[] = [];
+  const idLookupPredicate = (value: Value) => (item: LookupItem) =>
+    isEqual(item.value, value);
 
   function setHighlighted(id: Id, show: boolean) {
     if (show) {
@@ -23,21 +34,21 @@ export function createHighlighter<Value, Id extends string>(
     return String(idCounter++) as Id;
   }
 
-  function valueToKey(value: Value) {
-    return JSON.stringify(value);
-  }
-
   function requireId(value: Value): Id {
-    const key = valueToKey(value);
-    let id = idMap.get(key);
+    let id = idLookup.find(idLookupPredicate(value))?.id;
     if (id === undefined) {
-      idMap.set(key, (id = nextId()));
+      id = nextId();
+      idLookup.push({ value, id });
     }
     return id;
   }
 
   function freeId(value: Value) {
-    idMap.delete(valueToKey(value));
+    const index = idLookup.findIndex(idLookupPredicate(value));
+    if (index !== -1) {
+      const { id } = idLookup[index];
+      idLookup.splice(index, 1);
+    }
   }
 
   function useHighlight(value: Value, enabled = false) {

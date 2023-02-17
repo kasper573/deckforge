@@ -1,14 +1,13 @@
 import { styled } from "@mui/material/styles";
 import type { ComponentProps, ReactNode } from "react";
 import classNames from "classnames";
-import { createHighlighter } from "../../../hooks/useHighlighter";
+import { useContext } from "react";
 import { joinNodes } from "../../../../lib/joinNodes";
 import { colors } from "../colors";
 import { isPrimitive } from "../../../../lib/ts-extensions/isPrimitive";
 import type { LogIdentifier } from "../types";
+import { LogContext } from "../LogContext";
 import classes from "./BaseLogValue.module.css";
-
-const highlighter = createHighlighter("data-log-highlight");
 
 export function BaseLogValue({
   value,
@@ -21,12 +20,13 @@ export function BaseLogValue({
     ComponentProps<typeof StyledValue>,
     "children"
   >) {
+  const { highlighter } = useContext(LogContext);
   const { id, show, hide } = highlighter.useHighlight(value, highlight);
   return (
     <StyledValue
       {...props}
       style={{ ...props.style, color }}
-      highlightId={id}
+      highlightSelector={highlighter.selector(id)}
       onMouseOver={show}
       onMouseOut={hide}
       className={classNames(props.className, punctuationClasses(text))}
@@ -61,7 +61,7 @@ const determineColor = (
 };
 
 const StyledValue = styled("span")<{
-  highlightId?: string;
+  highlightSelector?: string;
   isPunctuation?: boolean;
 }>((p) => {
   let style = {
@@ -72,10 +72,10 @@ const StyledValue = styled("span")<{
     }),
   };
 
-  if (p.highlightId !== undefined) {
+  if (p.highlightSelector) {
     style = {
       ...style,
-      [highlighter.selector(p.highlightId)]: {
+      [p.highlightSelector]: {
         backgroundColor: colors.highlight,
       },
     };

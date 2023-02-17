@@ -2,18 +2,23 @@ import { useMemo } from "react";
 import Box from "@mui/material/Box";
 import { isEqual } from "lodash";
 import type { LogEntry } from "../types";
+import { LogContext } from "../LogContext";
+import { createHighlighter } from "../../../hooks/useHighlighter";
 import { BaseLogValue } from "./BaseLogValue";
 import { DynamicLogValue } from "./DynamicLogValue";
 
 export function LogList({ entries = [] }: { entries?: LogEntry[] }) {
   const collapsed = useMemo(() => collapsedLogEntries(entries), [entries]);
+  const highlighter = useMemo(() => createHighlighter("log-highlight"), []);
 
   return (
-    <Box sx={{ p: 1 }}>
-      {collapsed.map(({ entry, count }) => (
-        <LogListItem key={entry.id} entry={entry} count={count} />
-      ))}
-    </Box>
+    <LogContext.Provider value={{ highlighter }}>
+      <Box sx={{ p: 1 }}>
+        {collapsed.map(({ entry, count }) => (
+          <LogListItem key={entry.id} entry={entry} count={count} />
+        ))}
+      </Box>
+    </LogContext.Provider>
   );
 }
 
