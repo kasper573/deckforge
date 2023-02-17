@@ -15,11 +15,7 @@ import type {
   Reducer,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
-import type {
-  MachineAction,
-  MachineActionPayload,
-  MachineMiddleware,
-} from "../../../lib/machine/MachineAction";
+import type { MachineMiddleware } from "../../../lib/machine/MachineAction";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -34,10 +30,10 @@ import type {
   RuntimePlayer,
   RuntimePlayerId,
   RuntimeReducer,
-  RuntimeState,
 } from "./types";
 import type { ModuleCompiler, ModuleOutput } from "./moduleRuntimes/types";
 import type { RuntimeEffect } from "./types";
+import { ModuleReference } from "./moduleRuntimes/types";
 
 export interface CompiledGame<G extends RuntimeGenerics> {
   runtime: GameRuntime<G>;
@@ -95,13 +91,7 @@ export function compileGame<G extends RuntimeGenerics>(
   const deferredEvents = Object.fromEntries(
     gameDefinition.events.map((event) => [
       event.name,
-      (
-        state: RuntimeState<G>,
-        payload: MachineActionPayload<MachineAction>
-      ) => {
-        const fn = eventModules[event.name];
-        return fn(state, payload);
-      },
+      new ModuleReference(eventModuleName(event), getEventType(event)),
     ])
   ) as unknown as RuntimeEffects<G>;
 
@@ -151,7 +141,7 @@ export function compileGame<G extends RuntimeGenerics>(
       event,
       moduleCompiler.addModule({
         name: eventModuleName(event),
-        type: runtimeDefinition.effects.shape[event.name],
+        type: getEventType(event),
         code: event.code,
         globals,
       })
@@ -170,6 +160,10 @@ export function compileGame<G extends RuntimeGenerics>(
       })
     )
   );
+
+  function getEventType(event: Event) {
+    return runtimeDefinition.effects.shape[event.name];
+  }
 
   function createPlayer(): RuntimePlayer<G> {
     const properties = namedPropertyDefaults(
