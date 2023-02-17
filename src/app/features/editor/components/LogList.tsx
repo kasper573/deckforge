@@ -1,8 +1,7 @@
 import { styled } from "@mui/material/styles";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { useMemo } from "react";
 import uniqolor from "uniqolor";
-import Rand from "rand-seed";
 import Box from "@mui/material/Box";
 import { isEqual } from "lodash";
 import { InspectorDialog } from "../../../dialogs/InspectorDialog";
@@ -53,7 +52,9 @@ export function LogValue({
   const color = useMemo(
     () =>
       fixedColor ??
-      (deriveColor ? seededUniqueColor(objectName ?? value) : undefined),
+      (deriveColor
+        ? seededUniqueColor(objectName ? [objectName, value] : value)
+        : undefined),
     [objectName, value, fixedColor, deriveColor]
   );
 
@@ -110,12 +111,17 @@ export class LogSpreadError {
 function ObjectValue({
   value,
   name = "Object",
+  ...props
 }: {
   value: unknown;
   name?: ReactNode;
-}) {
+} & ComponentProps<typeof Interaction>) {
   const inspect = useModal(InspectorDialog, sharedInspectorDialogId);
-  return <Interaction onClick={() => inspect({ value })}>{name}</Interaction>;
+  return (
+    <Interaction {...props} onClick={() => inspect({ value })}>
+      {name}
+    </Interaction>
+  );
 }
 
 // Use a shared ID so each inspectable value doesn't allocate a new dialog
@@ -141,9 +147,10 @@ const Interaction = styled(Value)`
 `;
 
 function seededUniqueColor(value: unknown) {
-  const rng = new Rand(JSON.stringify(value));
-  const input = rng.next();
-  const { color } = uniqolor(input);
+  const { color } = uniqolor(JSON.stringify(value), {
+    saturation: 65,
+    lightness: 50,
+  });
   return color;
 }
 

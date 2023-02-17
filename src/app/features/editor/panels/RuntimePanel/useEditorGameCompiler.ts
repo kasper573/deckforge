@@ -82,9 +82,18 @@ function enhanceModule<T extends ModuleOutput>(
         LogIdentifier.create(`[${moduleType}]`),
         moduleName,
         "(",
-        LogIdentifier.create(cloneDeep(state), { name: "state" }),
+        LogIdentifier.create(cloneDeep(state), {
+          name: "state",
+          color: colors.info,
+        }),
         ...(payload !== undefined
-          ? [",", LogIdentifier.create(payload, { name: "input" })]
+          ? [
+              ",",
+              LogIdentifier.create(payload, {
+                name: "input",
+                color: colors.info,
+              }),
+            ]
           : []),
         ")",
       ]);
