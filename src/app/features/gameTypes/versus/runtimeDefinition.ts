@@ -10,6 +10,7 @@ import { cardInstanceIdType } from "../../compiler/types";
 
 export const runtimeDefinition = defineRuntime({
   playerProperties: {
+    name: z.string(),
     health: z.number(),
     healthMax: z.number(),
     mana: z.number(),
@@ -47,7 +48,9 @@ export const runtimeDefinition = defineRuntime({
   },
   initialState: ({ decks, createPlayer }) => {
     const p1 = createPlayer();
+    p1.properties.name = "Player 1";
     const p2 = createPlayer();
+    p2.properties.name = "Player 2";
     return {
       players: [p1, p2],
       decks,
