@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { createHighlighter } from "../../../hooks/useHighlighter";
 import { joinNodes } from "../../../../lib/joinNodes";
 import { colors } from "../colors";
-import { isPrimitive } from "../isPrimitive";
+import { isPrimitive } from "../../../../lib/ts-extensions/isPrimitive";
 import type { LogIdentifier } from "../types";
 
 const highlighter = createHighlighter("data-log-highlight");

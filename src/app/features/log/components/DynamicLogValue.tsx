@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { omit } from "lodash";
-import { isPrimitive } from "../isPrimitive";
+import { isPrimitive } from "../../../../lib/ts-extensions/isPrimitive";
 import { LogIdentifier, LogSpreadError } from "../types";
 import { BaseLogValue } from "./BaseLogValue";
 import { SpreadLogValue } from "./SpreadLogValue";
