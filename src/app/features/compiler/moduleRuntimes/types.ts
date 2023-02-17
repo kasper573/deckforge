@@ -35,3 +35,28 @@ export interface ModuleCompiler {
 
   dispose(): void;
 }
+
+export class ModuleReference {
+  constructor(
+    public readonly name: string,
+    public readonly outputType: ZodType
+  ) {}
+
+  static assign(target: object, value: ModuleReference) {
+    Object.defineProperty(target, ModuleReference.symbol, { value });
+  }
+
+  static symbol = Symbol("ModuleReference");
+
+  static identify(target: unknown): ModuleReference | undefined {
+    if (target instanceof ModuleReference) {
+      return target;
+    }
+    const refOnTarget = (target as Record<PropertyKey, unknown> | undefined)?.[
+      ModuleReference.symbol
+    ];
+    if (refOnTarget instanceof ModuleReference) {
+      return refOnTarget;
+    }
+  }
+}
