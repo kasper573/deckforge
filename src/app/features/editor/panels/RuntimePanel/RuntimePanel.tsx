@@ -16,11 +16,11 @@ import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { useActions } from "../../../../../lib/useActions";
 import { editorActions } from "../../actions";
 import { PendingGameRenderer } from "../../../compiler/GameRenderer";
-import { LogIdentifier } from "../../types";
 import type { PanelProps } from "../definition";
+import { colors } from "../../components/Log/colors";
+import { LogIdentifier } from "../../components/Log/types";
 import { RuntimeErrorFallback } from "./RuntimeErrorFallback";
 import { CompilingIndicator } from "./CompilingIndicator";
-import { colors } from "./colors";
 import { useEditorGameCompiler } from "./useEditorGameCompiler";
 
 export function RuntimePanel(props: PanelProps) {

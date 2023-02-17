@@ -9,6 +9,7 @@ import { useModal } from "../../../../lib/useModal";
 import { AlertDialog } from "../../../dialogs/AlertDialog";
 import type { TourStep } from "../../../components/Tour";
 import { symbols } from "../../compiler/moduleRuntimes/symbols";
+import { colors } from "../components/Log/colors";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel/CodePanel";
@@ -114,8 +115,16 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-logs",
       content: (
         <>
-          The logs panel shows compiler and runtime errors, and events as they
-          happen in the game runtime.
+          <Typography paragraph>
+            The logs panel shows compiler and runtime errors, and events as they
+            happen in the game runtime.
+          </Typography>
+          <Typography>
+            Hover a <code style={{ color: colors.variable }}>variable</code> or{" "}
+            <code style={{ color: colors.primitive }}>value</code> to highlight
+            duplicates across the log. Click a variable name to view its
+            content.
+          </Typography>
         </>
       ),
     },

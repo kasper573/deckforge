@@ -9,6 +9,7 @@ import {
   propertyIdType,
   reducerIdType,
 } from "../../../api/services/game/types";
+import type { LogEntry } from "./components/Log/types";
 
 export const editorObjectIdType = z
   .object({
@@ -51,29 +52,6 @@ export interface EditorState {
   panelLayout?: PanelLayout;
   logs: LogEntry[];
 }
-
-export interface LogEntry {
-  id: string;
-  content: LogContent[];
-}
-
-export class LogIdentifier {
-  constructor(
-    public readonly value: LogValue,
-    public readonly name?: string,
-    public readonly color?: string
-  ) {}
-
-  static create(
-    value: string,
-    { name, color }: Pick<LogIdentifier, "name" | "color"> = {}
-  ) {
-    return new LogIdentifier(value, name, color);
-  }
-}
-
-export type LogValue = unknown;
-export type LogContent = LogValue | LogIdentifier;
 
 export type PanelId = z.infer<typeof panelIdType>;
 export const panelIdType = z.enum([

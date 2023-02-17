@@ -1,15 +1,15 @@
 import { useMemo, useReducer } from "react";
 import { useDebounce } from "use-debounce";
 import { cloneDeep } from "lodash";
-import type { LogContent } from "../../types";
-import { LogIdentifier } from "../../types";
 import { useSelector } from "../../store";
 import { selectors } from "../../selectors";
 import { useReaction } from "../../../../../lib/useReaction";
 import { useGameCompiler } from "../../../compiler/useGameCompiler";
 import type { CompileGameOptions } from "../../../compiler/compileGame";
 import type { ModuleOutput } from "../../../compiler/moduleRuntimes/types";
-import { colors } from "./colors";
+import { colors } from "../../components/Log/colors";
+import type { LogContent } from "../../components/Log/types";
+import { LogIdentifier } from "../../components/Log/types";
 
 export function useEditorGameCompiler(
   seed: string,
@@ -23,10 +23,11 @@ export function useEditorGameCompiler(
       seed,
       log: (...args: unknown[]) => log(args),
       moduleEnhancers: {
-        event: (e, m) => enhanceModule("Event", e.name, m, log),
-        reducer: (r, m) => enhanceModule("Reducer", r.name, m, log),
+        event: (e, m) => enhanceModule(logIdentifiers.event, e.name, m, log),
+        reducer: (r, m) =>
+          enhanceModule(logIdentifiers.reducer, r.name, m, log),
         card: ([c, d], m) =>
-          enhanceModule("Card", `${d.name} > ${c.name}`, m, log),
+          enhanceModule(logIdentifiers.card, `${d.name} > ${c.name}`, m, log),
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,10 +49,7 @@ export function useEditorGameCompiler(
 
   useReaction(() => {
     if (error) {
-      log([
-        LogIdentifier.create("[Compiler Error]", { color: colors.error }),
-        ...error,
-      ]);
+      log([logIdentifiers.errors.compiler, ...error]);
     }
   }, [error]);
 
@@ -63,6 +61,20 @@ export function useEditorGameCompiler(
   return [compiled, forceRecompile, isCompiling] as const;
 }
 
+const logIdentifiers = {
+  event: LogIdentifier.create(`[Event]`, { color: "#0c9d5b" }),
+  reducer: LogIdentifier.create(`[Reducer]`, { color: "#aa3fd0" }),
+  card: LogIdentifier.create(`[Card]`, { color: "#a99326" }),
+  errors: {
+    runtime: LogIdentifier.create(`[Runtime Error]`, {
+      color: colors.error,
+    }),
+    compiler: LogIdentifier.create(`[Compiler Error]`, {
+      color: colors.error,
+    }),
+  },
+};
+
 function useDebouncedDefinitions() {
   const runtime = useSelector(selectors.runtimeDefinition);
   const game = useSelector(selectors.gameDefinition);
@@ -71,7 +83,7 @@ function useDebouncedDefinitions() {
 }
 
 function enhanceModule<T extends ModuleOutput>(
-  moduleType: string,
+  typeIdentifier: unknown,
   moduleName: string,
   mod: T,
   log: (args: unknown[]) => void
@@ -79,19 +91,19 @@ function enhanceModule<T extends ModuleOutput>(
   if (typeof mod === "function") {
     return ((state, payload) => {
       log([
-        LogIdentifier.create(`[${moduleType}]`),
+        typeIdentifier,
         moduleName,
         "(",
         LogIdentifier.create(cloneDeep(state), {
-          name: "state",
-          color: colors.info,
+          text: "state",
+          highlight: true,
         }),
         ...(payload !== undefined
           ? [
               ",",
               LogIdentifier.create(payload, {
-                name: "input",
-                color: colors.info,
+                text: "input",
+                highlight: true,
               }),
             ]
           : []),
@@ -102,10 +114,7 @@ function enhanceModule<T extends ModuleOutput>(
       try {
         res = mod(state, payload);
       } catch (error) {
-        log([
-          LogIdentifier.create("[Runtime Error]", { color: colors.error }),
-          error,
-        ]);
+        log([logIdentifiers.errors.runtime, error]);
         return;
       }
 
@@ -117,7 +126,12 @@ function enhanceModule<T extends ModuleOutput>(
     return Object.fromEntries(
       Object.entries(mod).map(([key, value]) => [
         key,
-        enhanceModule(moduleType, `${moduleName}_${key}`, value ?? noop, log),
+        enhanceModule(
+          typeIdentifier,
+          `${moduleName}_${key}`,
+          value ?? noop,
+          log
+        ),
       ])
     ) as T;
   }

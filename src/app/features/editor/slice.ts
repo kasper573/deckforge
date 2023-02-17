@@ -23,7 +23,6 @@ import type {
   EditorObjectId,
   EditorState,
   EditorSyncState,
-  LogEntry,
   PanelId,
   PanelLayout,
 } from "./types";
@@ -32,6 +31,7 @@ import { selectors } from "./selectors";
 import { moveObject } from "./reducers/moveObject";
 import { panelStorage, selectedObjectStorage } from "./localStorage";
 import { createPostProcessReducer } from "./reducers/createPostProcessReducer";
+import type { LogEntry } from "./components/Log/types";
 
 const initialState: EditorState = {
   syncState: "dirty",
