@@ -37,7 +37,7 @@ export function BaseLogValue({
 }
 
 function formatText(text: ReactNode, value: unknown): ReactNode {
-  if (isPrimitive(value) && text !== value) {
+  if (isPrimitive(value) && text !== String(value)) {
     text = `${text}: ${value}`;
   }
   return typeof text === "string" ? joinNodes(text.split(/\n/), <br />) : text;
