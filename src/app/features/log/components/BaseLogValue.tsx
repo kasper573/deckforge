@@ -1,10 +1,12 @@
 import { styled } from "@mui/material/styles";
 import type { ComponentProps, ReactNode } from "react";
+import classNames from "classnames";
 import { createHighlighter } from "../../../hooks/useHighlighter";
 import { joinNodes } from "../../../../lib/joinNodes";
 import { colors } from "../colors";
 import { isPrimitive } from "../../../../lib/ts-extensions/isPrimitive";
 import type { LogIdentifier } from "../types";
+import classes from "./BaseLogValue.module.css";
 
 const highlighter = createHighlighter("data-log-highlight");
 
@@ -21,11 +23,12 @@ export function BaseLogValue({
   >) {
   return (
     <StyledValue
-      style={{ color }}
+      {...props}
+      style={{ ...props.style, color }}
       highlightId={value}
       onMouseOver={highlight ? () => highlighter.setId(value) : undefined}
       onMouseOut={highlight ? () => highlighter.setId(undefined) : undefined}
-      {...props}
+      className={classNames(props.className, punctuationClasses(text))}
     >
       {formatText(text, value)}
     </StyledValue>
@@ -56,24 +59,39 @@ const determineColor = (
   }
 };
 
-const StyledValue = styled("span")<{ highlightId?: unknown }>((p) => {
+const StyledValue = styled("span")<{
+  highlightId?: unknown;
+  isPunctuation?: boolean;
+}>((p) => {
   let style = {
     borderRadius: p.theme.shape.borderRadius,
     transition: p.theme.transitions.create("background-color", {
       duration: p.theme.transitions.duration.shortest,
       easing: p.theme.transitions.easing.easeOut,
     }),
-    [":not(:first-of-type)"]: {
-      marginLeft: 4,
-    },
   };
+
   if (p.highlightId !== undefined) {
     style = {
       ...style,
       [highlighter.selector(p.highlightId)]: {
-        backgroundColor: p.theme.palette.secondary.dark,
+        backgroundColor: colors.highlight,
       },
     };
   }
   return style;
 });
+
+const punctuation: unknown[] = [",", ";", ":", ".", "!", "?", " "];
+function punctuationClasses(value: unknown) {
+  const str = String(value);
+  const start = punctuation.includes(str[0]);
+  const end = punctuation.includes(str[str.length - 1]);
+  const none = !start && !end;
+  return {
+    [classes["log-value"]]: true,
+    [classes["pt-start"]]: start,
+    [classes["pt-end"]]: end,
+    [classes["pt-none"]]: none,
+  };
+}

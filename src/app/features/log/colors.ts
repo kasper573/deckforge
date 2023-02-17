@@ -1,6 +1,7 @@
 export const colors = {
-  primitive: "#4ba4a6",
-  string: "#b08147",
+  primitive: "#80C0A8",
+  string: "#CE8349",
   error: "#ff6347",
-  variable: "#9bdafc",
+  variable: "#9CDCFE",
+  highlight: "#194b6a",
 };
