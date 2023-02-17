@@ -21,13 +21,14 @@ export function BaseLogValue({
     ComponentProps<typeof StyledValue>,
     "children"
   >) {
+  const { id, show, hide } = highlighter.useHighlight(value, highlight);
   return (
     <StyledValue
       {...props}
       style={{ ...props.style, color }}
-      highlightId={value}
-      onMouseOver={highlight ? () => highlighter.setId(value) : undefined}
-      onMouseOut={highlight ? () => highlighter.setId(undefined) : undefined}
+      highlightId={id}
+      onMouseOver={show}
+      onMouseOut={hide}
       className={classNames(props.className, punctuationClasses(text))}
     >
       {formatText(text, value)}
@@ -60,7 +61,7 @@ const determineColor = (
 };
 
 const StyledValue = styled("span")<{
-  highlightId?: unknown;
+  highlightId?: string;
   isPunctuation?: boolean;
 }>((p) => {
   let style = {
