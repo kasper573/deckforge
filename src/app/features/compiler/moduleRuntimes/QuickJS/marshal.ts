@@ -1,11 +1,22 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import { isPlainObject } from "lodash";
 import { Scope } from "quickjs-emscripten";
+import { ZodFunction, ZodObject } from "zod";
+import { ModuleReference } from "../types";
+import { zodInstanceOf } from "../../../../../lib/zod-extensions/zodInstanceOf";
+import type { QuickJSModule } from "./QuickJSModule";
 
 export type Marshal = ReturnType<typeof createMarshal>;
 
-export function createMarshal(vm: QuickJSContext) {
+export function createMarshal(
+  vm: QuickJSContext,
+  resolveModule: (name: string) => QuickJSModule
+) {
   function create(value: unknown, target?: QuickJSHandle): QuickJSHandle {
+    const moduleReference = ModuleReference.identify(value);
+    if (moduleReference) {
+      return deferModule(moduleReference);
+    }
     if (Array.isArray(value)) {
       return assign(vm.newArray(), value);
     }
@@ -61,6 +72,28 @@ export function createMarshal(vm: QuickJSContext) {
         assign(element, value as object);
       }
     }
+  }
+
+  function deferModule({ name, outputType }: ModuleReference) {
+    if (zodInstanceOf(outputType, ZodObject)) {
+      const deferredModuleShape = vm.newObject();
+      for (const key of Object.keys(outputType.shape)) {
+        vm.defineProp(deferredModuleShape, key, {
+          get: () =>
+            vm.newFunction(`defer_key_${key}_in_module_${name}`, () =>
+              resolveModule(name).resolve([key])
+            ),
+        });
+      }
+      return deferredModuleShape;
+    }
+    if (zodInstanceOf(outputType, ZodFunction)) {
+      return vm.newFunction(
+        `defer_module_${name}_as_function`,
+        (...argHandles) => resolveModule(name).invokeNative([], argHandles)
+      );
+    }
+    throw new Error("Unsupported deferred module type");
   }
 
   return {

@@ -6,6 +6,7 @@ import { symbols as abstractSymbols } from "../symbols";
 import type { ModuleDefinition, ModuleOutput } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
 import { createMutateFn } from "../createMutateFn";
+import { ModuleReference } from "../types";
 import type { Marshal } from "./marshal";
 import { createMarshal } from "./marshal";
 
@@ -16,9 +17,10 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
 
   constructor(
     private readonly vm: QuickJSContext,
-    public readonly definition: Readonly<ModuleDefinition<Output>>
+    public readonly definition: Readonly<ModuleDefinition<Output>>,
+    resolveModule: (name: string) => QuickJSModule
   ) {
-    this.marshal = createMarshal(vm);
+    this.marshal = createMarshal(vm, resolveModule);
 
     if (this.definition.globals) {
       this.marshal.assign(vm.global, this.definition.globals);
@@ -54,7 +56,12 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
       definition.type,
       (path) =>
         (...args: unknown[]) =>
-          this.call(path, args)
+          this.invokeManaged(path, args)
+    );
+
+    ModuleReference.assign(
+      this.proxy,
+      new ModuleReference(definition.name, definition.type)
     );
   }
 
@@ -66,15 +73,25 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
     }, this.vm.global);
   }
 
-  call(path: string[], args: unknown[]) {
+  invokeManaged(path: string[], args: unknown[]) {
     return Scope.withScope((scope) => {
-      const { vm, marshal } = this;
+      const argHandles = args.map((a) => scope.manage(this.marshal.create(a)));
+      const result = this.invokeNative(path, argHandles);
+      const returns = result.consume(this.vm.dump);
+      const argsAfter = argHandles.map(this.vm.dump);
+      mutate(args, argsAfter);
+      return returns;
+    });
+  }
+
+  invokeNative(path: string[], argHandles: QuickJSHandle[]): QuickJSHandle {
+    return Scope.withScope((scope) => {
+      const { vm } = this;
       const fnHandle = scope.manage(this.resolve(path));
       if (vm.typeof(fnHandle) !== "function") {
-        return;
+        return vm.undefined;
       }
 
-      const argHandles = args.map((a) => scope.manage(marshal.create(a)));
       const callResult = vm.callFunction(fnHandle, vm.null, ...argHandles);
 
       if (callResult?.error) {
@@ -86,10 +103,7 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
         );
       }
 
-      const returns = callResult.value.consume(this.vm.dump);
-      const argsAfter = argHandles.map(this.vm.dump);
-      mutate(args, argsAfter);
-      return returns;
+      return callResult.value;
     });
   }
 

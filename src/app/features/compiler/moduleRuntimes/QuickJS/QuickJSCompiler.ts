@@ -13,10 +13,22 @@ export function createQuickJSCompiler(
   const runtime = createRuntime();
   const modules = new Map<string, QuickJSModule>();
 
+  function resolveModule(name: string) {
+    const m = modules.get(name);
+    if (!m) {
+      throw new Error(`Module "${name}" not found`);
+    }
+    return m;
+  }
+
   return {
     addModule(definition) {
       modules.get(definition.name)?.dispose();
-      const m = new QuickJSModule(runtime.newContext(), definition);
+      const m = new QuickJSModule(
+        runtime.newContext(),
+        definition,
+        resolveModule
+      );
       modules.set(definition.name, m);
       return m.proxy;
     },
