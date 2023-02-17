@@ -1,7 +1,7 @@
 import { styled } from "@mui/material/styles";
 import type { ComponentProps, ReactNode } from "react";
 import classNames from "classnames";
-import { useContext } from "react";
+import { isValidElement, useContext } from "react";
 import { joinNodes } from "../../../../lib/joinNodes";
 import { colors } from "../colors";
 import { isPrimitive } from "../../../../lib/ts-extensions/isPrimitive";
@@ -11,7 +11,7 @@ import classes from "./BaseLogValue.module.css";
 
 export function BaseLogValue({
   value,
-  text = String(value),
+  text = isValidElement(value) ? value : String(value),
   colorStringsAsValue,
   color = determineColor(value, text, colorStringsAsValue),
   highlight,

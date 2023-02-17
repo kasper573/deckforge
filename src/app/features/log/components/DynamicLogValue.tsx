@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import { omit } from "lodash";
+import { isValidElement } from "react";
 import { isPrimitive } from "../../../../lib/ts-extensions/isPrimitive";
 import { LogIdentifier, LogSpreadError } from "../types";
 import { BaseLogValue } from "./BaseLogValue";
@@ -8,6 +9,9 @@ import { InspectableLogValue } from "./InspectableLogValue";
 
 export function DynamicLogValue(props: ComponentProps<typeof BaseLogValue>) {
   const { value } = props;
+  if (isValidElement(value)) {
+    return value;
+  }
   switch (typeof value) {
     case "undefined":
     case "number":
