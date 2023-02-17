@@ -30,7 +30,6 @@ export function RuntimePanel(props: PanelProps) {
   const [seed, setSeed] = useState("");
   const gameType = useSelector(selectors.gameType);
   const [compiled, recompile, isCompiling] = useEditorGameCompiler(seed, log);
-  const hasErrors = compiled.isErr();
 
   function onRenderError(error: unknown) {
     log([
@@ -59,12 +58,12 @@ export function RuntimePanel(props: PanelProps) {
       toolbarControls={
         <PanelControls>
           <Tooltip title="Customize seed">
-            <IconButton disabled={hasErrors} size="small" onClick={tryEditSeed}>
+            <IconButton size="small" onClick={tryEditSeed}>
               <Yard />
             </IconButton>
           </Tooltip>
           <Tooltip title="Reset runtime">
-            <IconButton disabled={hasErrors} size="small" onClick={recompile}>
+            <IconButton size="small" onClick={recompile}>
               <Reload />
             </IconButton>
           </Tooltip>
@@ -85,7 +84,7 @@ export function RuntimePanel(props: PanelProps) {
           />
         </ErrorBoundary>
       )}
-      {hasErrors && (
+      {compiled.isErr() && (
         <PanelEmptyState>
           <Typography variant="h5">Compiler error</Typography>
         </PanelEmptyState>
