@@ -16,18 +16,10 @@ export function safeFunctionParse<
     );
   }
 
+  name = name ?? value.name;
   const argsType = type._def.args;
   const returnType = type._def.returns;
-  if (!argsType || !returnType) {
-    throw new Error(
-      "Function type must have both arguments and return types specified."
-    );
-  }
-
-  name = name ?? value.name;
-
   const description = name ? `function "${name}"` : "function";
-
   const argCount = argsType._def.items.length;
 
   return (...args: z.infer<Args>): z.infer<Returns> => {
