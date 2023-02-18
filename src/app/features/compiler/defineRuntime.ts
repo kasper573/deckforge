@@ -212,7 +212,10 @@ function deriveEffectsType<G extends RuntimeGenerics>(
   const shape = Object.entries(actionTypes).reduce(
     (shape, [actionName, actionType]) => {
       const args = actionType._def.args._def.items;
-      const effectType = z.function(z.tuple([stateType, ...args]), z.void());
+      const effectType = z.function(
+        z.tuple([stateType, ...args]),
+        z.void().or(z.function().args(stateType))
+      );
       return { ...shape, [actionName]: effectType };
     },
     {} as ZodShapeFor<RuntimeEffects<G>>
