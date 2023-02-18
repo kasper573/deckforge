@@ -5,6 +5,7 @@ import { ZodFunction, ZodObject } from "zod";
 import { ModuleReference } from "../types";
 import { zodInstanceOf } from "../../../../../lib/zod-extensions/zodInstanceOf";
 import type { QuickJSModule } from "./QuickJSModule";
+import { coerceError } from "./coerceError";
 
 export type Marshal = ReturnType<typeof createMarshal>;
 
@@ -93,8 +94,25 @@ export function createMarshal(
     throw new Error("Unsupported deferred module type");
   }
 
+  function oneOffFunction(fnHandle: QuickJSHandle) {
+    return (...args: unknown[]): unknown => {
+      const argHandles = args.map((a) => create(a));
+      const callResult = vm.callFunction(fnHandle, vm.null, ...argHandles);
+      if (callResult?.error) {
+        throw coerceError(
+          callResult.error.consume(vm.dump),
+          `Failed to invoke one-off function`
+        );
+      }
+      const result = callResult.value.consume(vm.dump);
+      fnHandle.dispose();
+      return result;
+    };
+  }
+
   return {
     create: (value: unknown) => create(value),
     assign,
+    oneOffFunction,
   };
 }

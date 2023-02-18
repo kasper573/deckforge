@@ -1,14 +1,14 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import { Scope } from "quickjs-emscripten";
-import { z } from "zod";
 import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
 import { symbols as abstractSymbols } from "../symbols";
 import type { ModuleDefinition, ModuleOutput } from "../types";
+import { ModuleReference } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
 import { createMutateFn } from "../createMutateFn";
-import { ModuleReference } from "../types";
 import type { Marshal } from "./marshal";
 import { createMarshal } from "./marshal";
+import { coerceError } from "./coerceError";
 
 export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
   readonly marshal: Marshal;
@@ -78,7 +78,10 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
     return Scope.withScope((scope) => {
       const argHandles = args.map((a) => scope.manage(this.marshal.create(a)));
       const result = this.invokeNative(path, argHandles);
-      const returns = result.consume(this.vm.dump);
+      const returns =
+        this.vm.typeof(result) === "function"
+          ? this.marshal.oneOffFunction(result)
+          : result.consume(this.vm.dump);
       const argsAfter = argHandles.map(this.vm.dump);
       mutate(args, argsAfter);
       return returns;
@@ -128,18 +131,3 @@ const mutate = createMutateFn();
 const symbols = {
   definition: "___definition___",
 };
-
-function coerceError(input: unknown, description: string): Error {
-  const result = errorType.safeParse(input);
-  if (result.success) {
-    const { name, message, stack } = result.data;
-    return new Error(`${description}: ${name}: ${message}\n${stack}`);
-  }
-  return new Error(description + ": " + String(input));
-}
-
-const errorType = z.object({
-  message: z.string(),
-  name: z.string(),
-  stack: z.string(),
-});
