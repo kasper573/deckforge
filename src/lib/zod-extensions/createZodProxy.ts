@@ -2,21 +2,23 @@ import type { ZodType, z } from "zod";
 import { ZodFunction, ZodObject } from "zod";
 import { zodTypeAtPath } from "./zodTypeAtPath";
 import { zodInstanceOf } from "./zodInstanceOf";
+import { safeFunctionParse } from "./safeFunctionParse";
 
 export function createZodProxy<RootType extends ZodType>(
   rootType: RootType,
   resolver: <TypeAtPath extends ZodType>(
     path: string[],
     typeAtPath: TypeAtPath
-  ) => z.infer<TypeAtPath>
+  ) => z.infer<TypeAtPath>,
+  rootName?: string
 ): z.infer<RootType> {
   function resolveValuePath(path: string[]): unknown {
-    const typeAtPath = zodTypeAtPath(rootType, path);
-    if (!typeAtPath) {
-      throw new Error("Could not find type at path: " + path.join("."));
+    const fnType = zodTypeAtPath(rootType, path);
+    if (fnType && zodInstanceOf(fnType, ZodFunction)) {
+      const fnName = rootName ? [rootName, ...path].join(".") : undefined;
+      return safeFunctionParse(fnType, resolver(path, fnType), fnName);
     }
-    return resolver(path, typeAtPath);
-    //return typeAtPath.parse(resolver(path, typeAtPath));
+    throw new Error("Could not find function type at path: " + path.join("."));
   }
 
   if (zodInstanceOf(rootType, ZodObject)) {

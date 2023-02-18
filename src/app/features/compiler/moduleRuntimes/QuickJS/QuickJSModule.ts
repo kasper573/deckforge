@@ -56,7 +56,8 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
       definition.type,
       (path) =>
         (...args: unknown[]) =>
-          this.invokeManaged(path, args)
+          this.invokeManaged(path, args),
+      definition.name
     );
 
     ModuleReference.assign(

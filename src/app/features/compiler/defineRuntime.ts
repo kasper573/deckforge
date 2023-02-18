@@ -99,7 +99,7 @@ export function defineRuntime<
 
   const player = z.object({
     id: playerId,
-    deckId,
+    deckId: deckId.optional(),
     properties: z.object(playerProperties),
     board: z.object({
       draw: z.array(card),
