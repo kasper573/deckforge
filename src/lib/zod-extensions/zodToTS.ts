@@ -33,6 +33,7 @@ import {
 } from "zod";
 import { memoize } from "lodash";
 import { getBrandName } from "./zodRuntimeBranded";
+import { zodInstanceOf } from "./zodInstanceOf";
 
 export interface ZodToTSOptions {
   resolvers?: Map<ZodType, string>;
@@ -205,8 +206,13 @@ function zodToTSImpl(
     return `[${type._def.items.map(zodToTS).join(", ")}]`;
   }
   if (type instanceof ZodUnion) {
-    return type._def.options.map(zodToTS).join(" | ");
+    return type._def.options
+      .map((t: ZodType) =>
+        zodInstanceOf(t, ZodFunction) ? `(${zodToTS(t)})` : zodToTS(t)
+      )
+      .join(" | ");
   }
+
   if (type instanceof ZodIntersection) {
     return `${zodToTS(type._def.left, "left")} & ${zodToTS(
       type._def.right,
