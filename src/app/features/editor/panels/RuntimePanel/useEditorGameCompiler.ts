@@ -5,8 +5,9 @@ import { selectors } from "../../selectors";
 import { useReaction } from "../../../../../lib/useReaction";
 import { useGameCompiler } from "../../../compiler/useGameCompiler";
 import type { CompileGameOptions } from "../../../compiler/compileGame";
-import type { ModuleOutput } from "../../../compiler/moduleRuntimes/types";
 import type { LogContent } from "../../../log/types";
+import type { MachineMiddleware } from "../../../../../lib/machine/MachineAction";
+import type { MachineContext } from "../../../../../lib/machine/MachineContext";
 import { logIdentifiers } from "./logIdentifiers";
 
 export function useEditorGameCompiler(
@@ -20,13 +21,11 @@ export function useEditorGameCompiler(
     (): Partial<CompileGameOptions> => ({
       seed,
       log: (...args: unknown[]) => log(args),
-      moduleEnhancers: {
-        event: (e, m) => enhanceModule(logIdentifiers.event, e.name, m, log),
-        reducer: (r, m) =>
-          enhanceModule(logIdentifiers.reducer, r.name, m, log),
-        card: ([c, d], m) =>
-          enhanceModule(logIdentifiers.card, `${d.name} > ${c.name}`, m, log),
-      },
+      middlewares: <T>(defaults: T[]) => [
+        createEventLoggerReducer(log),
+        createFailSafeReducer(log),
+        ...defaults,
+      ],
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [seed, log, resetCount]
@@ -66,52 +65,31 @@ function useDebouncedDefinitions() {
   return useDebounce(defs, 1500);
 }
 
-function enhanceModule<T extends ModuleOutput>(
-  typeIdentifier: unknown,
-  moduleName: string,
-  mod: T,
+function createEventLoggerReducer(
   log: (args: unknown[]) => void
-): T {
-  if (typeof mod === "function") {
-    return ((state, payload) => {
-      log([
-        typeIdentifier,
-        moduleName,
-        "(",
-        logIdentifiers.variable("state", state),
-        ...(payload !== undefined
-          ? [",", logIdentifiers.variable("input", payload)]
-          : []),
-        ")",
-      ]);
-
-      let res;
-      try {
-        res = mod(state, payload);
-      } catch (error) {
-        log([logIdentifiers.errors.runtime, error]);
-        return;
-      }
-
-      return res;
-    }) as T;
-  }
-
-  if (typeof mod === "object") {
-    return Object.fromEntries(
-      Object.entries(mod).map(([key, value]) => [
-        key,
-        enhanceModule(
-          typeIdentifier,
-          `${moduleName}_${key}`,
-          value ?? noop,
-          log
-        ),
-      ])
-    ) as T;
-  }
-
-  throw new Error("Unexpected module type");
+): MachineMiddleware<MachineContext> {
+  return (state, action, next) => {
+    log([
+      logIdentifiers.event,
+      action.name,
+      "(",
+      logIdentifiers.variable("state", state),
+      ",",
+      logIdentifiers.variable("input", action.payload),
+      ")",
+    ]);
+    next();
+  };
 }
 
-const noop = () => {};
+function createFailSafeReducer(
+  log: (args: unknown[]) => void
+): MachineMiddleware<MachineContext> {
+  return (state, action, next) => {
+    try {
+      next();
+    } catch (error) {
+      log([logIdentifiers.errors.runtime, error]);
+    }
+  };
+}
