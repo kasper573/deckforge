@@ -4,6 +4,7 @@ import { Scope } from "quickjs-emscripten";
 import { ZodFunction, ZodObject } from "zod";
 import { ModuleReference } from "../types";
 import { zodInstanceOf } from "../../../../../lib/zod-extensions/zodInstanceOf";
+import { createMutateFn } from "../createMutateFn";
 import type { QuickJSModule } from "./QuickJSModule";
 import { coerceError } from "./coerceError";
 
@@ -106,6 +107,8 @@ export function createMarshal(
       }
       const result = callResult.value.consume(vm.dump);
       fnHandle.dispose();
+      const argsAfter = argHandles.map((a) => a.consume(vm.dump));
+      mutate(args, argsAfter);
       return result;
     };
   }
@@ -116,3 +119,5 @@ export function createMarshal(
     oneOffFunction,
   };
 }
+
+const mutate = createMutateFn();
