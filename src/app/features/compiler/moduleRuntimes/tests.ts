@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { AnyFunction } from "js-interpreter";
 import { get, range } from "lodash";
 import produce from "immer";
+import type { ZodTypeAny } from "zod/lib/types";
 import type {
   ModuleDefinition,
   ModuleCompiler,
@@ -71,18 +72,22 @@ export function generateModuleRuntimeTests(
 
     it("can compile empty module without errors", () => {
       t.assertValidRuntime((compiler) => {
-        compiler.addModule({ name: "module", type: z.function(), code: `` });
+        compiler.addModule({
+          name: "module",
+          type: z.function(),
+          code: ``,
+        });
       });
     });
   });
 
   describe("return value", () =>
-    t.testModuleOutputs("() => 5", (fn) => {
+    t.testModuleOutputs("() => 5", [], (fn) => {
       expect(fn()).toEqual(5);
     }));
 
   describe("arguments", () =>
-    t.testModuleOutputs("(a, b) => a + b", (fn) => {
+    t.testModuleOutputs("(a, b) => a + b", [z.unknown(), z.unknown()], (fn) => {
       expect(fn(1, 2)).toEqual(3);
     }));
 
@@ -210,6 +215,7 @@ export function generateModuleRuntimeTests(
             `(${variableNames.join(",")}) => { 
             ${variableNames.map(createMutationCode).join(";")} 
             }`,
+            variableNames.map(() => z.unknown()),
             (fn) => {
               let values = variableNames.map(createInitializer);
               values = produce(values, (draft) => fn(...draft));
@@ -226,6 +232,7 @@ export function generateModuleRuntimeTests(
           `(a, b) => { 
             ${createMutationCode("a")};
           }`,
+          [z.unknown(), z.unknown()],
           (fn) => {
             let values = [createInitializer(), createInitializer()];
             values = produce(values, (draft) => fn(...draft));
@@ -288,7 +295,10 @@ export function generateModuleRuntimeTests(
       testEmptyInvoke((compiler) => {
         const record = compiler.addModule({
           name: "record",
-          type: z.object({ empty: z.function(), defined: z.function() }),
+          type: z.object({
+            empty: z.function(),
+            defined: z.function(),
+          }),
           code: `define({ defined: define(() => 5) })`,
         });
         return record.empty;
@@ -314,13 +324,13 @@ export function generateModuleRuntimeTests(
         (compiler) => {
           const moduleA = compiler.addModule({
             name: "moduleA",
-            type: z.function(),
-            code: `define((...args) => ["A", ...args])`,
+            type: z.function().args(z.unknown()),
+            code: `define((args) => ["A", ...args])`,
           });
           const moduleB = compiler.addModule({
             name: "moduleB",
-            type: z.function(),
-            code: `define((...args) => moduleA("B", ...args))`,
+            type: z.function().args(z.unknown()),
+            code: `define((arg) => moduleA(["B", arg]))`,
             globals: { moduleA },
           });
           return moduleB;
@@ -336,14 +346,16 @@ export function generateModuleRuntimeTests(
         (compiler) => {
           compiler.addModule({
             name: "moduleA",
-            type: z.function(),
-            code: `define((...args) => ["A", ...args])`,
+            type: z.function().args(z.unknown()),
+            code: `define((args) => ["A", ...args])`,
           });
           const moduleB = compiler.addModule({
             name: "moduleB",
-            type: z.function(),
-            code: `define((...args) => moduleA("B", ...args))`,
-            globals: { moduleA: new ModuleReference("moduleA", z.function()) },
+            type: z.function().args(z.unknown()),
+            code: `define((arg) => moduleA(["B", arg]))`,
+            globals: {
+              moduleA: new ModuleReference("moduleA", z.function()),
+            },
           });
           return moduleB;
         },
@@ -356,16 +368,16 @@ export function generateModuleRuntimeTests(
     it("calling module A from module B via object reference", () =>
       t.assertValidRuntime(
         (compiler) => {
-          const moduleAType = z.object({ foo: z.function() });
+          const moduleAType = z.object({ foo: z.function().args(z.unknown()) });
           compiler.addModule({
             name: "moduleA",
             type: moduleAType,
-            code: `define({ foo: (...args) => ["A", ...args]})`,
+            code: `define({ foo: (args) => ["A", ...args]})`,
           });
           const moduleB = compiler.addModule({
             name: "moduleB",
-            type: z.function(),
-            code: `define((...args) => moduleA.foo("B", ...args))`,
+            type: z.function().args(z.unknown()),
+            code: `define((arg) => moduleA.foo(["B", arg]))`,
             globals: { moduleA: new ModuleReference("moduleA", moduleAType) },
           });
           return moduleB;
@@ -405,13 +417,13 @@ export function generateModuleRuntimeTests(
           (compiler) => {
             const double = compiler.addModule({
               name: "double",
-              type: z.function(),
+              type: z.function().args(z.unknown()),
               code: `define((state) => state.x *= 2)`,
             });
 
             return compiler.addModule({
               name: "program",
-              type: z.function(),
+              type: z.function().args(z.unknown()),
               code: `define((state) => { state.x = 5; double(state); })`,
               globals: { double },
             });
@@ -506,7 +518,7 @@ export function generateModuleRuntimeTests(
             (compiler) => {
               const damage = compiler.addModule({
                 name: "damage",
-                type: z.function(),
+                type: z.function().args(z.unknown(), z.number(), z.number()),
                 code: `define((state, playerId, amount) => {
                   const player = state.players.find(p => p.id === playerId);
                   player.properties.health -= amount;
@@ -515,7 +527,7 @@ export function generateModuleRuntimeTests(
 
               return compiler.addModule({
                 name: "program",
-                type: z.function(),
+                type: z.function().args(z.unknown(), z.unknown()),
                 code: `define((state, health) => {
                   ${createLoopCode(
                     "state.players",
@@ -550,12 +562,12 @@ export function generateModuleRuntimeTests(
     function test(path: [string, ...string[]]) {
       return t.testModuleOutput(
         {
-          type: z.function(),
-          code: `define((...args) => ${path.join(".")}(...args))`,
+          type: z.function().args(z.unknown()),
+          code: `define((args) => ${path.join(".")}(...args))`,
           globals: valueAtPath(path, (...args: unknown[]) => [path, ...args]),
         },
         (fn) => {
-          expect(fn(1, 2)).toEqual([path, 1, 2]);
+          expect(fn([1, 2])).toEqual([path, 1, 2]);
         }
       );
     }
@@ -715,13 +727,17 @@ export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
 ) {
   function testModuleOutputs(
     functionDefinitionCode: string,
+    argTypes: ZodTypeAny[],
     assert: (output: CompiledFunctionModule) => void
   ) {
+    const fnType = z
+      .function()
+      .args(...(argTypes as [ZodTypeAny, ...ZodTypeAny[]] | []));
     it("optional single function (assert bypass)", () =>
       testModuleOutput(
         {
           code: `define(${functionDefinitionCode})`,
-          type: z.function().optional() as ZodType<AnyFunction>,
+          type: fnType.optional() as ZodType<AnyFunction>,
         },
         assert
       ));
@@ -730,7 +746,7 @@ export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
       testModuleOutput(
         {
           code: `define(${functionDefinitionCode})`,
-          type: z.function(),
+          type: fnType,
         },
         assert
       ));
@@ -738,7 +754,7 @@ export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
     it("function record", () =>
       testModuleOutput(
         {
-          type: z.object({ first: z.function(), second: z.function() }),
+          type: z.object({ first: fnType, second: fnType }),
           code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
         },
         ({ first, second }) => {
@@ -750,9 +766,7 @@ export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
     it("partial function record", () =>
       testModuleOutput(
         {
-          type: z
-            .object({ first: z.function(), second: z.function() })
-            .partial(),
+          type: z.object({ first: fnType, second: fnType }).partial(),
           code: `define({ first: ${functionDefinitionCode}, second: ${functionDefinitionCode} })`,
         },
         ({ first, second }) => {
