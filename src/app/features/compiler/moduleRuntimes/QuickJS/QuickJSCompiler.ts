@@ -1,7 +1,5 @@
 import { err, ok } from "neverthrow";
 import type { QuickJSRuntime } from "quickjs-emscripten";
-import type { z } from "zod";
-import type { ZodType } from "zod";
 import type {
   ModuleCompiler,
   CompiledModules,
