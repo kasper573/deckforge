@@ -63,19 +63,21 @@ export function createQuickJSCompiler({
     },
 
     compile(): ModuleCompilerResult {
-      const errors: unknown[] = [];
+      const errors: Record<string, Error> = {};
       const proxies: CompiledModules = {};
+      let hasErrors = false;
 
       for (const { module, proxy } of compiled.values()) {
         if (module.error) {
-          errors.push(module.error);
+          hasErrors = true;
+          errors[module.definition.name] = module.error;
         } else {
           proxies[module.definition.name] = proxy;
         }
       }
 
-      if (errors.length) {
-        return err(new Error(errors.join("\n")));
+      if (hasErrors) {
+        return err(errors);
       }
 
       return ok(proxies);

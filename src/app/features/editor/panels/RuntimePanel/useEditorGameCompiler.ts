@@ -36,7 +36,8 @@ export function useEditorGameCompiler(
     compiled.isOk() && compiled.value.status === "ready"
       ? compiled.value.runtime
       : undefined;
-  const error = compiled.isErr() ? compiled.error : undefined;
+
+  const compilerErrors = compiled.isErr() ? compiled.error : undefined;
 
   useReaction(() => {
     if (runtime) {
@@ -45,10 +46,12 @@ export function useEditorGameCompiler(
   }, [runtime]);
 
   useReaction(() => {
-    if (error) {
-      log([logIdentifiers.errors.compiler, ...error]);
+    if (compilerErrors) {
+      for (const error of compilerErrors) {
+        log([logIdentifiers.errors.compiler, error]);
+      }
     }
-  }, [error]);
+  }, [compilerErrors]);
 
   function forceRecompile() {
     log(["Runtime was reset manually"]);

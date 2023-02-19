@@ -58,7 +58,9 @@ export class JSInterpreterCompiler implements ModuleCompiler {
 }
 
 function compileRuntime(definitions: ModuleDefinitions): ModuleCompilerResult {
-  const createError = (error: unknown) => bridgeErrorProtocol.parse(error);
+  const createError = (error: unknown) => ({
+    runtime: new Error(String(bridgeErrorProtocol.parse(error))),
+  });
 
   let code: string;
   try {

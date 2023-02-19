@@ -23,7 +23,10 @@ export type CompiledObjectModule = Partial<
 export type CompiledFunctionModule = (...args: any[]) => any;
 export type CompiledModule = CompiledObjectModule | CompiledFunctionModule;
 export type CompiledModules = Record<string, CompiledModule>;
-export type ModuleCompilerResult = Result<CompiledModules, unknown>;
+export type ModuleCompilerResult = Result<
+  CompiledModules,
+  Record<string, Error>
+>;
 
 export interface ModuleCompilerInfo {
   name: string;
