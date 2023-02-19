@@ -25,7 +25,7 @@ export type CompiledModule = CompiledObjectModule | CompiledFunctionModule;
 export type CompiledModules = Record<string, CompiledModule>;
 export type ModuleCompilerResult = Result<
   CompiledModules,
-  Record<string, Error>
+  Record<string, unknown>
 >;
 
 export interface ModuleCompilerInfo {

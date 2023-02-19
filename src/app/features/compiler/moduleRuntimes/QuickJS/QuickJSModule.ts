@@ -10,7 +10,7 @@ import { coerceError } from "./coerceError";
 
 export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
   readonly marshal: Marshal;
-  readonly error?: Error;
+  readonly error?: unknown;
 
   constructor(
     private readonly vm: QuickJSContext,

@@ -63,7 +63,7 @@ export function createQuickJSCompiler({
     },
 
     compile(): ModuleCompilerResult {
-      const errors: Record<string, Error> = {};
+      const errors: Record<string, unknown> = {};
       const proxies: CompiledModules = {};
       let hasErrors = false;
 
