@@ -10,7 +10,7 @@ import { generateModuleRuntimeTests } from "../tests";
 import { createQuickJSCompiler } from "./QuickJSCompiler";
 
 function generateQuickJSTests(createRuntime: () => QuickJSRuntime) {
-  generateModuleRuntimeTests(() => createQuickJSCompiler(createRuntime));
+  generateModuleRuntimeTests(() => createQuickJSCompiler({ createRuntime }));
 }
 
 type TestStrategy = keyof typeof testStrategies;

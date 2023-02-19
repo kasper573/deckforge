@@ -11,9 +11,15 @@ import { ModuleReference } from "../types";
 import { safeFunctionParse } from "../../../../../lib/zod-extensions/safeFunctionParse";
 import { QuickJSModule } from "./QuickJSModule";
 
-export function createQuickJSCompiler(
-  createRuntime: () => QuickJSRuntime
-): ModuleCompiler {
+export interface QuickJSCompilerOptions {
+  createRuntime: () => QuickJSRuntime;
+  memoryLeaks?: "warn" | "error" | "ignore";
+}
+
+export function createQuickJSCompiler({
+  createRuntime,
+  memoryLeaks,
+}: QuickJSCompilerOptions): ModuleCompiler {
   const runtime = createRuntime();
   const compiled = new Map<
     string,
@@ -77,10 +83,31 @@ export function createQuickJSCompiler(
 
     dispose() {
       for (const { module } of compiled.values()) {
-        module.dispose();
+        disposeBlock(memoryLeaks, `module "${module.definition.name}"`, () =>
+          module.dispose()
+        );
       }
       compiled.clear();
-      runtime.dispose();
+      disposeBlock(memoryLeaks, "runtime", () => runtime.dispose());
     },
   };
+}
+
+function disposeBlock(
+  leak: QuickJSCompilerOptions["memoryLeaks"] = "error",
+  name: string,
+  block: () => void
+) {
+  try {
+    block();
+  } catch (error) {
+    const message = `Memory leak detected in ${name}:\n${error}`;
+    switch (leak) {
+      case "error":
+        throw new Error(message);
+      case "warn":
+        console.warn(message);
+        break;
+    }
+  }
 }

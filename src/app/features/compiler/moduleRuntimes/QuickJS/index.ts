@@ -1,5 +1,6 @@
 import type { InterruptHandler } from "quickjs-emscripten";
 import type { ModuleCompilerInfo } from "../types";
+import { env } from "../../../../env";
 
 export const quickJSCompilerInfo: ModuleCompilerInfo = {
   name: "QuickJS",
@@ -10,13 +11,15 @@ export const quickJSCompilerInfo: ModuleCompilerInfo = {
       import("./QuickJSCompiler"),
     ]);
     return () =>
-      createQuickJSCompiler(() =>
-        quickJS.newRuntime({
-          memoryLimitBytes: 1024 * 640,
-          maxStackSizeBytes: 1024 * 320,
-          interruptHandler: createInterruptHandler(),
-        })
-      );
+      createQuickJSCompiler({
+        memoryLeaks: env.moduleCompiler.memoryLeaks,
+        createRuntime: () =>
+          quickJS.newRuntime({
+            memoryLimitBytes: 1024 * 640,
+            maxStackSizeBytes: 1024 * 320,
+            interruptHandler: createInterruptHandler(),
+          }),
+      });
   },
 };
 
