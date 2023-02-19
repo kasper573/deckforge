@@ -2,19 +2,19 @@ import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 import { Scope } from "quickjs-emscripten";
 import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
 import { symbols as abstractSymbols } from "../symbols";
-import type { ModuleDefinition, ModuleOutput } from "../types";
+import type { ModuleDefinition, AnyModuleType } from "../types";
 import { createMutateFn } from "../createMutateFn";
 import type { Marshal } from "./marshal";
 import { createMarshal } from "./marshal";
 import { coerceError } from "./coerceError";
 
-export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
+export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
   readonly marshal: Marshal;
   readonly error?: unknown;
 
   constructor(
     private readonly vm: QuickJSContext,
-    public readonly definition: Readonly<ModuleDefinition<Output>>,
+    public readonly definition: Readonly<ModuleDefinition<Type>>,
     resolveModule: (name: string) => QuickJSModule
   ) {
     this.marshal = createMarshal(vm, resolveModule);

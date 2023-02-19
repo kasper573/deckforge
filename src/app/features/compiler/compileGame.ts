@@ -31,7 +31,7 @@ import type {
   RuntimePlayerId,
   RuntimeReducer,
 } from "./types";
-import type { ModuleCompiler, ModuleOutput } from "./moduleRuntimes/types";
+import type { ModuleCompiler } from "./moduleRuntimes/types";
 import { ModuleReference } from "./moduleRuntimes/types";
 
 export interface CompiledGame<G extends RuntimeGenerics> {
@@ -43,11 +43,6 @@ export type CompileGameResult<G extends RuntimeGenerics> = Result<
   CompiledGame<G>,
   unknown[]
 >;
-
-export type ModuleEnhancer<Info, Module extends ModuleOutput> = (
-  info: Info,
-  mod: Module
-) => Module;
 
 export interface CompileGameOptions<
   G extends RuntimeGenerics = RuntimeGenerics
@@ -250,9 +245,6 @@ function createReducerMiddleware<G extends RuntimeGenerics>(
     }
   };
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const noEnhance: ModuleEnhancer<any, any> = (info, mod) => mod;
 
 type BuiltinOverrides<T = typeof window> = {
   [K in keyof T]?: Partial<T[K]>;

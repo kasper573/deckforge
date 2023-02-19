@@ -4,7 +4,7 @@ import type {
   ModuleCompiler,
   CompiledModules,
   ModuleCompilerResult,
-  ModuleOutput,
+  CompiledModule,
 } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
 import { ModuleReference } from "../types";
@@ -17,7 +17,7 @@ export function createQuickJSCompiler(
   const runtime = createRuntime();
   const compiled = new Map<
     string,
-    { module: QuickJSModule; proxy: ModuleOutput }
+    { module: QuickJSModule; proxy: CompiledModule }
   >();
 
   function resolveModule(name: string) {

@@ -6,8 +6,8 @@ import { get, range } from "lodash";
 import produce from "immer";
 import type {
   ModuleDefinition,
-  ModuleOutputFunction,
   ModuleCompiler,
+  CompiledFunctionModule,
 } from "./types";
 import type { ModuleCompilerResult } from "./types";
 import { ModuleReference } from "./types";
@@ -715,7 +715,7 @@ export function createRuntimeTestUtils<Compiler extends ModuleCompiler>(
 ) {
   function testModuleOutputs(
     functionDefinitionCode: string,
-    assert: (output: ModuleOutputFunction) => void
+    assert: (output: CompiledFunctionModule) => void
   ) {
     it("optional single function (assert bypass)", () =>
       testModuleOutput(

@@ -8,9 +8,9 @@ import type {
   CompiledModules,
   ModuleDefinition,
   ModuleDefinitions,
-  ModuleOutputRecord,
   ModuleCompilerResult,
   ModuleCompiler,
+  CompiledObjectModule,
 } from "../types";
 import { symbols as moduleRuntimeSymbols } from "../symbols";
 import { createMutateFn } from "../createMutateFn";
@@ -379,7 +379,7 @@ function createModuleProxy<Definition extends ModuleDefinition>(
 
   if (zodInstanceOf(type, ZodObject)) {
     const proxies = Object.keys(type.shape).reduce(
-      (acc: ModuleOutputRecord, key) => ({
+      (acc: CompiledObjectModule, key) => ({
         ...acc,
         [key]: createFunctionProxy(moduleName, key),
       }),
