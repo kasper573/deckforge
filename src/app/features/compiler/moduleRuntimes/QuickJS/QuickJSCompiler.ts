@@ -1,20 +1,29 @@
 import { err, ok } from "neverthrow";
 import type { QuickJSRuntime } from "quickjs-emscripten";
+import type { z } from "zod";
+import type { ZodType } from "zod";
 import type {
   ModuleCompiler,
   CompiledModules,
   ModuleCompilerResult,
+  ModuleOutput,
 } from "../types";
+import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
+import { ModuleReference } from "../types";
+import { safeFunctionParse } from "../../../../../lib/zod-extensions/safeFunctionParse";
 import { QuickJSModule } from "./QuickJSModule";
 
 export function createQuickJSCompiler(
   createRuntime: () => QuickJSRuntime
 ): ModuleCompiler {
   const runtime = createRuntime();
-  const modules = new Map<string, QuickJSModule>();
+  const compiled = new Map<
+    string,
+    { module: QuickJSModule; proxy: ModuleOutput }
+  >();
 
   function resolveModule(name: string) {
-    const m = modules.get(name);
+    const m = compiled.get(name)?.module;
     if (!m) {
       throw new Error(`Module "${name}" not found`);
     }
@@ -23,25 +32,41 @@ export function createQuickJSCompiler(
 
   return {
     addModule(definition) {
-      modules.get(definition.name)?.dispose();
-      const m = new QuickJSModule(
+      compiled.get(definition.name)?.module.dispose();
+
+      const module = new QuickJSModule(
         runtime.newContext(),
         definition,
         resolveModule
       );
-      modules.set(definition.name, m);
-      return m.proxy;
+
+      const proxy = createZodProxy(definition.type, (path, typeAtPath) => {
+        const fn = (...args: unknown[]) => module.invokeManaged(path, args);
+        return safeFunctionParse(
+          typeAtPath,
+          fn,
+          [definition.name, ...path].join(".")
+        );
+      });
+
+      ModuleReference.assign(
+        proxy,
+        new ModuleReference(definition.name, definition.type)
+      );
+
+      compiled.set(definition.name, { module, proxy });
+      return proxy;
     },
 
     compile(): ModuleCompilerResult {
       const errors: unknown[] = [];
-      const compiled: CompiledModules = {};
+      const proxies: CompiledModules = {};
 
-      for (const m of modules.values()) {
-        if (m.error) {
-          errors.push(m.error);
+      for (const { module, proxy } of compiled.values()) {
+        if (module.error) {
+          errors.push(module.error);
         } else {
-          compiled[m.definition.name] = m.proxy;
+          proxies[module.definition.name] = proxy;
         }
       }
 
@@ -49,14 +74,14 @@ export function createQuickJSCompiler(
         return err(new Error(errors.join("\n")));
       }
 
-      return ok(compiled);
+      return ok(proxies);
     },
 
     dispose() {
-      for (const m of modules.values()) {
-        m.dispose();
+      for (const { module } of compiled.values()) {
+        module.dispose();
       }
-      modules.clear();
+      compiled.clear();
       runtime.dispose();
     },
   };

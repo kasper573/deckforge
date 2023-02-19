@@ -1,18 +1,26 @@
 import type { ZodTuple } from "zod/lib/types";
-import type { ZodFunction, ZodType } from "zod";
+import { ZodFunction } from "zod";
+import type { ZodType } from "zod";
 import type { z } from "zod";
 import { normalizeType } from "./zodNormalize";
+import { zodInstanceOf } from "./zodInstanceOf";
 
 export function safeFunctionParse<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Args extends ZodTuple<any, any>,
   Returns extends ZodType
->(type: ZodFunction<Args, Returns>, value: unknown, name?: string) {
-  type = normalizeType(type) as ZodFunction<Args, Returns>;
+>(type: ZodType, value: unknown, name?: string) {
+  type = normalizeType(type);
 
   if (typeof value !== "function") {
     throw new Error(
       `Expected value to be a function, but got ${typeof value} instead.`
+    );
+  }
+
+  if (!zodInstanceOf(type, ZodFunction)) {
+    throw new Error(
+      `Expected type to be a function, but got ${type.constructor.name} instead.`
     );
   }
 

@@ -3,8 +3,6 @@ import { Scope } from "quickjs-emscripten";
 import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
 import { symbols as abstractSymbols } from "../symbols";
 import type { ModuleDefinition, ModuleOutput } from "../types";
-import { ModuleReference } from "../types";
-import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
 import { createMutateFn } from "../createMutateFn";
 import type { Marshal } from "./marshal";
 import { createMarshal } from "./marshal";
@@ -12,7 +10,6 @@ import { coerceError } from "./coerceError";
 
 export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
   readonly marshal: Marshal;
-  readonly proxy: ModuleOutput;
   readonly error?: unknown;
 
   constructor(
@@ -51,19 +48,6 @@ export class QuickJSModule<Output extends ModuleOutput = ModuleOutput> {
         evalResult.value.dispose();
       }
     }
-
-    this.proxy = createZodProxy(
-      definition.type,
-      (path) =>
-        (...args: unknown[]) =>
-          this.invokeManaged(path, args),
-      definition.name
-    );
-
-    ModuleReference.assign(
-      this.proxy,
-      new ModuleReference(definition.name, definition.type)
-    );
   }
 
   resolve(path: string[]): QuickJSHandle {
