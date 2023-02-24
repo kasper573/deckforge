@@ -11,6 +11,7 @@ export async function testGameType<G extends RuntimeGenerics>(
   const quickJS = await getQuickJS();
   const gameDefinition = await gameType.defaultGameDefinition();
   const result = compileGame(gameType.runtimeDefinition, gameDefinition, {
+    seed: "test",
     moduleCompiler: createQuickJSCompiler({
       createRuntime: () => quickJS.newRuntime(),
     }),
