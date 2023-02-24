@@ -82,9 +82,8 @@ export function defineRuntime<
   ) as unknown as RuntimeDefinition<G>["effects"];
 
   const emptyEffect = createEffectType(
-    lazyState,
-    z.void()
-  ) as RuntimeDefinition<G>["emptyEffect"];
+    lazyState
+  ) as unknown as RuntimeDefinition<G>["emptyEffect"];
 
   const card = z.object({
     id: cardInstanceIdType,
@@ -217,9 +216,7 @@ function deriveEffectsType<G extends RuntimeGenerics>(
 ) {
   const shape = Object.entries(actionTypes).reduce(
     (shape, [actionName, actionType]) => {
-      const [inputType = z.void()] = actionType._def.args._def.items as
-        | [ZodType]
-        | [];
+      const [inputType] = actionType._def.args._def.items;
       return { ...shape, [actionName]: createEffectType(stateType, inputType) };
     },
     {} as ZodShapeFor<RuntimeEffects<G>>
@@ -229,10 +226,10 @@ function deriveEffectsType<G extends RuntimeGenerics>(
 
 function createEffectType<G extends RuntimeGenerics, InputType extends ZodType>(
   stateType: ZodType<RuntimeState<G>>,
-  inputType: InputType
+  inputType?: InputType
 ) {
   return z.function(
-    z.tuple([stateType, inputType]),
+    z.tuple(inputType ? [stateType, inputType] : [stateType]),
     z.void().or(z.function().args(stateType))
   );
 }
