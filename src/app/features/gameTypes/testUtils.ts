@@ -18,12 +18,28 @@ export async function testGameType<G extends RuntimeGenerics>(
   });
 
   expect(result).toEqual(expect.objectContaining({ value: expect.anything() }));
+  if (!result.isOk()) {
+    return;
+  }
 
-  if (result.isOk()) {
-    try {
-      test(result.value.runtime);
-    } finally {
-      result.value.dispose();
-    }
+  let testError: unknown;
+  try {
+    test(result.value.runtime);
+  } catch (error) {
+    testError = error;
+  }
+
+  let disposeError: unknown;
+  try {
+    result.value.dispose();
+  } catch (error) {
+    disposeError = error;
+  }
+
+  if (testError) {
+    throw testError;
+  }
+  if (disposeError) {
+    throw disposeError;
   }
 }
