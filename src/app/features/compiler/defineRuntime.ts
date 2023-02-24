@@ -1,5 +1,5 @@
-import type { ZodRawShape, ZodType } from "zod";
-import { z } from "zod";
+import type { ZodRawShape, ZodType, ZodTuple, ZodVoid } from "zod";
+import { z, ZodFunction } from "zod";
 import type { ZodTypeAny } from "zod/lib/types";
 import { uniqBy } from "lodash";
 import type {
@@ -17,6 +17,11 @@ import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded
 import { createMachine } from "../../../lib/machine/Machine";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
 import { zodSpreadArgs } from "../../../lib/zod-extensions/zodToTS";
+import type { MachineActionObject } from "../../../lib/machine/MachineAction";
+import type {
+  MachineAction,
+  MachineActionPayload,
+} from "../../../lib/machine/MachineAction";
 import type {
   PropRecord,
   RuntimeDefinition,
@@ -26,6 +31,7 @@ import type {
   RuntimeState,
   RuntimeModuleAPI,
   RuntimeStateFactory,
+  RuntimeMachineContext,
 } from "./types";
 import type { RuntimeEffect } from "./types";
 import { cardInstanceIdType } from "./types";
@@ -122,12 +128,10 @@ export function defineRuntime<
     properties: globals,
   }) as unknown as RuntimeDefinition<G>["state"];
 
-  const actionUnion = z.unknown();
-
   const reducer = z
     .function()
-    .args(state, actionUnion)
-    .returns(z.void()) as RuntimeDefinition<G>["reducer"];
+    .args(state, deriveActionObjectUnionType(actionsShape))
+    .returns(z.void()) as unknown as RuntimeDefinition<G>["reducer"];
 
   const definition: RuntimeDefinition<G> = {
     globals,
@@ -188,6 +192,41 @@ export function deriveRuntimeDefinition<Base extends RuntimeDefinition>(
     }),
   });
 }
+
+function deriveActionObjectUnionType<
+  G extends RuntimeGenerics,
+  Actions extends ZodRawShape
+>(actionsShape: Actions): ZodType {
+  const actionObjects = Object.entries(actionsShape).map(
+    ([actionName, action]) => {
+      if (!(action instanceof ZodFunction)) {
+        throw new Error("Action must be a function");
+      }
+      return deriveActionObjectType(actionName, action);
+    }
+  );
+
+  if (actionObjects.length === 0) {
+    return z.unknown();
+  }
+
+  return actionObjects.reduce((acc, cur) => acc.or(cur));
+}
+
+function deriveActionObjectType<
+  G extends RuntimeGenerics,
+  ActionName extends keyof G["actions"]
+>(name: ActionName, actionType: ActionType<G["actions"][ActionName]>) {
+  return z.object({
+    name: z.literal(String(name)),
+    payload: actionType._def.args._def.items[0] ?? z.void(),
+  }) as unknown as ZodType<MachineActionObject<RuntimeMachineContext<G>>>;
+}
+
+type ActionType<T extends MachineAction> = ZodFunction<
+  ZodTuple<[ZodType<MachineActionPayload<T>>]>,
+  ZodVoid
+>;
 
 const propertiesToZodShape = (propertyList: Property[]) =>
   propertyList.reduce(
