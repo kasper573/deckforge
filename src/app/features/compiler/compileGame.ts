@@ -132,7 +132,10 @@ export function compileGame<G extends RuntimeGenerics>(
   );
 
   function getEventType(event: Event) {
-    return runtimeDefinition.effects.shape[event.name];
+    return (
+      runtimeDefinition.effects.shape[event.name] ??
+      runtimeDefinition.emptyEffect
+    );
   }
 
   function createPlayer(): RuntimePlayer<G> {

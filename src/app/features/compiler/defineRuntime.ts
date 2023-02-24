@@ -81,6 +81,11 @@ export function defineRuntime<
     lazyState
   ) as unknown as RuntimeDefinition<G>["effects"];
 
+  const emptyEffect = createEffectType(
+    lazyState,
+    z.void()
+  ) as RuntimeDefinition<G>["emptyEffect"];
+
   const card = z.object({
     id: cardInstanceIdType,
     typeId: cardDefinitionType.shape.cardId,
@@ -130,6 +135,7 @@ export function defineRuntime<
     deck,
     card,
     cardEffects,
+    emptyEffect,
     player,
     state,
     effects,
@@ -211,16 +217,24 @@ function deriveEffectsType<G extends RuntimeGenerics>(
 ) {
   const shape = Object.entries(actionTypes).reduce(
     (shape, [actionName, actionType]) => {
-      const args = actionType._def.args._def.items;
-      const effectType = z.function(
-        z.tuple([stateType, ...args]),
-        z.void().or(z.function().args(stateType))
-      );
-      return { ...shape, [actionName]: effectType };
+      const [inputType = z.void()] = actionType._def.args._def.items as
+        | [ZodType]
+        | [];
+      return { ...shape, [actionName]: createEffectType(stateType, inputType) };
     },
     {} as ZodShapeFor<RuntimeEffects<G>>
   );
   return z.object(shape);
+}
+
+function createEffectType<G extends RuntimeGenerics, InputType extends ZodType>(
+  stateType: ZodType<RuntimeState<G>>,
+  inputType: InputType
+) {
+  return z.function(
+    z.tuple([stateType, inputType]),
+    z.void().or(z.function().args(stateType))
+  );
 }
 
 export function deriveMachine<G extends RuntimeGenerics>(
