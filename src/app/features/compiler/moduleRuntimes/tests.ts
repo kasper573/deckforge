@@ -92,11 +92,12 @@ export function generateModuleRuntimeTests(
     }));
 
   describe("disallow circular references", () => {
-    const circularError = /circular reference/i;
     describe("in function arguments", () =>
       t.testModuleOutputs(`(arg) => {}`, [z.unknown()], (fn) => {
         const circular = createCircular();
-        expect(() => fn(circular)).toThrowError(circularError);
+        expect(() => fn(circular)).toThrowError(
+          "Circular reference found in args.0.children.0"
+        );
       }));
 
     it("in module globals", () =>
@@ -112,7 +113,9 @@ export function generateModuleRuntimeTests(
           expect(result).toEqual(
             expect.objectContaining({
               error: {
-                main: expect.stringMatching(circularError),
+                main: new Error(
+                  "Circular reference found in globals.circular.children.0"
+                ),
               },
             })
           );
