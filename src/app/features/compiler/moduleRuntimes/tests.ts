@@ -92,7 +92,7 @@ export function generateModuleRuntimeTests(
     }));
 
   describe("disallow circular references", () => {
-    const circularError = /circular/i;
+    const circularError = /circular reference/i;
     describe("in function arguments", () =>
       t.testModuleOutputs(`(arg) => {}`, [z.unknown()], (fn) => {
         const circular = createCircular();

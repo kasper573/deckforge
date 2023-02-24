@@ -478,7 +478,7 @@ function useGameRuntime<G extends RuntimeGenerics>(
 ) {
   useGameCompiler(runtimeDefinition, gameDefinition, (result) => {
     if (result.isErr()) {
-      throw new Error(result.error.join(", "));
+      throw new Error(result.error.join("\n"));
     }
     handle(result.value.runtime);
   });
