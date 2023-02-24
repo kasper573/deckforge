@@ -9,6 +9,7 @@ import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded
 import type { CardId, DeckId } from "../../../api/services/game/types";
 import type { Machine } from "../../../lib/machine/Machine";
 import type { MachineActionObject } from "../../../lib/machine/MachineAction";
+import type { MachineEffect } from "../../../lib/machine/MachineAction";
 
 export type CardInstanceId = z.infer<typeof cardInstanceIdType>;
 export const cardInstanceIdType = zodRuntimeBranded("CardInstanceId");
@@ -66,6 +67,11 @@ export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<
   RuntimeMachineContext<G>
 >;
 
+export type RuntimeEmptyEffect<G extends RuntimeGenerics> = MachineEffect<
+  RuntimeState<G>,
+  void
+>;
+
 export type RuntimeEffect<
   G extends RuntimeGenerics,
   EffectName extends keyof G["actions"] = keyof G["actions"]
@@ -81,6 +87,7 @@ export interface RuntimeDefinition<
   cardEffects: ZodType<Partial<RuntimeEffects<G>>>;
   player: ZodObject<ZodShapeFor<RuntimePlayer<G>>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
+  emptyEffect: ZodType<RuntimeEmptyEffect<G>>;
   actions: ZodObject<ZodShapeFor<G["actions"]>>;
   reducer: ZodType<RuntimeReducer<G>>;
   createInitialState: RuntimeStateFactory<G>;
