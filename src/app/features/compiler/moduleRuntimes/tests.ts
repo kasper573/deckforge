@@ -91,6 +91,42 @@ export function generateModuleRuntimeTests(
       expect(fn(1, 2)).toEqual(3);
     }));
 
+  describe("disallow circular references", () => {
+    const circularError = /circular/i;
+    describe("in function arguments", () =>
+      t.testModuleOutputs(`(arg) => {}`, [z.unknown()], (fn) => {
+        const circular = createCircular();
+        expect(() => fn(circular)).toThrowError(circularError);
+      }));
+
+    it("in module globals", () =>
+      t.useRuntime(
+        (compiler) =>
+          compiler.addModule({
+            name: "main",
+            code: "",
+            type: z.function(),
+            globals: { circular: createCircular() },
+          }),
+        (result) => {
+          expect(result).toEqual(
+            expect.objectContaining({
+              error: {
+                main: expect.stringMatching(circularError),
+              },
+            })
+          );
+        }
+      ));
+
+    function createCircular() {
+      type Node = { x: number; children: Node[] };
+      const node: Node = { x: 0, children: [] };
+      node.children.push(node);
+      return node;
+    }
+  });
+
   describe("argument mutation", () => {
     describe("root", () => testMutationsFor());
     describe("nested", () => testMutationsFor(["a", "b", "c"]));

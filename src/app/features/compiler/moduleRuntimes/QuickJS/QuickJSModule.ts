@@ -19,6 +19,13 @@ export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
   ) {
     this.marshal = createMarshal(vm, resolveModule);
 
+    try {
+      assertNotCircular(definition.globals);
+    } catch (error) {
+      this.error = (error as Error).message;
+      return;
+    }
+
     if (this.definition.globals) {
       this.marshal.assign(vm.global, this.definition.globals);
     }
@@ -59,6 +66,7 @@ export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
   }
 
   invokeManaged(path: string[], args: unknown[]) {
+    assertNotCircular(args);
     return Scope.withScope((scope) => {
       const argHandles = args.map((a) => scope.manage(this.marshal.create(a)));
       const result = this.invokeNative(path, argHandles);
@@ -115,3 +123,19 @@ const mutate = createMutateFn();
 const symbols = {
   definition: "___definition___",
 };
+
+function assertNotCircular(value: unknown) {
+  const seen = new Set();
+  function check(value: unknown) {
+    if (typeof value !== "object" || value === null) {
+      return;
+    }
+    if (seen.has(value)) {
+      throw new Error("Circular references not allowed");
+    }
+    seen.add(value);
+    Object.values(value).forEach(check);
+  }
+  check(value);
+  seen.clear();
+}
