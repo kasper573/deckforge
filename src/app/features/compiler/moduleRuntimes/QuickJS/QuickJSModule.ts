@@ -49,7 +49,7 @@ export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
       if (evalResult.error) {
         this.error = coerceError(
           evalResult.error.consume(this.vm.dump),
-          `Failed to compile module "${definition.name}"`
+          `Failed to compile module`
         );
       } else {
         evalResult.value.dispose();

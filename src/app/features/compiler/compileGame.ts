@@ -161,7 +161,11 @@ export function compileGame<G extends RuntimeGenerics>(
 
   const moduleCompileResult = moduleCompiler.compile();
   if (moduleCompileResult.isErr()) {
-    return err(Object.entries(moduleCompileResult.error).map(([, e]) => e));
+    return err(
+      Object.entries(moduleCompileResult.error).map(
+        ([moduleName, e]) => `${moduleName}: ${e}`
+      )
+    );
   }
 
   const initialState = runtimeDefinition.createInitialState({
