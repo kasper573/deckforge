@@ -45,10 +45,20 @@ export interface ModuleCompiler {
 }
 
 export class ModuleReference {
-  constructor(
-    public readonly name: string,
-    public readonly outputType: AnyModuleType
-  ) {}
+  readonly #name: string;
+  readonly #outputType: AnyModuleType;
+
+  get name() {
+    return this.#name;
+  }
+  get outputType() {
+    return this.#outputType;
+  }
+
+  constructor(name: string, outputType: AnyModuleType) {
+    this.#name = name;
+    this.#outputType = outputType;
+  }
 
   static assign(target: object, value: ModuleReference) {
     Object.defineProperty(target, ModuleReference.symbol, { value });

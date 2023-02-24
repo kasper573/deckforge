@@ -20,9 +20,9 @@ export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
     this.marshal = createMarshal(vm, resolveModule);
 
     try {
-      assertNotCircular(definition.globals);
+      assertNotCircular(definition.globals, ["globals"]);
     } catch (error) {
-      this.error = (error as Error).message;
+      this.error = error;
       return;
     }
 
@@ -47,10 +47,9 @@ export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
     if (transpiledCode) {
       const evalResult = vm.evalCode(defineCode(transpiledCode));
       if (evalResult.error) {
-        this.error = coerceError(
-          evalResult.error.consume(this.vm.dump),
-          `Failed to compile module`
-        );
+        this.error =
+          `Failed to compile module: ` +
+          coerceError(evalResult.error.consume(this.vm.dump));
       } else {
         evalResult.value.dispose();
       }
@@ -66,7 +65,12 @@ export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
   }
 
   invokeManaged(path: string[], args: unknown[]) {
-    assertNotCircular(args);
+    assertNotCircular(
+      args,
+      ["args"],
+      (msg) => `${invocationError(path, this.definition)}: ${msg}`
+    );
+
     return Scope.withScope((scope) => {
       const argHandles = args.map((a) => scope.manage(this.marshal.create(a)));
       const result = this.invokeNative(path, argHandles);
@@ -91,11 +95,9 @@ export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
       const callResult = vm.callFunction(fnHandle, vm.null, ...argHandles);
 
       if (callResult?.error) {
-        throw coerceError(
-          callResult.error.consume(this.vm.dump),
-          `Failed to invoke ${
-            path.length ? `"${path.join(".")}" in ` : ""
-          } module "${this.definition.name}"`
+        throw (
+          `${invocationError(path, this.definition)}: ` +
+          coerceError(callResult.error.consume(this.vm.dump))
         );
       }
 
@@ -107,6 +109,11 @@ export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
     this.vm.dispose();
   }
 }
+
+const invocationError = (path: string[], def: ModuleDefinition) =>
+  `Failed to invoke ${path.length ? `"${path.join(".")}" in ` : ""} module "${
+    def.name
+  }"`;
 
 function defineCode(definitionCode: string) {
   return `
@@ -124,18 +131,27 @@ const symbols = {
   definition: "___definition___",
 };
 
-function assertNotCircular(value: unknown) {
+function assertNotCircular(
+  value: unknown,
+  startPath: string[],
+  formatError = (msg: string) => msg
+) {
   const seen = new Set();
-  function check(value: unknown) {
+  function check(value: unknown, path: string[]) {
     if (typeof value !== "object" || value === null) {
       return;
     }
     if (seen.has(value)) {
-      throw new Error("Circular references not allowed");
+      throw new Error(
+        formatError(`Circular reference found in ${path.join(".")}`)
+      );
     }
     seen.add(value);
-    Object.values(value).forEach(check);
+    Object.entries(value).forEach(([key, value]) =>
+      check(value, [...path, key])
+    );
+    seen.delete(value);
   }
-  check(value);
+  check(value, startPath);
   seen.clear();
 }

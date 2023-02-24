@@ -100,9 +100,9 @@ export function createMarshal(
       const argHandles = args.map((a) => create(a));
       const callResult = vm.callFunction(fnHandle, vm.null, ...argHandles);
       if (callResult?.error) {
-        throw coerceError(
-          callResult.error.consume(vm.dump),
-          `Failed to invoke one-off function`
+        throw (
+          `Failed to invoke one-off function: ` +
+          coerceError(callResult.error.consume(vm.dump))
         );
       }
       const result = callResult.value.consume(vm.dump);
