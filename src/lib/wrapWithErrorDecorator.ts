@@ -1,3 +1,5 @@
+import type { AnyFunction } from "./ts-extensions/types";
+
 export function wrapWithErrorDecorator<T>(
   value: T,
   decorate: ErrorDecorator,
@@ -48,4 +50,3 @@ function wrapFunctionWithErrorDecorator<Fn extends AnyFunction>(
 }
 
 export type ErrorDecorator = (error: unknown, path: string[]) => unknown;
-type AnyFunction = (...args: never[]) => unknown;

@@ -1,10 +1,10 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import type { ZodType } from "zod";
 import { z } from "zod";
-import type { AnyFunction } from "js-interpreter";
 import { get, range } from "lodash";
 import produce from "immer";
 import type { ZodTypeAny } from "zod/lib/types";
+import type { AnyFunction } from "../../../../lib/ts-extensions/types";
 import type {
   ModuleDefinition,
   ModuleCompiler,
