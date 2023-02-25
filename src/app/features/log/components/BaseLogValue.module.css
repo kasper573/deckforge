@@ -6,4 +6,3 @@
 .log-value:not(.pt-end) + .log-value.pt-start {
   margin-left: 0;
 }
-
