@@ -9,7 +9,7 @@ import { gameTypes } from "../gameTypes";
 import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 
 export default function GamePlayPage() {
-  const { slug } = useRouteParams(router.play);
+  const { slug, seed } = useRouteParams(router.play);
   const { data: game } = trpc.game.read.useQuery({ type: "slug", slug });
 
   const runtimeDefinition = useMemo(() => {
@@ -19,7 +19,8 @@ export default function GamePlayPage() {
     }
   }, [game]);
 
-  const result = useGameCompiler(runtimeDefinition, game?.definition);
+  const options = useMemo(() => ({ seed }), [seed]);
+  const result = useGameCompiler(runtimeDefinition, game?.definition, options);
 
   return (
     <Page>

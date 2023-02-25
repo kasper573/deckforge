@@ -31,9 +31,9 @@ export const router = OptionsRouter(
       exact: true,
       component: lazy(() => import("./features/common/HomePage")),
     }),
-    play: route("play/:slug", {
+    play: route("play/:slug&:seed?", {
       component: lazy(() => import("./features/play/GamePlayPage")),
-      params: { slug: stringParser },
+      params: { slug: stringParser, seed: stringParser },
     }),
     user: route(
       "user",

@@ -6,6 +6,8 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import CardActions from "@mui/material/CardActions";
+import { useHistory } from "react-router";
+import { z } from "zod";
 import type { Game } from "../../../../../api/services/game/types";
 import { useModal } from "../../../../../lib/useModal";
 import { ConfirmDialog } from "../../../../dialogs/ConfirmDialog";
@@ -27,11 +29,25 @@ export function GameCard({
   type: gameTypeId,
   updatedAt,
 }: Pick<Game, "gameId" | "name" | "updatedAt" | "slug" | "type">) {
+  const history = useHistory();
   const confirm = useModal(ConfirmDialog);
   const prompt = useModal(PromptDialog);
   const updateGame = useToastProcedure(trpc.game.update);
   const deleteGame = useToastProcedure(trpc.game.delete);
   const type = gameTypes.get(gameTypeId);
+
+  async function playSeeded() {
+    const seed = await prompt({
+      title: "Enter seed to play",
+      label: "Seed",
+      schema: z.string(),
+    });
+
+    if (seed === undefined) {
+      return;
+    }
+    history.push(router.play({ slug, seed }).$);
+  }
 
   return (
     <CardLink aria-label={name} to={router.editor({}).edit({ gameId })}>
@@ -60,6 +76,7 @@ export function GameCard({
                 )}
               >
                 <LinkMenuItem to={router.play({ slug })}>Play</LinkMenuItem>
+                <MenuItem onClick={playSeeded}>Play (seeded)</MenuItem>
                 <MenuItem
                   onClick={() =>
                     prompt({
