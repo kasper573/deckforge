@@ -45,7 +45,10 @@ export class QuickJSModule<Type extends AnyModuleType = AnyModuleType> {
     }
 
     if (transpiledCode) {
-      const evalResult = vm.evalCode(defineCode(transpiledCode));
+      const evalResult = vm.evalCode(
+        defineCode(transpiledCode),
+        definition.name
+      );
       if (evalResult.error) {
         this.error =
           `Failed to compile module: ` +
