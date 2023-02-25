@@ -28,9 +28,17 @@ export const gamePageActions = {
       submitNewNameDialog(newName);
       findGameCard(newName).should("exist");
     },
-    gotoGamePlay(gameName: string) {
+    gotoGamePlay(gameName: string, seed?: string) {
       showGameOptions(gameName);
-      cy.findByRole("link", { name: /play/i }).click();
+      if (seed) {
+        cy.findByRole("menuitem", { name: /play.*seed/i }).click();
+        cy.findByRole("dialog").within(() => {
+          cy.findByLabelText(/seed/i).type(seed);
+          cy.findByRole("form").submit();
+        });
+      } else {
+        cy.findByRole("link", { name: /^play$/i }).click();
+      }
       expectValidGamePlayPage();
     },
   },

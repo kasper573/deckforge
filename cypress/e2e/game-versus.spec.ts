@@ -15,7 +15,7 @@ describe("game: versus", () => {
   const gameName = "New game";
   setupGameTests("1 vs 1", gameName, () => {
     it("can play through default game", () => {
-      gamePageActions.list.gotoGamePlay(gameName);
+      gamePageActions.list.gotoGamePlay(gameName, "test");
 
       cy.findByRole("button", { name: /start game/i }).click();
 
