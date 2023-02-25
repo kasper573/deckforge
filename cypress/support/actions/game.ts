@@ -1,4 +1,5 @@
 import { showUserMenu } from "./user";
+import { resetData } from "./common";
 
 export const gotoGameEditor = (gameName: string) => {
   findGameCard(gameName).click();
@@ -48,5 +49,35 @@ function submitNewNameDialog(newName: string) {
   cy.findByRole("dialog").within(() => {
     cy.findByLabelText(/name/i).clear().type(newName);
     cy.findByRole("form").submit();
+  });
+}
+
+export function setupGameTests(
+  gameTypeName: string,
+  gameName: string,
+  setupTests: () => void
+) {
+  beforeEach(() => {
+    resetData("game");
+    gotoGameList();
+  });
+
+  describe(`can create new "${gameTypeName}" game`, () => {
+    beforeEach(() => {
+      cy.findByRole("button", { name: /create game/i }).click();
+      cy.findByRole("dialog").within(() => cy.findByText(gameTypeName).click());
+
+      cy.findByRole("dialog").within(() => {
+        cy.findByLabelText(/name/i).type(gameName);
+        cy.findByRole("form").submit();
+      });
+
+      cy.findByText(/welcome to deck forge/i);
+      cy.findByRole("button", { name: /no thanks/i }).click();
+
+      gotoGameList();
+    });
+
+    setupTests();
   });
 }

@@ -4,9 +4,9 @@ import { nextTestUser, register } from "../support/actions/user";
 import {
   findGameCard,
   gotoGameEditor,
-  gotoGameList,
   gamePageActions,
   showGameOptions,
+  setupGameTests,
 } from "../support/actions/game";
 
 describe("game", () => {
@@ -18,29 +18,8 @@ describe("game", () => {
     register(user.name, user.password, user.email);
   });
 
-  beforeEach(() => {
-    resetData("game");
-    gotoGameList();
-  });
-
-  describe("can create new game", () => {
-    const gameName = "New game";
-
-    beforeEach(() => {
-      cy.findByRole("button", { name: /create game/i }).click();
-      cy.findByRole("dialog").within(() => cy.findByText(/1 vs 1/i).click());
-
-      cy.findByRole("dialog").within(() => {
-        cy.findByLabelText(/name/i).type(gameName);
-        cy.findByRole("form").submit();
-      });
-
-      cy.findByText(/welcome to deck forge/i);
-      cy.findByRole("button", { name: /no thanks/i }).click();
-
-      gotoGameList();
-    });
-
+  const gameName = "New game";
+  setupGameTests("1 vs 1", gameName, () => {
     it("and see it listed", () => {
       findGameCard(gameName).should("exist");
     });
