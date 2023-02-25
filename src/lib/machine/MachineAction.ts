@@ -79,3 +79,11 @@ export type MachineActionObject<
   name: ActionName;
   payload: MachineActionPayload<MC["actions"][ActionName]>;
 };
+
+export type MachinePayloadFilter<
+  MC extends MachineContext,
+  ActionName extends keyof MC["actions"] = keyof MC["actions"]
+> = (
+  name: ActionName,
+  payload: MachineActionPayload<MC["actions"][ActionName]>
+) => MachineActionPayload<MC["actions"][ActionName]>;

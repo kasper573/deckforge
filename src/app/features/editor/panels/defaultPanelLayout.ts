@@ -2,43 +2,43 @@ import type { MosaicNode } from "react-mosaic-component";
 import type { PanelId } from "../types";
 
 export const defaultPanelLayout: MosaicNode<PanelId> = {
+  direction: "row",
   first: {
+    direction: "column",
     first: "events",
     second: {
+      direction: "column",
       first: {
-        first: "middlewares",
-        second: "cardProperties",
         direction: "column",
+        first: "reducers",
+        second: "cardProperties",
         splitPercentage: 50,
       },
       second: "playerProperties",
-      direction: "column",
       splitPercentage: 66,
     },
-    direction: "column",
     splitPercentage: 33,
   },
   second: {
     direction: "row",
     first: {
+      direction: "column",
       first: "code",
       second: "logs",
-      direction: "column",
-      splitPercentage: 55,
+      splitPercentage: 77.25,
     },
     second: {
       direction: "column",
       first: "runtime",
       second: {
+        direction: "column",
         first: "inspector",
         second: "decks",
-        direction: "column",
         splitPercentage: 33,
       },
       splitPercentage: 33,
     },
     splitPercentage: 66,
   },
-  direction: "row",
   splitPercentage: 20,
 };

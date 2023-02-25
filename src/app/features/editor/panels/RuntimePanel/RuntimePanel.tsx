@@ -1,7 +1,7 @@
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import Yard from "@mui/icons-material/Yard";
 import useTheme from "@mui/material/styles/useTheme";
 import { useSelector } from "../../store";
@@ -15,15 +15,13 @@ import { useModal } from "../../../../../lib/useModal";
 import { PromptDialog } from "../../../../dialogs/PromptDialog";
 import { useActions } from "../../../../../lib/useActions";
 import { editorActions } from "../../actions";
-import { GameRenderer } from "../../../compiler/GameRenderer";
-import { Center } from "../../../../components/Center";
-import { LoadingIndicator } from "../../../../components/LoadingIndicator";
-import { logIdentifier } from "../../types";
+import { PendingGameRenderer } from "../../../compiler/GameRenderer";
 import type { PanelProps } from "../definition";
+import { colors } from "../../../log/colors";
+import { LogIdentifier } from "../../../log/types";
 import { RuntimeErrorFallback } from "./RuntimeErrorFallback";
 import { CompilingIndicator } from "./CompilingIndicator";
-import { colors } from "./colors";
-import { useCompilation } from "./useCompilation";
+import { useEditorGameCompiler } from "./useEditorGameCompiler";
 
 export function RuntimePanel(props: PanelProps) {
   const theme = useTheme();
@@ -31,11 +29,13 @@ export function RuntimePanel(props: PanelProps) {
   const prompt = useModal(PromptDialog);
   const [seed, setSeed] = useState("");
   const gameType = useSelector(selectors.gameType);
-  const [compiled, recompile, isCompiling] = useCompilation(seed, log);
-  const hasErrors = !!compiled?.errors?.length;
+  const [compiled, recompile, isCompiling] = useEditorGameCompiler(seed, log);
 
   function onRenderError(error: unknown) {
-    log([logIdentifier("[Renderer Error]", { color: colors.error }), error]);
+    log([
+      LogIdentifier.create("[Renderer Error]", { color: colors.error }),
+      error,
+    ]);
   }
 
   async function tryEditSeed() {
@@ -58,12 +58,12 @@ export function RuntimePanel(props: PanelProps) {
       toolbarControls={
         <PanelControls>
           <Tooltip title="Customize seed">
-            <IconButton disabled={hasErrors} size="small" onClick={tryEditSeed}>
+            <IconButton size="small" onClick={tryEditSeed}>
               <Yard />
             </IconButton>
           </Tooltip>
           <Tooltip title="Reset runtime">
-            <IconButton disabled={hasErrors} size="small" onClick={recompile}>
+            <IconButton size="small" onClick={recompile}>
               <Reload />
             </IconButton>
           </Tooltip>
@@ -71,32 +71,20 @@ export function RuntimePanel(props: PanelProps) {
       }
       {...props}
     >
-      {compiled?.runtime && (
+      {compiled.isOk() && (
         <ErrorBoundary fallback={RuntimeErrorFallback} onError={onRenderError}>
-          {gameType ? (
-            <Suspense
-              fallback={
-                <Center>
-                  <LoadingIndicator />
-                </Center>
-              }
-            >
-              <GameRenderer
-                type={gameType}
-                runtime={compiled.runtime}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  background: theme.palette.secondary.dark,
-                }}
-              />
-            </Suspense>
-          ) : (
-            <PanelEmptyState>Game type missing</PanelEmptyState>
-          )}
+          <PendingGameRenderer
+            result={compiled}
+            type={gameType}
+            style={{
+              width: "100%",
+              height: "100%",
+              background: theme.palette.secondary.dark,
+            }}
+          />
         </ErrorBoundary>
       )}
-      {hasErrors && (
+      {compiled.isErr() && (
         <PanelEmptyState>
           <Typography variant="h5">Compiler error</Typography>
         </PanelEmptyState>

@@ -43,7 +43,7 @@ export function useForm<T extends ZodType>(
   const muiRegister: typeof register = useCallback(
     (path, fieldOptions) => {
       const error = get(errors, path);
-      const fieldType = zodTypeAtPath(schema, path);
+      const fieldType = zodTypeAtPath(schema, path.split("."));
       if (!fieldType) {
         throw new Error(`Schema does not contain a field on path "${path}"`);
       }

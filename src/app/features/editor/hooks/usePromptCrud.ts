@@ -8,7 +8,7 @@ import {
   cardType,
   deckType,
   eventType,
-  middlewareType,
+  reducerType,
   propertyType,
 } from "../../../../api/services/game/types";
 import { useStore } from "../store";
@@ -74,6 +74,18 @@ function selectInvalidNames<Type extends EditorObjectId["type"]>(
       return game?.definition.events
         .filter((m) => m.eventId !== skip.eventId)
         .map((e) => e.name);
+    case "reducer":
+      return game?.definition.reducers
+        .filter((m) => m.reducerId !== skip.reducerId)
+        .map((r) => r.name);
+    case "card":
+      return game?.definition.cards
+        .filter((m) => m.cardId !== skip.cardId)
+        .map((c) => c.name);
+    case "deck":
+      return game?.definition.decks
+        .filter((m) => m.deckId !== skip.deckId)
+        .map((d) => d.name);
   }
 }
 
@@ -85,7 +97,7 @@ const uniqueNameSchema = (schema: ZodString, existingNames?: string[]) =>
 
 const objectNameSchemas: Record<EditorObjectId["type"], ZodString> = {
   property: propertyType.shape.name,
-  middleware: middlewareType.shape.name,
+  reducer: reducerType.shape.name,
   event: eventType.shape.name,
   card: cardType.shape.name,
   deck: deckType.shape.name,

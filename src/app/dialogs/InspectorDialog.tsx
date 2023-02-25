@@ -5,7 +5,11 @@ import DialogContent from "@mui/material/DialogContent";
 import { ObjectInspector } from "react-inspector";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import Stack from "@mui/material/Stack";
 import type { ModalProps } from "../../lib/useModal";
+import { Copy } from "../components/icons";
 
 export type InspectorDialogProps = ModalProps<
   void,
@@ -13,21 +17,39 @@ export type InspectorDialogProps = ModalProps<
     title?: ReactNode;
     value: unknown;
     closeLabel?: ReactNode;
+    expandLevel?: number;
   }
 >;
 
 export function InspectorDialog({
   open,
-  input: { title = "Inspector", value, closeLabel = "Close" },
+  input: { title = "Inspector", value, closeLabel = "Close", expandLevel = 3 },
   resolve,
 }: InspectorDialogProps) {
   const close = () => resolve();
 
+  function copyToClipboard() {
+    navigator.clipboard.writeText(JSON.stringify(value, null, 2));
+  }
+
   return (
     <Dialog disableRestoreFocus fullWidth open={open} onClose={close}>
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle>
+        <Stack direction="row" justifyContent="space-between">
+          <span>{title}</span>
+          <Tooltip title="Copy to clipboard">
+            <IconButton edge="end" onClick={copyToClipboard}>
+              <Copy />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      </DialogTitle>
       <DialogContent>
-        <ObjectInspector data={value} theme="chromeDark" expandLevel={1} />
+        <ObjectInspector
+          data={value}
+          theme="chromeDark"
+          expandLevel={expandLevel}
+        />
       </DialogContent>
       <DialogActions>
         <Button type="submit" variant="contained" autoFocus onClick={close}>

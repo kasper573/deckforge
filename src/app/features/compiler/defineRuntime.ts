@@ -1,8 +1,9 @@
-import type { ZodRawShape, ZodType } from "zod";
-import { z } from "zod";
+import type { ZodRawShape, ZodType, ZodTuple, ZodVoid } from "zod";
+import { z, ZodFunction } from "zod";
 import type { ZodTypeAny } from "zod/lib/types";
-import { uniq } from "lodash";
+import { uniqBy } from "lodash";
 import type {
+  CardId,
   DeckId,
   Event,
   Game,
@@ -12,9 +13,15 @@ import {
   cardType as cardDefinitionType,
   propertyValue,
 } from "../../../api/services/game/types";
-import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded";
 import { createMachine } from "../../../lib/machine/Machine";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
+import { zodSpreadArgs } from "../../../lib/zod-extensions/zodToTS";
+import type { MachineActionObject } from "../../../lib/machine/MachineAction";
+import type {
+  MachineAction,
+  MachineActionPayload,
+} from "../../../lib/machine/MachineAction";
 import type {
   PropRecord,
   RuntimeDefinition,
@@ -22,10 +29,13 @@ import type {
   RuntimeGenerics,
   RuntimePlayerId,
   RuntimeState,
-  RuntimeScriptAPI,
+  RuntimeModuleAPI,
   RuntimeStateFactory,
+  RuntimeMachineContext,
 } from "./types";
-import { zodPile } from "./apis/Pile";
+import type { RuntimeEffect } from "./types";
+import { cardInstanceIdType } from "./types";
+import { symbols } from "./moduleRuntimes/symbols";
 
 export function defineRuntime<
   GlobalPropTypeDefs extends ZodRawShape,
@@ -62,7 +72,7 @@ export function defineRuntime<
   type GlobalProps = z.objectInputType<GlobalPropTypeDefs, ZodTypeAny>;
   type G = RuntimeGenerics<PlayerProps, CardProps, Actions, GlobalProps>;
 
-  const playerId = zodNominalString<RuntimePlayerId>();
+  const playerId = zodRuntimeBranded("RuntimePlayerId");
   const deckId = cardDefinitionType.shape.deckId;
 
   const lazyState = z.lazy(() => state);
@@ -77,12 +87,19 @@ export function defineRuntime<
     lazyState
   ) as unknown as RuntimeDefinition<G>["effects"];
 
+  const emptyEffect = createEffectType(
+    lazyState
+  ) as unknown as RuntimeDefinition<G>["emptyEffect"];
+
   const card = z.object({
-    id: cardDefinitionType.shape.cardId,
+    id: cardInstanceIdType,
+    typeId: cardDefinitionType.shape.cardId,
     name: cardDefinitionType.shape.name,
     properties: z.object(cardProperties),
-    effects: effects.partial(),
   }) as unknown as RuntimeDefinition<G>["card"];
+
+  const cardEffects =
+    effects.partial() as unknown as RuntimeDefinition<G>["cardEffects"];
 
   const deck = z.object({
     id: deckId,
@@ -90,16 +107,14 @@ export function defineRuntime<
     cards: z.array(card),
   }) as unknown as RuntimeDefinition<G>["deck"];
 
-  const cardPile = zodPile(card) as unknown as RuntimeDefinition<G>["cardPile"];
-
   const player = z.object({
     id: playerId,
-    deckId,
+    deckId: deckId.optional(),
     properties: z.object(playerProperties),
     board: z.object({
-      draw: cardPile,
-      hand: cardPile,
-      discard: cardPile,
+      draw: z.array(card),
+      hand: z.array(card),
+      discard: z.array(card),
     }),
   }) as unknown as RuntimeDefinition<G>["player"];
 
@@ -113,24 +128,22 @@ export function defineRuntime<
     properties: globals,
   }) as unknown as RuntimeDefinition<G>["state"];
 
-  const actionUnion = z.unknown();
-  const middlewareNext = z.function().args().returns(z.void());
-
-  const middleware = z
+  const reducer = z
     .function()
-    .args(state, actionUnion, middlewareNext)
-    .returns(z.void()) as RuntimeDefinition<G>["middleware"];
+    .args(state, deriveActionObjectUnionType(actionsShape))
+    .returns(z.void()) as unknown as RuntimeDefinition<G>["reducer"];
 
   const definition: RuntimeDefinition<G> = {
     globals,
     deck,
     card,
-    cardPile,
+    cardEffects,
+    emptyEffect,
     player,
     state,
     effects,
     actions,
-    middleware,
+    reducer,
     createInitialState,
   };
 
@@ -157,8 +170,13 @@ export function deriveRuntimeDefinition<Base extends RuntimeDefinition>(
   const commonProps = deriveRuntimeDefinitionParts(gameDefinition);
 
   if (baseDefinition) {
+    const mergedActions = {
+      ...commonProps.actions(),
+      ...baseDefinition.actions.shape,
+    };
     return defineRuntime({
       ...commonProps,
+      actions: () => mergedActions,
       globalProperties: () => baseDefinition.globals.shape,
       initialState: baseDefinition?.createInitialState,
     });
@@ -174,6 +192,41 @@ export function deriveRuntimeDefinition<Base extends RuntimeDefinition>(
     }),
   });
 }
+
+function deriveActionObjectUnionType<
+  G extends RuntimeGenerics,
+  Actions extends ZodRawShape
+>(actionsShape: Actions): ZodType {
+  const actionObjects = Object.entries(actionsShape).map(
+    ([actionName, action]) => {
+      if (!(action instanceof ZodFunction)) {
+        throw new Error("Action must be a function");
+      }
+      return deriveActionObjectType(actionName, action);
+    }
+  );
+
+  if (actionObjects.length === 0) {
+    return z.unknown();
+  }
+
+  return actionObjects.reduce((acc, cur) => acc.or(cur));
+}
+
+function deriveActionObjectType<
+  G extends RuntimeGenerics,
+  ActionName extends keyof G["actions"]
+>(name: ActionName, actionType: ActionType<G["actions"][ActionName]>) {
+  return z.object({
+    name: z.literal(String(name)),
+    payload: actionType._def.args._def.items[0] ?? z.void(),
+  }) as unknown as ZodType<MachineActionObject<RuntimeMachineContext<G>>>;
+}
+
+type ActionType<T extends MachineAction> = ZodFunction<
+  ZodTuple<[ZodType<MachineActionPayload<T>>]>,
+  ZodVoid
+>;
 
 const propertiesToZodShape = (propertyList: Property[]) =>
   propertyList.reduce(
@@ -202,18 +255,31 @@ function deriveEffectsType<G extends RuntimeGenerics>(
 ) {
   const shape = Object.entries(actionTypes).reduce(
     (shape, [actionName, actionType]) => {
-      const args = actionType._def.args._def.items;
-      const effectType = z.function(z.tuple([stateType, ...args]), z.void());
-      return { ...shape, [actionName]: effectType };
+      const [inputType] = actionType._def.args._def.items;
+      return { ...shape, [actionName]: createEffectType(stateType, inputType) };
     },
     {} as ZodShapeFor<RuntimeEffects<G>>
   );
   return z.object(shape);
 }
 
+function createEffectType<G extends RuntimeGenerics, InputType extends ZodType>(
+  stateType: ZodType<RuntimeState<G>>,
+  inputType?: InputType
+) {
+  return z.function(
+    z.tuple(inputType ? [stateType, inputType] : [stateType]),
+    z.void().or(z.function().args(stateType))
+  );
+}
+
 export function deriveMachine<G extends RuntimeGenerics>(
   effects: RuntimeEffects<G>,
-  initialState: RuntimeState<G>
+  initialState: RuntimeState<G>,
+  getEffectsForCard: <EffectName extends keyof G["actions"]>(
+    id: CardId,
+    action: EffectName
+  ) => RuntimeEffect<G, EffectName> | undefined
 ) {
   return createMachine(initialState)
     .effects(effects)
@@ -225,10 +291,13 @@ export function deriveMachine<G extends RuntimeGenerics>(
           .flat()
       );
 
-      const cards = uniq([...cardsInDecks, ...cardOnBoards]);
+      const typeUniqueCards = uniqBy(
+        [...cardsInDecks, ...cardOnBoards],
+        (card) => card.typeId
+      );
 
-      for (const card of cards) {
-        const effect = card.effects[effectName];
+      for (const card of typeUniqueCards) {
+        const effect = getEffectsForCard(card.typeId, effectName);
         if (effect !== undefined) {
           yield effect;
         }
@@ -240,19 +309,23 @@ export function runtimeEvent<Args extends [] | [ZodTypeAny]>(...args: Args) {
   return z.function(z.tuple(args), z.void());
 }
 
-export function createScriptApiDefinition<G extends RuntimeGenerics>({
-  card,
-  actions,
-}: Pick<RuntimeDefinition<G>, "card" | "actions">): ZodShapeFor<
-  RuntimeScriptAPI<G>
-> {
+export function createModuleApiDefinition<G extends RuntimeGenerics>(
+  { card, effects }: Pick<RuntimeDefinition<G>, "card" | "effects">,
+  outputType: ZodType
+) {
+  const events = effects as unknown as ZodType<RuntimeModuleAPI<G>["events"]>;
   const cloneCard = z.function().args(card).returns(card) as unknown as ZodType<
-    RuntimeScriptAPI<G>["cloneCard"]
+    RuntimeModuleAPI<G>["cloneCard"]
   >;
-  return {
+  const apiTypes: ZodShapeFor<RuntimeModuleAPI<G>> = {
     cloneCard,
-    actions,
-    thisCardId: card.shape.id,
-    random: z.function().args(z.void()).returns(z.number()),
+    events,
+    thisCardId: card.shape.typeId,
+    log: zodSpreadArgs(z.function().args(z.unknown()).returns(z.void())),
+  };
+
+  return {
+    ...apiTypes,
+    [symbols.define]: z.function().args(outputType).returns(z.void()),
   };
 }

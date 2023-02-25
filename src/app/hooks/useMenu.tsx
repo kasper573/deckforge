@@ -1,13 +1,20 @@
 import type { MouseEvent, ReactElement } from "react";
-import { cloneElement, useCallback, useEffect, useMemo } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
 import type { MenuProps } from "@mui/material/Menu";
 import Menu from "@mui/material/Menu";
 import { createStore, useStore } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { concatFunctions } from "../../lib/ts-extensions/concatFunctions";
-import type { NominalString } from "../../lib/ts-extensions/NominalString";
 
-export type UseMenuItems = ReactElement[];
+export type UseMenuItems = Array<
+  ReactElement | ((close: MenuProps["onClose"]) => ReactElement)
+>;
 
 export interface UseMenuOptions {
   dontCloseOnSelect?: boolean;
@@ -30,7 +37,11 @@ export const useMenu = (
   return useCallback((e: MouseEvent) => menuStore.getState().open(e, id), [id]);
 };
 
-type MenuId = NominalString<"MenuId">;
+function normalizeItems(items: UseMenuItems = [], close: MenuProps["onClose"]) {
+  return items.map((item) => (isValidElement(item) ? item : item(close)));
+}
+
+type MenuId = string;
 interface MenuEntry {
   id: MenuId;
   props: Partial<MenuProps>;
@@ -102,21 +113,22 @@ export function MenuOutlet() {
             onClick: concatFunctions(menuListProps?.onClick, close),
           };
         }
+        const onClose = concatFunctions(
+          menu.props?.onClose,
+          close as MenuProps["onClose"]
+        );
         return (
           <Menu
             key={menu.id}
             {...menu.props}
             open={!!position && menu.id === openId}
             onContextMenu={concatFunctions(menu.props?.onContextMenu, close)}
-            onClose={concatFunctions(
-              menu.props?.onClose,
-              close as MenuProps["onClose"]
-            )}
+            onClose={onClose}
             anchorReference="anchorPosition"
             anchorPosition={position}
             MenuListProps={menuListProps}
           >
-            {menu.items?.map((item, index) =>
+            {normalizeItems(menu.items, onClose).map((item, index) =>
               cloneElement(item, { key: index })
             )}
           </Menu>

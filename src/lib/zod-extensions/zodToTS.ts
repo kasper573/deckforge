@@ -1,5 +1,6 @@
 import type { ZodRawShape, ZodType } from "zod";
 import {
+  z,
   ZodAny,
   ZodArray,
   ZodBigInt,
@@ -31,6 +32,8 @@ import {
   ZodVoid,
 } from "zod";
 import { memoize } from "lodash";
+import { getBrandName } from "./zodRuntimeBranded";
+import { zodInstanceOf } from "./zodInstanceOf";
 
 export interface ZodToTSOptions {
   resolvers?: Map<ZodType, string>;
@@ -153,7 +156,25 @@ function zodToTSImpl(
     }
   }
   if (type instanceof ZodFunction) {
-    return `(...args: ${zodToTS(type._def.args, "args")}) => ${zodToTS(
+    const args = type._def.args as ZodTuple;
+    const argTypeStrings = args.items.map((t, i) => zodToTS(t, String(i)));
+    const paramStrings = argTypeStrings.map(
+      (argTypeString, argIndex) => `arg${argIndex}: ${argTypeString}`
+    );
+
+    const spreadAtIndex = getSpreadIndex(type);
+    if (spreadAtIndex !== undefined) {
+      const typeStr = argTypeStrings[spreadAtIndex] ?? zodToTS(z.unknown());
+      const paramStr = `...rest: ${typeStr}`;
+      if (paramStrings[spreadAtIndex] === undefined) {
+        throw new Error(
+          "Spread not possible: No parameter defined at index " + spreadAtIndex
+        );
+      }
+      paramStrings[spreadAtIndex] = paramStr;
+    }
+
+    return `(${paramStrings.join(", ")}) => ${zodToTS(
       type._def.returns,
       "returns"
     )}`;
@@ -185,8 +206,13 @@ function zodToTSImpl(
     return `[${type._def.items.map(zodToTS).join(", ")}]`;
   }
   if (type instanceof ZodUnion) {
-    return type._def.options.map(zodToTS).join(" | ");
+    return type._def.options
+      .map((t: ZodType) =>
+        zodInstanceOf(t, ZodFunction) ? `(${zodToTS(t)})` : zodToTS(t)
+      )
+      .join(" | ");
   }
+
   if (type instanceof ZodIntersection) {
     return `${zodToTS(type._def.left, "left")} & ${zodToTS(
       type._def.right,
@@ -197,8 +223,13 @@ function zodToTSImpl(
     return zodToTS(type._def.getter());
   }
   if (type instanceof ZodBranded) {
+    const brandName = getBrandName(type);
+    if (brandName) {
+      return `"Brand[${brandName}]"`;
+    }
     throw new Error(
-      "Branded types are not supported. Use the resolvers option and provide manual resolutions for these types."
+      "Branded types are not supported unless using zodRuntimeBranded. " +
+        "Or use the resolvers option and provide manual resolutions for these types."
     );
   }
 
@@ -261,3 +292,16 @@ function recordToInverseMap<T>(record: Record<string, T>) {
   }
   return inverseMap;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function zodSpreadArgs<T extends ZodFunction<any, any>>(
+  fnType: T,
+  spreadAtIndex = (fnType._def.args as ZodTuple).items.length - 1
+) {
+  Object.assign(fnType, { [spreadSymbol]: spreadAtIndex });
+  return fnType;
+}
+
+const spreadSymbol = Symbol("zodSpread");
+const getSpreadIndex = (type: ZodType) =>
+  spreadSymbol in type ? (type[spreadSymbol] as number) : undefined;

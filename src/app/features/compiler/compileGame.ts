@@ -1,246 +1,253 @@
-import type { z, ZodType } from "zod";
 import { v4 } from "uuid";
 import Rand from "rand-seed";
+import produce from "immer";
+import type { Result } from "neverthrow";
+import { err, ok } from "neverthrow";
+import { groupBy } from "lodash";
+import type { ZodType } from "zod";
+import { ZodVoid, ZodFunction } from "zod";
 import type {
   Card,
+  CardId,
+  Deck,
+  Event,
   Game,
   Property,
   PropertyDefaults,
+  Reducer,
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
-import type { Machine } from "../../../lib/machine/Machine";
-import { evalWithScope } from "../../../lib/evalWithScope";
-import { LogSpreadError } from "../editor/components/LogList";
-import type { ErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
-import { wrapWithErrorDecorator } from "../../../lib/wrapWithErrorDecorator";
+import type { MachineMiddleware } from "../../../lib/machine/MachineAction";
+import { zodInstanceOf } from "../../../lib/zod-extensions/zodInstanceOf";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
+  GameRuntime,
   RuntimeCard,
   RuntimeDeck,
   RuntimeDefinition,
   RuntimeEffects,
   RuntimeGenerics,
   RuntimeMachineContext,
-  RuntimeMiddleware,
+  RuntimeModuleAPI,
   RuntimePlayer,
   RuntimePlayerId,
-  RuntimeScriptAPI,
+  RuntimeReducer,
 } from "./types";
-import { createPile } from "./apis/Pile";
+import type { ModuleCompiler } from "./moduleRuntimes/types";
+import { ModuleReference } from "./moduleRuntimes/types";
 
-export type GameRuntime<G extends RuntimeGenerics> = Machine<
-  RuntimeMachineContext<G>
+export interface CompiledGame<G extends RuntimeGenerics> {
+  runtime: GameRuntime<G>;
+  dispose: () => void;
+}
+
+export type CompileGameResult<G extends RuntimeGenerics> = Result<
+  CompiledGame<G>,
+  unknown[]
 >;
 
-export type GameInitialPlayer<G extends RuntimeGenerics> = Omit<
-  RuntimePlayer<G>,
-  "properties"
-> & {
-  properties?: Partial<RuntimePlayer<G>["properties"]>;
-};
-
-export interface GameInitialState<G extends RuntimeGenerics> {
-  players: [GameInitialPlayer<G>, GameInitialPlayer<G>];
+export interface CompileGameOptions<
+  G extends RuntimeGenerics = RuntimeGenerics
+> {
+  seed?: string;
+  log?: (...args: unknown[]) => void;
+  moduleCompiler: ModuleCompiler;
+  middlewares?: (
+    defaultMiddlewares: MachineMiddleware<RuntimeMachineContext<G>>[]
+  ) => MachineMiddleware<RuntimeMachineContext<G>>[];
 }
 
 export function compileGame<G extends RuntimeGenerics>(
   runtimeDefinition: RuntimeDefinition<G>,
   gameDefinition: Game["definition"],
-  options?: {
-    seed?: string;
-    middlewares?: (
-      compiledMiddlewares: RuntimeMiddleware<G>[]
-    ) => RuntimeMiddleware<G>[];
-  }
-): { runtime?: GameRuntime<G>; errors?: unknown[] } {
-  try {
-    const cardProperties = gameDefinition.properties.filter(
-      (p) => p.entityId === "card"
-    );
-    const playerProperties = gameDefinition.properties.filter(
-      (p) => p.entityId === "player"
-    );
+  { moduleCompiler, seed, middlewares, log = () => {} }: CompileGameOptions<G>
+): CompileGameResult<G> {
+  const cardProperties = gameDefinition.properties.filter(
+    (p) => p.entityId === "card"
+  );
+  const playerProperties = gameDefinition.properties.filter(
+    (p) => p.entityId === "player"
+  );
 
-    const scriptAPI: RuntimeScriptAPI<G> = {
-      random: createRandomFn(options?.seed),
-      cloneCard,
-      actions: new Proxy({} as typeof runtime.actions, {
-        get: (target, propertyName) =>
-          runtime.actions[propertyName as keyof typeof runtime.actions],
-      }),
-    };
+  const deferredEvents = Object.fromEntries(
+    gameDefinition.events.map((event) => [
+      event.name,
+      new ModuleReference(eventModuleName(event), getEventType(event)),
+    ])
+  ) as unknown as RuntimeEffects<G>;
 
-    const decks = gameDefinition.decks.map(
-      (deck): RuntimeDeck<G> => ({
-        id: deck.deckId,
-        name: deck.name,
-        cards: gameDefinition.cards
-          .filter((c) => c.deckId === deck.deckId)
-          .map((card) =>
-            compileCard(card, {
-              runtimeDefinition,
-              scriptAPI,
-              cardProperties,
-            })
-          ),
-      })
-    );
+  const moduleAPI: RuntimeModuleAPI<G> = {
+    log,
+    cloneCard,
+    events: deferredEvents,
+  };
 
-    const effects = gameDefinition.events.reduce((effects, { name, code }) => {
-      effects[name as keyof typeof effects] = describedCompile(
-        "Event",
-        name,
-        code,
-        {
-          type: runtimeDefinition.effects.shape[name],
-          scriptAPI,
-          initialValue: () => {},
-        }
-      );
-      return effects;
-    }, {} as RuntimeEffects<G>);
+  const overrides: BuiltinOverrides = {
+    Math: {
+      random: createRandomFn(seed),
+    },
+  };
 
-    function cloneCard(card: RuntimeCard<G>): RuntimeCard<G> {
-      const cardDefinition = gameDefinition.cards.find(
-        (c) => c.cardId === card.typeId
-      );
-      if (!cardDefinition) {
-        throw new Error(`Card ${card.typeId} not found`);
-      }
-      return compileCard(cardDefinition, {
-        runtimeDefinition,
-        scriptAPI,
-        cardProperties,
+  const globals = {
+    ...moduleAPI,
+    ...overrides,
+  };
+
+  const cardLookup = groupBy(gameDefinition.cards, (c) => c.deckId);
+  const cardModules = {} as Record<CardId, Partial<RuntimeEffects<G>>>;
+  const decks: RuntimeDeck<G>[] = [];
+  for (const deck of gameDefinition.decks) {
+    const cards: RuntimeCard<G>[] = [];
+    for (const def of cardLookup[deck.deckId] ?? []) {
+      const cardGlobals: RuntimeModuleAPI<G> = {
+        ...globals,
+        thisCardId: def.cardId,
+      };
+      cards.push(compileCard<G>(def, cardProperties));
+      cardModules[def.cardId] = moduleCompiler.addModule({
+        name: cardModuleName(deck, def),
+        type: runtimeDefinition.cardEffects,
+        code: def.code,
+        globals: cardGlobals,
       });
     }
-
-    const compiledMiddlewares = gameDefinition.middlewares.map((middleware) =>
-      describedCompile("Middleware", middleware.name, middleware.code, {
-        type: runtimeDefinition.middleware,
-        scriptAPI,
-        initialValue: () => {},
-      })
-    );
-
-    function createPlayer(): RuntimePlayer<G> {
-      const properties = namedPropertyDefaults(
-        playerProperties
-      ) as RuntimePlayer<G>["properties"];
-
-      return {
-        id: v4() as RuntimePlayerId,
-        deckId: decks[0]?.id,
-        properties,
-        board: {
-          draw: createPile(),
-          discard: createPile(),
-          hand: createPile(),
-        },
-      };
-    }
-
-    const initialState = runtimeDefinition.createInitialState({
-      decks,
-      createPlayer,
-    });
-
-    const allMiddlewares =
-      options?.middlewares?.(compiledMiddlewares) ?? compiledMiddlewares;
-
-    let builder = deriveMachine<G>(effects, initialState);
-    builder = allMiddlewares.reduce(
-      (builder, next) => builder.middleware(next),
-      builder
-    );
-
-    const runtime = builder.build();
-    return { runtime };
-  } catch (error) {
-    if (Array.isArray(error)) {
-      return { errors: error };
-    }
-    return { errors: [error] };
+    decks.push({ id: deck.deckId, name: deck.name, cards });
   }
+
+  const eventModules = gameDefinition.events.reduce((modules, event) => {
+    modules[event.name as keyof typeof modules] = moduleCompiler.addModule({
+      name: eventModuleName(event),
+      type: getEventType(event),
+      code: event.code,
+      globals,
+    });
+    return modules;
+  }, {} as RuntimeEffects<G>);
+
+  const reducerModules = gameDefinition.reducers.map((reducer) =>
+    moduleCompiler.addModule({
+      name: reducerModuleName(reducer),
+      type: runtimeDefinition.reducer,
+      code: reducer.code,
+      globals,
+    })
+  );
+
+  function getEventType(event: Event) {
+    return getEventTypeByName(event.name);
+  }
+
+  function getEventTypeByName(name: keyof G["actions"]) {
+    const eventType =
+      runtimeDefinition.effects.shape[name] ?? runtimeDefinition.emptyEffect;
+    if (!(eventType instanceof ZodFunction)) {
+      throw new Error("Event runtime type must be a ZodFunction");
+    }
+    return eventType;
+  }
+
+  function createPlayer(): RuntimePlayer<G> {
+    const properties = namedPropertyDefaults(
+      playerProperties
+    ) as RuntimePlayer<G>["properties"];
+
+    return {
+      id: v4() as RuntimePlayerId,
+      deckId: decks[0]?.id,
+      properties,
+      board: {
+        draw: [],
+        discard: [],
+        hand: [],
+      },
+    };
+  }
+
+  function dispose() {
+    moduleCompiler.dispose();
+  }
+
+  const moduleCompileResult = moduleCompiler.compile();
+  if (moduleCompileResult.isErr()) {
+    return err(
+      Object.entries(moduleCompileResult.error).map(
+        ([moduleName, e]) => `${moduleName}: ${e}`
+      )
+    );
+  }
+
+  const initialState = runtimeDefinition.createInitialState({
+    decks,
+    createPlayer,
+  });
+
+  const defaultMiddlewares = reducerModules.length
+    ? [createReducerMiddleware(...reducerModules)]
+    : [];
+
+  const allMiddlewares =
+    middlewares?.(defaultMiddlewares) ?? defaultMiddlewares;
+
+  let builder = deriveMachine<G>(
+    eventModules,
+    initialState,
+    (id, effectName) => cardModules[id][effectName]
+  );
+
+  builder.payloadFilter((eventName, payload) => {
+    const [, payloadType]: ZodType[] =
+      getEventTypeByName(eventName)._def.args._def.items;
+    if (!payloadType || zodInstanceOf(payloadType, ZodVoid)) {
+      return undefined as unknown as typeof payload;
+    }
+    const result = payloadType.safeParse(payload);
+    if (!result.success) {
+      throw new Error(
+        "Invalid payload: " +
+          result.error.issues.map((i) => i.message).join(",")
+      );
+    }
+    return payload;
+  });
+
+  builder = allMiddlewares.reduce(
+    (builder, next) => builder.middleware(next),
+    builder
+  );
+
+  const runtime = builder.build();
+
+  return ok({ runtime, dispose });
 }
 
 function compileCard<G extends RuntimeGenerics>(
-  { cardId, name, code, propertyDefaults }: Card,
-  options: {
-    runtimeDefinition: RuntimeDefinition<G>;
-    scriptAPI: RuntimeScriptAPI<G>;
-    cardProperties: Property[];
-  }
+  { cardId, name, propertyDefaults }: Card,
+  cardProperties: Property[]
 ): RuntimeCard<G> {
-  const id = v4() as CardInstanceId;
   return {
-    id,
+    id: createCardInstanceId(),
     typeId: cardId,
     name: name,
-    properties: namedPropertyDefaults(options.cardProperties, propertyDefaults),
-    effects: describedCompile("Card", name, code, {
-      type: options.runtimeDefinition.card.shape.effects,
-      scriptAPI: { ...options.scriptAPI, thisCardId: id },
-      initialValue: {},
-    }),
+    properties: namedPropertyDefaults(cardProperties, propertyDefaults),
   };
 }
 
-type CompileResult<T extends ZodType> =
-  | { type: "success"; value: z.infer<T> }
-  | { type: "error"; error: unknown };
-
-function describedCompile<T extends ZodType, G extends RuntimeGenerics>(
-  kind: string,
-  name: string,
-  ...args: Parameters<typeof compile<T, G>>
-) {
-  const result = compile(...args);
-  const decorateError: ErrorDecorator = (error, path) =>
-    error instanceof LogSpreadError
-      ? error // Keep the innermost error as-is
-      : new LogSpreadError(kind, "(", name, ")", ...path, error);
-  if (result.type === "error") {
-    throw decorateError(result.error, []);
-  }
-
-  return wrapWithErrorDecorator(result.value, decorateError);
+function cloneCard<G extends RuntimeGenerics>(
+  card: RuntimeCard<G>
+): RuntimeCard<G> {
+  return produce(card, (draft) => {
+    draft.id = createCardInstanceId();
+  });
 }
 
-function compile<T extends ZodType, G extends RuntimeGenerics>(
-  code: string,
-  options: {
-    type: T;
-    scriptAPI: RuntimeScriptAPI<G>;
-    initialValue?: z.infer<T>;
-  }
-): CompileResult<T> {
-  let definition = options.initialValue;
-
-  function define(newDefinition: unknown) {
-    const result = options.type.safeParse(newDefinition);
-    if (!result.success) {
-      throw new Error(result.error.message);
-    }
-    // Cannot use parsed data because zod injects destructive behavior on parsed functions.
-    // There's no need for using the parsed data anyway, since it's already json.
-    // We're just using zod for validation here, not for parsing.
-    definition = newDefinition;
-  }
-
-  function derive(
-    createDefinition: (scriptAPI: RuntimeScriptAPI<G>) => unknown
-  ) {
-    define(createDefinition(options.scriptAPI));
-  }
-
-  try {
-    evalWithScope(code, { define, derive }); // Assume code calls define/derive to set definition
-    return { type: "success", value: definition };
-  } catch (error) {
-    return { type: "error", error };
-  }
-}
+const createCardInstanceId = v4 as () => CardInstanceId;
+const moduleName = (str: string) => str.replace(/[^a-zA-Z0-9_]/g, "_");
+const eventModuleName = (event: Event) => moduleName(`Event_${event.name}`);
+const reducerModuleName = (reducer: Reducer) =>
+  moduleName(`Reducer_${reducer.name}`);
+const cardModuleName = (deck: Deck, card: Card) =>
+  moduleName(`Card_${deck.name}_${card.name}`);
 
 function namedPropertyDefaults(
   properties: Property[],
@@ -259,3 +266,18 @@ function createRandomFn(seed?: string) {
   const rng = new Rand(seed);
   return () => rng.next();
 }
+
+function createReducerMiddleware<G extends RuntimeGenerics>(
+  ...reducers: RuntimeReducer<G>[]
+): MachineMiddleware<RuntimeMachineContext<G>> {
+  return (state, action, next) => {
+    next();
+    for (const reduce of reducers) {
+      reduce(state, action);
+    }
+  };
+}
+
+type BuiltinOverrides<T = typeof window> = {
+  [K in keyof T]?: Partial<T[K]>;
+};

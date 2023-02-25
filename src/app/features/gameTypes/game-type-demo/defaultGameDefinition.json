@@ -3,5 +3,5 @@
   "cards": [],
   "properties": [],
   "events": [],
-  "middlewares": []
+  "reducers": []
 }

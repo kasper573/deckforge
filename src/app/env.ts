@@ -8,6 +8,13 @@ const schema = z.object({
   showErrorDetails: zodBooleanish.default(false),
   webVitalsUrl: z.string().url().optional(),
   analyticsId: z.string().optional(),
+  moduleCompiler: z
+    .object({
+      memoryLeaks: z
+        .union([z.literal("warn"), z.literal("error"), z.literal("ignore")])
+        .default("error"),
+    })
+    .default({}),
 });
 
 export const env = schema.parse({
@@ -16,4 +23,7 @@ export const env = schema.parse({
   showErrorDetails: import.meta.env.VITE_SHOW_ERROR_DETAILS,
   webVitalsUrl: import.meta.env.VITE_WEBVITALS_URL,
   analyticsId: import.meta.env.VITE_ANALYTICS_ID,
+  moduleCompiler: {
+    showMemoryLeakWarnings: import.meta.env.VITE_MODULE_COMPILER_MEMORY_LEAKS,
+  },
 });

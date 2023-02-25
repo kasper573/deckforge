@@ -101,19 +101,16 @@ const modals = {
       <>
         <Typography>
           An opinionated and simplified editor and engine for card games. You
-          decide the game mechanics. Rendering is handled by Deck Forge.
+          decide the game mechanics, while the rest is handled by Deck Forge.
         </Typography>
         <Divider sx={{ my: 2 }} />
         <Typography paragraph>
-          Deck Forge is a proof of concept and is not particularly intuitive.
-          Unless you are a programmer and intimately familiar with event driven
-          programming and state machines this editor will basically be useless
-          to you :).
+          Deck Forge is a proof of concept and is not particularly intuitive. It
+          is assumed you are already familiar with programming, particularly
+          with event driven programming and state machines.
         </Typography>
         <Typography>
-          However, {`I've`} made a tour that will try to explain how the editor
-          works. <br />
-          Good luck!
+          Do you want to take a tour of the editor and learn how it works?
         </Typography>
       </>
     ),

@@ -1,6 +1,13 @@
 import { resetData } from "../support/actions/common";
 import type { TestUser } from "../support/actions/user";
-import { nextTestUser, register, showUserMenu } from "../support/actions/user";
+import { nextTestUser, register } from "../support/actions/user";
+import {
+  findGameCard,
+  gotoGameEditor,
+  gamePageActions,
+  showGameOptions,
+  setupGameTests,
+} from "../support/actions/game";
 
 describe("game", () => {
   let user: TestUser;
@@ -11,35 +18,14 @@ describe("game", () => {
     register(user.name, user.password, user.email);
   });
 
-  beforeEach(() => {
-    resetData("game");
-    gotoGameList();
-  });
-
-  describe("can create new game", () => {
-    const gameName = "New game";
-
-    beforeEach(() => {
-      cy.findByRole("button", { name: /create game/i }).click();
-      cy.findByRole("dialog").within(() => cy.findByText(/1 vs 1/i).click());
-
-      cy.findByRole("dialog").within(() => {
-        cy.findByLabelText(/name/i).type(gameName);
-        cy.findByRole("form").submit();
-      });
-
-      cy.findByText(/welcome to deck forge/i);
-      cy.findByRole("button", { name: /no thanks/i }).click();
-
-      gotoGameList();
-    });
-
+  const gameName = "New game";
+  setupGameTests("1 vs 1", gameName, () => {
     it("and see it listed", () => {
       findGameCard(gameName).should("exist");
     });
 
     it("and rename it", () => {
-      pageActions.list.renameGame(gameName, "Renamed");
+      gamePageActions.list.renameGame(gameName, "Renamed");
     });
 
     it("and then delete it", () => {
@@ -52,65 +38,18 @@ describe("game", () => {
     });
 
     it("and visit its gameplay page", () => {
-      pageActions.list.gotoGamePlay(gameName);
+      gamePageActions.list.gotoGamePlay(gameName);
     });
 
     it("rename it and then visit its gameplay page", () => {
-      pageActions.list.renameGame(gameName, "Renamed");
-      pageActions.list.gotoGamePlay("Renamed");
+      gamePageActions.list.renameGame(gameName, "Renamed");
+      gamePageActions.list.gotoGamePlay("Renamed");
     });
 
     it("rename it inside the editor and then visit its gameplay page", () => {
-      gotoEditor(gameName);
-      pageActions.editor.renameGame("Renamed");
-      pageActions.editor.gotoGamePlay();
+      gotoGameEditor(gameName);
+      gamePageActions.editor.renameGame("Renamed");
+      gamePageActions.editor.gotoGamePlay();
     });
   });
 });
-
-const gotoEditor = (gameName: string) => findGameCard(gameName).click();
-
-const gotoGameList = () => showUserMenu().findByText("Your games").click();
-
-const findGameCard = (name: string) => cy.findByRole("link", { name });
-
-const showGameOptions = (gameName: string) =>
-  findGameCard(gameName).within(() => {
-    cy.findByRole("button", { name: /more options/i }).click();
-  });
-
-const expectValidGamePlayPage = () =>
-  cy.findByText(/game not found/i).should("not.exist");
-
-function submitNewNameDialog(newName: string) {
-  cy.findByRole("dialog").within(() => {
-    cy.findByLabelText(/name/i).clear().type(newName);
-    cy.findByRole("form").submit();
-  });
-}
-
-const pageActions = {
-  list: {
-    renameGame(gameName: string, newName: string) {
-      showGameOptions(gameName);
-      cy.findByRole("menuitem", { name: /rename/i }).click();
-      submitNewNameDialog(newName);
-      findGameCard(newName).should("exist");
-    },
-    gotoGamePlay(gameName: string) {
-      showGameOptions(gameName);
-      cy.findByRole("link", { name: /play/i }).click();
-      expectValidGamePlayPage();
-    },
-  },
-  editor: {
-    renameGame(newName: string) {
-      cy.findByLabelText(/rename game/i).click();
-      submitNewNameDialog(newName);
-    },
-    gotoGamePlay() {
-      cy.findByRole("link", { name: /gameplay page/i }).click();
-      expectValidGamePlayPage();
-    },
-  },
-};

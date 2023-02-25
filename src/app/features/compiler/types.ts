@@ -1,25 +1,24 @@
-import type { ZodObject, ZodType } from "zod";
+import type { z, ZodObject, ZodType } from "zod";
 import type {
   MachineActions,
   MachineEffects,
-  MachineMiddleware,
 } from "../../../lib/machine/MachineAction";
 import type { MachineContext } from "../../../lib/machine/MachineContext";
-import type { NominalString } from "../../../lib/ts-extensions/NominalString";
 import type { ZodShapeFor } from "../../../lib/zod-extensions/ZodShapeFor";
-import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+import { zodRuntimeBranded } from "../../../lib/zod-extensions/zodRuntimeBranded";
 import type { CardId, DeckId } from "../../../api/services/game/types";
-import type { Pile } from "./apis/Pile";
+import type { Machine } from "../../../lib/machine/Machine";
+import type { MachineActionObject } from "../../../lib/machine/MachineAction";
+import type { MachineEffect } from "../../../lib/machine/MachineAction";
 
-export type CardInstanceId = NominalString<"CardInstanceId">;
-export const cardInstanceIdType = zodNominalString<CardInstanceId>();
+export type CardInstanceId = z.infer<typeof cardInstanceIdType>;
+export const cardInstanceIdType = zodRuntimeBranded("CardInstanceId");
 
 export interface RuntimeCard<G extends RuntimeGenerics> {
   id: CardInstanceId;
   typeId: CardId;
   name: string;
   properties: G["cardProps"];
-  effects: Partial<RuntimeEffects<G>>;
 }
 
 export interface RuntimeDeck<G extends RuntimeGenerics> {
@@ -28,17 +27,17 @@ export interface RuntimeDeck<G extends RuntimeGenerics> {
   cards: ReadonlyArray<RuntimeCard<G>>;
 }
 
-export const runtimePlayerIdType = zodNominalString<RuntimePlayerId>();
-export type RuntimePlayerId = NominalString<"PlayerId">;
+export const runtimePlayerIdType = zodRuntimeBranded("RuntimePlayerId");
+export type RuntimePlayerId = z.infer<typeof runtimePlayerIdType>;
 
 export interface RuntimePlayer<G extends RuntimeGenerics> {
   id: RuntimePlayerId;
   properties: G["playerProps"];
   deckId?: DeckId;
   board: {
-    draw: Pile<RuntimeCard<G>>;
-    hand: Pile<RuntimeCard<G>>;
-    discard: Pile<RuntimeCard<G>>;
+    draw: RuntimeCard<G>[];
+    hand: RuntimeCard<G>[];
+    discard: RuntimeCard<G>[];
   };
 }
 
@@ -68,18 +67,29 @@ export type RuntimeEffects<G extends RuntimeGenerics> = MachineEffects<
   RuntimeMachineContext<G>
 >;
 
+export type RuntimeEmptyEffect<G extends RuntimeGenerics> = MachineEffect<
+  RuntimeState<G>,
+  void
+>;
+
+export type RuntimeEffect<
+  G extends RuntimeGenerics,
+  EffectName extends keyof G["actions"] = keyof G["actions"]
+> = RuntimeEffects<G>[EffectName];
+
 export interface RuntimeDefinition<
   G extends RuntimeGenerics = RuntimeGenerics
 > {
   globals: ZodObject<ZodShapeFor<G["globalProps"]>>;
   state: ZodType<RuntimeState<G>>;
-  deck: ZodType<RuntimeDeck<G>>;
+  deck: ZodObject<ZodShapeFor<RuntimeDeck<G>>>;
   card: ZodObject<ZodShapeFor<RuntimeCard<G>>>;
-  cardPile: ZodType<Pile<RuntimeCard<G>>>;
+  cardEffects: ZodType<Partial<RuntimeEffects<G>>>;
   player: ZodObject<ZodShapeFor<RuntimePlayer<G>>>;
   effects: ZodObject<ZodShapeFor<RuntimeEffects<G>>>;
-  actions: ZodType<G["actions"]>;
-  middleware: ZodType<RuntimeMiddleware<G>>;
+  emptyEffect: ZodType<RuntimeEmptyEffect<G>>;
+  actions: ZodObject<ZodShapeFor<G["actions"]>>;
+  reducer: ZodType<RuntimeReducer<G>>;
   createInitialState: RuntimeStateFactory<G>;
 }
 
@@ -93,18 +103,26 @@ export type PropRecord = Record<string, unknown>;
 export type RuntimeGenericsFor<T extends RuntimeDefinition> =
   T extends RuntimeDefinition<infer G> ? G : never;
 
-export type RuntimeMiddleware<G extends RuntimeGenerics> = MachineMiddleware<
-  RuntimeMachineContext<G>
->;
+export type RuntimeReducer<
+  G extends RuntimeGenerics,
+  MC extends RuntimeMachineContext<G> = RuntimeMachineContext<G>
+> = (
+  state: MC["state"],
+  action: MachineActionObject<MC, keyof MC["actions"]>
+) => void;
 
 export type RuntimeMachineContext<G extends RuntimeGenerics> = MachineContext<
   RuntimeState<G>,
   G["actions"]
 >;
 
-export type RuntimeScriptAPI<G extends RuntimeGenerics> = {
-  actions: G["actions"];
-  thisCardId?: CardInstanceId;
+export type RuntimeModuleAPI<G extends RuntimeGenerics> = {
+  events: RuntimeEffects<G>;
+  thisCardId?: CardId;
   cloneCard: (card: RuntimeCard<G>) => RuntimeCard<G>;
-  random: () => number;
+  log: (...args: unknown[]) => void;
 };
+
+export type GameRuntime<G extends RuntimeGenerics> = Machine<
+  RuntimeMachineContext<G>
+>;

@@ -1,7 +1,7 @@
 import { Color, Engine, Input } from "excalibur";
 import type { ComponentProps } from "react";
-import type { GameRuntime } from "../../compiler/compileGame";
 import ExcaliburRenderer from "../../../../lib/ExcaliburRenderer";
+import type { GameRuntime } from "../../compiler/types";
 import type { DemoGenerics } from "./runtimeDefinition";
 
 export interface RendererProps

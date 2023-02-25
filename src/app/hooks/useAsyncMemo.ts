@@ -7,7 +7,7 @@ export function useAsyncMemo<T>(fetch: () => Promise<T>): T | undefined {
     let isCancelled = false;
     fetch().then((value) => {
       if (!isCancelled) {
-        setValue(value);
+        setValue(() => value);
       }
     });
     return () => {

@@ -1,5 +1,6 @@
 import { v4 } from "uuid";
 import { z } from "zod";
+import { getQuickJS } from "quickjs-emscripten";
 import type {
   CardId,
   DeckId,
@@ -7,17 +8,30 @@ import type {
   EventId,
   Game,
   GameDefinition,
-  MiddlewareId,
+  ReducerId,
   PropertyId,
 } from "../../../api/services/game/types";
 import { defineRuntime, deriveRuntimeDefinitionParts } from "./defineRuntime";
+import type { CompileGameResult } from "./compileGame";
 import { compileGame } from "./compileGame";
-import type { RuntimeGenerics } from "./types";
+import type { GameRuntime, RuntimeGenerics } from "./types";
+import type { RuntimeDefinition } from "./types";
+import type { ModuleCompiler } from "./moduleRuntimes/types";
+import { createQuickJSCompiler } from "./moduleRuntimes/QuickJS/QuickJSCompiler";
+
+let moduleCompiler: ModuleCompiler;
 
 describe("compileGame", () => {
+  beforeEach(async () => {
+    const quickJS = await getQuickJS();
+    moduleCompiler = createQuickJSCompiler({
+      createRuntime: () => quickJS.newRuntime(),
+    });
+  });
+
   it("can compile game with a single event without errors", () => {
     const gameDefinition: GameDefinition = {
-      middlewares: [],
+      reducers: [],
       properties: [],
       events: [
         {
@@ -30,15 +44,18 @@ describe("compileGame", () => {
       cards: [],
       decks: [],
     };
-    const runtimeDefinition = defineTestRuntime(gameDefinition);
-    const { errors, runtime } = compileGame(runtimeDefinition, gameDefinition);
-    expect(errors).toBeUndefined();
-    expect(runtime).toBeDefined();
+    useGameCompiler(
+      defineTestRuntime(gameDefinition),
+      gameDefinition,
+      (result) => {
+        expect(result).toEqual({ value: expect.any(Object) });
+      }
+    );
   });
 
   it("compiled event can mutate player property", () => {
     const gameDefinition: GameDefinition = {
-      middlewares: [],
+      reducers: [],
       properties: [
         {
           entityId: "player" as EntityId,
@@ -65,18 +82,18 @@ define((state, damage) => {
       decks: [],
     };
     const runtimeDefinition = defineTestRuntime(gameDefinition);
-    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
-
-    runtime.actions.attack(5);
-    expect(runtime.state.players[0].properties.health).toBe(5);
-    expect(runtime.state.players[1].properties.health).toBe(5);
+    useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+      runtime.actions.attack(5);
+      expect(runtime.state.players[0].properties.health).toBe(5);
+      expect(runtime.state.players[1].properties.health).toBe(5);
+    });
   });
 
   it("compiled event can add card to draw pile", () => {
     const deckId = v4() as DeckId;
     const gameDefinition: GameDefinition = {
       properties: [],
-      middlewares: [],
+      reducers: [],
       events: [
         {
           eventId: v4() as EventId,
@@ -86,7 +103,7 @@ define((state, damage) => {
 define((state) => {
   const deck = state.decks[0].cards;
   for (const player of state.players) {
-    player.board.draw.add(deck[0]);
+    player.board.draw.push(deck[0]);
   }
 });`,
         },
@@ -103,11 +120,12 @@ define((state) => {
       decks: [{ deckId, name: "Test Deck" }],
     };
     const runtimeDefinition = defineTestRuntime(gameDefinition);
-    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
-    runtime.actions.addCard();
-    const [player1] = runtime.state.players;
-    expect(player1.board.draw.size).toBe(1);
-    expect(player1.board.draw.at(0)).toBe(runtime.state.decks[0].cards[0]);
+    useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+      runtime.actions.addCard();
+      const [player1] = runtime.state.players;
+      expect(player1.board.draw.length).toBe(1);
+      expect(player1.board.draw.at(0)).toEqual(runtime.state.decks[0].cards[0]);
+    });
   });
 
   it("compiled card effect can mutate player property", () => {
@@ -122,11 +140,11 @@ define((state) => {
           defaultValue: 10,
         },
       ],
-      middlewares: [],
+      reducers: [],
       events: [
         {
           eventId: v4() as EventId,
-          name: "playCard",
+          name: "play",
           code: ``,
           inputType: { player: "string", target: "string" },
         },
@@ -138,34 +156,105 @@ define((state) => {
           name: "Lifesteal",
           propertyDefaults: {},
           code: `
-derive(({thisCardId}) => ({
-  playCard (state, {player: playerId, target: targetId, cardId}) {
-    if (cardId !== thisCardId) {
-      return;
-    }
+define({
+  play (state, {player: playerId, target: targetId, cardId}) {
     const player = state.players.find((p) => p.id === playerId);
     const target = state.players.find((p) => p.id === targetId);
-    player.properties.health += 5;
-    target.properties.health -= 5;
+    const card = player.board.hand.find((c) => c.id === cardId);
+    if (card) {
+      player.properties.health += 5;
+      target.properties.health -= 5;
+    }
   }
-}))`,
+})`,
         },
       ],
       decks: [{ deckId, name: "Test Deck" }],
     };
     const runtimeDefinition = defineTestRuntime(gameDefinition);
-    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
-
-    runtime.execute((state) => {
-      const [player1, player2] = state.players;
-      const cardId = state.decks[0].cards[0].id;
-      runtime?.actions.playCard({
-        player: player1.id,
-        target: player2.id,
-        cardId,
+    useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+      runtime.execute((state) => {
+        const [player1, player2] = state.players;
+        const [card] = state.decks[0].cards;
+        player1.board.hand.push(card);
+        runtime?.actions.play({
+          player: player1.id,
+          target: player2.id,
+          cardId: card.id,
+        });
+        expect(player1.properties.health).toBe(15);
+        expect(player2.properties.health).toBe(5);
       });
-      expect(player1.properties.health).toBe(15);
-      expect(player2.properties.health).toBe(5);
+    });
+  });
+
+  it("cloned card effect can mutate player property", () => {
+    const deckId = v4() as DeckId;
+    const gameDefinition: GameDefinition = {
+      properties: [
+        {
+          entityId: "player" as EntityId,
+          propertyId: v4() as PropertyId,
+          name: "health",
+          type: "number",
+          defaultValue: 10,
+        },
+      ],
+      reducers: [],
+      events: [
+        {
+          eventId: v4() as EventId,
+          name: "clone",
+          code: `
+define(({players, decks: [deck]}) => {
+  for (const player of players) {
+    player.board.hand.push(cloneCard(deck.cards[0]));
+  }
+})`,
+          inputType: { player: "string", target: "string" },
+        },
+        {
+          eventId: v4() as EventId,
+          name: "play",
+          code: ``,
+          inputType: { player: "string", target: "string" },
+        },
+      ],
+      cards: [
+        {
+          cardId: v4() as CardId,
+          deckId,
+          name: "Lifesteal",
+          propertyDefaults: {},
+          code: `
+define({
+  play (state, {player: playerId, target: targetId, cardId}) {
+    const player = state.players.find((p) => p.id === playerId);
+    const target = state.players.find((p) => p.id === targetId);
+    const card = player.board.hand.find(c => c.id === cardId);
+    if (card?.typeId === thisCardId) {
+      player.properties.health += 5;
+      target.properties.health -= 5;
+    }
+  }
+})`,
+        },
+      ],
+      decks: [{ deckId, name: "Test Deck" }],
+    };
+    const runtimeDefinition = defineTestRuntime(gameDefinition);
+    useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+      runtime.execute((state) => {
+        const [player1, player2] = state.players;
+        runtime?.actions.clone();
+        runtime?.actions.play({
+          player: player1.id,
+          target: player2.id,
+          cardId: player1.board.hand[0].id,
+        });
+        expect(player1.properties.health).toBe(15);
+        expect(player2.properties.health).toBe(5);
+      });
     });
   });
 
@@ -188,7 +277,7 @@ derive(({thisCardId}) => ({
     const gameDefinition: GameDefinition = {
       properties: Object.values(properties),
       events: [],
-      middlewares: [],
+      reducers: [],
       cards: [
         {
           cardId: v4() as CardId,
@@ -209,39 +298,83 @@ derive(({thisCardId}) => ({
     };
     it("player properties", () => {
       const runtimeDefinition = defineTestRuntime(gameDefinition);
-      const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
-      expect(runtime.state.players[0].properties.num).toBe(0);
-      expect(runtime.state.players[1].properties.num).toBe(0);
+      useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+        expect(runtime.state.players[0].properties.num).toBe(0);
+        expect(runtime.state.players[1].properties.num).toBe(0);
+      });
     });
 
     it("card properties", () => {
       const runtimeDefinition = defineTestRuntime(gameDefinition);
-      const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
-      expect(runtime.state.decks[0].cards[0].properties.str).toBe("default");
+      useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+        expect(runtime.state.decks[0].cards[0].properties.str).toBe("default");
+      });
     });
   });
 
-  it("compiled runtime can chain events ", () => {
+  it("compiled runtime can reuse events inside events", () => {
     const gameDefinition: GameDefinition = {
-      properties: [
-        {
-          entityId: "player" as EntityId,
-          propertyId: v4() as PropertyId,
-          name: "count",
-          type: "number",
-        },
-      ],
-      middlewares: [],
+      properties: [],
+      reducers: [],
       events: [
         {
           eventId: v4() as EventId,
-          name: "increaseUntil",
+          name: "increase",
           code: `
-          derive(({actions}) => (state, max) => {
-            const [player] = state.players;
-            if (player.properties.count < max) {
-              player.properties.count++;
-              actions.increaseUntil(max);
+          define((state, n) => {
+            state.properties.status += n;
+          });
+          `,
+          inputType: "number",
+        },
+        {
+          eventId: v4() as EventId,
+          name: "decrease",
+          code: `
+          define((state, n) => {
+            state.properties.status -= n;
+          });
+          `,
+          inputType: "number",
+        },
+        {
+          eventId: v4() as EventId,
+          name: "calculate",
+          code: `
+          define((state) => {
+            state.properties.status = 10;
+            events.increase(state, 20);
+            events.decrease(state, 5);
+          });
+          `,
+          inputType: "void",
+        },
+      ],
+      cards: [],
+      decks: [],
+    };
+    const runtimeDefinition = defineTestRuntime(gameDefinition);
+    useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+      runtime.execute((state) => {
+        runtime.actions.calculate();
+        expect(state.properties.status).toBe(25);
+      });
+    });
+  });
+
+  it("compiled runtime can recurse events ", () => {
+    const gameDefinition: GameDefinition = {
+      properties: [],
+      reducers: [],
+      events: [
+        {
+          eventId: v4() as EventId,
+          name: "increaseN",
+          code: `
+          define((state, n) => {
+            if (n > 0) {
+              state.properties.status++;
+              events.increaseN(state, n - 1);
             }
           });
           `,
@@ -252,18 +385,19 @@ derive(({thisCardId}) => ({
       decks: [],
     };
     const runtimeDefinition = defineTestRuntime(gameDefinition);
-    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
-    runtime.execute((state) => {
-      runtime.actions.increaseUntil(10);
-      expect(state.players[0].properties.count).toBe(10);
+    useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+      runtime.execute((state) => {
+        runtime.actions.increaseN(10);
+        expect(state.properties.status).toBe(10);
+      });
     });
   });
 
-  it("compiled middleware can read and mutate state", () => {
+  it("compiled reducer can read and mutate state", () => {
     const gameDefinition: GameDefinition = {
-      middlewares: [
+      reducers: [
         {
-          middlewareId: v4() as MiddlewareId,
+          reducerId: v4() as ReducerId,
           name: "make player 1 win",
           code: `define((state) => {
             state.properties.status = { type: "result", winner: state.players[0].id };
@@ -283,37 +417,37 @@ derive(({thisCardId}) => ({
       decks: [],
     };
     const runtimeDefinition = defineTestRuntime(gameDefinition);
-    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
-    runtime!.actions.foo();
-    expect(runtime!.state.properties.status).toEqual({
-      type: "result",
-      winner: runtime!.state.players[0].id,
+    useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+      runtime.actions.foo();
+      expect(runtime!.state.properties.status).toEqual({
+        type: "result",
+        winner: runtime!.state.players[0].id,
+      });
     });
   });
 
-  it("compiled middleware can opt out of next middleware", () => {
+  it("can compile multiple reducers", () => {
     const gameDefinition: GameDefinition = {
-      middlewares: [
+      reducers: [
         {
-          middlewareId: v4() as MiddlewareId,
+          reducerId: v4() as ReducerId,
           name: "set to 1",
-          code: `define((state, action, next) => {
+          code: `define((state, action) => {
             state.properties.status = 1;
-            next();
           })`,
         },
         {
-          middlewareId: v4() as MiddlewareId,
+          reducerId: v4() as ReducerId,
           name: "add 2",
           code: `define((state) => {
             state.properties.status += 2;
           })`,
         },
         {
-          middlewareId: v4() as MiddlewareId,
-          name: "set to 0",
+          reducerId: v4() as ReducerId,
+          name: "subtract 1",
           code: `define((state) => {
-            state.properties.status = 0;
+            state.properties.status -= 1;
           })`,
         },
       ],
@@ -330,20 +464,41 @@ derive(({thisCardId}) => ({
       decks: [],
     };
     const runtimeDefinition = defineTestRuntime(gameDefinition);
-    const runtime = tryCompileGame(runtimeDefinition, gameDefinition);
-    runtime!.actions.foo();
-    expect(runtime!.state.properties.status).toEqual(3);
+    useGameRuntime(runtimeDefinition, gameDefinition, (runtime) => {
+      runtime.actions.foo();
+      expect(runtime.state.properties.status).toEqual(2);
+    });
   });
 });
 
-function tryCompileGame<G extends RuntimeGenerics>(
-  ...args: Parameters<typeof compileGame<G>>
+function useGameRuntime<G extends RuntimeGenerics>(
+  runtimeDefinition: RuntimeDefinition<G>,
+  gameDefinition: Game["definition"],
+  handle: (runtime: GameRuntime<G>) => void
 ) {
-  const { runtime, errors } = compileGame<G>(...args);
-  if (errors) {
-    throw new Error(errors.join(", "));
+  useGameCompiler(runtimeDefinition, gameDefinition, (result) => {
+    if (result.isErr()) {
+      throw new Error(result.error.join("\n"));
+    }
+    handle(result.value.runtime);
+  });
+}
+
+function useGameCompiler<G extends RuntimeGenerics>(
+  runtimeDefinition: RuntimeDefinition<G>,
+  gameDefinition: Game["definition"],
+  handle: (result: CompileGameResult<G>) => void
+) {
+  const result = compileGame<G>(runtimeDefinition, gameDefinition, {
+    moduleCompiler,
+  });
+  try {
+    handle(result);
+  } finally {
+    if (result.isOk()) {
+      result.value.dispose();
+    }
   }
-  return runtime!;
 }
 
 function defineTestRuntime(gameDefinition: Game["definition"]) {

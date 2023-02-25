@@ -14,6 +14,7 @@ import { PanelTitle } from "../../components/PanelTitle";
 import { PanelControls } from "../../components/PanelControls";
 import { useModal } from "../../../../../lib/useModal";
 import type { PanelProps } from "../definition";
+import { moduleCompilerInfo } from "../../../compiler/moduleRuntimes";
 import { ApiReferenceDialog } from "./ApiReferenceDialog";
 
 export function CodePanel({ title, ...props }: PanelProps) {
@@ -32,6 +33,7 @@ export function CodePanel({ title, ...props }: PanelProps) {
       value={object?.code}
       onChange={update}
       typeDefs={typeDefs}
+      compilerOptions={moduleCompilerInfo.tsCompilerOptions}
     />
   );
 
@@ -87,11 +89,11 @@ function useEditorProps(): {
         objectSelector: selectors.event(id.eventId),
         update: (code) => actions.updateEvent({ ...id, code }),
       };
-    case "middleware":
+    case "reducer":
       return {
-        typeDefs: editorApi?.middleware,
-        objectSelector: selectors.middleware(id.middlewareId),
-        update: (code) => actions.updateMiddleware({ ...id, code }),
+        typeDefs: editorApi?.reducer,
+        objectSelector: selectors.reducer(id.reducerId),
+        update: (code) => actions.updateReducer({ ...id, code }),
       };
   }
 

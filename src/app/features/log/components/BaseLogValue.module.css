@@ -1,0 +1,8 @@
+.log-value + .log-value {
+  margin-left: 4px;
+}
+
+.log-value.space,
+.log-value:not(.pt-end) + .log-value.pt-start {
+  margin-left: 0;
+}

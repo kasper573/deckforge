@@ -1,43 +1,43 @@
 import type { MosaicNode } from "react-mosaic-component";
 import type { ZodType } from "zod";
 import { z } from "zod";
-import type {
-  EventId,
-  CardId,
-  DeckId,
-  PropertyId,
-  MiddlewareId,
-  Game,
+import type { Game } from "../../../api/services/game/types";
+import {
+  cardIdType,
+  deckIdType,
+  eventIdType,
+  propertyIdType,
+  reducerIdType,
 } from "../../../api/services/game/types";
-import { zodNominalString } from "../../../lib/zod-extensions/zodNominalString";
+import type { LogEntry } from "../log/types";
 
 export const editorObjectIdType = z
   .object({
     type: z.literal("event"),
-    eventId: zodNominalString<EventId>(),
+    eventId: eventIdType,
   })
   .or(
     z.object({
-      type: z.literal("middleware"),
-      middlewareId: zodNominalString<MiddlewareId>(),
+      type: z.literal("reducer"),
+      reducerId: reducerIdType,
     })
   )
   .or(
     z.object({
       type: z.literal("deck"),
-      deckId: zodNominalString<DeckId>(),
+      deckId: deckIdType,
     })
   )
   .or(
     z.object({
       type: z.literal("card"),
-      cardId: zodNominalString<CardId>(),
+      cardId: cardIdType,
     })
   )
   .or(
     z.object({
       type: z.literal("property"),
-      propertyId: zodNominalString<PropertyId>(),
+      propertyId: propertyIdType,
     })
   );
 
@@ -53,38 +53,12 @@ export interface EditorState {
   logs: LogEntry[];
 }
 
-export interface LogEntry {
-  id: string;
-  content: LogContent[];
-}
-
-export const logIdentifierSymbol = Symbol("logIdentifier");
-export const logIdentifier = (
-  value: LogValue,
-  options: Pick<LogIdentifier, "name" | "color"> = {}
-): LogIdentifier => ({
-  [logIdentifierSymbol]: true,
-  value,
-  ...options,
-});
-
-export type LogValue = unknown;
-export type LogIdentifier = {
-  [logIdentifierSymbol]: true;
-  value: LogValue;
-  name?: string;
-  color?: string;
-};
-export type LogContent = LogValue | LogIdentifier;
-export const isLogIdentifier = (value: unknown): value is LogIdentifier =>
-  typeof value === "object" && value !== null && logIdentifierSymbol in value;
-
 export type PanelId = z.infer<typeof panelIdType>;
 export const panelIdType = z.enum([
   "code",
   "decks",
   "events",
-  "middlewares",
+  "reducers",
   "cardProperties",
   "playerProperties",
   "inspector",

@@ -8,13 +8,15 @@ import type { PanelId } from "../types";
 import { useModal } from "../../../../lib/useModal";
 import { AlertDialog } from "../../../dialogs/AlertDialog";
 import type { TourStep } from "../../../components/Tour";
+import { symbols } from "../../compiler/moduleRuntimes/symbols";
+import { colors } from "../../log/colors";
 import { DecksPanel } from "./DecksPanel";
 import { EventsPanel } from "./EventsPanel";
 import { CodePanel } from "./CodePanel/CodePanel";
 import { InspectorPanel } from "./InspectorPanel/InspectorPanel";
 import { CardPropertiesPanel, PlayerPropertiesPanel } from "./PropertiesPanel";
 import { RuntimePanel } from "./RuntimePanel/RuntimePanel";
-import { MiddlewaresPanel } from "./MiddlewaresPanel";
+import { ReducersPanel } from "./ReducersPanel";
 import { LogsPanel } from "./LogsPanel";
 
 export interface PanelProps {
@@ -38,8 +40,15 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-runtime",
       content: (
         <>
-          The runtime panel shows the current state of the game and allows you
-          to interact with it.
+          <Typography paragraph>
+            The runtime panel shows the current state of the game and allows you
+            to interact with it.
+          </Typography>
+          <Typography>
+            Whenever you make a change to the game code or settings, the game
+            will recompile automatically and restart (you can also manually
+            trigger a recompile by using the runtime {`panel's`} toolbar).
+          </Typography>
         </>
       ),
     },
@@ -91,16 +100,22 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
         <>
           <Typography paragraph>
             The code panel allows you to edit the code for the currently
-            selected event, middleware or card.
+            selected event, reducer or card.
           </Typography>
           <Typography paragraph>
-            Deck forge uses javascript, with type hints provided by typescript
-            types. Click the API Reference button to see definitions of all
-            types and functions available for the currently selected object.
+            Deck Forge uses TypeScript. Click the <code>API Reference</code>{" "}
+            button in the code panel toolbar to see definitions of all types and
+            functions available for the currently selected object.
+          </Typography>
+          <Typography paragraph>
+            In your code, call the <code>{symbols.define}</code> to describe
+            what your object does.
           </Typography>
           <Typography>
-            In your code, call either the <code>define</code> or{" "}
-            <code>derive</code> functions to describe what your object does.
+            Your code runs sandboxed, so you only have access to the native{" "}
+            {`APIs`} provided by Deck Forge. {"There's"} also security limits.
+            If you overflow the stack, exhaust your memory limit, or try to
+            stall the CPU, your code will halt.
           </Typography>
         </>
       ),
@@ -113,8 +128,16 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       className: "tour-logs",
       content: (
         <>
-          The logs panel shows compiler and runtime errors, and events as they
-          happen in the game runtime.
+          <Typography paragraph>
+            The logs panel shows compiler and runtime errors, and events as they
+            happen in the game runtime.
+          </Typography>
+          <Typography>
+            Hover a <code style={{ color: colors.variable }}>variable</code> or{" "}
+            <code style={{ color: colors.primitive }}>value</code> to highlight
+            duplicates across the log. Click a variable name to view its
+            content.
+          </Typography>
         </>
       ),
     },
@@ -140,31 +163,25 @@ export const panelsDefinition: Record<PanelId, PanelDefinition> = {
       ),
     },
   },
-  middlewares: {
-    component: memo(MiddlewaresPanel, isEqual),
-    title: "Middlewares",
+  reducers: {
+    component: memo(ReducersPanel, isEqual),
+    title: "Reducers",
     tour: {
-      className: "tour-middlewares",
+      className: "tour-reducers",
       content: (
         <>
           <Typography paragraph>
-            Middlewares are <StateReducer /> functions that run each time any
-            event is invoked.
+            Reducers are <StateReducer /> functions that run each time any event
+            is invoked.
           </Typography>
 
           <Typography paragraph>
-            They have an additional parameter <code>next</code>, which is a
-            function that will call the next middleware. This allows you to
-            intercept and enhance the behavior of all events.
-          </Typography>
-
-          <Typography paragraph>
-            Middlewares are applied in the order they are listed. Drag and drop
-            to re-order middlewares.
+            Reducers are applied in the order they are listed. Drag and drop to
+            re-order reducers.
           </Typography>
 
           <Typography>
-            Right click to add, remove or rename middlewares.
+            Right click to add, remove or rename reducers.
           </Typography>
         </>
       ),

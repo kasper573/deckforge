@@ -1,8 +1,8 @@
 import Editor, { useMonaco } from "@monaco-editor/react";
 import type { ComponentProps, MutableRefObject } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { v4 } from "uuid";
-import type { editor } from "monaco-editor";
+import type { editor, languages } from "monaco-editor";
 
 export type CodeEditorTypeDefs = string;
 
@@ -10,17 +10,19 @@ export interface CodeEditorProps {
   value?: string;
   onChange: (value: string) => void;
   typeDefs?: CodeEditorTypeDefs;
+  compilerOptions?: Partial<languages.typescript.CompilerOptions>;
 }
 
 export function CodeEditor({
   value = "",
   typeDefs,
   onChange,
+  compilerOptions,
 }: CodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor>();
   const [isRefreshingRef, refreshEditor] = useRefreshEditor(editorRef);
   useTypeDefs(typeDefs, refreshEditor);
-
+  useCompilerOptions(compilerOptions);
   return (
     <CodeEditorWithoutTypedefs
       onMount={(editor) => (editorRef.current = editor)}
@@ -89,4 +91,28 @@ function useTypeDefs(
       model.dispose();
     };
   }, [monaco, typeDefs]);
+}
+
+function useCompilerOptions(
+  changedOptions?: Partial<languages.typescript.CompilerOptions>
+) {
+  const monaco = useMonaco();
+  const defaultOptions = useMemo(
+    () => monaco?.languages.typescript.typescriptDefaults.getCompilerOptions(),
+    [monaco]
+  );
+
+  useEffect(() => {
+    if (!monaco || !defaultOptions) {
+      return;
+    }
+
+    const { typescriptDefaults } = monaco.languages.typescript;
+    const previousOptions = typescriptDefaults.getCompilerOptions();
+    typescriptDefaults.setCompilerOptions({
+      ...defaultOptions,
+      ...changedOptions,
+    });
+    return () => typescriptDefaults.setCompilerOptions(previousOptions);
+  }, [monaco, defaultOptions, changedOptions]);
 }

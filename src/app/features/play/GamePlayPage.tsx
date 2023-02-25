@@ -2,40 +2,32 @@ import { useRouteParams } from "react-typesafe-routes";
 import { useMemo } from "react";
 import { Page } from "../layout/Page";
 import { router } from "../../router";
-import { compileGame } from "../compiler/compileGame";
-import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 import { trpc } from "../../trpc";
-import { GameRenderer } from "../compiler/GameRenderer";
+import { PendingGameRenderer } from "../compiler/GameRenderer";
+import { useGameCompiler } from "../compiler/useGameCompiler";
 import { gameTypes } from "../gameTypes";
+import { deriveRuntimeDefinition } from "../compiler/defineRuntime";
 
 export default function GamePlayPage() {
-  const { slug } = useRouteParams(router.play);
+  const { slug, seed } = useRouteParams(router.play);
   const { data: game } = trpc.game.read.useQuery({ type: "slug", slug });
 
-  const compiled = useMemo(() => {
+  const runtimeDefinition = useMemo(() => {
     if (game) {
       const baseDefinition = gameTypes.get(game.type)?.runtimeDefinition;
-      if (baseDefinition) {
-        return compileGame(
-          deriveRuntimeDefinition(game.definition, baseDefinition),
-          game.definition
-        );
-      }
+      return deriveRuntimeDefinition(game.definition, baseDefinition);
     }
   }, [game]);
 
-  if (!compiled || compiled?.errors || !compiled.runtime) {
-    throw new Error(
-      compiled?.errors ? compiled.errors.join(", ") : "Could not compile game"
-    );
-  }
+  const options = useMemo(() => ({ seed }), [seed]);
+  const result = useGameCompiler(runtimeDefinition, game?.definition, options);
 
   return (
     <Page>
       {game && (
-        <GameRenderer
+        <PendingGameRenderer
           type={game.type}
-          runtime={compiled.runtime}
+          result={result}
           style={{ width: "100%", height: "100%" }}
         />
       )}

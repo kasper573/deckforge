@@ -9,7 +9,7 @@ describe("returns the type at the given path", () => {
         bar: z.string().optional(),
       }),
     });
-    const type = zodTypeAtPath(schema, "foo.bar");
+    const type = zodTypeAtPath(schema, ["foo", "bar"]);
     expect(type).toBeInstanceOf(z.ZodOptional);
     expect((type as ZodOptional<ZodString>)._def.innerType).toBeInstanceOf(
       z.ZodString
@@ -22,7 +22,7 @@ describe("returns the type at the given path", () => {
         bar: z.string(),
       }),
     });
-    const type = zodTypeAtPath(schema, "foo.bar");
+    const type = zodTypeAtPath(schema, ["foo", "bar"]);
     expect(type).toBeInstanceOf(z.ZodString);
   });
 
@@ -34,7 +34,7 @@ describe("returns the type at the given path", () => {
         })
         .refine(() => true, { message: "foo.bar" }),
     });
-    const type = zodTypeAtPath(schema, "foo.bar");
+    const type = zodTypeAtPath(schema, ["foo", "bar"]);
     expect(type).toBeInstanceOf(z.ZodString);
   });
 
@@ -46,7 +46,7 @@ describe("returns the type at the given path", () => {
         }),
       })
       .partial();
-    const type = zodTypeAtPath(schema, "foo.bar");
+    const type = zodTypeAtPath(schema, ["foo", "bar"]);
     expect(type).toBeInstanceOf(z.ZodString);
   });
 
@@ -58,7 +58,7 @@ describe("returns the type at the given path", () => {
         })
         .optional(),
     });
-    const type = zodTypeAtPath(schema, "foo.bar");
+    const type = zodTypeAtPath(schema, ["foo", "bar"]);
     expect(type).toBeInstanceOf(z.ZodString);
   });
 
@@ -70,7 +70,7 @@ describe("returns the type at the given path", () => {
         })
         .nullable(),
     });
-    const type = zodTypeAtPath(schema, "foo.bar");
+    const type = zodTypeAtPath(schema, ["foo", "bar"]);
     expect(type).toBeInstanceOf(z.ZodString);
   });
 
@@ -82,7 +82,7 @@ describe("returns the type at the given path", () => {
         })
         .nullish(),
     });
-    const type = zodTypeAtPath(schema, "foo.bar");
+    const type = zodTypeAtPath(schema, ["foo", "bar"]);
     expect(type).toBeInstanceOf(z.ZodString);
   });
 
@@ -98,8 +98,8 @@ describe("returns the type at the given path", () => {
           })
         ),
     });
-    const bar = zodTypeAtPath(schema, "foo.bar");
-    const baz = zodTypeAtPath(schema, "foo.baz");
+    const bar = zodTypeAtPath(schema, ["foo", "bar"]);
+    const baz = zodTypeAtPath(schema, ["foo", "baz"]);
     expect(bar).toBeInstanceOf(z.ZodString);
     expect(baz).toBeInstanceOf(z.ZodNumber);
   });

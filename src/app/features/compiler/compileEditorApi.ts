@@ -1,13 +1,13 @@
-import { z } from "zod";
+import type { ZodRawShape } from "zod";
 import { omit } from "lodash";
 import type { CodeEditorTypeDefs } from "../../components/CodeEditor";
 import { zodToTSResolver } from "../../../lib/zod-extensions/zodToTS";
 import type { RuntimeDefinition, RuntimeGenerics } from "./types";
-import { createScriptApiDefinition } from "./defineRuntime";
+import { createModuleApiDefinition } from "./defineRuntime";
 
 export interface EditorApi<G extends RuntimeGenerics> {
   card: CodeEditorTypeDefs;
-  middleware: CodeEditorTypeDefs;
+  reducer: CodeEditorTypeDefs;
   events: {
     [K in keyof G["actions"]]: CodeEditorTypeDefs;
   };
@@ -17,59 +17,60 @@ export function compileEditorApi<G extends RuntimeGenerics>(
   definition: RuntimeDefinition<G>
 ): EditorApi<G> {
   const zodToTS = zodToTSResolver({
+    PlayerId: definition.player.shape.id,
+    DeckId: definition.deck.shape.id,
+    CardTypeId: definition.card.shape.typeId,
+    CardInstanceId: definition.card.shape.id,
     Card: definition.card,
-    CardPile: definition.cardPile,
+    CardEffects: definition.cardEffects,
     Deck: definition.deck,
-    CardEffects: definition.card.shape.effects,
     Player: definition.player,
     State: definition.state,
-    EventHandlers: definition.effects,
-    EventDispatchers: definition.actions,
-    Middleware: definition.middleware,
+    Events: definition.effects,
+    Reducer: definition.reducer,
   });
 
   const common: CodeEditorTypeDefs = zodToTS.declare();
-  const scriptAPIShape = createScriptApiDefinition(definition);
-  const generalApiType = zodToTS(z.object(omit(scriptAPIShape, "thisCardId")));
-  const cardApiType = zodToTS(z.object(scriptAPIShape));
 
   return {
-    middleware: zodToTS.add(
+    reducer: zodToTS.add(
       common,
-      declareModuleDefinition({
-        definitionType: zodToTS(definition.middleware),
-        apiType: generalApiType,
-      })
+      declareModuleGlobals(
+        omit(
+          createModuleApiDefinition(definition, definition.reducer),
+          "thisCardId"
+        )
+      )
     ),
     card: zodToTS.add(
       common,
-      declareModuleDefinition({
-        definitionType: zodToTS(definition.card.shape.effects),
-        apiType: cardApiType,
-      })
+      declareModuleGlobals(
+        createModuleApiDefinition(definition, definition.cardEffects)
+      )
     ),
     events: Object.entries(definition.effects.shape).reduce(
       (eventTypeDefs, [effectName, effectType]) => {
         eventTypeDefs[effectName as keyof G["actions"]] = zodToTS.add(
           common,
-          declareModuleDefinition({
-            definitionType: zodToTS(effectType),
-            apiType: generalApiType,
-          })
+          declareModuleGlobals(
+            omit(
+              createModuleApiDefinition(definition, effectType),
+              "thisCardId"
+            )
+          )
         );
         return eventTypeDefs;
       },
       {} as EditorApi<G>["events"]
     ),
   };
-}
 
-function declareModuleDefinition(p: {
-  apiType: string;
-  definitionType: string;
-}) {
-  return [
-    `declare function define(definition: ${p.definitionType}): void;`,
-    `declare function derive(createDefinition: (api: ${p.apiType}) => ${p.definitionType}): void;`,
-  ].join("\n");
+  function declareModuleGlobals(shape: ZodRawShape) {
+    return Object.entries(shape)
+      .map(
+        ([propName, propType]) =>
+          `declare const ${propName}: ${zodToTS(propType)};`
+      )
+      .join("\n");
+  }
 }

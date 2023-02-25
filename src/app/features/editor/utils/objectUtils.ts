@@ -15,8 +15,8 @@ export function selectedList(
   switch (type) {
     case "event":
       return state.game?.definition.events;
-    case "middleware":
-      return state.game?.definition.middlewares;
+    case "reducer":
+      return state.game?.definition.reducers;
     case "card":
       return state.game?.definition.cards;
     case "deck":

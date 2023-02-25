@@ -9,7 +9,7 @@ import { useActions } from "../../../../lib/useActions";
 import { editorActions } from "../actions";
 import { PanelEmptyState } from "../components/PanelEmptyState";
 import { Delete } from "../../../components/icons";
-import { LogList } from "../components/LogList";
+import { LogList } from "../../log/components/LogList";
 import type { PanelProps } from "./definition";
 
 export function LogsPanel(props: PanelProps) {

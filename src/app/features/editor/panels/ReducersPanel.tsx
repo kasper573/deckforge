@@ -12,20 +12,19 @@ import { useConfirmDelete } from "../hooks/useConfirmDelete";
 import { usePromptCreate, usePromptRename } from "../hooks/usePromptCrud";
 import type { PanelProps } from "./definition";
 
-export function MiddlewaresPanel(props: PanelProps) {
-  const middlewares = useSelector(selectors.middlewares);
+export function ReducersPanel(props: PanelProps) {
+  const reducers = useSelector(selectors.reducers);
   const confirmDelete = useConfirmDelete();
   const promptRename = usePromptRename();
   const promptCreate = usePromptCreate();
-  const { createMiddleware, moveObject, selectObject } =
-    useActions(editorActions);
+  const { createReducer, moveObject, selectObject } = useActions(editorActions);
   const selectedObjectId = useSelector(selectors.selectedObjectId);
 
-  const promptCreateMiddleware = () =>
-    promptCreate("middleware", (name) => createMiddleware({ name }));
+  const promptCreateReducer = () =>
+    promptCreate("reducer", (name) => createReducer({ name }));
 
   const openContextMenu = useMenu([
-    <MenuItem onClick={promptCreateMiddleware}>New middleware</MenuItem>,
+    <MenuItem onClick={promptCreateReducer}>New reducer</MenuItem>,
   ]);
 
   return (
@@ -34,23 +33,19 @@ export function MiddlewaresPanel(props: PanelProps) {
         selected={selectedObjectId}
         onSelectedChanged={selectObject}
         onItemMoved={moveObject}
-        items={middlewares.map((middleware) => ({
-          nodeId: middleware.objectId,
-          label: middleware.name,
-          icon: <ObjectIcon type="middleware" />,
-          onDoubleClick: () => promptRename(middleware),
+        items={reducers.map((reducer) => ({
+          nodeId: reducer.objectId,
+          label: reducer.name,
+          icon: <ObjectIcon type="reducer" />,
+          onDoubleClick: () => promptRename(reducer),
           contextMenu: [
-            <MenuItem onClick={() => promptRename(middleware)}>
-              Rename
-            </MenuItem>,
-            <MenuItem onClick={() => confirmDelete(middleware)}>
-              Delete
-            </MenuItem>,
+            <MenuItem onClick={() => promptRename(reducer)}>Rename</MenuItem>,
+            <MenuItem onClick={() => confirmDelete(reducer)}>Delete</MenuItem>,
           ],
         }))}
       />
-      {middlewares.length === 0 && (
-        <PanelEmptyState>This game has no middlewares</PanelEmptyState>
+      {reducers.length === 0 && (
+        <PanelEmptyState>This game has no reducers</PanelEmptyState>
       )}
     </Panel>
   );
