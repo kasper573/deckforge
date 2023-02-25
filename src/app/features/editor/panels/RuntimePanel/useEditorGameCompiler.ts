@@ -77,8 +77,9 @@ function createEventLoggerReducer(
       action.name,
       "(",
       logIdentifiers.variable("state", state),
-      ",",
-      logIdentifiers.variable("input", action.payload),
+      ...(action.payload !== undefined
+        ? [",", logIdentifiers.variable("input", action.payload)]
+        : []),
       ")",
     ]);
     next();

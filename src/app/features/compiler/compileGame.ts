@@ -4,6 +4,8 @@ import produce from "immer";
 import type { Result } from "neverthrow";
 import { err, ok } from "neverthrow";
 import { groupBy } from "lodash";
+import type { ZodType } from "zod";
+import { ZodVoid, ZodFunction } from "zod";
 import type {
   Card,
   CardId,
@@ -16,6 +18,7 @@ import type {
 } from "../../../api/services/game/types";
 import { propertyValue } from "../../../api/services/game/types";
 import type { MachineMiddleware } from "../../../lib/machine/MachineAction";
+import { zodInstanceOf } from "../../../lib/zod-extensions/zodInstanceOf";
 import { deriveMachine } from "./defineRuntime";
 import type {
   CardInstanceId,
@@ -132,10 +135,16 @@ export function compileGame<G extends RuntimeGenerics>(
   );
 
   function getEventType(event: Event) {
-    return (
-      runtimeDefinition.effects.shape[event.name] ??
-      runtimeDefinition.emptyEffect
-    );
+    return getEventTypeByName(event.name);
+  }
+
+  function getEventTypeByName(name: keyof G["actions"]) {
+    const eventType =
+      runtimeDefinition.effects.shape[name] ?? runtimeDefinition.emptyEffect;
+    if (!(eventType instanceof ZodFunction)) {
+      throw new Error("Event runtime type must be a ZodFunction");
+    }
+    return eventType;
   }
 
   function createPlayer(): RuntimePlayer<G> {
@@ -185,6 +194,22 @@ export function compileGame<G extends RuntimeGenerics>(
     initialState,
     (id, effectName) => cardModules[id][effectName]
   );
+
+  builder.payloadFilter((eventName, payload) => {
+    const [, payloadType]: ZodType[] =
+      getEventTypeByName(eventName)._def.args._def.items;
+    if (!payloadType || zodInstanceOf(payloadType, ZodVoid)) {
+      return undefined as unknown as typeof payload;
+    }
+    const result = payloadType.safeParse(payload);
+    if (!result.success) {
+      throw new Error(
+        "Invalid payload: " +
+          result.error.issues.map((i) => i.message).join(",")
+      );
+    }
+    return payload;
+  });
 
   builder = allMiddlewares.reduce(
     (builder, next) => builder.middleware(next),

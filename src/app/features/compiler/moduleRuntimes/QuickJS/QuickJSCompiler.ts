@@ -8,7 +8,6 @@ import type {
 } from "../types";
 import { createZodProxy } from "../../../../../lib/zod-extensions/createZodProxy";
 import { ModuleReference } from "../types";
-import { safeFunctionParse } from "../../../../../lib/zod-extensions/safeFunctionParse";
 import { QuickJSModule } from "./QuickJSModule";
 
 export interface QuickJSCompilerOptions {
@@ -44,14 +43,12 @@ export function createQuickJSCompiler({
         resolveModule
       );
 
-      const proxy = createZodProxy(definition.type, (path, typeAtPath) => {
-        const fn = (...args: unknown[]) => module.invokeManaged(path, args);
-        return safeFunctionParse(
-          typeAtPath,
-          fn,
-          [definition.name, ...path].join(".")
-        );
-      });
+      const proxy = createZodProxy(
+        definition.type,
+        (path) =>
+          (...args: unknown[]) =>
+            module.invokeManaged(path, args)
+      );
 
       ModuleReference.assign(
         proxy,

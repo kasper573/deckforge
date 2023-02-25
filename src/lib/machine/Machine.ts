@@ -8,6 +8,7 @@ import type { MachineContext } from "./MachineContext";
 import type { MachineEffectSelector } from "./MachineAction";
 import type { AnyMachineEffects } from "./MachineAction";
 import type { MachineMiddleware } from "./MachineAction";
+import type { MachinePayloadFilter } from "./MachineAction";
 
 enableMapSet();
 
@@ -22,7 +23,8 @@ function createMachineInstance<MC extends MachineContext>(
   state: MC["state"],
   effects: MachineEffects<MC>,
   selectReactions?: MachineEffectSelector<MC>,
-  middlewares: MachineMiddleware<MC>[] = []
+  middlewares: MachineMiddleware<MC>[] = [],
+  payloadFilter: MachinePayloadFilter<MC> = (name, payload) => payload
 ): Machine<MC> {
   const subscriptions = new Set<(state: MC["state"]) => void>();
   const effectHandler = createEffectHandlerMiddleware(effects, selectReactions);
@@ -32,6 +34,7 @@ function createMachineInstance<MC extends MachineContext>(
     name: ActionName,
     payload: MachineActionPayload<MC["actions"][ActionName]>
   ) {
+    payload = payloadFilter(name, payload);
     machine.execute((draft) => {
       const middlewareQueue = [...middlewares, effectHandler];
 
@@ -128,7 +131,10 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
     >,
     private _middlewares: Array<
       MachineMiddleware<MachineContext<State, MachineActionsFor<Effects>>>
-    > = []
+    > = [],
+    private _payloadFilter?: MachinePayloadFilter<
+      MachineContext<State, MachineActionsFor<Effects>>
+    >
   ) {}
 
   effects<Effects extends AnyMachineEffects<State>>(newEffects: Effects) {
@@ -140,12 +146,8 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
       MachineContext<State, MachineActionsFor<Effects>>
     >
   ) {
-    return new MachineBuilder<State, Effects>(
-      this._state,
-      this._effects,
-      newReactions,
-      this._middlewares
-    );
+    this._reactions = newReactions;
+    return this;
   }
 
   middleware(
@@ -153,17 +155,28 @@ class MachineBuilder<State, Effects extends AnyMachineEffects<State>> {
       MachineContext<State, MachineActionsFor<Effects>>
     >
   ) {
-    return new MachineBuilder<State, Effects>(
-      this._state,
-      this._effects,
-      this._reactions,
-      [...this._middlewares, middleware]
-    );
+    this._middlewares = [...this._middlewares, middleware];
+    return this;
+  }
+
+  payloadFilter(
+    filter: MachinePayloadFilter<
+      MachineContext<State, MachineActionsFor<Effects>>
+    >
+  ) {
+    this._payloadFilter = filter;
+    return this;
   }
 
   build() {
     return createMachineInstance<
       MachineContext<State, MachineActionsFor<Effects>>
-    >(this._state, this._effects, this._reactions, this._middlewares);
+    >(
+      this._state,
+      this._effects,
+      this._reactions,
+      this._middlewares,
+      this._payloadFilter
+    );
   }
 }
