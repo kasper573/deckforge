@@ -1,13 +1,17 @@
 import { showUserMenu } from "./user";
 import { resetData } from "./common";
 
+const expectLoaded = () => cy.findByRole("progressbar").should("not.exist");
+
 export const gotoGameEditor = (gameName: string) => {
   findGameCard(gameName).click();
-  cy.findByRole("progressbar").should("not.exist");
+  expectLoaded();
 };
 
-export const gotoGameList = () =>
+export const gotoGameList = () => {
   showUserMenu().findByText("Your games").click();
+  expectLoaded();
+};
 
 export const findGameCard = (name: string) => cy.findByRole("link", { name });
 
@@ -42,8 +46,10 @@ export const gamePageActions = {
   },
 };
 
-const expectValidGamePlayPage = () =>
+const expectValidGamePlayPage = () => {
+  expectLoaded();
   cy.findByText(/game not found/i).should("not.exist");
+};
 
 function submitNewNameDialog(newName: string) {
   cy.findByRole("dialog").within(() => {
