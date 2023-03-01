@@ -7,22 +7,20 @@ export function createModelStore<
   Instance,
   Input
 >(
-  initialModels = {} as ModelDefinitions<
-    ModelGenerics<ModelId, Model, InstanceId, Instance, Input>
-  >,
-  createInstance?: ModelInstanceFactory<
-    ModelGenerics<ModelId, Model, InstanceId, Instance, Input>
-  >
+  initialModels = {} as ModelDefinitions<ModelId, Model>,
+  createInstance?: InstanceFactory<Model, Input, Instance>
 ) {
-  return new ModelStore(initialModels, createInstance);
+  return new ModelStore<
+    ModelGenerics<ModelId, Model, InstanceId, Instance, Input>
+  >(initialModels, createInstance);
 }
 
 export type { ModelStore };
 
 class ModelStore<G extends ModelGenerics> extends Store<ModelState<G>> {
   constructor(
-    initialModels: ModelDefinitions<G>,
-    private readonly createInstance?: ModelInstanceFactory<G>
+    initialModels: inferModelDefinitions<G>,
+    private readonly createInstance?: inferInstanceFactory<G>
   ) {
     super(defaultModelState(initialModels));
   }
@@ -69,7 +67,7 @@ class ModelStore<G extends ModelGenerics> extends Store<ModelState<G>> {
 }
 
 function defaultModelState<G extends ModelGenerics>(
-  definitions: ModelDefinitions<G>
+  definitions: inferModelDefinitions<G>
 ) {
   return Object.entries(definitions).reduce((acc, [id, model]) => {
     acc[id as G["modelId"]] = defaultModelEntry(model);
@@ -91,10 +89,12 @@ export type ModelState<G extends ModelGenerics> = Record<
   ModelEntry<G>
 >;
 
-export type ModelDefinitions<G extends ModelGenerics> = Record<
+export type inferModelDefinitions<G extends ModelGenerics> = ModelDefinitions<
   G["modelId"],
   G["model"]
 >;
+
+export type ModelDefinitions<Id extends PropertyKey, Model> = Record<Id, Model>;
 
 export interface ModelEntry<G extends ModelGenerics> {
   definition: G["model"];
@@ -106,10 +106,16 @@ export type InstanceRecord<G extends ModelGenerics> = Record<
   G["instance"]
 >;
 
-export type ModelInstanceFactory<G extends ModelGenerics> = (
-  model: G["model"],
-  input: G["input"]
-) => G["instance"];
+export type inferInstanceFactory<G extends ModelGenerics> = InstanceFactory<
+  G["model"],
+  G["input"],
+  G["instance"]
+>;
+
+export type InstanceFactory<Model, Input, Instance> = (
+  model: Model,
+  input: Input
+) => Instance;
 
 export interface ModelGenerics<
   ModelId extends PropertyKey = PropertyKey,
