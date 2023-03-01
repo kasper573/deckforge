@@ -1,10 +1,27 @@
 import { Store } from "./Store";
 
-export class ModelStore<G extends ModelGenerics = ModelGenerics> extends Store<
-  ModelState<G>
-> {
+export function createModelStore<
+  ModelId extends PropertyKey,
+  Model,
+  InstanceId extends PropertyKey,
+  Instance,
+  Input
+>(
+  initialModels = {} as ModelDefinitions<
+    ModelGenerics<ModelId, Model, InstanceId, Instance, Input>
+  >,
+  createInstance?: ModelInstanceFactory<
+    ModelGenerics<ModelId, Model, InstanceId, Instance, Input>
+  >
+) {
+  return new ModelStore(initialModels, createInstance);
+}
+
+export type { ModelStore };
+
+class ModelStore<G extends ModelGenerics> extends Store<ModelState<G>> {
   constructor(
-    initialModels = {} as ModelDefinitions<G>,
+    initialModels: ModelDefinitions<G>,
     private readonly createInstance?: ModelInstanceFactory<G>
   ) {
     super(defaultModelState(initialModels));
@@ -69,22 +86,22 @@ function defaultModelEntry<G extends ModelGenerics>(
   };
 }
 
-export type ModelState<G extends ModelGenerics = ModelGenerics> = Record<
+export type ModelState<G extends ModelGenerics> = Record<
   G["modelId"],
   ModelEntry<G>
 >;
 
-export type ModelDefinitions<G extends ModelGenerics = ModelGenerics> = Record<
+export type ModelDefinitions<G extends ModelGenerics> = Record<
   G["modelId"],
   G["model"]
 >;
 
-export interface ModelEntry<G extends ModelGenerics = ModelGenerics> {
+export interface ModelEntry<G extends ModelGenerics> {
   definition: G["model"];
   instances: Record<G["instanceId"], G["instance"]>;
 }
 
-export type InstanceRecord<G extends ModelGenerics = ModelGenerics> = Record<
+export type InstanceRecord<G extends ModelGenerics> = Record<
   G["instanceId"],
   G["instance"]
 >;
