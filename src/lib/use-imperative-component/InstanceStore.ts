@@ -1,3 +1,4 @@
+import type { StoreListener } from "./Store";
 import { Store } from "./Store";
 
 export function createInstanceStore<
@@ -17,24 +18,31 @@ export function createInstanceStore<
 
 export type { InstanceStore };
 
-class InstanceStore<G extends InstanceStoreGenerics> extends Store<
-  ModelState<G>
-> {
+class InstanceStore<G extends InstanceStoreGenerics> {
   constructor(
     initialModels: inferModelDefinitions<G>,
-    private readonly createInstance?: inferInstanceFactory<G>
+    private readonly createInstance?: inferInstanceFactory<G>,
+    private store = new Store<ModelState<G>>(defaultModelState(initialModels))
   ) {
-    super(defaultModelState(initialModels));
+    this.subscribe = this.store.subscribe.bind(this.store);
+  }
+
+  get state() {
+    return this.store.state;
+  }
+
+  subscribe(listener: StoreListener<ModelState<G>>) {
+    return this.store.subscribe(listener);
   }
 
   upsertModel(id: G["modelId"], model: G["model"]) {
-    return this.mutate((models) => {
+    return this.store.mutate((models) => {
       models[id] = defaultModelEntry(model);
     });
   }
 
   deleteModel(id: G["modelId"]) {
-    return this.mutate((models) => {
+    return this.store.mutate((models) => {
       delete models[id];
     });
   }
@@ -44,7 +52,7 @@ class InstanceStore<G extends InstanceStoreGenerics> extends Store<
     instanceId: G["instanceId"],
     input: G["input"]
   ) {
-    return this.mutate((models) => {
+    return this.store.mutate((models) => {
       const model = models[modelId];
       if (!model) {
         throw new Error(`No model with id ${String(modelId)} found`);
@@ -58,7 +66,7 @@ class InstanceStore<G extends InstanceStoreGenerics> extends Store<
   }
 
   destroyInstance(modelId: G["modelId"], instanceId: G["instanceId"]) {
-    return this.mutate((models) => {
+    return this.store.mutate((models) => {
       const model = models[modelId];
       if (!model) {
         throw new Error(`No model with id ${String(modelId)} found`);
