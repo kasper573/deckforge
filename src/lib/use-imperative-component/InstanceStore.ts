@@ -27,19 +27,19 @@ class InstanceStore<G extends InstanceStoreGenerics> extends Store<
     super(defaultModelState(initialModels));
   }
 
-  addModel(id: G["modelId"], model: G["model"]) {
+  upsertModel(id: G["modelId"], model: G["model"]) {
     return this.mutate((models) => {
       models[id] = defaultModelEntry(model);
     });
   }
 
-  removeModel(id: G["modelId"]) {
+  deleteModel(id: G["modelId"]) {
     return this.mutate((models) => {
       delete models[id];
     });
   }
 
-  instantiate(
+  upsertInstance(
     modelId: G["modelId"],
     instanceId: G["instanceId"],
     input: G["input"]
