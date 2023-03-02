@@ -1,10 +1,9 @@
 import produce from "immer";
-import type { DeepReadonly } from "./DeepReadonly";
 
-export class Store<State = unknown> {
+export class Store<State> {
   private _listeners = new Set<StoreListener<State>>();
 
-  get state(): DeepReadonly<State> {
+  get state(): State {
     return this._state;
   }
 
