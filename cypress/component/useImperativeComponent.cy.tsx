@@ -107,6 +107,14 @@ describe("useImperativeComponent", () => {
     $.resolve().click();
     $.dialog().should("exist");
   });
+
+  it("can manually remove instance", () => {
+    const App = createTestApp();
+    cy.mount(<App />);
+    $.trigger().click();
+    $.remove().click();
+    $.dialog().should("not.exist");
+  });
 });
 
 function createTestApp(
@@ -137,7 +145,7 @@ function createTestApp(
   }
 }
 
-function Dialog({ resolve, reject, input }) {
+function Dialog({ resolve, reject, remove, input }) {
   const [response, setResponse] = useState("");
   return (
     <div role="dialog" aria-label={input}>
@@ -148,6 +156,7 @@ function Dialog({ resolve, reject, input }) {
       />
       <button onClick={() => resolve(response)}>{$.resolve.id}</button>
       <button onClick={() => reject(response)}>{$.reject.id}</button>
+      <button onClick={() => remove()}>{$.remove.id}</button>
     </div>
   );
 }
@@ -184,6 +193,7 @@ const $ = {
   dialog: el("dialog", (role, name) => cy.findAllByRole(role, { name })),
   resolve: el("resolve", roleByName("button")),
   reject: el("reject", roleByName("button")),
+  remove: el("remove", roleByName("button")),
   response: el("input", roleByName("textbox")),
   result: el("result", (id) => cy.findByTestId(id)),
   trigger: el("trigger", roleByName("button")),
