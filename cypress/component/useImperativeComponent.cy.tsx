@@ -109,21 +109,21 @@ describe("useImperativeComponent", () => {
       );
     });
 
-    it("resolving a single instance", () => {
+    it("resolving a lone instance removes it", () => {
       cy.mount(<App />);
       $.trigger().click();
       $.resolve().click();
       $.dialog().should("not.exist");
     });
 
-    it("rejecting a single instance", () => {
+    it("rejecting a lone instance removes it", () => {
       cy.mount(<App />);
       $.trigger().click();
       $.reject().click();
       $.dialog().should("not.exist");
     });
 
-    it("resolving one of many instances", () => {
+    it("resolving one of many instances removes the right instance", () => {
       let count = 0;
       cy.mount(<App input={() => count++} />);
       $.trigger().click();
@@ -132,7 +132,7 @@ describe("useImperativeComponent", () => {
       $.dialog("1").should("exist");
     });
 
-    it("rejecting one of many instances", () => {
+    it("rejecting one of many instances removes the right instance", () => {
       let count = 0;
       cy.mount(<App input={() => count++} />);
       $.trigger().click();
@@ -141,7 +141,7 @@ describe("useImperativeComponent", () => {
       $.dialog("1").should("exist");
     });
 
-    it("can opt out", () => {
+    it("resolving while opted out does not remove instance", () => {
       const App = createTestApp(
         createImperative({
           renderer: outletRenderer(),
