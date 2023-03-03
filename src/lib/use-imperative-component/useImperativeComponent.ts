@@ -72,10 +72,12 @@ export function* generateElements(
   ] of Object.entries(components)) {
     for (const [instanceId, instance] of Object.entries(instances)) {
       if (shouldIncludeInstance(instance)) {
+        const { props, ...builtins } = instance;
         yield createElement(component, {
           key: `${componentId}-${instanceId}`,
           ...defaultProps,
-          ...instance.props,
+          ...props,
+          ...builtins,
         });
       }
     }

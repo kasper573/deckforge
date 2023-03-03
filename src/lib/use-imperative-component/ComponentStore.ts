@@ -1,4 +1,6 @@
 import type { ComponentType } from "react";
+import type { Result } from "neverthrow";
+import { err, ok } from "neverthrow";
 import type { StoreListener } from "./Store";
 import { Store } from "./Store";
 
@@ -35,7 +37,7 @@ export class ComponentStore {
     const { store } = this;
 
     function trigger<Input>(input: Input, props: Record<string, unknown> = {}) {
-      return new Promise((resolvePromise, rejectPromise) => {
+      return new Promise<Result<unknown, unknown>>((emitResult) => {
         store.mutate((state) => {
           const iid = nextId();
           state[cid].instances[iid] = {
@@ -49,7 +51,7 @@ export class ComponentStore {
                   value,
                 };
               });
-              resolvePromise(value);
+              emitResult(ok(value));
             },
             reject: (error) => {
               store.mutate((state) => {
@@ -58,7 +60,7 @@ export class ComponentStore {
                   error,
                 };
               });
-              rejectPromise(error);
+              emitResult(err(error));
             },
             remove: () =>
               store.mutate((state) => {

@@ -21,10 +21,7 @@ describe("useImperativeComponent", () => {
       $.response.target.type("value");
       $.resolve.target.click();
     });
-    $.result.target.should(
-      "have.text",
-      formatResult({ type: "success", value: "value" })
-    );
+    $.result.target.should("have.text", formatResult({ value: "value" }));
   });
 
   it("reject returns error", () => {
@@ -34,10 +31,7 @@ describe("useImperativeComponent", () => {
       $.response.target.type("error");
       $.reject.target.click();
     });
-    $.result.target.should(
-      "have.text",
-      formatResult({ type: "error", error: "error" })
-    );
+    $.result.target.should("have.text", formatResult({ error: "error" }));
   });
 
   it("resolve removes instance", () => {
