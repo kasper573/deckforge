@@ -133,32 +133,31 @@ describe("useImperativeComponent", () => {
     });
   });
 
-  describe("manual removal of instances", () => {
-    describe("when auto removal is disabled", () => {
-      beforeEach(() => {
-        App = createTestApp(
-          createImperative({
-            renderer: outletRenderer(),
-            autoRemoveInstances: false,
-          })
-        );
-      });
-
-      it("resolving does not remove instance", () => {
-        cy.mount(<App />);
-        $.trigger().click();
-        $.resolve().click();
-        $.dialog().should("exist");
-      });
-
-      it("rejecting does not remove instance", () => {
-        cy.mount(<App />);
-        $.trigger().click();
-        $.reject().click();
-        $.dialog().should("exist");
-      });
+  describe("when auto removal of instances is disabled", () => {
+    beforeEach(() => {
+      App = createTestApp(
+        createImperative({
+          renderer: outletRenderer(),
+          autoRemoveInstances: false,
+        })
+      );
+    });
+    it("resolving does not remove instance", () => {
+      cy.mount(<App />);
+      $.trigger().click();
+      $.resolve().click();
+      $.dialog().should("exist");
     });
 
+    it("rejecting does not remove instance", () => {
+      cy.mount(<App />);
+      $.trigger().click();
+      $.reject().click();
+      $.dialog().should("exist");
+    });
+  });
+
+  describe("manual removal of instances", () => {
     it("can manually remove instance", () => {
       cy.mount(<App />);
       $.trigger().click();
