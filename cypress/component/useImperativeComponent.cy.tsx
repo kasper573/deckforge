@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types,react/display-name */
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { createElement, useRef, useState } from "react";
 
 import type {
@@ -79,6 +79,27 @@ describe("useImperativeComponent", () => {
       $.trigger().click();
       $.dialog().eq(0).should("have.attr", "aria-label", "0");
       $.dialog().eq(1).should("have.attr", "aria-label", "1");
+    });
+  });
+
+  describe("auto removal of components", () => {
+    let App: ReturnType<typeof createTestApp>;
+    beforeEach(() => {
+      App = createTestApp(
+        createImperative({
+          renderer: outletRenderer(),
+          autoRemoveComponents: true,
+        })
+      );
+    });
+
+    it("unmounting a component removes all its instances", () => {
+      cy.mount(<App />);
+      $.trigger().click();
+      $.trigger().click();
+      $.trigger().click();
+      $.unmount().click();
+      $.dialog().should("not.exist");
     });
   });
 
@@ -176,22 +197,36 @@ describe("useImperativeComponent", () => {
 function createTestApp(
   { Outlet, useComponent } = createImperative({ renderer: outletRenderer() })
 ) {
-  return function App(props: ComponentProps<typeof Page>) {
+  return function App({
+    children,
+    ...props
+  }: ComponentProps<typeof Mount> & {
+    children?: (renderMount: () => ReactNode) => ReactNode;
+  }) {
+    const renderMount = () => <Mount {...props} />;
     return (
       <>
-        <RenderCounter name={$.appRC.name} />
-        <Page {...props} />
+        {children !== undefined ? children(renderMount) : renderMount()}
         <Outlet />
       </>
     );
   };
 
-  function Page({ input }: { input?: () => unknown }) {
+  function Mount(props: ComponentProps<typeof HookConsumer>) {
+    const [isMounted, setMounted] = useState(true);
+    return (
+      <>
+        {isMounted && <HookConsumer {...props} />}
+        <button onClick={() => setMounted(false)}>{$.unmount.name}</button>
+      </>
+    );
+  }
+
+  function HookConsumer({ input }: { input?: () => unknown }) {
     const [result, setResult] = useState();
     const trigger = useComponent(Dialog);
     return (
       <>
-        <RenderCounter name={$.pageRC.name} />
         {result && (
           <div data-testid={$.result.name}>{formatResult(result)}</div>
         )}
@@ -252,11 +287,10 @@ const $ = createNamedFunctions()
   .add("resolve", roleByName("button"))
   .add("reject", roleByName("button"))
   .add("remove", roleByName("button"))
+  .add("unmount", roleByName("button"))
   .add("response", roleByName("textbox"))
   .add("result", (id) => cy.findByTestId(id))
   .add("trigger", roleByName("button"))
-  .add("appRC", (id) => cy.findAllByTestId(id))
-  .add("pageRC", (id) => cy.findAllByTestId(id))
   .build();
 
 function roleByName<Role extends string>(role: Role) {
