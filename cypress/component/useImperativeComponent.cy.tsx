@@ -116,6 +116,16 @@ describe("useImperativeComponent", () => {
     $.remove().click();
     $.dialog().should("not.exist");
   });
+
+  it("manually removing one of many instances removes the right instance", () => {
+    let count = 0;
+    const App = createTestApp();
+    cy.mount(<App input={() => count++} />);
+    $.trigger().click();
+    $.trigger().click();
+    $.dialog("0").within(() => $.remove().click());
+    $.dialog("1").should("exist");
+  });
 });
 
 function createTestApp(
