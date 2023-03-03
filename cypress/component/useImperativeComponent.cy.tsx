@@ -208,35 +208,37 @@ describe("useImperativeComponent", () => {
       $.dialog("0").within(() => $.reject().click());
       $.dialog("1").should("exist");
     });
-
-    it("resolving while opted out does not remove instance", () => {
-      const App = createTestApp(
-        createImperative({
-          renderer: outletRenderer(),
-          autoRemoveInstances: false,
-        })
-      );
-      cy.mount(<App />);
-      $.trigger().click();
-      $.resolve().click();
-      $.dialog().should("exist");
-    });
-
-    it("rejecting while opted out does not remove instance", () => {
-      const App = createTestApp(
-        createImperative({
-          renderer: outletRenderer(),
-          autoRemoveInstances: false,
-        })
-      );
-      cy.mount(<App />);
-      $.trigger().click();
-      $.reject().click();
-      $.dialog().should("exist");
-    });
   });
 
   describe("manual removal of instances", () => {
+    describe("when auto removal is disabled", () => {
+      it("resolving does not remove instance", () => {
+        const App = createTestApp(
+          createImperative({
+            renderer: outletRenderer(),
+            autoRemoveInstances: false,
+          })
+        );
+        cy.mount(<App />);
+        $.trigger().click();
+        $.resolve().click();
+        $.dialog().should("exist");
+      });
+
+      it("rejecting does not remove instance", () => {
+        const App = createTestApp(
+          createImperative({
+            renderer: outletRenderer(),
+            autoRemoveInstances: false,
+          })
+        );
+        cy.mount(<App />);
+        $.trigger().click();
+        $.reject().click();
+        $.dialog().should("exist");
+      });
+    });
+
     it("can manually remove instance", () => {
       const App = createTestApp();
       cy.mount(<App />);
