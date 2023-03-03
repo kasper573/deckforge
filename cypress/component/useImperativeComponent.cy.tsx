@@ -7,7 +7,7 @@ import type {
   OutletRenderer,
 } from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createImperative } from "../../src/lib/use-imperative-component/useImperativeComponent";
-import { createFunctor } from "../../src/lib/functors";
+import { createNamedFunctions } from "../../src/lib/namedFunctions";
 
 describe("useImperativeComponent", () => {
   it("mount does not create instance", () => {
@@ -192,19 +192,17 @@ function outletRenderer(
 
 const formatResult = (r: unknown) => JSON.stringify(r);
 
-const $ = {
-  dialog: createFunctor("dialog", (role, name?: string) =>
-    cy.findAllByRole(role, { name })
-  ),
-  resolve: createFunctor("resolve", roleByName("button")),
-  reject: createFunctor("reject", roleByName("button")),
-  remove: createFunctor("remove", roleByName("button")),
-  response: createFunctor("input", roleByName("textbox")),
-  result: createFunctor("result", (id) => cy.findByTestId(id)),
-  trigger: createFunctor("trigger", roleByName("button")),
-  appRC: createFunctor("app-render-count", (id) => cy.findAllByTestId(id)),
-  pageRC: createFunctor("page-render-count", (id) => cy.findAllByTestId(id)),
-};
+const $ = createNamedFunctions()
+  .add("dialog", (role, name?: string) => cy.findAllByRole(role, { name }))
+  .add("resolve", roleByName("button"))
+  .add("reject", roleByName("button"))
+  .add("remove", roleByName("button"))
+  .add("response", roleByName("textbox"))
+  .add("result", (id) => cy.findByTestId(id))
+  .add("trigger", roleByName("button"))
+  .add("appRC", (id) => cy.findAllByTestId(id))
+  .add("pageRC", (id) => cy.findAllByTestId(id))
+  .build();
 
 function roleByName<Role extends string>(role: Role) {
   return (name: string) => cy.findAllByRole(role, { name });
