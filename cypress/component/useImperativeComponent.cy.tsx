@@ -10,29 +10,30 @@ import { createImperative } from "../../src/lib/use-imperative-component/useImpe
 import { createNamedFunctions } from "../../src/lib/namedFunctions";
 
 describe("useImperativeComponent", () => {
+  let App: ReturnType<typeof createTestApp>;
+  beforeEach(() => {
+    App = createTestApp();
+  });
+
   describe("core behaviors", () => {
     it("mount does not create instance", () => {
-      const App = createTestApp();
       cy.mount(<App />);
       $.dialog().should("not.exist");
     });
 
     it("trigger creates instance", () => {
-      const App = createTestApp();
       cy.mount(<App />);
       $.trigger().click();
       $.dialog().should("exist");
     });
 
     it("instance can be given input", () => {
-      const App = createTestApp();
       cy.mount(<App input={() => "foo"} />);
       $.trigger().click();
       $.dialog("foo").should("exist");
     });
 
     it("resolve returns value", () => {
-      const App = createTestApp();
       cy.mount(<App />);
       $.trigger().click();
       $.dialog().within(() => {
@@ -43,7 +44,6 @@ describe("useImperativeComponent", () => {
     });
 
     it("reject returns error", () => {
-      const App = createTestApp();
       cy.mount(<App />);
       $.trigger().click();
       $.dialog().within(() => {
@@ -54,7 +54,6 @@ describe("useImperativeComponent", () => {
     });
 
     it("can have multiple instances", () => {
-      const App = createTestApp();
       cy.mount(<App />);
       $.trigger().click();
       $.trigger().click();
@@ -63,7 +62,6 @@ describe("useImperativeComponent", () => {
 
     it("multiple instances can have separate input", () => {
       let count = 0;
-      const App = createTestApp();
       cy.mount(<App input={() => count++} />);
       $.trigger().click();
       $.trigger().click();
@@ -73,7 +71,6 @@ describe("useImperativeComponent", () => {
 
     it("instances are rendered in the order they are created", () => {
       let count = 0;
-      const App = createTestApp();
       cy.mount(<App input={() => count++} />);
       $.trigger().click();
       $.trigger().click();
@@ -83,11 +80,6 @@ describe("useImperativeComponent", () => {
   });
 
   describe("persisted instances", () => {
-    let App: ReturnType<typeof createTestApp>;
-    beforeEach(() => {
-      App = createTestApp(createImperative({ renderer: outletRenderer() }));
-    });
-
     it("unmounting a lone component with pending instances does not remove the instances", () => {
       cy.mount(<App />);
       $.trigger().click();
@@ -99,7 +91,6 @@ describe("useImperativeComponent", () => {
   });
 
   describe("auto removal of instances", () => {
-    let App: ReturnType<typeof createTestApp>;
     beforeEach(() => {
       App = createTestApp(
         createImperative({
@@ -144,13 +135,16 @@ describe("useImperativeComponent", () => {
 
   describe("manual removal of instances", () => {
     describe("when auto removal is disabled", () => {
-      it("resolving does not remove instance", () => {
-        const App = createTestApp(
+      beforeEach(() => {
+        App = createTestApp(
           createImperative({
             renderer: outletRenderer(),
             autoRemoveInstances: false,
           })
         );
+      });
+
+      it("resolving does not remove instance", () => {
         cy.mount(<App />);
         $.trigger().click();
         $.resolve().click();
@@ -158,12 +152,6 @@ describe("useImperativeComponent", () => {
       });
 
       it("rejecting does not remove instance", () => {
-        const App = createTestApp(
-          createImperative({
-            renderer: outletRenderer(),
-            autoRemoveInstances: false,
-          })
-        );
         cy.mount(<App />);
         $.trigger().click();
         $.reject().click();
@@ -172,7 +160,6 @@ describe("useImperativeComponent", () => {
     });
 
     it("can manually remove instance", () => {
-      const App = createTestApp();
       cy.mount(<App />);
       $.trigger().click();
       $.remove().click();
@@ -181,7 +168,6 @@ describe("useImperativeComponent", () => {
 
     it("manually removing one of many instances removes the right instance", () => {
       let count = 0;
-      const App = createTestApp();
       cy.mount(<App input={() => count++} />);
       $.trigger().click();
       $.trigger().click();
