@@ -10,92 +10,96 @@ import { createImperative } from "../../src/lib/use-imperative-component/useImpe
 import { createNamedFunctions } from "../../src/lib/namedFunctions";
 
 describe("useImperativeComponent", () => {
-  it("mount does not create instance", () => {
-    const App = createTestApp();
-    cy.mount(<App />);
-    $.dialog().should("not.exist");
-  });
-
-  it("trigger creates instance", () => {
-    const App = createTestApp();
-    cy.mount(<App />);
-    $.trigger().click();
-    $.dialog().should("exist");
-  });
-
-  it("instance can be given input", () => {
-    const App = createTestApp();
-    cy.mount(<App input={() => "foo"} />);
-    $.trigger().click();
-    $.dialog("foo").should("exist");
-  });
-
-  it("resolve returns value", () => {
-    const App = createTestApp();
-    cy.mount(<App />);
-    $.trigger().click();
-    $.dialog().within(() => {
-      $.response().type("value");
-      $.resolve().click();
+  describe("core behaviors", () => {
+    it("mount does not create instance", () => {
+      const App = createTestApp();
+      cy.mount(<App />);
+      $.dialog().should("not.exist");
     });
-    $.result().should("have.text", formatResult({ value: "value" }));
-  });
 
-  it("reject returns error", () => {
-    const App = createTestApp();
-    cy.mount(<App />);
-    $.trigger().click();
-    $.dialog().within(() => {
-      $.response().type("error");
-      $.reject().click();
+    it("trigger creates instance", () => {
+      const App = createTestApp();
+      cy.mount(<App />);
+      $.trigger().click();
+      $.dialog().should("exist");
     });
-    $.result().should("have.text", formatResult({ error: "error" }));
+
+    it("instance can be given input", () => {
+      const App = createTestApp();
+      cy.mount(<App input={() => "foo"} />);
+      $.trigger().click();
+      $.dialog("foo").should("exist");
+    });
+
+    it("resolve returns value", () => {
+      const App = createTestApp();
+      cy.mount(<App />);
+      $.trigger().click();
+      $.dialog().within(() => {
+        $.response().type("value");
+        $.resolve().click();
+      });
+      $.result().should("have.text", formatResult({ value: "value" }));
+    });
+
+    it("reject returns error", () => {
+      const App = createTestApp();
+      cy.mount(<App />);
+      $.trigger().click();
+      $.dialog().within(() => {
+        $.response().type("error");
+        $.reject().click();
+      });
+      $.result().should("have.text", formatResult({ error: "error" }));
+    });
+
+    it("can have multiple instances", () => {
+      const App = createTestApp();
+      cy.mount(<App />);
+      $.trigger().click();
+      $.trigger().click();
+      $.dialog().should("have.length", 2);
+    });
+
+    it("multiple instances can have separate input", () => {
+      let count = 0;
+      const App = createTestApp();
+      cy.mount(<App input={() => count++} />);
+      $.trigger().click();
+      $.trigger().click();
+      $.dialog("0").should("exist");
+      $.dialog("1").should("exist");
+    });
+
+    it("instances are rendered in the order they are created", () => {
+      let count = 0;
+      const App = createTestApp();
+      cy.mount(<App input={() => count++} />);
+      $.trigger().click();
+      $.trigger().click();
+      $.dialog().eq(0).should("have.attr", "aria-label", "0");
+      $.dialog().eq(1).should("have.attr", "aria-label", "1");
+    });
   });
 
-  it("can have multiple instances", () => {
-    const App = createTestApp();
-    cy.mount(<App />);
-    $.trigger().click();
-    $.trigger().click();
-    $.dialog().should("have.length", 2);
-  });
+  describe("manual removal of instances", () => {
+    it("can manually remove instance", () => {
+      const App = createTestApp();
+      cy.mount(<App />);
+      $.trigger().click();
+      $.remove().click();
+      $.dialog().should("not.exist");
+    });
 
-  it("multiple instances can have separate input", () => {
-    let count = 0;
-    const App = createTestApp();
-    cy.mount(<App input={() => count++} />);
-    $.trigger().click();
-    $.trigger().click();
-    $.dialog("0").should("exist");
-    $.dialog("1").should("exist");
-  });
-
-  it("instances are rendered in the order they are created", () => {
-    let count = 0;
-    const App = createTestApp();
-    cy.mount(<App input={() => count++} />);
-    $.trigger().click();
-    $.trigger().click();
-    $.dialog().eq(0).should("have.attr", "aria-label", "0");
-    $.dialog().eq(1).should("have.attr", "aria-label", "1");
-  });
-
-  it("can manually remove instance", () => {
-    const App = createTestApp();
-    cy.mount(<App />);
-    $.trigger().click();
-    $.remove().click();
-    $.dialog().should("not.exist");
-  });
-
-  it("manually removing one of many instances removes the right instance", () => {
-    let count = 0;
-    const App = createTestApp();
-    cy.mount(<App input={() => count++} />);
-    $.trigger().click();
-    $.trigger().click();
-    $.dialog("0").within(() => $.remove().click());
-    $.dialog("1").should("exist");
+    it("manually removing one of many instances removes the right instance", () => {
+      let count = 0;
+      const App = createTestApp();
+      cy.mount(<App input={() => count++} />);
+      $.trigger().click();
+      $.trigger().click();
+      $.dialog("0").within(() => $.remove().click());
+      $.dialog("1").should("exist");
+    });
   });
 
   describe("auto removal of instances", () => {
