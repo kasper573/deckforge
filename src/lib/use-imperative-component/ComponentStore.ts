@@ -27,9 +27,28 @@ export class ComponentStore {
     });
   }
 
-  removeComponent(id: ComponentId) {
+  markComponentForRemoval(id: ComponentId) {
     return this.store.mutate((components) => {
-      delete components[id];
+      components[id].markedForRemoval = true;
+    });
+  }
+
+  removeInstance(cid: ComponentId, iid: InstanceId) {
+    return this.store.mutate((components) => {
+      const component = components[cid];
+      delete component.instances[iid];
+      if (
+        component.markedForRemoval &&
+        !Object.keys(component.instances).length
+      ) {
+        delete components[iid];
+      }
+    });
+  }
+
+  setInstanceState(cid: ComponentId, iid: InstanceId, state: InstanceState) {
+    return this.store.mutate((components) => {
+      components[cid].instances[iid].state = state;
     });
   }
 
@@ -37,39 +56,24 @@ export class ComponentStore {
     cid: ComponentId,
     { autoRemoveInstances }: InstanceInterfaceOptions
   ) {
-    const { store } = this;
-
-    function trigger<Input>(input: Input, props: Record<string, unknown> = {}) {
-      return new Promise<Result<unknown, unknown>>((emitResult) => {
-        store.mutate((state) => {
+    return <Input>(input: Input, props: Record<string, unknown> = {}) =>
+      new Promise<Result<unknown, unknown>>((emitResult) => {
+        this.store.mutate((state) => {
           const iid = nextId();
-          const remove = () =>
-            store.mutate((state) => {
-              delete state[cid].instances[iid];
-            });
+          const remove = () => this.removeInstance(cid, iid);
           state[cid].instances[iid] = {
             state: { type: "pending" },
             input,
             props,
-            resolve(value) {
-              store.mutate((components) => {
-                components[cid].instances[iid].state = {
-                  type: "resolved",
-                  value,
-                };
-              });
+            resolve: (value) => {
+              this.setInstanceState(cid, iid, { type: "resolved", value });
               if (autoRemoveInstances) {
                 remove();
               }
               emitResult(ok(value));
             },
-            reject(error) {
-              store.mutate((state) => {
-                state[cid].instances[iid].state = {
-                  type: "rejected",
-                  error,
-                };
-              });
+            reject: (error) => {
+              this.setInstanceState(cid, iid, { type: "rejected", error });
               if (autoRemoveInstances) {
                 remove();
               }
@@ -79,9 +83,6 @@ export class ComponentStore {
           };
         });
       });
-    }
-
-    return trigger;
   }
 }
 
@@ -92,6 +93,7 @@ export interface ComponentEntry {
   component: ComponentType;
   defaultProps: Record<string, unknown>;
   instances: Record<InstanceId, InstanceEntry>;
+  markedForRemoval?: boolean;
 }
 
 export type InstanceId = string;

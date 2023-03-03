@@ -82,69 +82,19 @@ describe("useImperativeComponent", () => {
     });
   });
 
-  describe("auto removal of components", () => {
+  describe("persisted instances", () => {
     let App: ReturnType<typeof createTestApp>;
     beforeEach(() => {
       App = createTestApp(createImperative({ renderer: outletRenderer() }));
     });
 
-    it("unmounting a lone component removes all its instances", () => {
+    it("unmounting a lone component with pending instances does not remove the instances", () => {
       cy.mount(<App />);
       $.trigger().click();
       $.trigger().click();
       $.trigger().click();
       $.unmount().click();
-      $.dialog().should("not.exist");
-    });
-
-    it("unmounting one of many components removes only the related instances", () => {
-      const mounts = createNamedFunctions()
-        .add("first", cy.findByTestId)
-        .add("second", cy.findByTestId)
-        .build();
-
-      let prefix: string;
-      let count: number;
-      cy.mount(
-        <App input={() => `${prefix}-${count++}`}>
-          {(Mount) => (
-            <>
-              <div data-testid={mounts.first.name}>
-                <Mount />
-              </div>
-              <div data-testid={mounts.second.name}>
-                <Mount />
-              </div>
-            </>
-          )}
-        </App>
-      );
-
-      prefix = "first";
-      count = 0;
-      mounts
-        .first()
-        .within(() => {
-          $.trigger().click();
-          $.trigger().click();
-          $.trigger().click();
-        })
-        .then(() => {
-          prefix = "second";
-          count = 0;
-          mounts.second().within(() => {
-            $.trigger().click();
-            $.trigger().click();
-            $.trigger().click();
-          });
-        });
-
-      mounts.first().within(() => $.unmount().click());
-
       $.dialog().should("have.length", 3);
-      $.dialog().eq(0).should("have.attr", "aria-label", "second-0");
-      $.dialog().eq(1).should("have.attr", "aria-label", "second-1");
-      $.dialog().eq(2).should("have.attr", "aria-label", "second-2");
     });
   });
 

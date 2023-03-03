@@ -34,15 +34,18 @@ export function createImperative({
   ) {
     const id = useMemo(nextComponentId, []);
     const store = useContext(Context);
+    const latest = useRef({ id, store });
+    latest.current = { id, store };
 
     useEffect(() => {
       store.upsertComponent(id, { component, defaultProps });
     }, [store, id, component, defaultProps]);
 
-    const latest = useRef({ id, store });
-    latest.current = { id, store };
     useEffect(
-      () => () => latest.current.store.removeComponent(latest.current.id),
+      () => () => {
+        const { id, store } = latest.current;
+        store.markComponentForRemoval(id);
+      },
       []
     );
 
