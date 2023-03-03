@@ -94,6 +94,19 @@ describe("useImperativeComponent", () => {
     $.dialog().eq(0).should("have.attr", "aria-label", "0");
     $.dialog().eq(1).should("have.attr", "aria-label", "1");
   });
+
+  it("can opt out of auto removing instances", () => {
+    const App = createTestApp(
+      createImperative({
+        renderer: outletRenderer(),
+        autoRemoveInstances: false,
+      })
+    );
+    cy.mount(<App />);
+    $.trigger().click();
+    $.resolve().click();
+    $.dialog().should("exist");
+  });
 });
 
 function createTestApp(
