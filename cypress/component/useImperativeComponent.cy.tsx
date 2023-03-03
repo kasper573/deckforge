@@ -86,9 +86,9 @@ describe("useImperativeComponent", () => {
   });
 });
 
-const { Outlet, useComponent } = createImperative(
-  outletRenderer(({ state: { type } }) => type === "pending")
-);
+const { Outlet, useComponent } = createImperative({
+  renderer: outletRenderer(),
+});
 
 function App(props: ComponentProps<typeof Page>) {
   return (

@@ -33,13 +33,20 @@ export class ComponentStore {
     });
   }
 
-  interfaceFor<T extends ComponentEntry>(cid: ComponentId) {
+  interfaceFor<T extends ComponentEntry>(
+    cid: ComponentId,
+    { autoRemoveInstances }: InstanceInterfaceOptions
+  ) {
     const { store } = this;
 
     function trigger<Input>(input: Input, props: Record<string, unknown> = {}) {
       return new Promise<Result<unknown, unknown>>((emitResult) => {
         store.mutate((state) => {
           const iid = nextId();
+          const remove = () =>
+            store.mutate((state) => {
+              delete state[cid].instances[iid];
+            });
           state[cid].instances[iid] = {
             state: { type: "pending" },
             input,
@@ -51,6 +58,9 @@ export class ComponentStore {
                   value,
                 };
               });
+              if (autoRemoveInstances) {
+                remove();
+              }
               emitResult(ok(value));
             },
             reject(error) {
@@ -60,12 +70,12 @@ export class ComponentStore {
                   error,
                 };
               });
+              if (autoRemoveInstances) {
+                remove();
+              }
               emitResult(err(error));
             },
-            remove: () =>
-              store.mutate((state) => {
-                delete state[cid].instances[iid];
-              }),
+            remove,
           };
         });
       });
@@ -92,6 +102,10 @@ export interface InstanceEntry {
   resolve: (value: unknown) => void;
   reject: (error: unknown) => void;
   remove: () => void;
+}
+
+export interface InstanceInterfaceOptions {
+  autoRemoveInstances: boolean;
 }
 
 export type InstanceState =
