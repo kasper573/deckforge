@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types,react/display-name */
 import type { ComponentProps, ComponentType, ReactNode } from "react";
-import { createElement, useRef, useState } from "react";
+import { createElement, useState } from "react";
 
 import type {
   OutletEntry,
@@ -315,13 +315,6 @@ function Dialog({ resolve, reject, remove, input }) {
       <button onClick={() => remove()}>{$.remove.name}</button>
     </div>
   );
-}
-
-function RenderCounter({ name }: { name: string }) {
-  const count = useRef(0);
-  count.current++;
-  return null;
-  //return <div data-testid={name}>{count.current}</div>;
 }
 
 function outletRenderer(
