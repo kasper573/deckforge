@@ -52,7 +52,7 @@ describe("useImperativeComponent", () => {
     $.result().should("have.text", formatResult({ error: "error" }));
   });
 
-  it("resolve removes instance", () => {
+  it("resolve auto removes instance by default", () => {
     const App = createTestApp();
     cy.mount(<App />);
     $.trigger().click();
@@ -60,7 +60,7 @@ describe("useImperativeComponent", () => {
     $.dialog().should("not.exist");
   });
 
-  it("reject removes instance", () => {
+  it("reject auto removes instance by default", () => {
     const App = createTestApp();
     cy.mount(<App />);
     $.trigger().click();
