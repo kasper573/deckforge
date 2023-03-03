@@ -153,6 +153,19 @@ describe("useImperativeComponent", () => {
       $.resolve().click();
       $.dialog().should("exist");
     });
+
+    it("rejecting while opted out does not remove instance", () => {
+      const App = createTestApp(
+        createImperative({
+          renderer: outletRenderer(),
+          autoRemoveInstances: false,
+        })
+      );
+      cy.mount(<App />);
+      $.trigger().click();
+      $.reject().click();
+      $.dialog().should("exist");
+    });
   });
 });
 
