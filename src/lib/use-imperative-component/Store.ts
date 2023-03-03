@@ -9,7 +9,7 @@ export class Store<State> {
 
   constructor(private _state: State) {}
 
-  mutate(mutator: (currentState: State) => void | State) {
+  mutate(mutator: (currentState: State) => void | State): void {
     const previousState = this._state;
     const updatedState = produce(this._state, mutator);
     this._state = updatedState;

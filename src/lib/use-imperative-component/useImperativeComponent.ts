@@ -10,13 +10,13 @@ import {
 } from "react";
 import type {
   ComponentEntry,
-  ComponentStoreState,
+  ComponentState,
   InstanceEntry,
 } from "./ComponentStore";
 import { ComponentStore } from "./ComponentStore";
 
 export type Imperative = ReturnType<typeof createImperative>;
-export type OutletRenderer = ComponentType<ComponentStoreState>;
+export type OutletRenderer = ComponentType<ComponentState>;
 
 export function createImperative(outletRenderer?: OutletRenderer) {
   const Context = createContext<ComponentStore>(new ComponentStore());
@@ -40,7 +40,7 @@ export function createImperativeUsingContext(
 
     useEffect(() => {
       store.upsertComponent(id, { component, defaultProps });
-      return () => store.deleteComponent(id);
+      return () => store.removeComponent(id);
     }, [store, id, component, defaultProps]);
 
     return useMemo(() => store.interfaceFor<T>(id), [store, id]);
@@ -56,22 +56,25 @@ export function createImperativeUsingContext(
   return { Outlet, useComponent, useComponentWith };
 }
 
-export function defaultOutletRenderer(state: ComponentStoreState) {
+export function defaultOutletRenderer(state: ComponentState) {
   const elements = Array.from(generateElements(state));
   return createElement(Fragment, {}, ...elements);
 }
 
 export function* generateElements(
-  { instances, components }: ComponentStoreState,
+  components: ComponentState,
   shouldIncludeInstance = (instance: InstanceEntry) =>
     instance.state.type === "pending"
 ): Generator<JSX.Element> {
-  for (const [componentId, componentInstances] of Object.entries(instances)) {
-    const { component } = components[componentId];
-    for (const [instanceId, instance] of Object.entries(componentInstances)) {
+  for (const [
+    componentId,
+    { component, instances, defaultProps },
+  ] of Object.entries(components)) {
+    for (const [instanceId, instance] of Object.entries(instances)) {
       if (shouldIncludeInstance(instance)) {
         yield createElement(component, {
-          key: instanceId,
+          key: `${componentId}-${instanceId}`,
+          ...defaultProps,
           ...instance.props,
         });
       }

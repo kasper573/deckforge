@@ -3,22 +3,22 @@ import { useRef, useState } from "react";
 import { createImperative } from "../../src/lib/use-imperative-component/useImperativeComponent";
 
 describe("useImperativeComponent", () => {
-  it("mounting component does not cy.mount its element", () => {
+  it("mount does not create instance", () => {
     cy.mount(<App />);
     $.dialog.target.should("not.exist");
   });
 
-  it("triggering component cy.mounts one element", () => {
+  it("trigger creates instance", () => {
     cy.mount(<App />);
     $.trigger.target.click();
     $.dialog.target.should("exist");
   });
 
-  it("resolving returns a value", () => {
+  it("resolve returns value", () => {
     cy.mount(<App />);
     $.trigger.target.click();
     $.dialog.target.within(() => {
-      $.input.target.type("value");
+      $.response.target.type("value");
       $.resolve.target.click();
     });
     $.result.target.should(
@@ -27,11 +27,11 @@ describe("useImperativeComponent", () => {
     );
   });
 
-  it("rejecting returns an error", () => {
+  it("reject returns error", () => {
     cy.mount(<App />);
     $.trigger.target.click();
     $.dialog.target.within(() => {
-      $.input.target.type("error");
+      $.response.target.type("error");
       $.reject.target.click();
     });
     $.result.target.should(
@@ -40,14 +40,14 @@ describe("useImperativeComponent", () => {
     );
   });
 
-  it("resolving removes the element", () => {
+  it("resolve removes instance", () => {
     cy.mount(<App />);
     $.trigger.target.click();
     $.resolve.target.click();
     $.dialog.target.should("not.exist");
   });
 
-  it("rejecting removes the element", () => {
+  it("reject removes instance", () => {
     cy.mount(<App />);
     $.trigger.target.click();
     $.reject.target.click();
@@ -60,7 +60,7 @@ const { Outlet, useComponent } = createImperative();
 function App(props: ComponentProps<typeof Page>) {
   return (
     <>
-      <RenderCounter name={$.appRC.label} />
+      <RenderCounter name={$.appRC.name} />
       <Page {...props} />
       <Outlet />
     </>
@@ -72,8 +72,8 @@ function Page({ input }: { input?: () => unknown }) {
   const trigger = useComponent(Dialog);
   return (
     <>
-      <RenderCounter name={$.pageRC.label} />
-      {result && <div data-testid="result">{formatResult(result)}</div>}
+      <RenderCounter name={$.pageRC.name} />
+      {result && <div data-testid={$.result.name}>{formatResult(result)}</div>}
       <button onClick={() => trigger(input?.()).then(setResult)}>
         trigger
       </button>
@@ -85,14 +85,14 @@ function Dialog({ resolve, reject, input }) {
   const [response, setResponse] = useState("");
   return (
     <div role="dialog">
-      <div data-testid={$.input.label}>{input}</div>
+      <div data-testid={$.input.name}>{input}</div>
       <input
-        name={$.response.label}
+        aria-label={$.response.name}
         value={response}
         onChange={(e) => setResponse(e.target.value)}
       />
-      <button onClick={() => resolve(response)}>{$.resolve.label}</button>
-      <button onClick={() => reject(response)}>{$.reject.label}</button>
+      <button onClick={() => resolve(response)}>{$.resolve.name}</button>
+      <button onClick={() => reject(response)}>{$.reject.name}</button>
     </div>
   );
 }
@@ -122,14 +122,14 @@ function roleByName<Role extends string>(role: Role) {
   return (name: string) => cy.findByRole(role, { name });
 }
 
-function el<Label extends string, Selection>(
-  label: Label,
-  select: (label: Label) => Selection
+function el<Name extends string, Selection>(
+  name: Name,
+  select: (name: Name) => Selection
 ) {
   return {
-    label,
+    name,
     get target() {
-      return select(label);
+      return select(name);
     },
   };
 }

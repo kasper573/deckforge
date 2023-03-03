@@ -3,12 +3,7 @@ import type { StoreListener } from "./Store";
 import { Store } from "./Store";
 
 export class ComponentStore {
-  constructor(
-    private store = new Store<ComponentStoreState>({
-      components: {},
-      instances: {},
-    })
-  ) {
+  constructor(private store = new Store<ComponentState>({})) {
     this.subscribe = this.store.subscribe.bind(this.store);
   }
 
@@ -16,32 +11,60 @@ export class ComponentStore {
     return this.store.state;
   }
 
-  subscribe(listener: StoreListener<ComponentStoreState>) {
+  subscribe(listener: StoreListener<ComponentState>) {
     return this.store.subscribe(listener);
   }
 
-  upsertComponent(id: ComponentId, entry: ComponentEntry) {
-    return this.store.mutate(({ components }) => {
-      components[id] = entry;
+  upsertComponent(id: ComponentId, entry: Omit<ComponentEntry, "instances">) {
+    return this.store.mutate((components) => {
+      if (!components[id]) {
+        components[id] = { instances: {}, ...entry };
+      } else {
+        Object.assign(components[id], entry);
+      }
     });
   }
 
-  deleteComponent(id: ComponentId) {
-    return this.store.mutate(({ components }) => {
+  removeComponent(id: ComponentId) {
+    return this.store.mutate((components) => {
       delete components[id];
     });
   }
 
-  interfaceFor<T extends ComponentEntry>(componentId: ComponentId) {
+  interfaceFor<T extends ComponentEntry>(cid: ComponentId) {
     const { store } = this;
 
-    function trigger<Input>(input: Input) {
-      return new Promise((resolve, reject) => {
-        store.mutate(({ components, instances }) => {
-          const entry = components[componentId];
-          if (!entry) {
-            throw new Error(`No component with id ${componentId} found`);
-          }
+    function trigger<Input>(input: Input, props: Record<string, unknown> = {}) {
+      return new Promise((resolvePromise, rejectPromise) => {
+        store.mutate((state) => {
+          const iid = nextId();
+          state[cid].instances[iid] = {
+            state: { type: "pending" },
+            input,
+            props,
+            resolve: (value) => {
+              store.mutate((components) => {
+                components[cid].instances[iid].state = {
+                  type: "resolved",
+                  value,
+                };
+              });
+              resolvePromise(value);
+            },
+            reject: (error) => {
+              store.mutate((state) => {
+                state[cid].instances[iid].state = {
+                  type: "rejected",
+                  error,
+                };
+              });
+              rejectPromise(error);
+            },
+            remove: () =>
+              store.mutate((state) => {
+                delete state[cid].instances[iid];
+              }),
+          };
         });
       });
     }
@@ -50,15 +73,13 @@ export class ComponentStore {
   }
 }
 
-export type ComponentStoreState = {
-  components: Record<ComponentId, ComponentEntry>;
-  instances: Record<ComponentId, Record<InstanceId, InstanceEntry>>;
-};
+export type ComponentState = Record<ComponentId, ComponentEntry>;
 
 export type ComponentId = string;
 export interface ComponentEntry {
   component: ComponentType;
   defaultProps: Record<string, unknown>;
+  instances: Record<InstanceId, InstanceEntry>;
 }
 
 export type InstanceId = string;
@@ -66,6 +87,9 @@ export interface InstanceEntry {
   input: unknown;
   state: InstanceState;
   props: Record<string, unknown>;
+  resolve: (value: unknown) => void;
+  reject: (error: unknown) => void;
+  remove: () => void;
 }
 export type InstanceState =
   | { type: "pending" }
