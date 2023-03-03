@@ -75,6 +75,15 @@ describe("useImperativeComponent", () => {
     $.dialog("0").should("exist");
     $.dialog("1").should("exist");
   });
+
+  it("instances are rendered in the order they are created", () => {
+    let count = 0;
+    cy.mount(<App input={() => count++} />);
+    $.trigger().click();
+    $.trigger().click();
+    $.dialog().eq(0).should("have.attr", "aria-label", "0");
+    $.dialog().eq(1).should("have.attr", "aria-label", "1");
+  });
 });
 
 const { Outlet, useComponent } = createImperative(
