@@ -31,11 +31,60 @@ describe("useImperativeComponent", () => {
       $.dialog("foo").should("exist");
     });
 
+    it("instance component can be changed", () => {
+      const imp = createImperative({ renderer: ImperativeOutlet });
+      cy.mount(<App />);
+      cy.findByText("trigger").click();
+      cy.findByTestId("component1").contains("input");
+
+      cy.findByText("change").click();
+      cy.findByTestId("component1").should("not.exist");
+      cy.findByTestId("component2").contains("input");
+
+      function App() {
+        const [component, setComponent] = useState(() => Component1);
+        const trigger = imp.useComponent(component);
+        return (
+          <>
+            <button onClick={() => trigger("input")}>trigger</button>
+            <button onClick={() => setComponent(() => Component2)}>
+              change
+            </button>
+            <imp.Outlet />
+          </>
+        );
+      }
+
+      function Component1({ input }) {
+        return <div data-testid="component1">{input}</div>;
+      }
+      function Component2({ input }) {
+        return <div data-testid="component2">{input}</div>;
+      }
+    });
+
     describe("props", () => {
       it("instance can use default props", () => {
         cy.mount(<App defaultProps={{ prop: "default" }} />);
         $.trigger().click();
         $.prop().should("have.text", "default");
+      });
+
+      it("instance can receive changed default props", () => {
+        cy.mount(<AppWithChanges />);
+        $.trigger().click();
+        cy.findByText("change").click();
+        $.prop().should("have.text", "changed");
+
+        function AppWithChanges() {
+          const [prop, setProp] = useState("default");
+          return (
+            <>
+              <App defaultProps={{ prop }} />
+              <button onClick={() => setProp("changed")}>change</button>
+            </>
+          );
+        }
       });
 
       it("instance can use own props", () => {
