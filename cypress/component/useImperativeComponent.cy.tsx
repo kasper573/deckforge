@@ -7,6 +7,7 @@ import type {
   OutletRenderer,
 } from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createImperative } from "../../src/lib/use-imperative-component/useImperativeComponent";
+import { createFunctor } from "../../src/lib/functors";
 
 describe("useImperativeComponent", () => {
   it("mount does not create instance", () => {
@@ -123,7 +124,7 @@ function createTestApp(
   return function App(props: ComponentProps<typeof Page>) {
     return (
       <>
-        <RenderCounter name={$.appRC.id} />
+        <RenderCounter name={$.appRC.name} />
         <Page {...props} />
         <Outlet />
       </>
@@ -135,8 +136,10 @@ function createTestApp(
     const trigger = useComponent(Dialog);
     return (
       <>
-        <RenderCounter name={$.pageRC.id} />
-        {result && <div data-testid={$.result.id}>{formatResult(result)}</div>}
+        <RenderCounter name={$.pageRC.name} />
+        {result && (
+          <div data-testid={$.result.name}>{formatResult(result)}</div>
+        )}
         <button onClick={() => trigger(input?.()).then(setResult)}>
           trigger
         </button>
@@ -150,13 +153,13 @@ function Dialog({ resolve, reject, remove, input }) {
   return (
     <div role="dialog" aria-label={input}>
       <input
-        aria-label={$.response.id}
+        aria-label={$.response.name}
         value={response}
         onChange={(e) => setResponse(e.target.value)}
       />
-      <button onClick={() => resolve(response)}>{$.resolve.id}</button>
-      <button onClick={() => reject(response)}>{$.reject.id}</button>
-      <button onClick={() => remove()}>{$.remove.id}</button>
+      <button onClick={() => resolve(response)}>{$.resolve.name}</button>
+      <button onClick={() => reject(response)}>{$.reject.name}</button>
+      <button onClick={() => remove()}>{$.remove.name}</button>
     </div>
   );
 }
@@ -190,33 +193,19 @@ function outletRenderer(
 const formatResult = (r: unknown) => JSON.stringify(r);
 
 const $ = {
-  dialog: el("dialog", (role, name) => cy.findAllByRole(role, { name })),
-  resolve: el("resolve", roleByName("button")),
-  reject: el("reject", roleByName("button")),
-  remove: el("remove", roleByName("button")),
-  response: el("input", roleByName("textbox")),
-  result: el("result", (id) => cy.findByTestId(id)),
-  trigger: el("trigger", roleByName("button")),
-  appRC: el("app-render-count", (id) => cy.findAllByTestId(id)),
-  pageRC: el("page-render-count", (id) => cy.findAllByTestId(id)),
+  dialog: createFunctor("dialog", (role, name?: string) =>
+    cy.findAllByRole(role, { name })
+  ),
+  resolve: createFunctor("resolve", roleByName("button")),
+  reject: createFunctor("reject", roleByName("button")),
+  remove: createFunctor("remove", roleByName("button")),
+  response: createFunctor("input", roleByName("textbox")),
+  result: createFunctor("result", (id) => cy.findByTestId(id)),
+  trigger: createFunctor("trigger", roleByName("button")),
+  appRC: createFunctor("app-render-count", (id) => cy.findAllByTestId(id)),
+  pageRC: createFunctor("page-render-count", (id) => cy.findAllByTestId(id)),
 };
 
 function roleByName<Role extends string>(role: Role) {
   return (name: string) => cy.findAllByRole(role, { name });
-}
-
-function el<Id extends string, Filter extends string, Selection>(
-  id: Id,
-  select: (id: Id, filter?: Filter) => Selection
-): Selector<Id, Filter, Selection> {
-  function fn(filter?: Filter) {
-    return select(id, filter);
-  }
-  fn.id = id;
-  return fn;
-}
-
-interface Selector<Id, Filter, Selection> {
-  readonly id: Id;
-  (filter?: Filter): Selection;
 }
