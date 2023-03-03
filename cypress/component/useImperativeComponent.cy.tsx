@@ -151,6 +151,19 @@ describe("useImperativeComponent", () => {
       $.dialog().eq(1).should("have.attr", "aria-label", "second-1");
       $.dialog().eq(2).should("have.attr", "aria-label", "second-2");
     });
+
+    it("unmounting while opted out does not remove instances", () => {
+      const App = createTestApp(
+        createImperative({
+          renderer: outletRenderer(),
+          autoRemoveComponents: false,
+        })
+      );
+      cy.mount(<App />);
+      $.trigger().click();
+      $.unmount().click();
+      $.dialog().should("exist");
+    });
   });
 
   describe("auto removal of instances", () => {
