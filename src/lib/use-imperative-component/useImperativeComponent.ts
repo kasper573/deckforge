@@ -21,8 +21,9 @@ import { ComponentStore } from "./ComponentStore";
 export function createImperative({
   renderer,
   autoRemoveInstances = true,
+  defaultStore = new ComponentStore(),
 }: CreateImperativeOptions) {
-  const Context = createContext(new ComponentStore());
+  const Context = createContext(defaultStore);
 
   function useComponent<T extends ComponentEntry>(component: T["component"]) {
     return useComponentWith(component, empty);
@@ -60,7 +61,7 @@ export function createImperative({
     const [state, setState] = useState(store.state);
     const entries = useMemo(() => outletEntries(state), [state]);
     useEffect(() => store.subscribe(setState), [store]);
-    return createElement(renderer, { entries, store });
+    return createElement(renderer, { entries, state });
   }
 
   return { Context, Outlet, useComponent, useComponentWith };
@@ -86,13 +87,14 @@ const empty = {} as const;
 export interface CreateImperativeOptions
   extends Partial<InstanceInterfaceOptions> {
   renderer: OutletRenderer;
+  defaultStore?: ComponentStore;
 }
 
 export type Imperative = ReturnType<typeof createImperative>;
 
 export type OutletRenderer = ComponentType<{
   entries: OutletEntry[];
-  store: ComponentStore;
+  state: ComponentStoreState;
 }>;
 
 export type OutletEntryKey = `${ComponentId}-${InstanceId}`;
