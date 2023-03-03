@@ -41,7 +41,7 @@ export class ComponentStore {
         component.markedForRemoval &&
         !Object.keys(component.instances).length
       ) {
-        delete components[iid];
+        delete components[cid];
       }
     });
   }

@@ -5,6 +5,7 @@ import { createElement, useState } from "react";
 import type { OutletRenderer } from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createImperative } from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createNamedFunctions } from "../../src/lib/namedFunctions";
+import { ComponentStore } from "../../src/lib/use-imperative-component/ComponentStore";
 
 describe("useImperativeComponent", () => {
   let App: ReturnType<typeof createTestApp>;
@@ -77,13 +78,52 @@ describe("useImperativeComponent", () => {
   });
 
   describe("persisted instances", () => {
-    it("unmounting a lone component with pending instances does not remove the instances", () => {
+    it("unmounting a component with pending instances does not remove its instances", () => {
       cy.mount(<App />);
       $.trigger().click();
       $.trigger().click();
       $.trigger().click();
       $.unmount().click();
       $.dialog().should("have.length", 3);
+    });
+
+    it("removes unmounted component from state once the final related instance is removed", () => {
+      const store = new ComponentStore();
+      App = createTestApp(
+        createImperative({
+          defaultStore: store,
+          renderer: ImperativeOutlet,
+        })
+      );
+
+      cy.mount(<App />);
+      $.trigger().click();
+      $.trigger().click();
+      $.trigger().click();
+
+      $.unmount().click();
+      $.dialog()
+        .should("have.length", 3)
+        .then(() => expectComponentCount(1));
+
+      $.remove().first().click();
+      $.dialog()
+        .should("have.length", 2)
+        .then(() => expectComponentCount(1));
+
+      $.remove().first().click();
+      $.dialog()
+        .should("have.length", 1)
+        .then(() => expectComponentCount(1));
+
+      $.remove().first().click();
+      $.dialog()
+        .should("have.length", 0)
+        .then(() => expectComponentCount(0));
+
+      function expectComponentCount(n: number) {
+        expect(Object.keys(store.state).length).to.equal(n);
+      }
     });
   });
 
