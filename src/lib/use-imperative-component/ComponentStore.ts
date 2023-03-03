@@ -46,12 +46,6 @@ export class ComponentStore {
     });
   }
 
-  setInstanceState(cid: ComponentId, iid: InstanceId, state: InstanceState) {
-    return this.store.mutate((components) => {
-      components[cid].instances[iid].state = state;
-    });
-  }
-
   interfaceFor<T extends ComponentEntry>(
     cid: ComponentId,
     { autoRemoveInstances }: InstanceInterfaceOptions
@@ -66,17 +60,27 @@ export class ComponentStore {
             input,
             props,
             resolve: (value) => {
-              this.setInstanceState(cid, iid, { type: "resolved", value });
-              if (autoRemoveInstances) {
-                remove();
-              }
+              this.store.mutate((components) => {
+                components[cid].instances[iid].state = {
+                  type: "resolved",
+                  value,
+                };
+                if (autoRemoveInstances) {
+                  remove();
+                }
+              });
               emitResult(ok(value));
             },
             reject: (error) => {
-              this.setInstanceState(cid, iid, { type: "rejected", error });
-              if (autoRemoveInstances) {
-                remove();
-              }
+              this.store.mutate((components) => {
+                components[cid].instances[iid].state = {
+                  type: "rejected",
+                  error,
+                };
+                if (autoRemoveInstances) {
+                  remove();
+                }
+              });
               emitResult(err(error));
             },
             remove,
