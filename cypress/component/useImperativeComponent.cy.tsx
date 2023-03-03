@@ -5,47 +5,69 @@ import { createImperative } from "../../src/lib/use-imperative-component/useImpe
 describe("useImperativeComponent", () => {
   it("mount does not create instance", () => {
     cy.mount(<App />);
-    $.dialog.target.should("not.exist");
+    $.dialog().should("not.exist");
   });
 
   it("trigger creates instance", () => {
     cy.mount(<App />);
-    $.trigger.target.click();
-    $.dialog.target.should("exist");
+    $.trigger().click();
+    $.dialog().should("exist");
+  });
+
+  it("instance can be given input", () => {
+    cy.mount(<App input={() => "foo"} />);
+    $.trigger().click();
+    $.dialog("foo").should("exist");
   });
 
   it("resolve returns value", () => {
     cy.mount(<App />);
-    $.trigger.target.click();
-    $.dialog.target.within(() => {
-      $.response.target.type("value");
-      $.resolve.target.click();
+    $.trigger().click();
+    $.dialog().within(() => {
+      $.response().type("value");
+      $.resolve().click();
     });
-    $.result.target.should("have.text", formatResult({ value: "value" }));
+    $.result().should("have.text", formatResult({ value: "value" }));
   });
 
   it("reject returns error", () => {
     cy.mount(<App />);
-    $.trigger.target.click();
-    $.dialog.target.within(() => {
-      $.response.target.type("error");
-      $.reject.target.click();
+    $.trigger().click();
+    $.dialog().within(() => {
+      $.response().type("error");
+      $.reject().click();
     });
-    $.result.target.should("have.text", formatResult({ error: "error" }));
+    $.result().should("have.text", formatResult({ error: "error" }));
   });
 
   it("resolve removes instance", () => {
     cy.mount(<App />);
-    $.trigger.target.click();
-    $.resolve.target.click();
-    $.dialog.target.should("not.exist");
+    $.trigger().click();
+    $.resolve().click();
+    $.dialog().should("not.exist");
   });
 
   it("reject removes instance", () => {
     cy.mount(<App />);
-    $.trigger.target.click();
-    $.reject.target.click();
-    $.dialog.target.should("not.exist");
+    $.trigger().click();
+    $.reject().click();
+    $.dialog().should("not.exist");
+  });
+
+  it("can have multiple instances", () => {
+    cy.mount(<App />);
+    $.trigger().click();
+    $.trigger().click();
+    $.dialog().should("have.length", 2);
+  });
+
+  it("multiple instances can have separate input", () => {
+    let count = 0;
+    cy.mount(<App input={() => count++} />);
+    $.trigger().click();
+    $.trigger().click();
+    $.dialog("0").should("exist");
+    $.dialog("1").should("exist");
   });
 });
 
@@ -54,7 +76,7 @@ const { Outlet, useComponent } = createImperative();
 function App(props: ComponentProps<typeof Page>) {
   return (
     <>
-      <RenderCounter name={$.appRC.name} />
+      <RenderCounter name={$.appRC.id} />
       <Page {...props} />
       <Outlet />
     </>
@@ -66,8 +88,8 @@ function Page({ input }: { input?: () => unknown }) {
   const trigger = useComponent(Dialog);
   return (
     <>
-      <RenderCounter name={$.pageRC.name} />
-      {result && <div data-testid={$.result.name}>{formatResult(result)}</div>}
+      <RenderCounter name={$.pageRC.id} />
+      {result && <div data-testid={$.result.id}>{formatResult(result)}</div>}
       <button onClick={() => trigger(input?.()).then(setResult)}>
         trigger
       </button>
@@ -78,15 +100,14 @@ function Page({ input }: { input?: () => unknown }) {
 function Dialog({ resolve, reject, input }) {
   const [response, setResponse] = useState("");
   return (
-    <div role="dialog">
-      <div data-testid={$.input.name}>{input}</div>
+    <div role="dialog" aria-label={input}>
       <input
-        aria-label={$.response.name}
+        aria-label={$.response.id}
         value={response}
         onChange={(e) => setResponse(e.target.value)}
       />
-      <button onClick={() => resolve(response)}>{$.resolve.name}</button>
-      <button onClick={() => reject(response)}>{$.reject.name}</button>
+      <button onClick={() => resolve(response)}>{$.resolve.id}</button>
+      <button onClick={() => reject(response)}>{$.reject.id}</button>
     </div>
   );
 }
@@ -101,29 +122,32 @@ function RenderCounter({ name }: { name: string }) {
 const formatResult = (r: unknown) => JSON.stringify(r);
 
 const $ = {
-  dialog: el("dialog", (role) => cy.findByRole(role)),
+  dialog: el("dialog", (role, name) => cy.findAllByRole(role, { name })),
   resolve: el("resolve", roleByName("button")),
   reject: el("reject", roleByName("button")),
-  input: el("input", (id) => cy.findByTestId(id)),
   response: el("input", roleByName("textbox")),
   result: el("result", (id) => cy.findByTestId(id)),
   trigger: el("trigger", roleByName("button")),
-  appRC: el("app-render-count", (id) => cy.findByTestId(id)),
-  pageRC: el("page-render-count", (id) => cy.findByTestId(id)),
+  appRC: el("app-render-count", (id) => cy.findAllByTestId(id)),
+  pageRC: el("page-render-count", (id) => cy.findAllByTestId(id)),
 };
 
 function roleByName<Role extends string>(role: Role) {
-  return (name: string) => cy.findByRole(role, { name });
+  return (name: string) => cy.findAllByRole(role, { name });
 }
 
-function el<Name extends string, Selection>(
-  name: Name,
-  select: (name: Name) => Selection
-) {
-  return {
-    name,
-    get target() {
-      return select(name);
-    },
-  };
+function el<Id extends string, Filter extends string, Selection>(
+  id: Id,
+  select: (id: Id, filter?: Filter) => Selection
+): Selector<Id, Filter, Selection> {
+  function fn(filter?: Filter) {
+    return select(id, filter);
+  }
+  fn.id = id;
+  return fn;
+}
+
+interface Selector<Id, Filter, Selection> {
+  readonly id: Id;
+  (filter?: Filter): Selection;
 }
