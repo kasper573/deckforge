@@ -1,5 +1,11 @@
+/* eslint-disable react/prop-types,react/display-name */
 import type { ComponentProps } from "react";
 import { createElement, useRef, useState } from "react";
+
+import type {
+  OutletEntry,
+  OutletRenderer,
+} from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createImperative } from "../../src/lib/use-imperative-component/useImperativeComponent";
 
 describe("useImperativeComponent", () => {
@@ -71,20 +77,9 @@ describe("useImperativeComponent", () => {
   });
 });
 
-const { Outlet, useComponent } = createImperative(({ entries }) => (
-  <>
-    {entries.map(
-      ({ component, defaultProps, props, state, key, ...builtins }) =>
-        state.type === "pending" &&
-        createElement(component, {
-          key,
-          ...defaultProps,
-          ...props,
-          ...builtins,
-        })
-    )}
-  </>
-));
+const { Outlet, useComponent } = createImperative(
+  outletRenderer(({ state: { type } }) => type === "pending")
+);
 
 function App(props: ComponentProps<typeof Page>) {
   return (
@@ -130,6 +125,25 @@ function RenderCounter({ name }: { name: string }) {
   count.current++;
   return null;
   //return <div data-testid={name}>{count.current}</div>;
+}
+
+function outletRenderer(
+  filterPredicate: (entry: OutletEntry) => boolean = () => true
+): OutletRenderer {
+  return ({ entries }) => (
+    <>
+      {entries
+        .filter(filterPredicate)
+        .map(({ component, defaultProps, props, state, key, ...builtins }) =>
+          createElement(component, {
+            key,
+            ...defaultProps,
+            ...props,
+            ...builtins,
+          })
+        )}
+    </>
+  );
 }
 
 const formatResult = (r: unknown) => JSON.stringify(r);
