@@ -82,26 +82,6 @@ describe("useImperativeComponent", () => {
     });
   });
 
-  describe("manual removal of instances", () => {
-    it("can manually remove instance", () => {
-      const App = createTestApp();
-      cy.mount(<App />);
-      $.trigger().click();
-      $.remove().click();
-      $.dialog().should("not.exist");
-    });
-
-    it("manually removing one of many instances removes the right instance", () => {
-      let count = 0;
-      const App = createTestApp();
-      cy.mount(<App input={() => count++} />);
-      $.trigger().click();
-      $.trigger().click();
-      $.dialog("0").within(() => $.remove().click());
-      $.dialog("1").should("exist");
-    });
-  });
-
   describe("auto removal of instances", () => {
     let App: ReturnType<typeof createTestApp>;
     beforeEach(() => {
@@ -169,6 +149,26 @@ describe("useImperativeComponent", () => {
       $.trigger().click();
       $.reject().click();
       $.dialog().should("exist");
+    });
+  });
+
+  describe("manual removal of instances", () => {
+    it("can manually remove instance", () => {
+      const App = createTestApp();
+      cy.mount(<App />);
+      $.trigger().click();
+      $.remove().click();
+      $.dialog().should("not.exist");
+    });
+
+    it("manually removing one of many instances removes the right instance", () => {
+      let count = 0;
+      const App = createTestApp();
+      cy.mount(<App input={() => count++} />);
+      $.trigger().click();
+      $.trigger().click();
+      $.dialog("0").within(() => $.remove().click());
+      $.dialog("1").should("exist");
     });
   });
 });
