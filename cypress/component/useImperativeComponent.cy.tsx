@@ -10,23 +10,27 @@ import { createImperative } from "../../src/lib/use-imperative-component/useImpe
 
 describe("useImperativeComponent", () => {
   it("mount does not create instance", () => {
+    const App = createTestApp();
     cy.mount(<App />);
     $.dialog().should("not.exist");
   });
 
   it("trigger creates instance", () => {
+    const App = createTestApp();
     cy.mount(<App />);
     $.trigger().click();
     $.dialog().should("exist");
   });
 
   it("instance can be given input", () => {
+    const App = createTestApp();
     cy.mount(<App input={() => "foo"} />);
     $.trigger().click();
     $.dialog("foo").should("exist");
   });
 
   it("resolve returns value", () => {
+    const App = createTestApp();
     cy.mount(<App />);
     $.trigger().click();
     $.dialog().within(() => {
@@ -37,6 +41,7 @@ describe("useImperativeComponent", () => {
   });
 
   it("reject returns error", () => {
+    const App = createTestApp();
     cy.mount(<App />);
     $.trigger().click();
     $.dialog().within(() => {
@@ -47,6 +52,7 @@ describe("useImperativeComponent", () => {
   });
 
   it("resolve removes instance", () => {
+    const App = createTestApp();
     cy.mount(<App />);
     $.trigger().click();
     $.resolve().click();
@@ -54,6 +60,7 @@ describe("useImperativeComponent", () => {
   });
 
   it("reject removes instance", () => {
+    const App = createTestApp();
     cy.mount(<App />);
     $.trigger().click();
     $.reject().click();
@@ -61,6 +68,7 @@ describe("useImperativeComponent", () => {
   });
 
   it("can have multiple instances", () => {
+    const App = createTestApp();
     cy.mount(<App />);
     $.trigger().click();
     $.trigger().click();
@@ -69,6 +77,7 @@ describe("useImperativeComponent", () => {
 
   it("multiple instances can have separate input", () => {
     let count = 0;
+    const App = createTestApp();
     cy.mount(<App input={() => count++} />);
     $.trigger().click();
     $.trigger().click();
@@ -78,6 +87,7 @@ describe("useImperativeComponent", () => {
 
   it("instances are rendered in the order they are created", () => {
     let count = 0;
+    const App = createTestApp();
     cy.mount(<App input={() => count++} />);
     $.trigger().click();
     $.trigger().click();
@@ -86,32 +96,32 @@ describe("useImperativeComponent", () => {
   });
 });
 
-const { Outlet, useComponent } = createImperative({
-  renderer: outletRenderer(),
-});
+function createTestApp(
+  { Outlet, useComponent } = createImperative({ renderer: outletRenderer() })
+) {
+  return function App(props: ComponentProps<typeof Page>) {
+    return (
+      <>
+        <RenderCounter name={$.appRC.id} />
+        <Page {...props} />
+        <Outlet />
+      </>
+    );
+  };
 
-function App(props: ComponentProps<typeof Page>) {
-  return (
-    <>
-      <RenderCounter name={$.appRC.id} />
-      <Page {...props} />
-      <Outlet />
-    </>
-  );
-}
-
-function Page({ input }: { input?: () => unknown }) {
-  const [result, setResult] = useState();
-  const trigger = useComponent(Dialog);
-  return (
-    <>
-      <RenderCounter name={$.pageRC.id} />
-      {result && <div data-testid={$.result.id}>{formatResult(result)}</div>}
-      <button onClick={() => trigger(input?.()).then(setResult)}>
-        trigger
-      </button>
-    </>
-  );
+  function Page({ input }: { input?: () => unknown }) {
+    const [result, setResult] = useState();
+    const trigger = useComponent(Dialog);
+    return (
+      <>
+        <RenderCounter name={$.pageRC.id} />
+        {result && <div data-testid={$.result.id}>{formatResult(result)}</div>}
+        <button onClick={() => trigger(input?.()).then(setResult)}>
+          trigger
+        </button>
+      </>
+    );
+  }
 }
 
 function Dialog({ resolve, reject, input }) {
