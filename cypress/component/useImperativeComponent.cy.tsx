@@ -31,11 +31,28 @@ describe("useImperativeComponent", () => {
       $.dialog("foo").should("exist");
     });
 
-    it("instance can use default props", () => {
-      cy.mount(<App input={() => "foo"} defaultProps={{ prop: "bar" }} />);
-      $.trigger().click();
-      $.dialog("foo").within(() => {
-        $.prop().should("have.text", "bar");
+    describe("props", () => {
+      it("instance can use default props", () => {
+        cy.mount(<App defaultProps={{ prop: "default" }} />);
+        $.trigger().click();
+        $.prop().should("have.text", "default");
+      });
+
+      it("instance can use own props", () => {
+        cy.mount(<App props={() => ({ prop: "own" })} />);
+        $.trigger().click();
+        $.prop().should("have.text", "own");
+      });
+
+      it("instance own props override default props", () => {
+        cy.mount(
+          <App
+            props={() => ({ prop: "own" })}
+            defaultProps={{ prop: "default" }}
+          />
+        );
+        $.trigger().click();
+        $.prop().should("have.text", "own");
       });
     });
 
