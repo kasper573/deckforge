@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { useRef, useState } from "react";
+import { createElement, useRef, useState } from "react";
 import { createImperative } from "../../src/lib/use-imperative-component/useImperativeComponent";
 
 describe("useImperativeComponent", () => {
@@ -71,7 +71,20 @@ describe("useImperativeComponent", () => {
   });
 });
 
-const { Outlet, useComponent } = createImperative();
+const { Outlet, useComponent } = createImperative(({ entries }) => (
+  <>
+    {entries.map(
+      ({ component, defaultProps, props, state, key, ...builtins }) =>
+        state.type === "pending" &&
+        createElement(component, {
+          key,
+          ...defaultProps,
+          ...props,
+          ...builtins,
+        })
+    )}
+  </>
+));
 
 function App(props: ComponentProps<typeof Page>) {
   return (

@@ -1,8 +1,7 @@
-import type { ComponentType, Context } from "react";
+import type { ComponentType } from "react";
 import {
   createContext,
   createElement,
-  Fragment,
   useContext,
   useEffect,
   useMemo,
@@ -10,23 +9,16 @@ import {
 } from "react";
 import type {
   ComponentEntry,
-  ComponentState,
+  ComponentId,
+  ComponentStoreState,
   InstanceEntry,
+  InstanceId,
 } from "./ComponentStore";
 import { ComponentStore } from "./ComponentStore";
 
-export type Imperative = ReturnType<typeof createImperative>;
-export type OutletRenderer = ComponentType<ComponentState>;
+export function createImperative(outletRenderer: OutletRenderer) {
+  const Context = createContext(new ComponentStore());
 
-export function createImperative(outletRenderer?: OutletRenderer) {
-  const Context = createContext<ComponentStore>(new ComponentStore());
-  return { Context, ...createImperativeUsingContext(Context, outletRenderer) };
-}
-
-export function createImperativeUsingContext(
-  storeContext: Context<ComponentStore>,
-  outletRenderer: OutletRenderer = defaultOutletRenderer
-) {
   function useComponent<T extends ComponentEntry>(component: T["component"]) {
     return useComponentWith(component, empty);
   }
@@ -36,7 +28,7 @@ export function createImperativeUsingContext(
     defaultProps: T["defaultProps"]
   ) {
     const id = useMemo(nextComponentId, []);
-    const store = useContext(storeContext);
+    const store = useContext(Context);
 
     useEffect(() => {
       store.upsertComponent(id, { component, defaultProps });
@@ -47,44 +39,41 @@ export function createImperativeUsingContext(
   }
 
   function Outlet() {
-    const store = useContext(storeContext);
+    const store = useContext(Context);
     const [state, setState] = useState(store.state);
+    const entries = useMemo(() => outletEntries(state), [state]);
     useEffect(() => store.subscribe(setState), [store]);
-    return createElement(outletRenderer, state);
+    return createElement(outletRenderer, { entries });
   }
 
-  return { Outlet, useComponent, useComponentWith };
+  return { Context, Outlet, useComponent, useComponentWith };
 }
 
-export function defaultOutletRenderer(state: ComponentState) {
-  const elements = Array.from(generateElements(state));
-  return createElement(Fragment, {}, ...elements);
-}
-
-export function* generateElements(
-  components: ComponentState,
-  shouldIncludeInstance = (instance: InstanceEntry) =>
-    instance.state.type === "pending"
-): Generator<JSX.Element> {
-  for (const [
-    componentId,
-    { component, instances, defaultProps },
-  ] of Object.entries(components)) {
-    for (const [instanceId, instance] of Object.entries(instances)) {
-      if (shouldIncludeInstance(instance)) {
-        const { props, ...builtins } = instance;
-        yield createElement(component, {
-          key: `${componentId}-${instanceId}`,
-          ...defaultProps,
-          ...props,
-          ...builtins,
-        });
-      }
-    }
-  }
+function outletEntries(componentEntries: ComponentStoreState): OutletEntry[] {
+  return Object.entries(componentEntries).flatMap(
+    ([componentId, { instances, ...componentEntry }]) =>
+      Object.entries(instances).map(([instanceId, instanceEntry]) => ({
+        key: `${componentId}-${instanceId}`,
+        ...instanceEntry,
+        ...componentEntry,
+        componentId,
+        instanceId,
+      }))
+  );
 }
 
 let componentIdCounter = 0;
 const nextComponentId = () => (componentIdCounter++).toString();
 
 const empty = {} as const;
+
+export type Imperative = ReturnType<typeof createImperative>;
+export type OutletRenderer = ComponentType<{ entries: OutletEntry[] }>;
+export type OutletEntryKey = `${ComponentId}-${InstanceId}`;
+export interface OutletEntry
+  extends InstanceEntry,
+    Omit<ComponentEntry, "instances"> {
+  componentId: ComponentId;
+  instanceId: InstanceId;
+  key: OutletEntryKey;
+}

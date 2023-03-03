@@ -5,7 +5,7 @@ import type { StoreListener } from "./Store";
 import { Store } from "./Store";
 
 export class ComponentStore {
-  constructor(private store = new Store<ComponentState>({})) {
+  constructor(private store = new Store<ComponentStoreState>({})) {
     this.subscribe = this.store.subscribe.bind(this.store);
   }
 
@@ -13,7 +13,7 @@ export class ComponentStore {
     return this.store.state;
   }
 
-  subscribe(listener: StoreListener<ComponentState>) {
+  subscribe(listener: StoreListener<ComponentStoreState>) {
     return this.store.subscribe(listener);
   }
 
@@ -75,7 +75,7 @@ export class ComponentStore {
   }
 }
 
-export type ComponentState = Record<ComponentId, ComponentEntry>;
+export type ComponentStoreState = Record<ComponentId, ComponentEntry>;
 
 export type ComponentId = string;
 export interface ComponentEntry {
@@ -93,6 +93,7 @@ export interface InstanceEntry {
   reject: (error: unknown) => void;
   remove: () => void;
 }
+
 export type InstanceState =
   | { type: "pending" }
   | { type: "resolved"; value: unknown }
