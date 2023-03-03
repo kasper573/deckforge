@@ -44,7 +44,7 @@ export class ComponentStore {
             state: { type: "pending" },
             input,
             props,
-            resolve: (value) => {
+            resolve(value) {
               store.mutate((components) => {
                 components[cid].instances[iid].state = {
                   type: "resolved",
@@ -53,7 +53,7 @@ export class ComponentStore {
               });
               emitResult(ok(value));
             },
-            reject: (error) => {
+            reject(error) {
               store.mutate((state) => {
                 state[cid].instances[iid].state = {
                   type: "rejected",
