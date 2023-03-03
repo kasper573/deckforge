@@ -85,12 +85,7 @@ describe("useImperativeComponent", () => {
   describe("auto removal of components", () => {
     let App: ReturnType<typeof createTestApp>;
     beforeEach(() => {
-      App = createTestApp(
-        createImperative({
-          renderer: outletRenderer(),
-          autoRemoveComponents: true,
-        })
-      );
+      App = createTestApp(createImperative({ renderer: outletRenderer() }));
     });
 
     it("unmounting a lone component removes all its instances", () => {
@@ -150,19 +145,6 @@ describe("useImperativeComponent", () => {
       $.dialog().eq(0).should("have.attr", "aria-label", "second-0");
       $.dialog().eq(1).should("have.attr", "aria-label", "second-1");
       $.dialog().eq(2).should("have.attr", "aria-label", "second-2");
-    });
-
-    it("unmounting while opted out does not remove instances", () => {
-      const App = createTestApp(
-        createImperative({
-          renderer: outletRenderer(),
-          autoRemoveComponents: false,
-        })
-      );
-      cy.mount(<App />);
-      $.trigger().click();
-      $.unmount().click();
-      $.dialog().should("exist");
     });
   });
 

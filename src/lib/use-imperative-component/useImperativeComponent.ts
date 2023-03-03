@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type {
@@ -20,7 +21,6 @@ import { ComponentStore } from "./ComponentStore";
 export function createImperative({
   renderer,
   autoRemoveInstances = true,
-  autoRemoveComponents = true,
 }: CreateImperativeOptions) {
   const Context = createContext(new ComponentStore());
 
@@ -37,10 +37,14 @@ export function createImperative({
 
     useEffect(() => {
       store.upsertComponent(id, { component, defaultProps });
-      if (autoRemoveComponents) {
-        return () => store.removeComponent(id);
-      }
     }, [store, id, component, defaultProps]);
+
+    const latest = useRef({ id, store });
+    latest.current = { id, store };
+    useEffect(
+      () => () => latest.current.store.removeComponent(latest.current.id),
+      []
+    );
 
     return useMemo(
       () => store.interfaceFor<T>(id, { autoRemoveInstances }),
@@ -79,7 +83,6 @@ const empty = {} as const;
 export interface CreateImperativeOptions
   extends Partial<InstanceInterfaceOptions> {
   renderer: OutletRenderer;
-  autoRemoveComponents?: boolean;
 }
 
 export type Imperative = ReturnType<typeof createImperative>;
