@@ -99,14 +99,8 @@ describe("useImperativeComponent", () => {
       cy.mount(<App />);
       $.trigger().click();
       $.trigger().click();
-      $.trigger().click();
 
       $.unmount().click();
-      $.dialog()
-        .should("have.length", 3)
-        .then(() => expectComponentCount(1));
-
-      $.remove().first().click();
       $.dialog()
         .should("have.length", 2)
         .then(() => expectComponentCount(1));

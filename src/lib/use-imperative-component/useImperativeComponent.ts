@@ -4,6 +4,7 @@ import {
   createElement,
   useContext,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -33,7 +34,7 @@ export function createImperative({
     component: T["component"],
     defaultProps: T["defaultProps"]
   ) {
-    const id = useMemo(nextComponentId, []);
+    const id = useId();
     const store = useContext(Context);
     const latest = useRef({ id, store });
     latest.current = { id, store };
@@ -80,8 +81,6 @@ function outletEntries(componentEntries: ComponentStoreState): OutletEntry[] {
   );
 }
 
-let componentIdCounter = 0;
-const nextComponentId = () => (componentIdCounter++).toString();
 const empty = {} as const;
 
 export interface CreateImperativeOptions
