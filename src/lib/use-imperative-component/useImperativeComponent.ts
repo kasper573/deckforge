@@ -26,13 +26,9 @@ export function createImperative({
 }: CreateImperativeOptions) {
   const Context = createContext(defaultStore);
 
-  function useComponent<T extends ComponentEntry>(component: T["component"]) {
-    return useComponentWith(component, empty);
-  }
-
-  function useComponentWith<T extends ComponentEntry>(
+  function useComponent<T extends ComponentEntry>(
     component: T["component"],
-    defaultProps: T["defaultProps"]
+    defaultProps: T["defaultProps"] = empty
   ) {
     const id = useId();
     const store = useContext(Context);
@@ -65,7 +61,7 @@ export function createImperative({
     return createElement(renderer, { entries, state });
   }
 
-  return { Context, Outlet, useComponent, useComponentWith };
+  return { Context, Outlet, useComponent };
 }
 
 function outletEntries(componentEntries: ComponentStoreState): OutletEntry[] {

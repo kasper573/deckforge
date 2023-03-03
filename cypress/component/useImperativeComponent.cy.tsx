@@ -31,6 +31,14 @@ describe("useImperativeComponent", () => {
       $.dialog("foo").should("exist");
     });
 
+    it("instance can use default props", () => {
+      cy.mount(<App input={() => "foo"} defaultProps={{ prop: "bar" }} />);
+      $.trigger().click();
+      $.dialog("foo").within(() => {
+        $.prop().should("have.text", "bar");
+      });
+    });
+
     it("resolve returns value", () => {
       cy.mount(<App />);
       $.trigger().click();
@@ -235,15 +243,23 @@ function createTestApp(
     );
   }
 
-  function HookConsumer({ input }: { input?: () => unknown }) {
+  function HookConsumer({
+    input,
+    props,
+    defaultProps,
+  }: {
+    input?: () => unknown;
+    props?: () => Record<string, unknown>;
+    defaultProps?: Record<string, unknown>;
+  }) {
     const [result, setResult] = useState();
-    const trigger = useComponent(Dialog);
+    const trigger = useComponent(Dialog, defaultProps);
     return (
       <>
         {result && (
           <div data-testid={$.result.name}>{formatResult(result)}</div>
         )}
-        <button onClick={() => trigger(input?.()).then(setResult)}>
+        <button onClick={() => trigger(input?.(), props?.()).then(setResult)}>
           trigger
         </button>
       </>
@@ -251,7 +267,7 @@ function createTestApp(
   }
 }
 
-function Dialog({ resolve, reject, remove, input }) {
+function Dialog({ resolve, reject, remove, input, prop }) {
   const [response, setResponse] = useState("");
   return (
     <div role="dialog" aria-label={input}>
@@ -260,6 +276,7 @@ function Dialog({ resolve, reject, remove, input }) {
         value={response}
         onChange={(e) => setResponse(e.target.value)}
       />
+      <div data-testid={$.prop.name}>{prop}</div>
       <button onClick={() => resolve(response)}>{$.resolve.name}</button>
       <button onClick={() => reject(response)}>{$.reject.name}</button>
       <button onClick={() => remove()}>{$.remove.name}</button>
@@ -294,6 +311,7 @@ const $ = createNamedFunctions()
   .add("response", roleByName("textbox"))
   .add("result", cy.findByTestId)
   .add("trigger", roleByName("button"))
+  .add("prop", cy.findByTestId)
   .build();
 
 function roleByName<Role extends string>(role: Role) {
