@@ -52,22 +52,6 @@ describe("useImperativeComponent", () => {
     $.result().should("have.text", formatResult({ error: "error" }));
   });
 
-  it("resolve auto removes instance by default", () => {
-    const App = createTestApp();
-    cy.mount(<App />);
-    $.trigger().click();
-    $.resolve().click();
-    $.dialog().should("not.exist");
-  });
-
-  it("reject auto removes instance by default", () => {
-    const App = createTestApp();
-    cy.mount(<App />);
-    $.trigger().click();
-    $.reject().click();
-    $.dialog().should("not.exist");
-  });
-
   it("can have multiple instances", () => {
     const App = createTestApp();
     cy.mount(<App />);
@@ -96,19 +80,6 @@ describe("useImperativeComponent", () => {
     $.dialog().eq(1).should("have.attr", "aria-label", "1");
   });
 
-  it("can opt out of auto removing instances", () => {
-    const App = createTestApp(
-      createImperative({
-        renderer: outletRenderer(),
-        autoRemoveInstances: false,
-      })
-    );
-    cy.mount(<App />);
-    $.trigger().click();
-    $.resolve().click();
-    $.dialog().should("exist");
-  });
-
   it("can manually remove instance", () => {
     const App = createTestApp();
     cy.mount(<App />);
@@ -125,6 +96,63 @@ describe("useImperativeComponent", () => {
     $.trigger().click();
     $.dialog("0").within(() => $.remove().click());
     $.dialog("1").should("exist");
+  });
+
+  describe("auto removal of instances", () => {
+    let App: ReturnType<typeof createTestApp>;
+    beforeEach(() => {
+      App = createTestApp(
+        createImperative({
+          renderer: outletRenderer(),
+          autoRemoveInstances: true,
+        })
+      );
+    });
+
+    it("resolving a single instance", () => {
+      cy.mount(<App />);
+      $.trigger().click();
+      $.resolve().click();
+      $.dialog().should("not.exist");
+    });
+
+    it("rejecting a single instance", () => {
+      cy.mount(<App />);
+      $.trigger().click();
+      $.reject().click();
+      $.dialog().should("not.exist");
+    });
+
+    it("resolving one of many instances", () => {
+      let count = 0;
+      cy.mount(<App input={() => count++} />);
+      $.trigger().click();
+      $.trigger().click();
+      $.dialog("0").within(() => $.resolve().click());
+      $.dialog("1").should("exist");
+    });
+
+    it("rejecting one of many instances", () => {
+      let count = 0;
+      cy.mount(<App input={() => count++} />);
+      $.trigger().click();
+      $.trigger().click();
+      $.dialog("0").within(() => $.reject().click());
+      $.dialog("1").should("exist");
+    });
+
+    it("can opt out", () => {
+      const App = createTestApp(
+        createImperative({
+          renderer: outletRenderer(),
+          autoRemoveInstances: false,
+        })
+      );
+      cy.mount(<App />);
+      $.trigger().click();
+      $.resolve().click();
+      $.dialog().should("exist");
+    });
   });
 });
 
