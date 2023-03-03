@@ -2,10 +2,7 @@
 import type { ComponentProps, ComponentType, ReactNode } from "react";
 import { createElement, useState } from "react";
 
-import type {
-  OutletEntry,
-  OutletRenderer,
-} from "../../src/lib/use-imperative-component/useImperativeComponent";
+import type { OutletRenderer } from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createImperative } from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createNamedFunctions } from "../../src/lib/namedFunctions";
 
@@ -94,7 +91,7 @@ describe("useImperativeComponent", () => {
     beforeEach(() => {
       App = createTestApp(
         createImperative({
-          renderer: outletRenderer(),
+          renderer: ImperativeOutlet,
           autoRemoveInstances: true,
         })
       );
@@ -137,7 +134,7 @@ describe("useImperativeComponent", () => {
     beforeEach(() => {
       App = createTestApp(
         createImperative({
-          renderer: outletRenderer(),
+          renderer: ImperativeOutlet,
           autoRemoveInstances: false,
         })
       );
@@ -177,7 +174,7 @@ describe("useImperativeComponent", () => {
 });
 
 function createTestApp(
-  { Outlet, useComponent } = createImperative({ renderer: outletRenderer() })
+  { Outlet, useComponent } = createImperative({ renderer: ImperativeOutlet })
 ) {
   return function App({
     children,
@@ -236,21 +233,18 @@ function Dialog({ resolve, reject, remove, input }) {
   );
 }
 
-function outletRenderer(
-  filterPredicate: (entry: OutletEntry) => boolean = () => true
-): OutletRenderer {
-  return ({ entries }) => (
+function ImperativeOutlet({ entries }: ComponentProps<OutletRenderer>) {
+  return (
     <>
-      {entries
-        .filter(filterPredicate)
-        .map(({ component, defaultProps, props, state, key, ...builtins }) =>
+      {entries.map(
+        ({ component, defaultProps, props, state, key, ...builtins }) =>
           createElement(component, {
             key,
             ...defaultProps,
             ...props,
             ...builtins,
           })
-        )}
+      )}
     </>
   );
 }
@@ -264,7 +258,7 @@ const $ = createNamedFunctions()
   .add("remove", roleByName("button"))
   .add("unmount", roleByName("button"))
   .add("response", roleByName("textbox"))
-  .add("result", (id) => cy.findByTestId(id))
+  .add("result", cy.findByTestId)
   .add("trigger", roleByName("button"))
   .build();
 
