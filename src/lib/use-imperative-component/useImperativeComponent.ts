@@ -31,6 +31,25 @@ export function createImperative({
     defaultProps: T["defaultProps"] = empty
   ) {
     const id = useId();
+    return useComponentWithFixedId(component, defaultProps, id);
+  }
+
+  useComponent.fixed = (fixedId: ComponentId) => {
+    function useComponentWithEmbeddedFixedId<T extends ComponentEntry>(
+      component: T["component"],
+      defaultProps: T["defaultProps"] = empty
+    ) {
+      return useComponentWithFixedId(component, defaultProps, fixedId);
+    }
+    return useComponentWithEmbeddedFixedId;
+  };
+
+  function useComponentWithFixedId<T extends ComponentEntry>(
+    component: T["component"],
+    defaultProps: T["defaultProps"] = empty,
+    fixedId?: ComponentId
+  ) {
+    const id = useId();
     const store = useContext(Context);
     const latest = useRef({ id, store });
     latest.current = { id, store };
