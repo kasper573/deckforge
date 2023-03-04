@@ -31,25 +31,24 @@ export function createImperative({
     defaultProps: T["defaultProps"] = empty
   ) {
     const id = useId();
-    return useComponentWithFixedId(component, defaultProps, id);
+    return useComponentImpl(component, defaultProps, id);
   }
 
   useComponent.fixed = (fixedId: ComponentId) => {
-    function useComponentWithEmbeddedFixedId<T extends ComponentEntry>(
+    function useComponentWithFixedId<T extends ComponentEntry>(
       component: T["component"],
       defaultProps: T["defaultProps"] = empty
     ) {
-      return useComponentWithFixedId(component, defaultProps, fixedId);
+      return useComponentImpl(component, defaultProps, fixedId);
     }
-    return useComponentWithEmbeddedFixedId;
+    return useComponentWithFixedId;
   };
 
-  function useComponentWithFixedId<T extends ComponentEntry>(
+  function useComponentImpl<T extends ComponentEntry>(
     component: T["component"],
     defaultProps: T["defaultProps"] = empty,
-    fixedId?: ComponentId
+    id: ComponentId
   ) {
-    const id = useId();
     const store = useContext(Context);
     const latest = useRef({ id, store });
     latest.current = { id, store };
