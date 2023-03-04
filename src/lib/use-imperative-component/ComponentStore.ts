@@ -1,5 +1,4 @@
 import type { ComponentType } from "react";
-import type { Result } from "neverthrow";
 import type { StoreListener } from "./Store";
 import { Store } from "./Store";
 
@@ -32,35 +31,36 @@ export class ComponentStore {
     });
   }
 
-  removeInstance(cid: ComponentId, iid: InstanceId) {
+  removeInstance(componentId: ComponentId, instanceId: InstanceId) {
     return this.store.mutate((components) => {
-      const component = components[cid];
-      delete component.instances[iid];
+      const component = components[componentId];
+      delete component.instances[instanceId];
       if (
         component.markedForRemoval &&
         !Object.keys(component.instances).length
       ) {
-        delete components[cid];
+        delete components[componentId];
       }
     });
   }
 
-  interfaceFor<T extends ComponentEntry>(cid: ComponentId) {
+  interfaceFor<T extends ComponentEntry>(componentId: ComponentId) {
     return (props: Record<string, unknown> = {}) =>
-      new Promise<Result<unknown, unknown>>((resolve) => {
+      new Promise((resolve) => {
         this.store.mutate((state) => {
-          const iid = nextId();
-          const remove = () => this.removeInstance(cid, iid);
-          state[cid].instances[iid] = {
+          const instanceId = nextId();
+          state[componentId].instances[instanceId] = {
             state: { type: "pending" },
             props,
             resolve: (value, removeDelay = Promise.resolve()) => {
               this.store.mutate((components) => {
-                components[cid].instances[iid].state = {
+                components[componentId].instances[instanceId].state = {
                   type: "resolved",
                   value,
                 };
-                removeDelay.then(remove);
+                removeDelay.then(() =>
+                  this.removeInstance(componentId, instanceId)
+                );
               });
               resolve(value);
             },
