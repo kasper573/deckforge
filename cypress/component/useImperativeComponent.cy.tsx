@@ -55,7 +55,7 @@ describe("useImperativeComponent", () => {
     }
   });
 
-  it("resolve returns value", () => {
+  it("can resolve value", () => {
     cy.mount(<App />);
     $.trigger().click();
     $.dialog().within(() => {
