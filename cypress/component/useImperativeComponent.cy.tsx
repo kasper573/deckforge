@@ -13,111 +13,116 @@ describe("useImperativeComponent", () => {
     App = createTestApp();
   });
 
-  describe("core behaviors", () => {
-    it("mount does not create instance", () => {
-      cy.mount(<App />);
-      $.dialog().should("not.exist");
-    });
+  it("mount does not create instance", () => {
+    cy.mount(<App />);
+    $.dialog().should("not.exist");
+  });
 
-    it("trigger creates instance", () => {
-      cy.mount(<App />);
+  it("trigger creates instance", () => {
+    cy.mount(<App />);
+    $.trigger().click();
+    $.dialog().should("exist");
+  });
+
+  it("instance component can be changed", () => {
+    const imp = createImperative({ renderer: ImperativeOutlet });
+    cy.mount(<App />);
+    cy.findByText("trigger").click();
+    cy.findByText("Component1").should("exist");
+    cy.findByText("Component2").should("not.exist");
+
+    cy.findByText("change").click();
+    cy.findByText("Component1").should("not.exist");
+    cy.findByText("Component2").should("exist");
+
+    function App() {
+      const [component, setComponent] = useState(() => Component1);
+      const trigger = imp.useComponent(component);
+      return (
+        <>
+          <button onClick={() => trigger()}>trigger</button>
+          <button onClick={() => setComponent(() => Component2)}>change</button>
+          <imp.Outlet />
+        </>
+      );
+    }
+
+    function Component1() {
+      return <div>Component1</div>;
+    }
+    function Component2() {
+      return <div>Component2</div>;
+    }
+  });
+
+  it("resolve returns value", () => {
+    cy.mount(<App />);
+    $.trigger().click();
+    $.dialog().within(() => {
+      $.response().type("value");
+      $.resolve().click();
+    });
+    $.result().should("have.text", "value");
+  });
+
+  it("can have multiple instances", () => {
+    cy.mount(<App />);
+    $.trigger().click();
+    $.trigger().click();
+    $.dialog().should("have.length", 2);
+  });
+
+  it("instances are rendered in the order they are created", () => {
+    let count = 0;
+    cy.mount(<App props={() => ({ name: count++ })} />);
+    $.trigger().click();
+    $.trigger().click();
+    $.dialog().eq(0).should("have.attr", "aria-label", "0");
+    $.dialog().eq(1).should("have.attr", "aria-label", "1");
+  });
+
+  describe("properties", () => {
+    it("instance can use default props", () => {
+      cy.mount(<App defaultProps={{ prop: "default" }} />);
       $.trigger().click();
-      $.dialog().should("exist");
+      $.prop().should("have.text", "default");
     });
 
-    it("instance component can be changed", () => {
-      const imp = createImperative({ renderer: ImperativeOutlet });
-      cy.mount(<App />);
-      cy.findByText("trigger").click();
-      cy.findByText("Component1").should("exist");
-      cy.findByText("Component2").should("not.exist");
-
+    it("instance can receive changed default props", () => {
+      cy.mount(<AppWithChanges />);
+      $.trigger().click();
       cy.findByText("change").click();
-      cy.findByText("Component1").should("not.exist");
-      cy.findByText("Component2").should("exist");
+      $.prop().should("have.text", "changed");
 
-      function App() {
-        const [component, setComponent] = useState(() => Component1);
-        const trigger = imp.useComponent(component);
+      function AppWithChanges() {
+        const [prop, setProp] = useState("default");
         return (
           <>
-            <button onClick={() => trigger()}>trigger</button>
-            <button onClick={() => setComponent(() => Component2)}>
-              change
-            </button>
-            <imp.Outlet />
+            <App defaultProps={{ prop }} />
+            <button onClick={() => setProp("changed")}>change</button>
           </>
         );
       }
-
-      function Component1() {
-        return <div>Component1</div>;
-      }
-      function Component2() {
-        return <div>Component2</div>;
-      }
     });
 
-    describe("props", () => {
-      it("instance can use default props", () => {
-        cy.mount(<App defaultProps={{ prop: "default" }} />);
-        $.trigger().click();
-        $.prop().should("have.text", "default");
-      });
-
-      it("instance can receive changed default props", () => {
-        cy.mount(<AppWithChanges />);
-        $.trigger().click();
-        cy.findByText("change").click();
-        $.prop().should("have.text", "changed");
-
-        function AppWithChanges() {
-          const [prop, setProp] = useState("default");
-          return (
-            <>
-              <App defaultProps={{ prop }} />
-              <button onClick={() => setProp("changed")}>change</button>
-            </>
-          );
-        }
-      });
-
-      it("instance can use own props", () => {
-        cy.mount(<App props={() => ({ prop: "own" })} />);
-        $.trigger().click();
-        $.prop().should("have.text", "own");
-      });
-
-      it("instance own props override default props", () => {
-        cy.mount(
-          <App
-            props={() => ({ prop: "own" })}
-            defaultProps={{ prop: "default" }}
-          />
-        );
-        $.trigger().click();
-        $.prop().should("have.text", "own");
-      });
-    });
-
-    it("resolve returns value", () => {
-      cy.mount(<App />);
+    it("instance can use own props", () => {
+      cy.mount(<App props={() => ({ prop: "own" })} />);
       $.trigger().click();
-      $.dialog().within(() => {
-        $.response().type("value");
-        $.resolve().click();
-      });
-      $.result().should("have.text", "value");
+      $.prop().should("have.text", "own");
     });
 
-    it("can have multiple instances", () => {
-      cy.mount(<App />);
+    it("instance own props override default props", () => {
+      cy.mount(
+        <App
+          props={() => ({ prop: "own" })}
+          defaultProps={{ prop: "default" }}
+        />
+      );
       $.trigger().click();
-      $.trigger().click();
-      $.dialog().should("have.length", 2);
+      $.prop().should("have.text", "own");
     });
 
-    it("multiple instances can have separate input", () => {
+    it("multiple instances can have separate props", () => {
       let count = 0;
       cy.mount(<App props={() => ({ name: count++ })} />);
       $.trigger().click();
@@ -125,18 +130,9 @@ describe("useImperativeComponent", () => {
       $.dialog("0").should("exist");
       $.dialog("1").should("exist");
     });
-
-    it("instances are rendered in the order they are created", () => {
-      let count = 0;
-      cy.mount(<App props={() => ({ name: count++ })} />);
-      $.trigger().click();
-      $.trigger().click();
-      $.dialog().eq(0).should("have.attr", "aria-label", "0");
-      $.dialog().eq(1).should("have.attr", "aria-label", "1");
-    });
   });
 
-  describe("persisted instances", () => {
+  describe("lifecycles", () => {
     it("unmounting a component with pending instances does not remove its instances", () => {
       cy.mount(<App />);
       $.trigger().click();
@@ -178,9 +174,7 @@ describe("useImperativeComponent", () => {
         expect(Object.keys(store.state).length).to.equal(n);
       }
     });
-  });
 
-  describe("removing instances", () => {
     it("resolving a lone instance removes it", () => {
       cy.mount(<App />);
       $.trigger().click();
@@ -197,13 +191,23 @@ describe("useImperativeComponent", () => {
       $.dialog("1").should("exist");
     });
 
-    describe.skip("using delay promise", () => {
-      it("resolving removes instance when delay promise is resolved", () => {
-        cy.mount(<App />);
-        $.trigger().click();
-        $.resolve().click();
-        $.dialog().should("exist");
-      });
+    it("can delay removal when resolving", async () => {
+      let resolveDelay = () => {};
+      const delayPromise = new Promise<void>((r) => (resolveDelay = r));
+      cy.mount(<App defaultProps={{ delayPromise }} />);
+
+      // Open and resolve dialog immediately
+      $.trigger().click();
+      $.resolve().click();
+
+      // Confirm that the dialog is still present after resolve
+      cy.wait(100);
+      $.dialog()
+        .should("exist")
+
+        // End the delay and confirm that it removes the dialog
+        .then(resolveDelay)
+        .then(() => $.dialog().should("not.exist"));
     });
   });
 });
@@ -256,7 +260,7 @@ function createTestApp(
   }
 }
 
-function Dialog({ resolve, name, prop }) {
+function Dialog({ resolve, name, prop, delayPromise }) {
   const [response, setResponse] = useState("");
   return (
     <div role="dialog" aria-label={name}>
@@ -266,7 +270,9 @@ function Dialog({ resolve, name, prop }) {
         onChange={(e) => setResponse(e.target.value)}
       />
       <div data-testid={$.prop.name}>{prop}</div>
-      <button onClick={() => resolve(response)}>{$.resolve.name}</button>
+      <button onClick={() => resolve(response, delayPromise)}>
+        {$.resolve.name}
+      </button>
     </div>
   );
 }
