@@ -25,28 +25,23 @@ describe("useImperativeComponent", () => {
       $.dialog().should("exist");
     });
 
-    it("instance can be given input", () => {
-      cy.mount(<App input={() => "foo"} />);
-      $.trigger().click();
-      $.dialog("foo").should("exist");
-    });
-
     it("instance component can be changed", () => {
       const imp = createImperative({ renderer: ImperativeOutlet });
       cy.mount(<App />);
       cy.findByText("trigger").click();
-      cy.findByTestId("component1").contains("input");
+      cy.findByText("Component1").should("exist");
+      cy.findByText("Component2").should("not.exist");
 
       cy.findByText("change").click();
-      cy.findByTestId("component1").should("not.exist");
-      cy.findByTestId("component2").contains("input");
+      cy.findByText("Component1").should("not.exist");
+      cy.findByText("Component2").should("exist");
 
       function App() {
         const [component, setComponent] = useState(() => Component1);
         const trigger = imp.useComponent(component);
         return (
           <>
-            <button onClick={() => trigger("input")}>trigger</button>
+            <button onClick={() => trigger()}>trigger</button>
             <button onClick={() => setComponent(() => Component2)}>
               change
             </button>
@@ -55,11 +50,11 @@ describe("useImperativeComponent", () => {
         );
       }
 
-      function Component1({ input }) {
-        return <div data-testid="component1">{input}</div>;
+      function Component1() {
+        return <div>Component1</div>;
       }
-      function Component2({ input }) {
-        return <div data-testid="component2">{input}</div>;
+      function Component2() {
+        return <div>Component2</div>;
       }
     });
 
@@ -134,7 +129,7 @@ describe("useImperativeComponent", () => {
 
     it("multiple instances can have separate input", () => {
       let count = 0;
-      cy.mount(<App input={() => count++} />);
+      cy.mount(<App props={() => ({ name: count++ })} />);
       $.trigger().click();
       $.trigger().click();
       $.dialog("0").should("exist");
@@ -143,7 +138,7 @@ describe("useImperativeComponent", () => {
 
     it("instances are rendered in the order they are created", () => {
       let count = 0;
-      cy.mount(<App input={() => count++} />);
+      cy.mount(<App props={() => ({ name: count++ })} />);
       $.trigger().click();
       $.trigger().click();
       $.dialog().eq(0).should("have.attr", "aria-label", "0");
@@ -221,7 +216,7 @@ describe("useImperativeComponent", () => {
 
     it("resolving one of many instances removes the right instance", () => {
       let count = 0;
-      cy.mount(<App input={() => count++} />);
+      cy.mount(<App props={() => ({ name: count++ })} />);
       $.trigger().click();
       $.trigger().click();
       $.dialog("0").within(() => $.resolve().click());
@@ -230,7 +225,7 @@ describe("useImperativeComponent", () => {
 
     it("rejecting one of many instances removes the right instance", () => {
       let count = 0;
-      cy.mount(<App input={() => count++} />);
+      cy.mount(<App props={() => ({ name: count++ })} />);
       $.trigger().click();
       $.trigger().click();
       $.dialog("0").within(() => $.reject().click());
@@ -272,7 +267,7 @@ describe("useImperativeComponent", () => {
 
     it("manually removing one of many instances removes the right instance", () => {
       let count = 0;
-      cy.mount(<App input={() => count++} />);
+      cy.mount(<App props={() => ({ name: count++ })} />);
       $.trigger().click();
       $.trigger().click();
       $.dialog("0").within(() => $.remove().click());
@@ -310,11 +305,9 @@ function createTestApp(
   }
 
   function HookConsumer({
-    input,
     props,
     defaultProps,
   }: {
-    input?: () => unknown;
     props?: () => Record<string, unknown>;
     defaultProps?: Record<string, unknown>;
   }) {
@@ -325,7 +318,7 @@ function createTestApp(
         {result && (
           <div data-testid={$.result.name}>{formatResult(result)}</div>
         )}
-        <button onClick={() => trigger(input?.(), props?.()).then(setResult)}>
+        <button onClick={() => trigger(props?.()).then(setResult)}>
           trigger
         </button>
       </>
@@ -333,10 +326,10 @@ function createTestApp(
   }
 }
 
-function Dialog({ resolve, reject, remove, input, prop }) {
+function Dialog({ resolve, reject, remove, name, prop }) {
   const [response, setResponse] = useState("");
   return (
-    <div role="dialog" aria-label={input}>
+    <div role="dialog" aria-label={name}>
       <input
         aria-label={$.response.name}
         value={response}

@@ -50,14 +50,13 @@ export class ComponentStore {
     cid: ComponentId,
     { autoRemoveInstances }: InstanceInterfaceOptions
   ) {
-    return <Input>(input: Input, props: Record<string, unknown> = {}) =>
+    return (props: Record<string, unknown> = {}) =>
       new Promise<Result<unknown, unknown>>((emitResult) => {
         this.store.mutate((state) => {
           const iid = nextId();
           const remove = () => this.removeInstance(cid, iid);
           state[cid].instances[iid] = {
             state: { type: "pending" },
-            input,
             props,
             resolve: (value) => {
               this.store.mutate((components) => {
@@ -102,7 +101,6 @@ export interface ComponentEntry {
 
 export type InstanceId = string;
 export interface InstanceEntry {
-  input: unknown;
   state: InstanceState;
   props: Record<string, unknown>;
   resolve: (value: unknown) => void;
