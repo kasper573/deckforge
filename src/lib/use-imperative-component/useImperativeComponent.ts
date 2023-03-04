@@ -15,13 +15,11 @@ import type {
   ComponentStoreState,
   InstanceEntry,
   InstanceId,
-  InstanceInterfaceOptions,
 } from "./ComponentStore";
 import { ComponentStore } from "./ComponentStore";
 
 export function createImperative({
   renderer,
-  autoRemoveInstances = true,
   defaultStore = new ComponentStore(),
 }: CreateImperativeOptions) {
   const Context = createContext(defaultStore);
@@ -65,10 +63,7 @@ export function createImperative({
       []
     );
 
-    return useMemo(
-      () => store.interfaceFor<T>(id, { autoRemoveInstances }),
-      [store, id]
-    );
+    return useMemo(() => store.interfaceFor<T>(id), [store, id]);
   }
 
   function Outlet() {
@@ -97,8 +92,7 @@ function outletEntries(componentEntries: ComponentStoreState): OutletEntry[] {
 
 const empty = {} as const;
 
-export interface CreateImperativeOptions
-  extends Partial<InstanceInterfaceOptions> {
+export interface CreateImperativeOptions {
   renderer: OutletRenderer;
   defaultStore?: ComponentStore;
 }

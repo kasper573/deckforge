@@ -46,10 +46,7 @@ export class ComponentStore {
     });
   }
 
-  interfaceFor<T extends ComponentEntry>(
-    cid: ComponentId,
-    { autoRemoveInstances }: InstanceInterfaceOptions
-  ) {
+  interfaceFor<T extends ComponentEntry>(cid: ComponentId) {
     return (props: Record<string, unknown> = {}) =>
       new Promise<Result<unknown, unknown>>((emitResult) => {
         this.store.mutate((state) => {
@@ -58,31 +55,26 @@ export class ComponentStore {
           state[cid].instances[iid] = {
             state: { type: "pending" },
             props,
-            resolve: (value) => {
+            resolve: (value, removeDelay = Promise.resolve()) => {
               this.store.mutate((components) => {
                 components[cid].instances[iid].state = {
                   type: "resolved",
                   value,
                 };
-                if (autoRemoveInstances) {
-                  remove();
-                }
+                removeDelay.then(remove);
               });
               emitResult(ok(value));
             },
-            reject: (error) => {
+            reject: (error, removeDelay = Promise.resolve()) => {
               this.store.mutate((components) => {
                 components[cid].instances[iid].state = {
                   type: "rejected",
                   error,
                 };
-                if (autoRemoveInstances) {
-                  remove();
-                }
+                removeDelay.then(remove);
               });
               emitResult(err(error));
             },
-            remove,
           };
         });
       });
@@ -103,13 +95,8 @@ export type InstanceId = string;
 export interface InstanceEntry {
   state: InstanceState;
   props: Record<string, unknown>;
-  resolve: (value: unknown) => void;
-  reject: (error: unknown) => void;
-  remove: () => void;
-}
-
-export interface InstanceInterfaceOptions {
-  autoRemoveInstances: boolean;
+  resolve: (value: unknown, removeDelay?: Promise<unknown>) => void;
+  reject: (error: unknown, removeDelay?: Promise<unknown>) => void;
 }
 
 export type InstanceState =

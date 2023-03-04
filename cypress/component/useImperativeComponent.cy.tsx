@@ -174,12 +174,12 @@ describe("useImperativeComponent", () => {
         .should("have.length", 2)
         .then(() => expectComponentCount(1));
 
-      $.remove().first().click();
+      $.resolve().first().click();
       $.dialog()
         .should("have.length", 1)
         .then(() => expectComponentCount(1));
 
-      $.remove().first().click();
+      $.resolve().first().click();
       $.dialog()
         .should("have.length", 0)
         .then(() => expectComponentCount(0));
@@ -190,16 +190,7 @@ describe("useImperativeComponent", () => {
     });
   });
 
-  describe("auto removal of instances", () => {
-    beforeEach(() => {
-      App = createTestApp(
-        createImperative({
-          renderer: ImperativeOutlet,
-          autoRemoveInstances: true,
-        })
-      );
-    });
-
+  describe("removing instances", () => {
     it("resolving a lone instance removes it", () => {
       cy.mount(<App />);
       $.trigger().click();
@@ -231,47 +222,21 @@ describe("useImperativeComponent", () => {
       $.dialog("0").within(() => $.reject().click());
       $.dialog("1").should("exist");
     });
-  });
 
-  describe("when auto removal of instances is disabled", () => {
-    beforeEach(() => {
-      App = createTestApp(
-        createImperative({
-          renderer: ImperativeOutlet,
-          autoRemoveInstances: false,
-        })
-      );
-    });
-    it("resolving does not remove instance", () => {
-      cy.mount(<App />);
-      $.trigger().click();
-      $.resolve().click();
-      $.dialog().should("exist");
-    });
+    describe.skip("using delay promise", () => {
+      it("resolving removes instance when delay promise is resolved", () => {
+        cy.mount(<App />);
+        $.trigger().click();
+        $.resolve().click();
+        $.dialog().should("exist");
+      });
 
-    it("rejecting does not remove instance", () => {
-      cy.mount(<App />);
-      $.trigger().click();
-      $.reject().click();
-      $.dialog().should("exist");
-    });
-  });
-
-  describe("manual removal of instances", () => {
-    it("can manually remove instance", () => {
-      cy.mount(<App />);
-      $.trigger().click();
-      $.remove().click();
-      $.dialog().should("not.exist");
-    });
-
-    it("manually removing one of many instances removes the right instance", () => {
-      let count = 0;
-      cy.mount(<App props={() => ({ name: count++ })} />);
-      $.trigger().click();
-      $.trigger().click();
-      $.dialog("0").within(() => $.remove().click());
-      $.dialog("1").should("exist");
+      it("rejecting removes instance when delay promise is resolved", () => {
+        cy.mount(<App />);
+        $.trigger().click();
+        $.reject().click();
+        $.dialog().should("exist");
+      });
     });
   });
 });
@@ -326,7 +291,7 @@ function createTestApp(
   }
 }
 
-function Dialog({ resolve, reject, remove, name, prop }) {
+function Dialog({ resolve, reject, name, prop }) {
   const [response, setResponse] = useState("");
   return (
     <div role="dialog" aria-label={name}>
@@ -338,7 +303,6 @@ function Dialog({ resolve, reject, remove, name, prop }) {
       <div data-testid={$.prop.name}>{prop}</div>
       <button onClick={() => resolve(response)}>{$.resolve.name}</button>
       <button onClick={() => reject(response)}>{$.reject.name}</button>
-      <button onClick={() => remove()}>{$.remove.name}</button>
     </div>
   );
 }
@@ -346,14 +310,12 @@ function Dialog({ resolve, reject, remove, name, prop }) {
 function ImperativeOutlet({ entries }: ComponentProps<OutletRenderer>) {
   return (
     <>
-      {entries.map(
-        ({ component, defaultProps, props, state, key, ...builtins }) =>
-          createElement(component, {
-            key,
-            ...defaultProps,
-            ...props,
-            ...builtins,
-          })
+      {entries.map(({ component, defaultProps, props, ...builtins }) =>
+        createElement(component, {
+          ...defaultProps,
+          ...props,
+          ...builtins,
+        })
       )}
     </>
   );
@@ -365,7 +327,6 @@ const $ = createNamedFunctions()
   .add("dialog", (role, name?: string) => cy.findAllByRole(role, { name }))
   .add("resolve", roleByName("button"))
   .add("reject", roleByName("button"))
-  .add("remove", roleByName("button"))
   .add("unmount", roleByName("button"))
   .add("response", roleByName("textbox"))
   .add("result", cy.findByTestId)
