@@ -27,5 +27,3 @@ const imperative = createImperative(({ entries }) => (
 
 export const ModalOutlet = imperative.Outlet;
 export const useModal = imperative.useComponent;
-
-useModal.fixed = imperative.useComponent.fixed;
