@@ -14,17 +14,15 @@ interface ExposedModalState<Input> {
 const imperative = createImperative({
   renderer: ({ entries }) => (
     <>
-      {entries.map(
-        ({ component, defaultProps, props, key, resolve, reject, input }) =>
-          createElement(component, {
-            key,
-            ...defaultProps,
-            ...props,
-            input,
-            resolve,
-            reject,
-            open: true,
-          })
+      {entries.map(({ component, defaultProps, props, key, resolve, reject }) =>
+        createElement(component, {
+          key,
+          ...defaultProps,
+          ...props,
+          resolve,
+          reject,
+          open: true,
+        })
       )}
     </>
   ),
