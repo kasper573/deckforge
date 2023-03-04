@@ -11,21 +11,19 @@ interface ExposedModalState<Input> {
   input: Input;
 }
 
-const imperative = createImperative({
-  renderer: ({ entries }) => (
-    <>
-      {entries.map(({ component, defaultProps, props, key, resolve }) =>
-        createElement(component, {
-          key,
-          ...defaultProps,
-          ...props,
-          resolve,
-          open: true,
-        })
-      )}
-    </>
-  ),
-});
+const imperative = createImperative(({ entries }) => (
+  <>
+    {entries.map(({ component, defaultProps, props, key, resolve }) =>
+      createElement(component, {
+        key,
+        ...defaultProps,
+        ...props,
+        resolve,
+        open: true,
+      })
+    )}
+  </>
+));
 
 export const ModalOutlet = imperative.Outlet;
 export const useModal = imperative.useComponent;

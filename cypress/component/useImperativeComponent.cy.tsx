@@ -25,7 +25,7 @@ describe("useImperativeComponent", () => {
   });
 
   it("instance component can be changed", () => {
-    const imp = createImperative({ renderer: ImperativeOutlet });
+    const imp = createImperative(ImperativeOutlet);
     cy.mount(<App />);
     cy.findByText("trigger").click();
     cy.findByText("Component1").should("exist");
@@ -143,15 +143,15 @@ describe("useImperativeComponent", () => {
     });
 
     it("removes unmounted component from state once the final related instance is removed", () => {
+      const imp = createImperative(ImperativeOutlet);
       const store = new ComponentStore();
-      App = createTestApp(
-        createImperative({
-          defaultStore: store,
-          renderer: ImperativeOutlet,
-        })
-      );
+      App = createTestApp(imp);
 
-      cy.mount(<App />);
+      cy.mount(
+        <imp.Context.Provider value={store}>
+          <App />
+        </imp.Context.Provider>
+      );
       $.trigger().click();
       $.trigger().click();
 
@@ -213,7 +213,7 @@ describe("useImperativeComponent", () => {
 });
 
 function createTestApp(
-  { Outlet, useComponent } = createImperative({ renderer: ImperativeOutlet })
+  { Outlet, useComponent } = createImperative(ImperativeOutlet)
 ) {
   return function App({
     children,

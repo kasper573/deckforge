@@ -18,11 +18,8 @@ import type {
 } from "./ComponentStore";
 import { ComponentStore } from "./ComponentStore";
 
-export function createImperative({
-  renderer,
-  defaultStore = new ComponentStore(),
-}: CreateImperativeOptions) {
-  const Context = createContext(defaultStore);
+export function createImperative(renderer: OutletRenderer) {
+  const Context = createContext(new ComponentStore());
 
   function useComponent<T extends ComponentEntry>(
     component: T["component"],
@@ -71,7 +68,7 @@ export function createImperative({
     const [state, setState] = useState(store.state);
     const entries = useMemo(() => outletEntries(state), [state]);
     useEffect(() => store.subscribe(setState), [store]);
-    return createElement(renderer, { entries, state });
+    return createElement(renderer, { entries });
   }
 
   return { Context, Outlet, useComponent };
@@ -79,37 +76,23 @@ export function createImperative({
 
 function outletEntries(componentEntries: ComponentStoreState): OutletEntry[] {
   return Object.entries(componentEntries).flatMap(
-    ([componentId, { instances, ...componentEntry }]) =>
-      Object.entries(instances).map(([instanceId, instanceEntry]) => ({
+    ([componentId, { instances, ...component }]) =>
+      Object.entries(instances).map(([instanceId, instance]) => ({
         key: `${componentId}-${instanceId}`,
-        ...instanceEntry,
-        ...componentEntry,
-        componentId,
-        instanceId,
+        ...instance,
+        ...component,
       }))
   );
 }
 
 const empty = {} as const;
 
-export interface CreateImperativeOptions {
-  renderer: OutletRenderer;
-  defaultStore?: ComponentStore;
-}
-
 export type Imperative = ReturnType<typeof createImperative>;
-
-export type OutletRenderer = ComponentType<{
-  entries: OutletEntry[];
-  state: ComponentStoreState;
-}>;
-
+export type OutletRenderer = ComponentType<{ entries: OutletEntry[] }>;
 export type OutletEntryKey = `${ComponentId}-${InstanceId}`;
 
 export interface OutletEntry
   extends InstanceEntry,
-    Omit<ComponentEntry, "instances"> {
-  componentId: ComponentId;
-  instanceId: InstanceId;
+    Pick<ComponentEntry, "component" | "defaultProps"> {
   key: OutletEntryKey;
 }
