@@ -14,13 +14,12 @@ interface ExposedModalState<Input> {
 const imperative = createImperative({
   renderer: ({ entries }) => (
     <>
-      {entries.map(({ component, defaultProps, props, key, resolve, reject }) =>
+      {entries.map(({ component, defaultProps, props, key, resolve }) =>
         createElement(component, {
           key,
           ...defaultProps,
           ...props,
           resolve,
-          reject,
           open: true,
         })
       )}
@@ -29,19 +28,6 @@ const imperative = createImperative({
 });
 
 export const ModalOutlet = imperative.Outlet;
-export const useModal = (
-  ...args: Parameters<typeof imperative.useComponent>
-) => {
-  const trigger = imperative.useComponent(...args);
-  async function patchedTrigger(...args: Parameters<typeof trigger>) {
-    const result = await trigger(...args);
-    if (result.isOk()) {
-      return result.value;
-    }
-    throw result.error;
-  }
-
-  return patchedTrigger;
-};
+export const useModal = imperative.useComponent;
 
 useModal.fixed = imperative.useComponent.fixed;

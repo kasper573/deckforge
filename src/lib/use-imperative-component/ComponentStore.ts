@@ -1,6 +1,5 @@
 import type { ComponentType } from "react";
 import type { Result } from "neverthrow";
-import { err, ok } from "neverthrow";
 import type { StoreListener } from "./Store";
 import { Store } from "./Store";
 
@@ -48,7 +47,7 @@ export class ComponentStore {
 
   interfaceFor<T extends ComponentEntry>(cid: ComponentId) {
     return (props: Record<string, unknown> = {}) =>
-      new Promise<Result<unknown, unknown>>((emitResult) => {
+      new Promise<Result<unknown, unknown>>((resolve) => {
         this.store.mutate((state) => {
           const iid = nextId();
           const remove = () => this.removeInstance(cid, iid);
@@ -63,17 +62,7 @@ export class ComponentStore {
                 };
                 removeDelay.then(remove);
               });
-              emitResult(ok(value));
-            },
-            reject: (error, removeDelay = Promise.resolve()) => {
-              this.store.mutate((components) => {
-                components[cid].instances[iid].state = {
-                  type: "rejected",
-                  error,
-                };
-                removeDelay.then(remove);
-              });
-              emitResult(err(error));
+              resolve(value);
             },
           };
         });
@@ -96,13 +85,11 @@ export interface InstanceEntry {
   state: InstanceState;
   props: Record<string, unknown>;
   resolve: (value: unknown, removeDelay?: Promise<unknown>) => void;
-  reject: (error: unknown, removeDelay?: Promise<unknown>) => void;
 }
 
 export type InstanceState =
   | { type: "pending" }
-  | { type: "resolved"; value: unknown }
-  | { type: "rejected"; error: unknown };
+  | { type: "resolved"; value: unknown };
 
 let idCounter = 0;
 const nextId = (): ComponentId => (++idCounter).toString();

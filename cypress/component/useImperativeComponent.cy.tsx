@@ -107,17 +107,7 @@ describe("useImperativeComponent", () => {
         $.response().type("value");
         $.resolve().click();
       });
-      $.result().should("have.text", formatResult({ value: "value" }));
-    });
-
-    it("reject returns error", () => {
-      cy.mount(<App />);
-      $.trigger().click();
-      $.dialog().within(() => {
-        $.response().type("error");
-        $.reject().click();
-      });
-      $.result().should("have.text", formatResult({ error: "error" }));
+      $.result().should("have.text", "value");
     });
 
     it("can have multiple instances", () => {
@@ -198,13 +188,6 @@ describe("useImperativeComponent", () => {
       $.dialog().should("not.exist");
     });
 
-    it("rejecting a lone instance removes it", () => {
-      cy.mount(<App />);
-      $.trigger().click();
-      $.reject().click();
-      $.dialog().should("not.exist");
-    });
-
     it("resolving one of many instances removes the right instance", () => {
       let count = 0;
       cy.mount(<App props={() => ({ name: count++ })} />);
@@ -214,27 +197,11 @@ describe("useImperativeComponent", () => {
       $.dialog("1").should("exist");
     });
 
-    it("rejecting one of many instances removes the right instance", () => {
-      let count = 0;
-      cy.mount(<App props={() => ({ name: count++ })} />);
-      $.trigger().click();
-      $.trigger().click();
-      $.dialog("0").within(() => $.reject().click());
-      $.dialog("1").should("exist");
-    });
-
     describe.skip("using delay promise", () => {
       it("resolving removes instance when delay promise is resolved", () => {
         cy.mount(<App />);
         $.trigger().click();
         $.resolve().click();
-        $.dialog().should("exist");
-      });
-
-      it("rejecting removes instance when delay promise is resolved", () => {
-        cy.mount(<App />);
-        $.trigger().click();
-        $.reject().click();
         $.dialog().should("exist");
       });
     });
@@ -280,9 +247,7 @@ function createTestApp(
     const trigger = useComponent(Dialog, defaultProps);
     return (
       <>
-        {result && (
-          <div data-testid={$.result.name}>{formatResult(result)}</div>
-        )}
+        {result && <div data-testid={$.result.name}>{result}</div>}
         <button onClick={() => trigger(props?.()).then(setResult)}>
           trigger
         </button>
@@ -291,7 +256,7 @@ function createTestApp(
   }
 }
 
-function Dialog({ resolve, reject, name, prop }) {
+function Dialog({ resolve, name, prop }) {
   const [response, setResponse] = useState("");
   return (
     <div role="dialog" aria-label={name}>
@@ -302,7 +267,6 @@ function Dialog({ resolve, reject, name, prop }) {
       />
       <div data-testid={$.prop.name}>{prop}</div>
       <button onClick={() => resolve(response)}>{$.resolve.name}</button>
-      <button onClick={() => reject(response)}>{$.reject.name}</button>
     </div>
   );
 }
@@ -321,12 +285,9 @@ function ImperativeOutlet({ entries }: ComponentProps<OutletRenderer>) {
   );
 }
 
-const formatResult = (r: unknown) => JSON.stringify(r);
-
 const $ = createNamedFunctions()
   .add("dialog", (role, name?: string) => cy.findAllByRole(role, { name }))
   .add("resolve", roleByName("button"))
-  .add("reject", roleByName("button"))
   .add("unmount", roleByName("button"))
   .add("response", roleByName("textbox"))
   .add("result", cy.findByTestId)
