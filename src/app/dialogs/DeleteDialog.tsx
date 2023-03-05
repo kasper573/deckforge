@@ -1,21 +1,16 @@
 import type { ModalProps } from "../../lib/useModal";
 import { ConfirmDialog } from "./ConfirmDialog";
 
-export type DeleteDialogProps = ModalProps<
-  boolean,
-  { subject: string; name: string }
->;
+export interface DeleteDialogProps extends ModalProps<boolean> {
+  subject: string;
+  name: string;
+}
 
-export function DeleteDialog({
-  input: { subject, name },
-  ...rest
-}: DeleteDialogProps) {
+export function DeleteDialog({ subject, name, ...rest }: DeleteDialogProps) {
   return (
     <ConfirmDialog
-      input={{
-        title: `Delete ${subject}`,
-        content: `Are you sure you want to delete "${name}". This action cannot be reversed.`,
-      }}
+      title={`Delete ${subject}`}
+      content={`Are you sure you want to delete "${name}". This action cannot be reversed.`}
       {...rest}
     />
   );

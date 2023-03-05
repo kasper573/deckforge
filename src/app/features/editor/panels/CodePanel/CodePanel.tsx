@@ -51,7 +51,7 @@ export function CodePanel({ title, ...props }: PanelProps) {
           <Button
             size="small"
             disabled={!typeDefs}
-            onClick={() => showApiReference(typeDefs)}
+            onClick={() => showApiReference({ typeDefs })}
           >
             API Reference
           </Button>

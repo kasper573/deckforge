@@ -6,19 +6,18 @@ import type { ReactNode } from "react";
 import Dialog from "@mui/material/Dialog";
 import type { ModalProps } from "../../lib/useModal";
 
-export type AlertDialogProps = ModalProps<
-  void,
-  {
-    title: ReactNode;
-    content: ReactNode;
-    closeLabel?: ReactNode;
-    cancelLabel?: ReactNode;
-  }
->;
+export interface AlertDialogProps extends ModalProps {
+  title: ReactNode;
+  content: ReactNode;
+  closeLabel?: ReactNode;
+  cancelLabel?: ReactNode;
+}
 
 export function AlertDialog({
   open,
-  input: { title, content, closeLabel = "Close" },
+  title,
+  content,
+  closeLabel = "Close",
   resolve,
 }: AlertDialogProps) {
   const close = () => resolve();

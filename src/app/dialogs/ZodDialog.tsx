@@ -14,27 +14,24 @@ export type ZodDialogOutput<T extends ZodType> =
   | { data: z.infer<T> }
   | { closed: true };
 
-export type ZodDialogProps<T extends ZodType> = ModalProps<
-  ZodDialogOutput<T>,
-  Omit<ZodControlProps<T>, "onChange" | "title"> & {
-    title?: ReactNode;
-    submitLabel?: ReactNode;
-    cancelLabel?: ReactNode;
-    extraFields?: ReactNode | ((value: z.infer<T>) => ReactNode);
-  }
->;
+export interface ZodDialogProps<T extends ZodType>
+  extends ModalProps<ZodDialogOutput<T>>,
+    Omit<ZodControlProps<T>, "onChange" | "title"> {
+  title?: ReactNode;
+  submitLabel?: ReactNode;
+  cancelLabel?: ReactNode;
+  extraFields?: ReactNode | ((value: z.infer<T>) => ReactNode);
+}
 
 export function ZodDialog<T extends ZodType>({
   open,
   resolve,
-  input: {
-    value: inputValue,
-    title,
-    submitLabel = "Submit",
-    cancelLabel = "Cancel",
-    extraFields: extraFieldsNodeOrFn,
-    ...controlProps
-  },
+  value: inputValue,
+  title,
+  submitLabel = "Submit",
+  cancelLabel = "Cancel",
+  extraFields: extraFieldsNodeOrFn,
+  ...controlProps
 }: ZodDialogProps<T>) {
   const [value, setValue] = useState(inputValue);
   const extraFields =

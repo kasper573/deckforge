@@ -10,7 +10,10 @@ import type { MenuProps } from "@mui/material/Menu";
 import Menu from "@mui/material/Menu";
 import { createStore, useStore } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { enableMapSet } from "immer";
 import { concatFunctions } from "../../lib/ts-extensions/concatFunctions";
+
+enableMapSet();
 
 export type UseMenuItems = Array<
   ReactElement | ((close: MenuProps["onClose"]) => ReactElement)

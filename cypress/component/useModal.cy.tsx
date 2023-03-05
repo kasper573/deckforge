@@ -33,19 +33,12 @@ describe("useModal.cy.ts", () => {
   });
 });
 
-type ExampleModalProps = ModalProps<
-  string,
-  {
-    count: number;
-    title: string;
-  }
->;
+interface ExampleModalProps extends ModalProps<string> {
+  count: number;
+  title: string;
+}
 
-function ExampleModal({
-  open,
-  input: { title, count },
-  resolve,
-}: ExampleModalProps) {
+function ExampleModal({ open, title, count, resolve }: ExampleModalProps) {
   return (
     <div role="modal" style={{ display: open ? "block" : "none" }}>
       <h1>{title}</h1>

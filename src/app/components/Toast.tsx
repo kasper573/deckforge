@@ -4,15 +4,18 @@ import Snackbar from "@mui/material/Snackbar";
 import type { ReactNode } from "react";
 import type { ModalProps } from "../../lib/useModal";
 
-export type ToastProps = ModalProps<
-  void,
-  { variant?: AlertColor; content: ReactNode; duration?: number }
->;
+export interface ToastProps extends ModalProps {
+  variant?: AlertColor;
+  content: ReactNode;
+  duration?: number;
+}
 
 export function Toast({
   open,
   resolve,
-  input: { variant = "success", content, duration = 6000 },
+  variant = "success",
+  content,
+  duration = 6000,
 }: ToastProps) {
   return (
     <Snackbar

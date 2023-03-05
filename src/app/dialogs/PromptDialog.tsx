@@ -8,29 +8,25 @@ import { FormDialog } from "./FormDialog";
 
 type StringLike = ZodString | ZodEffects<ZodString>;
 
-export type PromptDialogProps<T extends StringLike = ZodString> = ModalProps<
-  string | undefined,
-  {
-    title: ReactNode;
-    schema?: T;
-    label?: string;
-    defaultValue?: z.infer<T>;
-    submitLabel?: ReactNode;
-    cancelLabel?: ReactNode;
-    helperText?: ReactNode;
-  }
->;
+export interface PromptDialogProps<T extends StringLike = ZodString>
+  extends ModalProps<string | undefined> {
+  title: ReactNode;
+  schema?: T;
+  label?: string;
+  defaultValue?: z.infer<T>;
+  submitLabel?: ReactNode;
+  cancelLabel?: ReactNode;
+  helperText?: ReactNode;
+}
 
 export function PromptDialog<T extends StringLike>({
-  input: {
-    title,
-    schema: fieldSchema,
-    label,
-    defaultValue,
-    submitLabel = "Submit",
-    cancelLabel = "Cancel",
-    helperText,
-  },
+  title,
+  schema: fieldSchema,
+  label,
+  defaultValue,
+  submitLabel = "Submit",
+  cancelLabel = "Cancel",
+  helperText,
   resolve,
   ...rest
 }: PromptDialogProps<T>) {
@@ -40,7 +36,7 @@ export function PromptDialog<T extends StringLike>({
   );
   return (
     <FormDialog
-      input={{
+      {...{
         cancelLabel,
         submitLabel,
         title,
