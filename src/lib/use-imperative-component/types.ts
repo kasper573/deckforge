@@ -2,8 +2,11 @@ import type { ComponentProps, ComponentType, Context } from "react";
 import type { ComponentStore } from "./ComponentStore";
 
 export type ComponentStoreState = Record<ComponentId, ComponentEntry>;
+
 export type InstanceInterfaceFor<G extends ComponentGenerics> = (
-  props: Omit<InstanceProps<G>, keyof ImperativeComponentProps>
+  props: MakeOptionalIfEmptyObject<
+    Omit<InstanceProps<G>, keyof ImperativeComponentProps>
+  >
 ) => Promise<inferResolutionValue<G["Component"]>>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,13 +69,16 @@ export interface Imperative {
   Context: Context<ComponentStore>;
 }
 
-export type OutletRenderer = ComponentType<{ entries: OutletEntry[] }>;
-export type OutletEntryKey = `${ComponentId}-${InstanceId}`;
+export type OutletRenderer = ComponentType<ComponentStoreState>;
 
-export interface OutletEntry<G extends ComponentGenerics = ComponentGenerics>
-  extends InstanceEntry<G>,
-    Pick<ComponentEntry<G>, "component" | "defaultProps"> {
-  key: OutletEntryKey;
-}
-
+// Generic type helpers
 type MakePartial<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+type ExtractRequired<T> = {
+  [K in keyof T as undefined extends T[K] ? never : K]-?: T[K];
+};
+type MakeOptionalIfEmptyObject<T> = ExtractRequired<T> extends Record<
+  string,
+  never
+>
+  ? void | undefined | T
+  : T;

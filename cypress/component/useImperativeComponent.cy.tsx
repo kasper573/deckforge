@@ -5,7 +5,10 @@ import { createElement, useState } from "react";
 import { createImperative } from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createNamedFunctions } from "../../src/lib/namedFunctions";
 import { ComponentStore } from "../../src/lib/use-imperative-component/ComponentStore";
-import type { OutletRenderer } from "../../src/lib/use-imperative-component/types";
+import type {
+  OutletRenderer,
+  ImperativeComponentProps,
+} from "../../src/lib/use-imperative-component/types";
 
 describe("useImperativeComponent", () => {
   let App: ReturnType<typeof createTestApp>;
@@ -74,7 +77,7 @@ describe("useImperativeComponent", () => {
 
   it("instances are rendered in the order they are created", () => {
     let count = 0;
-    cy.mount(<App props={() => ({ name: count++ })} />);
+    cy.mount(<App props={() => ({ name: `${count++}` })} />);
     $.trigger().click();
     $.trigger().click();
     $.dialog().eq(0).should("have.attr", "aria-label", "0");
@@ -124,7 +127,7 @@ describe("useImperativeComponent", () => {
 
     it("multiple instances can have separate props", () => {
       let count = 0;
-      cy.mount(<App props={() => ({ name: count++ })} />);
+      cy.mount(<App props={() => ({ name: `${count++}` })} />);
       $.trigger().click();
       $.trigger().click();
       $.dialog("0").should("exist");
@@ -184,7 +187,7 @@ describe("useImperativeComponent", () => {
 
     it("resolving one of many instances removes the right instance", () => {
       let count = 0;
-      cy.mount(<App props={() => ({ name: count++ })} />);
+      cy.mount(<App props={() => ({ name: `${count++}` })} />);
       $.trigger().click();
       $.trigger().click();
       $.dialog("0").within(() => $.resolve().click());
@@ -244,8 +247,8 @@ function createTestApp(
     props,
     defaultProps,
   }: {
-    props?: () => Record<string, unknown>;
-    defaultProps?: Record<string, unknown>;
+    props?: () => DialogProps;
+    defaultProps?: DialogProps;
   }) {
     const [result, setResult] = useState();
     const trigger = useComponent(Dialog, defaultProps);
@@ -260,7 +263,18 @@ function createTestApp(
   }
 }
 
-function Dialog({ resolve, name, prop, delayPromise }) {
+interface DialogProps {
+  prop?: string;
+  name?: string;
+  delayPromise?: Promise<void>;
+}
+
+function Dialog({
+  resolve,
+  name,
+  prop,
+  delayPromise,
+}: DialogProps & ImperativeComponentProps) {
   const [response, setResponse] = useState("");
   return (
     <div role="dialog" aria-label={name}>
@@ -277,15 +291,21 @@ function Dialog({ resolve, name, prop, delayPromise }) {
   );
 }
 
-function ImperativeOutlet({ entries }: ComponentProps<OutletRenderer>) {
+function ImperativeOutlet(state: ComponentProps<OutletRenderer>) {
   return (
     <>
-      {entries.map(({ component, defaultProps, props, ...builtins }) =>
-        createElement(component, {
-          ...defaultProps,
-          ...props,
-          ...builtins,
-        })
+      {Object.entries(state).flatMap(
+        ([componentId, { instances, component, defaultProps }]) =>
+          Object.entries(instances).map(
+            ([instanceId, { props, state, resolve }]) =>
+              createElement(component, {
+                key: `${componentId}-${instanceId}`,
+                ...defaultProps,
+                ...props,
+                state,
+                resolve,
+              })
+          )
       )}
     </>
   );

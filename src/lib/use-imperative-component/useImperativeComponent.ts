@@ -9,12 +9,7 @@ import {
   useState,
 } from "react";
 import { ComponentStore } from "./ComponentStore";
-import type {
-  ComponentStoreState,
-  Imperative,
-  OutletEntry,
-  OutletRenderer,
-} from "./types";
+import type { Imperative, OutletRenderer } from "./types";
 
 export function createImperative(renderer: OutletRenderer): Imperative {
   const Context = createContext(new ComponentStore());
@@ -24,9 +19,8 @@ export function createImperative(renderer: OutletRenderer): Imperative {
     Outlet() {
       const store = useContext(Context);
       const [state, setState] = useState(store.state);
-      const entries = useMemo(() => outletEntries(state), [state]);
       useEffect(() => store.subscribe(setState), [store]);
-      return createElement(renderer, { entries });
+      return createElement(renderer, state);
     },
     useComponent(component, defaultProps, fixedId) {
       const autoId = useId();
@@ -50,15 +44,4 @@ export function createImperative(renderer: OutletRenderer): Imperative {
       return useMemo(() => store.interfaceFor(id), [store, id]);
     },
   };
-}
-
-function outletEntries(componentEntries: ComponentStoreState): OutletEntry[] {
-  return Object.entries(componentEntries).flatMap(
-    ([componentId, { instances, ...component }]) =>
-      Object.entries(instances).map(([instanceId, instance]) => ({
-        key: `${componentId}-${instanceId}`,
-        ...instance,
-        ...component,
-      }))
-  );
 }

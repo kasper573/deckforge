@@ -7,16 +7,20 @@ export interface ModalProps<Output = void>
   resolve: (output: Output) => void;
 }
 
-const imperative = createImperative(({ entries }) => (
+const imperative = createImperative((state) => (
   <>
-    {entries.map(({ component, defaultProps, props, key, resolve }) =>
-      createElement(component, {
-        key,
-        ...defaultProps,
-        ...props,
-        resolve,
-        open: true,
-      })
+    {Object.entries(state).flatMap(
+      ([componentId, { instances, component, defaultProps }]) =>
+        Object.entries(instances).map(
+          ([instanceId, { props, state, resolve }]) =>
+            createElement(component, {
+              key: `${componentId}-${instanceId}`,
+              ...defaultProps,
+              ...props,
+              state,
+              resolve,
+            })
+        )
     )}
   </>
 ));
