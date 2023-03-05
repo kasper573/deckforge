@@ -9,8 +9,8 @@ import { CodeEditorWithoutTypedefs } from "../../../../components/CodeEditor";
 export function ApiReferenceDialog({
   open,
   resolve,
-  input: typeDefs,
-}: { input: CodeEditorTypeDefs | undefined } & ModalProps) {
+  typeDefs,
+}: { typeDefs: CodeEditorTypeDefs | undefined } & ModalProps) {
   return (
     <Dialog maxWidth={false} open={open} onClose={() => resolve()}>
       <DialogTitle>API Reference</DialogTitle>

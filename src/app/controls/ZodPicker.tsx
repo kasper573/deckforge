@@ -1,6 +1,7 @@
 import type { ZodType } from "zod";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
+import type { ModalProps } from "../../lib/useModal";
 import { useModal } from "../../lib/useModal";
 import type { ZodDialogProps } from "../dialogs/ZodDialog";
 import { ZodDialog } from "../dialogs/ZodDialog";
@@ -9,7 +10,7 @@ import type { PropertyValueType } from "../../api/services/game/types";
 import type { ZodControlProps } from "./ZodControl";
 
 export type ZodPickerProps<T extends ZodType> = ZodControlProps<T> &
-  Omit<ZodDialogProps<T>, keyof ZodControlProps<T>> & {
+  Omit<ZodDialogProps<T>, keyof ZodControlProps<T> | keyof ModalProps> & {
     disabled?: boolean;
   };
 
@@ -18,7 +19,7 @@ export function ZodPicker<T extends ZodType>({
   disabled,
   ...dialogProps
 }: ZodPickerProps<T>) {
-  const showDialog = useModal(ZodDialog);
+  const showDialog = useModal(ZodDialog<T>);
   async function tryUpdateValue() {
     const result = await showDialog(dialogProps);
     if ("data" in result) {

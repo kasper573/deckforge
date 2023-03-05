@@ -2,7 +2,6 @@ import type { StoreListener } from "./Store";
 import { Store } from "./Store";
 import type {
   ComponentEntry,
-  ComponentGenerics,
   ComponentId,
   ComponentStoreState,
   InstanceId,
@@ -51,9 +50,17 @@ export class ComponentStore {
     });
   }
 
-  interfaceFor<G extends ComponentGenerics>(
+  interfaceFor<
+    ResolutionValue,
+    AdditionalComponentProps,
+    DefaultProps extends Partial<AdditionalComponentProps>
+  >(
     componentId: ComponentId
-  ): InstanceInterfaceFor<G> {
+  ): InstanceInterfaceFor<
+    ResolutionValue,
+    AdditionalComponentProps,
+    DefaultProps
+  > {
     return (props) =>
       new Promise((resolve) => {
         this.store.mutate((state) => {
