@@ -33,13 +33,10 @@ describe("useModal.cy.ts", () => {
   });
 });
 
-type ExampleModalProps = ModalProps<
-  string,
-  {
-    count: number;
-    title: string;
-  }
->;
+interface ExampleModalProps extends ModalProps<string> {
+  count: number;
+  title: string;
+}
 
 function ExampleModal({ open, title, count, resolve }: ExampleModalProps) {
   return (

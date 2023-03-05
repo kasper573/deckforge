@@ -1,6 +1,7 @@
 import type { ZodType } from "zod";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
+import type { ComponentType } from "react";
 import { useModal } from "../../lib/useModal";
 import type { ZodDialogProps } from "../dialogs/ZodDialog";
 import { ZodDialog } from "../dialogs/ZodDialog";
@@ -9,7 +10,7 @@ import type { PropertyValueType } from "../../api/services/game/types";
 import type { ZodControlProps } from "./ZodControl";
 
 export type ZodPickerProps<T extends ZodType> = ZodControlProps<T> &
-  Omit<ZodDialogProps<T>["input"], keyof ZodControlProps<T>> & {
+  Omit<ZodDialogProps<T>, keyof ZodControlProps<T>> & {
     disabled?: boolean;
   };
 

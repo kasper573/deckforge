@@ -11,28 +11,26 @@ import type { ModalProps } from "../../lib/useModal";
 import type { UseFormResult } from "../hooks/useForm";
 import { useForm } from "../hooks/useForm";
 
-export type FormDialogProps<T extends ZodType> = ModalProps<
-  { type: "submit"; value: z.infer<T> } | { type: "cancel" },
-  {
-    title: ReactNode;
-    schema: T;
-    defaultValues?: DefaultValues<z.infer<T>>;
-    submitLabel?: ReactNode;
-    cancelLabel?: ReactNode;
-    layout: (form: UseFormResult<T>) => ReactNode;
-  }
->;
+export interface FormDialogProps<T extends ZodType>
+  extends ModalProps<
+    { type: "submit"; value: z.infer<T> } | { type: "cancel" }
+  > {
+  title: ReactNode;
+  schema: T;
+  defaultValues?: DefaultValues<z.infer<T>>;
+  submitLabel?: ReactNode;
+  cancelLabel?: ReactNode;
+  layout: (form: UseFormResult<T>) => ReactNode;
+}
 
 export function FormDialog<T extends ZodType>({
   open,
-  input: {
-    title,
-    schema,
-    defaultValues,
-    submitLabel = "Submit",
-    cancelLabel = "Cancel",
-    layout: createFormFieldRegistrations,
-  },
+  title,
+  schema,
+  defaultValues,
+  submitLabel = "Submit",
+  cancelLabel = "Cancel",
+  layout: createFormFieldRegistrations,
   resolve,
 }: FormDialogProps<T>) {
   const form = useForm<T>(schema, { defaultValues });

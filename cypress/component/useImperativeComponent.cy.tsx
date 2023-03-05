@@ -243,18 +243,18 @@ function createTestApp(
     );
   }
 
-  function HookConsumer({
+  function HookConsumer<T extends string>({
     props,
     defaultProps,
   }: {
     props?: () => DialogProps;
     defaultProps?: DialogProps;
   }) {
-    const [result, setResult] = useState();
+    const [result, setResult] = useState<T>();
     const trigger = useComponent(Dialog, defaultProps);
     return (
       <>
-        {result && <div data-testid={$.result.name}>{result}</div>}
+        {result && <div data-testid={$.result.name}>{String(result)}</div>}
         <button onClick={() => trigger(props?.()).then(setResult)}>
           trigger
         </button>
@@ -269,12 +269,12 @@ interface DialogProps {
   delayPromise?: Promise<void>;
 }
 
-function Dialog({
+function Dialog<T extends string>({
   resolve,
   name,
   prop,
   delayPromise,
-}: DialogProps & ImperativeComponentProps) {
+}: DialogProps & ImperativeComponentProps<T>) {
   const [response, setResponse] = useState("");
   return (
     <div role="dialog" aria-label={name}>
@@ -284,7 +284,7 @@ function Dialog({
         onChange={(e) => setResponse(e.target.value)}
       />
       <div data-testid={$.prop.name}>{prop}</div>
-      <button onClick={() => resolve(response, delayPromise)}>
+      <button onClick={() => resolve(response as T, delayPromise)}>
         {$.resolve.name}
       </button>
     </div>

@@ -4,9 +4,7 @@ import type { ComponentStore } from "./ComponentStore";
 export type ComponentStoreState = Record<ComponentId, ComponentEntry>;
 
 export type InstanceInterfaceFor<G extends ComponentGenerics> = (
-  props: MakeOptionalIfEmptyObject<
-    Omit<InstanceProps<G>, keyof ImperativeComponentProps>
-  >
+  props: InstanceProps<G>
 ) => Promise<inferResolutionValue<G["Component"]>>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,10 +45,13 @@ export interface InstanceEntry<G extends ComponentGenerics = ComponentGenerics>
   props: InstanceProps<G>;
 }
 
-export type InstanceProps<G extends ComponentGenerics> = MakePartial<
-  ComponentProps<G["Component"]>,
-  keyof G["DefaultProps"]
->;
+export type InstanceProps<G extends ComponentGenerics> =
+  MakeOptionalIfEmptyObject<
+    Omit<
+      MakePartial<ComponentProps<G["Component"]>, keyof G["DefaultProps"]>,
+      keyof ImperativeComponentProps
+    >
+  >;
 
 export type InstanceState<ResolutionValue = unknown> =
   | { type: "pending" }

@@ -6,19 +6,19 @@ import type { ReactNode } from "react";
 import Dialog from "@mui/material/Dialog";
 import type { ModalProps } from "../../lib/useModal";
 
-export type ConfirmDialogProps = ModalProps<
-  boolean,
-  {
-    title: ReactNode;
-    content: ReactNode;
-    confirmLabel?: ReactNode;
-    cancelLabel?: ReactNode;
-  }
->;
+export interface ConfirmDialogProps extends ModalProps<boolean> {
+  title: ReactNode;
+  content: ReactNode;
+  confirmLabel?: ReactNode;
+  cancelLabel?: ReactNode;
+}
 
 export function ConfirmDialog({
   open,
-  input: { title, content, confirmLabel = "Yes", cancelLabel = "Cancel" },
+  title,
+  content,
+  confirmLabel = "Yes",
+  cancelLabel = "Cancel",
   resolve,
 }: ConfirmDialogProps) {
   const cancel = () => resolve(false);

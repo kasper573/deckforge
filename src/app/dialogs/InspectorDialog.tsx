@@ -19,7 +19,7 @@ export interface InspectorDialogProps extends ModalProps {
 }
 
 export function InspectorDialog({
-  state,
+  open,
   title = "Inspector",
   value,
   closeLabel = "Close",
@@ -33,12 +33,7 @@ export function InspectorDialog({
   }
 
   return (
-    <Dialog
-      disableRestoreFocus
-      fullWidth
-      open={state.type === "pending"}
-      onClose={close}
-    >
+    <Dialog disableRestoreFocus fullWidth open={open} onClose={close}>
       <DialogTitle>
         <Stack direction="row" justifyContent="space-between">
           <span>{title}</span>
