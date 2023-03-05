@@ -1,7 +1,6 @@
 import type { ZodType } from "zod";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
-import type { ComponentType } from "react";
 import { useModal } from "../../lib/useModal";
 import type { ZodDialogProps } from "../dialogs/ZodDialog";
 import { ZodDialog } from "../dialogs/ZodDialog";
