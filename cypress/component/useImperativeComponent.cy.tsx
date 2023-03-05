@@ -251,7 +251,8 @@ function createTestApp(
     defaultProps?: DialogProps;
   }) {
     const [result, setResult] = useState<T>();
-    const trigger = useComponent(Dialog, defaultProps);
+    // prettier-ignore
+    const trigger = useComponent((Dialog<T>), defaultProps);
     return (
       <>
         {result && <div data-testid={$.result.name}>{String(result)}</div>}
