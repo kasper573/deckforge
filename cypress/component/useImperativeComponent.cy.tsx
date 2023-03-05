@@ -2,10 +2,10 @@
 import type { ComponentProps, ComponentType, ReactNode } from "react";
 import { createElement, useState } from "react";
 
-import type { OutletRenderer } from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createImperative } from "../../src/lib/use-imperative-component/useImperativeComponent";
 import { createNamedFunctions } from "../../src/lib/namedFunctions";
 import { ComponentStore } from "../../src/lib/use-imperative-component/ComponentStore";
+import type { OutletRenderer } from "../../src/lib/use-imperative-component/types";
 
 describe("useImperativeComponent", () => {
   let App: ReturnType<typeof createTestApp>;

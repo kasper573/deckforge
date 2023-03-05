@@ -1,14 +1,10 @@
 import { createElement } from "react";
 import { createImperative } from "./use-imperative-component/useImperativeComponent";
+import type { ImperativeComponentProps } from "./use-imperative-component/types";
 
-export interface ModalProps<Output = void, Input = void>
-  extends ExposedModalState<Input> {
+export interface ModalProps<Output = void>
+  extends ImperativeComponentProps<Output> {
   resolve: (output: Output) => void;
-}
-
-interface ExposedModalState<Input> {
-  open: boolean;
-  input: Input;
 }
 
 const imperative = createImperative(({ entries }) => (

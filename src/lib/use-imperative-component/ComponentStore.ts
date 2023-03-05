@@ -1,6 +1,13 @@
-import type { ComponentType } from "react";
 import type { StoreListener } from "./Store";
 import { Store } from "./Store";
+import type {
+  ComponentEntry,
+  ComponentGenerics,
+  ComponentId,
+  ComponentStoreState,
+  InstanceId,
+  InstanceInterfaceFor,
+} from "./types";
 
 export class ComponentStore {
   constructor(private store = new Store<ComponentStoreState>({})) {
@@ -44,8 +51,10 @@ export class ComponentStore {
     });
   }
 
-  interfaceFor<T extends ComponentEntry>(componentId: ComponentId) {
-    return (props: Record<string, unknown> = {}) =>
+  interfaceFor<G extends ComponentGenerics>(
+    componentId: ComponentId
+  ): InstanceInterfaceFor<G> {
+    return (props) =>
       new Promise((resolve) => {
         this.store.mutate((state) => {
           const instanceId = nextId();
@@ -69,27 +78,6 @@ export class ComponentStore {
       });
   }
 }
-
-export type ComponentStoreState = Record<ComponentId, ComponentEntry>;
-
-export type ComponentId = string;
-export interface ComponentEntry {
-  component: ComponentType;
-  defaultProps: Record<string, unknown>;
-  instances: Record<InstanceId, InstanceEntry>;
-  markedForRemoval?: boolean;
-}
-
-export type InstanceId = string;
-export interface InstanceEntry {
-  state: InstanceState;
-  props: Record<string, unknown>;
-  resolve: (value: unknown, removeDelay?: Promise<unknown>) => void;
-}
-
-export type InstanceState =
-  | { type: "pending" }
-  | { type: "resolved"; value: unknown };
 
 let idCounter = 0;
 const nextId = (): ComponentId => (++idCounter).toString();

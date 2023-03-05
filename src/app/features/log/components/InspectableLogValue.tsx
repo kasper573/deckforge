@@ -10,7 +10,7 @@ const sharedInspectorDialogId = v4();
 export function InspectableLogValue(
   props: ComponentProps<typeof BaseLogValue>
 ) {
-  const inspect = useModal.fixed(sharedInspectorDialogId)(InspectorDialog);
+  const inspect = useModal(InspectorDialog, {}, sharedInspectorDialogId);
   return (
     <BaseLogValue
       {...props}

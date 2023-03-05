@@ -1,4 +1,3 @@
-import type { ComponentType } from "react";
 import {
   createContext,
   createElement,
@@ -9,69 +8,48 @@ import {
   useRef,
   useState,
 } from "react";
-import type {
-  ComponentEntry,
-  ComponentId,
-  ComponentStoreState,
-  InstanceEntry,
-  InstanceId,
-} from "./ComponentStore";
 import { ComponentStore } from "./ComponentStore";
+import type {
+  ComponentStoreState,
+  Imperative,
+  OutletEntry,
+  OutletRenderer,
+} from "./types";
 
-export function createImperative(renderer: OutletRenderer) {
+export function createImperative(renderer: OutletRenderer): Imperative {
   const Context = createContext(new ComponentStore());
 
-  function useComponent<T extends ComponentEntry>(
-    component: T["component"],
-    defaultProps: T["defaultProps"] = empty
-  ) {
-    const id = useId();
-    return useComponentImpl(component, defaultProps, id);
-  }
+  return {
+    Context,
+    Outlet() {
+      const store = useContext(Context);
+      const [state, setState] = useState(store.state);
+      const entries = useMemo(() => outletEntries(state), [state]);
+      useEffect(() => store.subscribe(setState), [store]);
+      return createElement(renderer, { entries });
+    },
+    useComponent(component, defaultProps, fixedId) {
+      const autoId = useId();
+      const id = fixedId ?? autoId;
+      const store = useContext(Context);
+      const latest = useRef({ id, store });
+      latest.current = { id, store };
 
-  useComponent.fixed = (fixedId: ComponentId) => {
-    function useComponentWithFixedId<T extends ComponentEntry>(
-      component: T["component"],
-      defaultProps: T["defaultProps"] = empty
-    ) {
-      return useComponentImpl(component, defaultProps, fixedId);
-    }
-    return useComponentWithFixedId;
+      useEffect(() => {
+        store.upsertComponent(id, { component, defaultProps });
+      }, [store, id, component, defaultProps]);
+
+      useEffect(
+        () => () => {
+          const { id, store } = latest.current;
+          store.markComponentForRemoval(id);
+        },
+        []
+      );
+
+      return useMemo(() => store.interfaceFor(id), [store, id]);
+    },
   };
-
-  function useComponentImpl<T extends ComponentEntry>(
-    component: T["component"],
-    defaultProps: T["defaultProps"] = empty,
-    id: ComponentId
-  ) {
-    const store = useContext(Context);
-    const latest = useRef({ id, store });
-    latest.current = { id, store };
-
-    useEffect(() => {
-      store.upsertComponent(id, { component, defaultProps });
-    }, [store, id, component, defaultProps]);
-
-    useEffect(
-      () => () => {
-        const { id, store } = latest.current;
-        store.markComponentForRemoval(id);
-      },
-      []
-    );
-
-    return useMemo(() => store.interfaceFor<T>(id), [store, id]);
-  }
-
-  function Outlet() {
-    const store = useContext(Context);
-    const [state, setState] = useState(store.state);
-    const entries = useMemo(() => outletEntries(state), [state]);
-    useEffect(() => store.subscribe(setState), [store]);
-    return createElement(renderer, { entries });
-  }
-
-  return { Context, Outlet, useComponent };
 }
 
 function outletEntries(componentEntries: ComponentStoreState): OutletEntry[] {
@@ -83,16 +61,4 @@ function outletEntries(componentEntries: ComponentStoreState): OutletEntry[] {
         ...component,
       }))
   );
-}
-
-const empty = {} as const;
-
-export type Imperative = ReturnType<typeof createImperative>;
-export type OutletRenderer = ComponentType<{ entries: OutletEntry[] }>;
-export type OutletEntryKey = `${ComponentId}-${InstanceId}`;
-
-export interface OutletEntry
-  extends InstanceEntry,
-    Pick<ComponentEntry, "component" | "defaultProps"> {
-  key: OutletEntryKey;
 }
