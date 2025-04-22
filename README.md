@@ -1,6 +1,6 @@
 # Deck Forge
 
-[deckforge.io](https://deckforge.io) is a service for creating and sharing deck builder games.
+Deck Forge is a browser based game engine and editor for creating and sharing deck builder games.
 
 ## Stack
 
