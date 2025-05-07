@@ -11,19 +11,19 @@ import Stack from "@mui/material/Stack";
 import type { ModalProps } from "../../lib/useModal";
 import { Copy } from "../components/icons";
 
-export type InspectorDialogProps = ModalProps<
-  void,
-  {
-    title?: ReactNode;
-    value: unknown;
-    closeLabel?: ReactNode;
-    expandLevel?: number;
-  }
->;
+export interface InspectorDialogProps extends ModalProps {
+  title?: ReactNode;
+  value: unknown;
+  closeLabel?: ReactNode;
+  expandLevel?: number;
+}
 
 export function InspectorDialog({
   open,
-  input: { title = "Inspector", value, closeLabel = "Close", expandLevel = 3 },
+  title = "Inspector",
+  value,
+  closeLabel = "Close",
+  expandLevel = 3,
   resolve,
 }: InspectorDialogProps) {
   const close = () => resolve();
